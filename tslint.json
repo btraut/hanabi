@@ -1,0 +1,21 @@
+{
+    "extends": "tslint:latest",
+    "rules": {
+        "quotemark": [true, "single", "jsx-double"],
+        "variable-name": [true, "check-format", "allow-leading-underscore", "allow-pascal-case"],
+        "interface-name": [true, "never-prefix"],
+        "trailing-comma": [true, {"multiline": "never", "singleline": "never"}],
+        "indent": [true, "tabs"],
+        
+        "no-trailing-whitespace": false,
+        "ordered-imports": [false],
+        "max-line-length": [false],
+        "switch-default": false,
+        "member-ordering": [false],
+        "object-literal-sort-keys": false,
+        "no-console": [false, "log", "error"],
+        "arrow-parens": false,
+        "no-empty-interface": false,
+        "no-reference": false
+    }
+}

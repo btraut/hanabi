@@ -1,0 +1,37 @@
+body,
+html,
+#AppContainer {
+	height: 100%;
+}
+
+body {
+	background: white;
+	color: #111;
+	-webkit-font-smoothing: antialiased;
+	overflow: auto;
+}
+
+a {
+	color: #359fe2;
+	text-decoration: none;
+	
+	&:focus,
+	&:hover {
+		color: darken(#359fe2, 10%);
+		text-decoration: none;
+	}
+}
+
+p {
+	margin: 0 0 20px;
+}
+
+svg {
+	display: block;
+}
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}

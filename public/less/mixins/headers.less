@@ -1,0 +1,17 @@
+.SectionHeader() {
+	margin: 20px -12px;
+	padding: 8px 12px;
+	border-bottom: 1px solid #ddd;
+	.HeaderLightFont();
+	text-transform: lowercase;
+
+	font-size: 40px;
+	
+	@media (max-width: @screen-sm-max) {
+		font-size: 32px;
+	}
+	
+	@media (max-width: @screen-xs-max) {
+		font-size: 28px;
+	}
+}

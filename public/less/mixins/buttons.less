@@ -1,0 +1,100 @@
+.ButtonStripped() {
+	margin: 0;
+	padding: 0;
+	border: none;
+	background: none;
+	outline: none;
+}
+
+.Button() {
+	.ButtonStripped();
+	
+	padding: 8px 12px;
+	border-radius: 4px;
+	font-size: 16px;
+	text-align: center;
+}
+
+.ButtonDefault(@border-color: #ccc, @text-color: #111, @focus-color: #66afe9) {
+	.Button();
+	
+	border: 1px solid @border-color;
+	color: @text-color;
+	
+	&:hover,
+	&:focus {
+		background-color: darken(#fff, 2%);
+		color: @text-color;
+	}
+	
+	&:focus {
+		border: 1px solid @focus-color;
+		box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px @focus-color;
+	}
+	
+	&:active {
+		background-color: darken(#fff, 6%);
+		color: @text-color;
+	}
+	
+	&:disabled,
+	&:hover:disabled,
+	&:focus:disabled {
+		color: #999;
+	}
+}
+
+.ButtonFilled(@background-color: #f4f4f4, @text-color: #111, @focus-color: #66afe9) {
+	.Button();
+	
+	background-color: @background-color;
+	color: @text-color;
+	
+	&:hover,
+	&:focus {
+		background-color: darken(@background-color, 2%);
+		color: @text-color;
+	}
+	
+	&:focus {
+		box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px @focus-color;
+	}
+	
+	&:active {
+		background-color: darken(@background-color, 6%);
+		color: @text-color;
+	}
+	
+	&:disabled,
+	&:hover:disabled,
+	&:focus:disabled {
+		background-color: fade(@background-color, 50%);
+	}
+}
+
+.ButtonDestructive() {
+	.ButtonFilled(#d9534f, #fff, #ff6161);
+}
+
+.ButtonSuccess() {
+	.ButtonFilled(#4cae4c, #fff, #66afe9);
+}
+
+.ButtonLink(@text-color: #359fe2) {
+	.ButtonStripped();
+	
+	color: @text-color;
+	
+	&:focus,
+	&:hover {
+		color: darken(@text-color, 10%);
+	}
+	
+	&:disabled {
+		color: #999;
+	}
+}
+
+.ButtonLinkDestructive() {
+	.ButtonLink(#d9534f);
+}
