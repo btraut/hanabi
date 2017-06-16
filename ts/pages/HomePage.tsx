@@ -1,7 +1,10 @@
 import * as React from 'react';
 import { ComponentBase } from 'resub';
+import * as aos from 'aos';
 
+import CountdownTimer from '../components/CountdownTimer';
 import ScrollUtils from '../utils/ScrollUtils';
+import WeddingMap from '../components/WeddingMap';
 
 import * as ampersandSVG from '../../public/images/ampersand.svg';
 
@@ -28,8 +31,8 @@ export default class HomePage extends ComponentBase<HomePageProps, HomePageState
 			<div className="HomePage">
 				<section className="HomePage-SplashSection" ref={ (ele) => { this._splashSection = ele; } }>
 					<div className="HomePage-HeaderContainer" ref={ (ele) => { this._headerContainer = ele; } }>
-						<h2 className="HomePage-SplashDate">May 19, 2018</h2>
-						<h1 className="HomePage-Header">
+						<h2 className="HomePage-SplashDate" data-aos="fade-up" data-aos-duration="1000">May 19, 2018</h2>
+						<h1 className="HomePage-Header" data-aos="fade-up" data-aos-duration="1000">
 							<div className="HomePage-HeaderName HomePage-HeaderName-Mary">Mary</div>
 							<div className="HomePage-HeaderAmpersand" dangerouslySetInnerHTML={{ __html: ampersandSVG }} />
 							<div className="HomePage-HeaderName HomePage-HeaderName-Brent">Brent</div>
@@ -38,6 +41,26 @@ export default class HomePage extends ComponentBase<HomePageProps, HomePageState
 					<button className="HomePage-DownArrow" ref={ (ele) => { this._downArrow = ele; } } onClick={ this._handleDownArrowClick } />
 					<div className="HomePage-SplashImage" ref={ (ele) => { this._splashImage = ele; } } />
 				</section>
+				
+				<section className="HomePage-BioSection">
+					<img className="HomePage-Instax" src="/images/instax-mary.png" data-aos="fade-up" data-aos-offset="200" />
+					<img className="HomePage-Instax" src="/images/instax-brent.png" data-aos="fade-up" data-aos-offset="200" />
+				</section>
+				
+				<section className="HomePage-CountdownTimerSection">
+					<div className="HomePage-CountdownTimerSectionInner" data-aos="fade-in" data-aos-offset="200">
+					<p className="HomePage-CountdownTimerHeader">We’ll say yes in…</p>
+					<CountdownTimer endDate={ new Date('May 19, 2018 16:00:00') } />
+					</div>
+				</section>
+				
+				<section className="HomePage-MapSection">
+					<WeddingMap />
+				</section>
+				
+				<footer className="HomePage-Footer">
+					<p className="HomePage-FooterHelp">Made in California with help from 🐶🐶🐱.</p>
+				</footer>
 			</div>
 		);
 	}
@@ -52,6 +75,12 @@ export default class HomePage extends ComponentBase<HomePageProps, HomePageState
 		
 		window.addEventListener('scroll', this._handleScroll);
 		window.addEventListener('resize', this._handleResize);
+		
+		aos.init({
+			duration: 600,
+			easing: 'ease-in-out',
+			once: true
+		});
 	}
 	
 	public componentWillUnmount() {

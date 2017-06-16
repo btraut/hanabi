@@ -20,13 +20,16 @@ export default class ScrollUtils {
 		let scrollCount = 0;
 		let oldTimestamp = performance.now();
 		
+		const scrollMaxX = document.documentElement.scrollWidth - document.documentElement.clientWidth;
+		const scrollMaxY = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+		
 		const step = (newTimestamp: number) => {
 			scrollCount += Math.PI / (scrollDuration / (newTimestamp - oldTimestamp));
 			if (scrollCount >= Math.PI) {
 				window.scrollTo(x, y);
 			}
 			
-			if (window.scrollX === x && window.scrollY === y) {
+			if ((window.scrollX === x || window.scrollX === scrollMaxX) && (window.scrollY === y || window.scrollY === scrollMaxY)) {
 				return;
 			}
 			
