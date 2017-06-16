@@ -20,6 +20,7 @@
 .HomePage-Header {
 	display: flex;
 	align-items: center;
+	.PlayfairDisplay();
 }
 
 .HomePage-HeaderAmpersand {
@@ -41,6 +42,7 @@
 .HomePage-SplashDate {
 	margin: 0 0 40px;
 	font-size: 24px;
+	.PlayfairDisplay();
 }
 
 .HomePage-DownArrow {
@@ -95,21 +97,81 @@
 	}
 }
 
+.HomePage-SectionHeader {
+	margin: 0 0 40px;
+	.PlayfairDisplay();
+	font-weight: 400;
+	text-align: center;
+	font-size: 32px;
+}
+
+.HomePage-SectionSubheader {
+	margin: -36px 0 40px;
+	.Hind();
+	font-weight: 400;
+	text-align: center;
+	font-size: 18px;
+}
+
 .HomePage-BioSection {
-	padding: 60px 0;
-	display: flex;
-	justify-content: center;
+	padding: 40px 20px 60px;
 	background-image: url('/images/bg-white.png');
 	background-size: 400px 400px;
 }
 
-.HomePage-Instax {
-	height: 400px;
+.HomePage-Bios {
+	display: flex;
+	justify-content: center;
+	align-items: stretch;
+}
+
+.HomePage-Bio {
+	display: flex;
+	align-items: stretch;
+	max-width: 500px;
 	margin-right: 60px;
+	padding: 10px;
+	border: 1px dashed #d8d0d0;
+	border-radius: 8px;
 	
 	&:last-child {
 		margin-right: 0;
 	}
+}
+
+.HomePage-BioInner {
+	flex: 1 1 auto;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 20px;
+	background: rgba(255, 255, 255, 0.8);
+}
+
+.HomePage-Instax {
+	height: 400px;
+	margin-bottom: 20px;
+}
+
+.HomePage-BioTitle {
+	margin: 0 0 20px;
+	.EuphoriaScript();
+	font-size: 36px;
+}
+
+.HomePage-BioSubtitle {
+	display: none;
+	margin: 0 0 20px;
+	.PlayfairDisplay();
+	font-size: 16px;
+	font-weight: bold;
+}
+
+.HomePage-BioText {
+	margin: 0;
+	.Hind();
+	text-align: center;
+	font-size: 16px;
 }
 
 .HomePage-CountdownTimerSection {
@@ -169,3 +231,25 @@
 	}
 }
 
+@media (max-width: @screen-md-max) {
+	.HomePage-Bio {
+		max-width: 360px;
+		margin-right: 40px;
+	}
+}
+
+@media (max-width: @screen-sm-max) {
+	.HomePage-Bios {
+		flex-direction: column;
+		align-items: center;
+	}
+	
+	.HomePage-Bio {
+		max-width: 500px;
+		margin: 0 0 40px;
+		
+		&:last-child {
+			margin: 0;
+		}
+	}
+}
