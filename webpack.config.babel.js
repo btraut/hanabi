@@ -160,7 +160,8 @@ const clientConfig = {
         }]),
         new webpack.DefinePlugin({
             DOMAIN_BASE: JSON.stringify(process.env.DOMAIN_BASE),
-            NODE_ENV: JSON.stringify(process.env.NODE_ENV)
+            NODE_ENV: JSON.stringify(process.env.NODE_ENV),
+            GOOGLE_MAPS_API_KEY: JSON.stringify(process.env.GOOGLE_MAPS_API_KEY)
         })
     ]
 };
@@ -191,7 +192,7 @@ const serverConfig = {
         }]),
         new webpack.DefinePlugin({
             DOMAIN_BASE: JSON.stringify(process.env.DOMAIN_BASE),
-            ENV_PATH: JSON.stringify('../../../.env'),
+            ENV_PATH: JSON.stringify('../../.env'),
             PUBLIC_ASSETS_PATH: JSON.stringify('../client'),
             SERVER_VIEWS_PATH: JSON.stringify('views')
         })

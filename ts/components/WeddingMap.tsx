@@ -7,6 +7,8 @@ interface WeddingMapState {}
 
 import * as mapMarkerSVG from '../../public/images/map-marker-2.svg';
 
+declare const GOOGLE_MAPS_API_KEY: string;
+
 export default class WeddingMap extends ComponentBase<WeddingMapProps, WeddingMapState> {
 	public render(): JSX.Element | null {
 		const marker = React.createElement('div', {
@@ -18,6 +20,10 @@ export default class WeddingMap extends ComponentBase<WeddingMapProps, WeddingMa
 		
 		return (
 			<GoogleMapReact
+				bootstrapURLKeys={{
+					key: GOOGLE_MAPS_API_KEY,
+					language: 'en'
+				}}
 				center={{
 					lat: 37.147368,
 					lng: -121.970813

@@ -52,11 +52,11 @@ declare const SERVER_VIEWS_PATH: string;
 		
 		if (process.env.REDIRECT_URL_PROTOCOL_AND_SUBDOMAIN) {
 			app.all(/.*/, (req, res, next) => {
-				if (!req.secure || req.headers.host.match(/^www\..*/i)) {
+				if (req.headers.host.match(/^www\..*/i)) {
 					res.redirect(301, url.parse(DOMAIN_BASE + req.url).href!);
 					return;
 				} else if (req.url.substr(-1) === '/' && req.url.length > 1) {
-					res.redirect(301, url.parse(req.url.slice(0, -1)).href!);
+					res.redirect(301, url.parse(DOMAIN_BASE + req.url.slice(0, -1)).href!);
 					return;
 				}
 				
@@ -100,7 +100,7 @@ declare const SERVER_VIEWS_PATH: string;
 		Logger.info(
 			'' + '\n\n' +
 			'———————————————————————————————————————————————————————————————————' + '\n' +
-			' maryingbrent.com' + '\n' +
+			' maryandbrent.com' + '\n' +
 			` http://localhost:${ app.get('port') }/` + '\n' +
 			' ' + '\n' +
 			` Listening for requests in ${ process.env.NODE_ENV } mode.` + '\n' +

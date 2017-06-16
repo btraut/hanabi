@@ -44,20 +44,20 @@ export default class HomePage extends ComponentBase<HomePageProps, HomePageState
 				
 				<section className="HomePage-BioSection">
 					<h3 className="HomePage-SectionHeader" data-aos="zoom-in">Bride and Groom</h3>
-					<h4 className="HomePage-SectionSubheader" data-aos="zoom-in">Introducing the lucky couple…</h4>
+					<h4 className="HomePage-SectionSubheader" data-aos="zoom-in">Introducing the happy couple…</h4>
 					<div className="HomePage-Bios">
 						<div className="HomePage-Bio" data-aos="fade-up" data-aos-offset="200">
 							<div className="HomePage-BioInner">
 								<img className="HomePage-Instax" src="/images/instax-mary.png" />
 								<p className="HomePage-BioTitle">Mary Do</p>
-								<p className="HomePage-BioText">The better half of the relationship; Mary is a firecracker whose love of all things furry knows no end. Although born in Vietnam, she finds as much identity in being a Michigander both from childhood and later becoming a proud Wolverine. Equal parts nerd, athlete, and socialite, Mary bakes a mean cookie and secretly aspires to become a champion rock climber and pool shark. Her level of confidence is only surpassed by her sarcasm, and both are just shy of mandating a safety label.</p>
+								<p className="HomePage-BioText">The better half of the relationship; Mary is a firecracker whose love of all things furry knows no end. Although born in Vietnam, she finds as much identity in being a Michigander both from childhood and later becoming a proud Wolverine. Equal parts nerd, athlete, and socialite, Mary bakes a mean cookie and secretly aspires to become a champion rock climber. Her level of confidence is only surpassed by her sarcasm, and both are just shy of mandating a safety label.</p>
 							</div>
 						</div>
 						<div className="HomePage-Bio" data-aos="fade-up" data-aos-offset="200">
 							<div className="HomePage-BioInner">
 								<img className="HomePage-Instax" src="/images/instax-brent.png" />
 								<p className="HomePage-BioTitle">Brent Traut</p>
-								<p className="HomePage-BioText">The strength, the support, the foundation; Brent is the reason we continually build and grow our relationship to what it is today and what it will be 10 years from now. He’s clueless with girls but when it comes to me, he knows exactly what to say. Born and raised in Minnesota, he still pronounces bagel “baggul” and has the sweet tooth of a five-year-old. He’s a go-getter who’ll try anything and excel at most, especially when a little friendly competition is involved.</p>
+								<p className="HomePage-BioText">The strength, the support, the foundation; Brent is the reason the relationship continues to build and grow to what it is today and what it will be 10 years from now. He’s clueless with girls but when it comes to Mary, he knows exactly what to say. Born and raised in Minnesota, he still pronounces bagel “baggul” and has the sweet tooth of a five-year-old. He’s a go-getter who’ll try anything and excel at most, especially when a little friendly competition is involved.</p>
 							</div>
 						</div>
 					</div>
