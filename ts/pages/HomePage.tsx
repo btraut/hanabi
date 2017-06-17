@@ -15,6 +15,7 @@ interface HomePageState {}
 export default class HomePage extends ComponentBase<HomePageProps, HomePageState> {
 	private _splashImage: ParallaxImage;
 	
+	private _container: HTMLElement;
 	private _splashSection: HTMLElement;
 	private _headerContainer: HTMLElement;
 	private _downArrow: HTMLElement;
@@ -25,7 +26,7 @@ export default class HomePage extends ComponentBase<HomePageProps, HomePageState
 	
 	public render(): JSX.Element | null {
 		return (
-			<div className="HomePage">
+			<div className="HomePage" ref={ (ele) => { this._container = ele; } }>
 				<section className="HomePage-SplashSection" ref={ (ele) => { this._splashSection = ele; } }>
 					<ParallaxImage width={ 2000 } height={ 1348 } offset={ -10 } className="HomePage-SplashImage" ref={ (ele) => { this._splashImage = ele; } } />
 					<div className="HomePage-HeaderContainer" ref={ (ele) => { this._headerContainer = ele; } }>
@@ -137,11 +138,8 @@ export default class HomePage extends ComponentBase<HomePageProps, HomePageState
 	}
 	
 	private _resizeSections() {
-		const viewportWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-		const viewportHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
-		
-		this._splashSection.style.width = viewportWidth + 'px';
-		this._splashSection.style.height = viewportHeight + 'px';
+		this._splashSection.style.width = document.body.clientWidth + 'px';
+		this._splashSection.style.height = document.documentElement.clientHeight + 'px';
 	}
 	
 	private _handleDownArrowClick = () => {

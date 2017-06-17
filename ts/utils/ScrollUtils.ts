@@ -27,6 +27,7 @@ export default class ScrollUtils {
 			scrollCount += Math.PI / (scrollDuration / (newTimestamp - oldTimestamp));
 			if (scrollCount >= Math.PI) {
 				window.scrollTo(x, y);
+				return;
 			}
 			
 			if ((window.scrollX === x || window.scrollX === scrollMaxX) && (window.scrollY === y || window.scrollY === scrollMaxY)) {
