@@ -175,9 +175,16 @@
 }
 
 .HomePage-CountdownTimerSection {
-	background: url('/images/mary-flowers.jpg') no-repeat;
-	background-size: cover;
-	background-position-y: 40%;
+	position: relative;
+	overflow: hidden;
+}
+
+.HomePage-CountdownTimerImage {
+	background-image: url('/images/mary-flowers.jpg');
+	background-repeat: no-repeat;
+	background-size: 100% 100%;
+	position: absolute;
+	z-index: 0;
 }
 
 .HomePage-CountdownTimerSectionInner {
@@ -186,6 +193,7 @@
 	align-items: center;
 	padding: 120px 0;
 	color: white;
+	z-index: 100;
 }
 
 .HomePage-CountdownTimerHeader {

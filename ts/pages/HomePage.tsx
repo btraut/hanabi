@@ -3,22 +3,19 @@ import { ComponentBase } from 'resub';
 import * as aos from 'aos';
 
 import CountdownTimer from '../components/CountdownTimer';
+import ParallaxImage from '../components/ParallaxImage';
 import ScrollUtils from '../utils/ScrollUtils';
 import WeddingMap from '../components/WeddingMap';
 
 import * as ampersandSVG from '../../public/images/ampersand.svg';
 
-const SPLASH_IAMGE_EXTRA_HEIGHT = 200;
-const SPLASH_IMAGE_WIDTH = 2000;
-const SPLASH_IMAGE_HEIGHT = 1348;
-const SPLASH_IMAGE_RATIO = SPLASH_IMAGE_WIDTH / SPLASH_IMAGE_HEIGHT;
-
 interface HomePageProps extends React.Props<HomePage> {}
 interface HomePageState {}
 
 export default class HomePage extends ComponentBase<HomePageProps, HomePageState> {
+	private _splashImage: ParallaxImage;
+	
 	private _splashSection: HTMLElement;
-	private _splashImage: HTMLElement;
 	private _headerContainer: HTMLElement;
 	private _downArrow: HTMLElement;
 	
@@ -30,6 +27,7 @@ export default class HomePage extends ComponentBase<HomePageProps, HomePageState
 		return (
 			<div className="HomePage">
 				<section className="HomePage-SplashSection" ref={ (ele) => { this._splashSection = ele; } }>
+					<ParallaxImage width={ 2000 } height={ 1348 } offset={ -10 } className="HomePage-SplashImage" ref={ (ele) => { this._splashImage = ele; } } />
 					<div className="HomePage-HeaderContainer" ref={ (ele) => { this._headerContainer = ele; } }>
 						<h2 className="HomePage-SplashDate" data-aos="fade-up" data-aos-duration="1000">May 19, 2018</h2>
 						<h1 className="HomePage-Header" data-aos="fade-up" data-aos-duration="1000">
@@ -39,7 +37,6 @@ export default class HomePage extends ComponentBase<HomePageProps, HomePageState
 						</h1>
 					</div>
 					<button className="HomePage-DownArrow" ref={ (ele) => { this._downArrow = ele; } } onClick={ this._handleDownArrowClick } />
-					<div className="HomePage-SplashImage" ref={ (ele) => { this._splashImage = ele; } } />
 				</section>
 				
 				<section className="HomePage-BioSection">
@@ -64,9 +61,10 @@ export default class HomePage extends ComponentBase<HomePageProps, HomePageState
 				</section>
 				
 				<section className="HomePage-CountdownTimerSection">
+					<ParallaxImage width={ 1920 } height={ 1280 } offset={ -50 } className="HomePage-CountdownTimerImage" />
 					<div className="HomePage-CountdownTimerSectionInner" data-aos="fade-in" data-aos-offset="200">
-					<p className="HomePage-CountdownTimerHeader">We’ll say yes in…</p>
-					<CountdownTimer endDate={ new Date('May 19, 2018 16:00:00') } />
+						<p className="HomePage-CountdownTimerHeader">We’ll say yes in…</p>
+						<CountdownTimer endDate={ new Date('May 19, 2018 16:00:00') } />
 					</div>
 				</section>
 				
@@ -84,6 +82,8 @@ export default class HomePage extends ComponentBase<HomePageProps, HomePageState
 	protected _componentDidRender() {
 		this._resizeSections();
 		this._handleScroll();
+		
+		this._splashImage.update();
 	}
 	
 	public componentDidMount() {
@@ -110,7 +110,6 @@ export default class HomePage extends ComponentBase<HomePageProps, HomePageState
 		const viewportHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
 		const scrollProgress = Math.min(document.body.scrollTop, viewportHeight) / viewportHeight;
 		
-		this._splashImage.style.transform = `translateY(${ (SPLASH_IAMGE_EXTRA_HEIGHT * scrollProgress) - 10 }px)`;
 		this._headerContainer.style.transform = `translate(-50%, calc(-50% - ${ (200 * scrollProgress) }px))`;
 		this._downArrow.style.opacity = String(Math.max(1 - 2.5 * scrollProgress, 0));
 	}
@@ -125,19 +124,6 @@ export default class HomePage extends ComponentBase<HomePageProps, HomePageState
 		
 		this._splashSection.style.width = viewportWidth + 'px';
 		this._splashSection.style.height = viewportHeight + 'px';
-		
-		// Update the splash image.
-		let splashImageWidth = (viewportHeight + SPLASH_IAMGE_EXTRA_HEIGHT) * SPLASH_IMAGE_RATIO;
-		let splashImageHeight = viewportHeight + SPLASH_IAMGE_EXTRA_HEIGHT;
-		
-		if ((viewportHeight + SPLASH_IAMGE_EXTRA_HEIGHT) * SPLASH_IMAGE_RATIO < viewportWidth) {
-			splashImageWidth = viewportWidth;
-			splashImageHeight = viewportWidth / SPLASH_IMAGE_RATIO;
-		}
-		
-		this._splashImage.style.width = splashImageWidth + 'px';
-		this._splashImage.style.height = splashImageHeight + 'px';
-		this._splashImage.style.left = ((splashImageWidth - viewportWidth) / -2) + 'px';
 	}
 	
 	private _handleDownArrowClick = () => {
