@@ -1,5 +1,7 @@
 .HomePage {
 	.PlayfairDisplay();
+	background-image: url('/images/bg-white.png');
+	background-size: 400px 400px;
 }
 
 .HomePage-SplashSection {
@@ -107,16 +109,15 @@
 
 .HomePage-SectionSubheader {
 	margin: -36px 0 40px;
-	.Hind();
-	font-weight: 400;
+	.HindLight();
 	text-align: center;
 	font-size: 18px;
+	text-transform: uppercase;
+	letter-spacing: 2px;
 }
 
 .HomePage-BioSection {
 	padding: 40px 20px 60px;
-	background-image: url('/images/bg-white.png');
-	background-size: 400px 400px;
 }
 
 .HomePage-Bios {
@@ -202,6 +203,43 @@
 }
 
 .HomePage-MapSection {
+	padding: 40px 0 0;
+}
+
+.HomePage-Venue {
+	display: flex;
+	align-items: stretch;
+	position: relative;
+}
+
+.HomePage-VenueDetails {
+	flex: 0 0 auto;
+	width: 360px;
+	padding: 40px 20px;
+	background-color: rgba(255, 255, 255, 0.6);
+	text-align: center;
+}
+
+.HomePage-VenueDetailsTitle {
+	font-size: 28px;
+}
+
+.HomePage-VenueDetailsDate {
+	margin: 0;
+	font-size: 18px;
+}
+
+.HomePage-VenueDetailsTime {
+	font-size: 18px;
+	font-weight: bold;
+}
+
+.HomePage-VenueDetailsAddress {
+	.Hind();
+}
+
+.HomePage-MapContainer {
+	flex: 1 1 0;
 	height: 500px;
 }
 
@@ -259,5 +297,18 @@
 		&:last-child {
 			margin: 0;
 		}
+	}
+	
+	.HomePage-Venue {
+		flex-direction: column;
+		align-items: stretch;
+	}
+	
+	.HomePage-VenueDetails {
+		width: auto;
+	}
+	
+	.HomePage-MapContainer {
+		flex: 0 0 auto;
 	}
 }

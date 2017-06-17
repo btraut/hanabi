@@ -69,7 +69,25 @@ export default class HomePage extends ComponentBase<HomePageProps, HomePageState
 				</section>
 				
 				<section className="HomePage-MapSection">
-					<WeddingMap />
+					<h3 className="HomePage-SectionHeader" data-aos="zoom-in">Event Details</h3>
+					<h4 className="HomePage-SectionSubheader" data-aos="zoom-in">When & Where</h4>
+					<div className="HomePage-Venue">
+						<div className="HomePage-VenueDetails">
+							<div className="HomePage-VenueDetailsInner" data-aos="fade-right">
+								<p className="HomePage-VenueDetailsTitle">Nestldown</p>
+								<p className="HomePage-VenueDetailsDate">May 19, 2018</p>
+								<p className="HomePage-VenueDetailsTime">3:30pm</p>
+								<p className="HomePage-VenueDetailsAddress">
+									22420 Old Santa Cruz Highway <br />
+									Los Gatos, CA 95030 <br />
+									<a href="http://nestldown.com/Nestldown-map-&-directions.pdf" target="_blank">Directions</a>
+								</p>
+							</div>
+						</div>
+						<div className="HomePage-MapContainer">
+							<WeddingMap />
+						</div>
+					</div>
 				</section>
 				
 				<footer className="HomePage-Footer">
