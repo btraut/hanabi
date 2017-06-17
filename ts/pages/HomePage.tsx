@@ -47,7 +47,7 @@ export default class HomePage extends ComponentBase<HomePageProps, HomePageState
 							<div className="HomePage-BioInner">
 								<img className="HomePage-Instax" src="/images/instax-mary.png" />
 								<p className="HomePage-BioTitle">Mary Do</p>
-								<p className="HomePage-BioText">The better half of the relationship; Mary is a firecracker whose love of all things furry knows no end. Although born in Vietnam, she finds as much identity in being a Michigander both from childhood and later becoming a proud Wolverine. Equal parts nerd, athlete, and socialite, Mary bakes a mean cookie and secretly aspires to become a champion rock climber. Her level of confidence is only surpassed by her sarcasm, and both are just shy of mandating a safety label.</p>
+								<p className="HomePage-BioText">The better half of the relationship; Mary is a firecracker whose love of all things furry knows no end. Although born in Vietnam, she finds as much identity in being a Michigander from childhood through her time as a proud Wolverine. Equal parts nerd, athlete, and socialite, Mary bakes a mean cookie and secretly aspires to become a champion rock climber. Her level of confidence is only surpassed by her sarcasm, and both are just shy of mandating a safety label.</p>
 							</div>
 						</div>
 						<div className="HomePage-Bio" data-aos="fade-up" data-aos-offset="200">
