@@ -129,8 +129,8 @@ export default class HomePage extends ComponentBase<HomePageProps, HomePageState
 		const viewportHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
 		const scrollProgress = Math.min(document.body.scrollTop, viewportHeight) / viewportHeight;
 		
-		this._headerContainer.style.transform = `translate(-50%, calc(-50% - ${ (200 * scrollProgress) }px))`;
-		this._downArrow.style.opacity = String(Math.max(1 - 2.5 * scrollProgress, 0));
+		this._headerContainer.style.transform = `translate(-50%, calc(-50% - ${ Math.floor(200 * scrollProgress) }px))`;
+		this._downArrow.style.opacity = String(Math.floor(Math.max(1 - 2.5 * scrollProgress, 0) * 100) / 100);
 	}
 	
 	private _handleResize = () => {

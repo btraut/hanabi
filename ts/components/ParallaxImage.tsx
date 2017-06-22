@@ -14,6 +14,9 @@ interface ParallaxImageState {}
 export default class ParallaxImage extends ComponentBase<ParallaxImageProps, ParallaxImageState> {
 	private _image: HTMLElement;
 	
+	private _newScrollTop = 0;
+	private _waitingForNextAnimationFrame = false;
+	
 	public render(): JSX.Element | null {
 		const classes = ['ParallaxImage', ...this.props.className.split(' ')];
 		return <div className={ classes.join(' ') } ref={ (ele) => { this._image = ele; } } />;
@@ -44,6 +47,15 @@ export default class ParallaxImage extends ComponentBase<ParallaxImageProps, Par
 	}
 	
 	private _handleScroll = () => {
+		this._newScrollTop = document.body.scrollTop;
+		
+		if (!this._waitingForNextAnimationFrame) {
+			this._waitingForNextAnimationFrame = true;
+			window.requestAnimationFrame(this._updateParallax);
+		}
+	}
+	
+	private _updateParallax = () => {
 		if (!this._image.parentElement) {
 			return;
 		}
@@ -55,7 +67,7 @@ export default class ParallaxImage extends ComponentBase<ParallaxImageProps, Par
 		const scrollTopStartPoint = parentTop - viewportHeight;
 		const scrollTopEndPoint = parentTop + this._image.parentElement.clientHeight;
 		
-		const scrollTop = document.body.scrollTop;
+		const scrollTop = this._newScrollTop;
 		let scrollProgress = 0;
 		
 		if (scrollTop >= scrollTopStartPoint && scrollTop <= scrollTopEndPoint) {
@@ -65,7 +77,9 @@ export default class ParallaxImage extends ComponentBase<ParallaxImageProps, Par
 		const travel = this.props.travel || 200;
 		const offset = this.props.offset || 0;
 		
-		this._image.style.transform = `translateY(${ (travel * scrollProgress) + (offset - travel) }px)`;
+		this._image.style.transform = `translate3d(0, ${ (travel * scrollProgress) + (offset - travel) }px, 0)`;
+		
+		this._waitingForNextAnimationFrame = false;
 	}
 	
 	private _handleResize = () => {
@@ -92,8 +106,8 @@ export default class ParallaxImage extends ComponentBase<ParallaxImageProps, Par
 			splashImageHeight = parentWidth / imageRatio;
 		}
 		
-		this._image.style.width = splashImageWidth + 'px';
-		this._image.style.height = splashImageHeight + 'px';
-		this._image.style.left = ((splashImageWidth - parentWidth) / -2) + 'px';
+		this._image.style.width = Math.floor(splashImageWidth) + 'px';
+		this._image.style.height = Math.floor(splashImageHeight) + 'px';
+		this._image.style.left = Math.floor((splashImageWidth - parentWidth) / -2) + 'px';
 	}
 }
