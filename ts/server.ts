@@ -9,9 +9,11 @@ import * as logger from 'morgan';
 import * as methodOverride from 'method-override';
 import * as moment from 'moment';
 import * as path from 'path';
+import * as ReactDOMServer from 'react-dom/server';
 import * as url from 'url';
 
 import Logger from './utils/Logger';
+import MBRouter from './stores/MBRouter';
 
 // Define globals from webpack.
 declare const DOMAIN_BASE: string;
@@ -70,7 +72,6 @@ declare const SERVER_VIEWS_PATH: string;
 		app.use(cookieParser());
 		app.use((_req, _res, next) => {
 			app.locals.moment = moment;
-			app.locals.showIntercom = (process.env.NODE_ENV !== 'development');
 			app.locals.env = process.env;
 			app.locals.clientScriptPath = webpackAssetsData.client.js;
 			app.locals.clientStylesPath = webpackAssetsData.client.css;
@@ -80,8 +81,16 @@ declare const SERVER_VIEWS_PATH: string;
 		app.use(express.static(path.resolve(__dirname, PUBLIC_ASSETS_PATH), { maxAge: 31557600000 }));
 		
 		// Render the client.
-		app.get('*', (_req: express.Request, res: express.Response) => {
-			return res.render('app');
+		app.get('*', (req: express.Request, res: express.Response) => {
+			MBRouter.navigateToPath(req.path, null, true);
+			
+			const content = MBRouter.getContent();
+			const markup = ReactDOMServer.renderToStaticMarkup(content!);
+			
+			return res.render('app', {
+				content: markup,
+				title: MBRouter.getPageTitle()
+			});
 		});
 		
 		// Start Express server.

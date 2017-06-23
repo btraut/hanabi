@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { ComponentBase } from 'resub';
-import * as aos from 'aos';
 
 import CountdownTimer from '../components/CountdownTimer';
 import ParallaxImage from '../components/ParallaxImage';
@@ -110,6 +109,12 @@ export default class HomePage extends ComponentBase<HomePageProps, HomePageState
 		
 		window.addEventListener('scroll', this._handleScroll);
 		window.addEventListener('resize', this._handleResize);
+		
+		this._initializeAOS();
+	}
+	
+	private async _initializeAOS() {
+		const aos = await import('aos');
 		
 		aos.init({
 			duration: 600,

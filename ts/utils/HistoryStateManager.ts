@@ -1,4 +1,5 @@
-import Router, { SUBSCRIPTION_KEY_CONTENT } from '../stores/Router';
+import MBRouter from '../stores/MBRouter';
+import { SUBSCRIPTION_KEY_CONTENT } from '../stores/Router';
 
 class HistoryStateManager {
 	private _historyStatesEnabled = true;
@@ -7,13 +8,13 @@ class HistoryStateManager {
 	public subscribe() {
 		window.addEventListener('popstate', this._handlePopState);
 		
-		this._routerSubscriptionToken = Router.subscribe(this._createHistoryState, SUBSCRIPTION_KEY_CONTENT);
+		this._routerSubscriptionToken = MBRouter.subscribe(this._createHistoryState, SUBSCRIPTION_KEY_CONTENT);
 	}
 	
 	public unsubscribe() {
 		window.removeEventListener('popstate', this._handlePopState);
 		
-		Router.unsubscribe(this._routerSubscriptionToken);
+		MBRouter.unsubscribe(this._routerSubscriptionToken);
 		this._routerSubscriptionToken = null;
 	}
 	
@@ -24,7 +25,7 @@ class HistoryStateManager {
 		this._historyStatesEnabled = false;
 		
 		// Tell the router to navigate to the page based on the new url.
-		await Router.navigateToPath(window.location.pathname + window.location.search);
+		await MBRouter.navigateToPath(window.location.pathname + window.location.search);
 		
 		// Re-enable history states.
 		this._historyStatesEnabled = true;
@@ -35,8 +36,8 @@ class HistoryStateManager {
 			return;
 		}
 		
-		const newUrl = Router.getPath();
-		const newTitle = Router.getPageTitle();
+		const newUrl = MBRouter.getPath();
+		const newTitle = MBRouter.getPageTitle();
 		
 		if (newUrl === window.location.href) {
 			// The URL didn't change at all. Check if the title did.
@@ -46,7 +47,7 @@ class HistoryStateManager {
 			}
 		} else {
 			// Update the URL.
-			if (Router.getReplaceHistoryState()) {
+			if (MBRouter.getReplaceHistoryState()) {
 				history.replaceState(null, newTitle, newUrl);
 			} else {
 				history.pushState(null, newTitle, newUrl);

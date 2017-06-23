@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { ComponentBase } from 'resub';
 
-import Router from '../stores/Router';
+import MBRouter from '../stores/MBRouter';
 
 interface AppProps extends React.Props<App> {}
 interface AppState {
@@ -11,7 +11,7 @@ interface AppState {
 export default class App extends ComponentBase<AppProps, AppState> {
 	protected _buildState(_props: AppProps, _initialBuild: boolean): Partial<AppState> {
 		return {
-			content: Router.getContent()
+			content: MBRouter.getContent()
 		};
 	}
 	

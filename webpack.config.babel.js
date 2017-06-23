@@ -194,7 +194,8 @@ const serverConfig = {
             DOMAIN_BASE: JSON.stringify(process.env.DOMAIN_BASE),
             ENV_PATH: JSON.stringify('../../.env'),
             PUBLIC_ASSETS_PATH: JSON.stringify('../client'),
-            SERVER_VIEWS_PATH: JSON.stringify('views')
+            SERVER_VIEWS_PATH: JSON.stringify('views'),
+            GOOGLE_MAPS_API_KEY: JSON.stringify(process.env.GOOGLE_MAPS_API_KEY)
         })
     ],
     node: {

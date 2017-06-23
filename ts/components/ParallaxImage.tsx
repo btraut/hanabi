@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { ComponentBase } from 'resub';
-import * as documentOffset from 'document-offset';
 
 interface ParallaxImageProps extends React.Props<ParallaxImage> {
 	width: number;
@@ -60,7 +59,7 @@ export default class ParallaxImage extends ComponentBase<ParallaxImageProps, Par
 			return;
 		}
 		
-		const parentTop = documentOffset(this._image.parentElement).top as number;
+		const parentTop = this._getDocumentOffset(this._image.parentElement).top as number;
 		
 		const viewportHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
 		
@@ -109,5 +108,23 @@ export default class ParallaxImage extends ComponentBase<ParallaxImageProps, Par
 		this._image.style.width = Math.floor(splashImageWidth) + 'px';
 		this._image.style.height = Math.floor(splashImageHeight) + 'px';
 		this._image.style.left = Math.floor((splashImageWidth - parentWidth) / -2) + 'px';
+	}
+	
+	private _getDocumentOffset(elem: HTMLElement) {
+		const box = elem.getBoundingClientRect();
+
+		const body = document.body;
+		const docEl = document.documentElement;
+
+		const scrollTop = window.pageYOffset || docEl.scrollTop || body.scrollTop;
+		const scrollLeft = window.pageXOffset || docEl.scrollLeft || body.scrollLeft;
+
+		const clientTop = docEl.clientTop || body.clientTop || 0;
+		const clientLeft = docEl.clientLeft || body.clientLeft || 0;
+
+		const top  = box.top +  scrollTop - clientTop;
+		const left = box.left + scrollLeft - clientLeft;
+
+		return { top: Math.round(top), left: Math.round(left) };
 	}
 }

@@ -35,7 +35,7 @@ interface Route {
 }
 
 @AutoSubscriptionUtils.AutoSubscribeStore
-class Router extends StoreBase {
+export default class Router extends StoreBase {
 	private _routes: Route[] = [];
 	private _navigatingToPath = false;
 	
@@ -179,11 +179,6 @@ class Router extends StoreBase {
 			
 			// Scroll to the top of the page.
 			ScrollUtils.scrollTo(0, 0);
-			
-			// Notify Intercom.
-			if ((window as any).Intercom) {
-				(window as any).Intercom('update');
-			}
 		} finally {
 			// Make sure we set that we're done navigating so that
 			// errors in route handling don't take down the whole app.
@@ -342,6 +337,3 @@ class Router extends StoreBase {
 		};
 	});
 }
-
-const instance = new Router();
-export default instance;
