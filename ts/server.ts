@@ -81,8 +81,8 @@ declare const SERVER_VIEWS_PATH: string;
 		app.use(express.static(path.resolve(__dirname, PUBLIC_ASSETS_PATH), { maxAge: 31557600000 }));
 		
 		// Render the client.
-		app.get('*', (req: express.Request, res: express.Response) => {
-			MBRouter.navigateToPath(req.path, null, true);
+		app.get('*', async (req: express.Request, res: express.Response) => {
+			await MBRouter.navigateToPath(req.path, null, true);
 			
 			const content = MBRouter.getContent();
 			const markup = ReactDOMServer.renderToStaticMarkup(content!);
