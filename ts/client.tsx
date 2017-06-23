@@ -10,6 +10,10 @@ import MBRouter from './stores/MBRouter';
 // ExtractTextPlugin will strip them from the JS output.
 import './../public/less/main.less';
 
+// Enable styles that are based on JS.
+document.body.classList.add('js');
+document.body.classList.remove('no-js');
+
 // Enable the history state manager.
 HistoryStateManager.subscribe();
 
