@@ -1,0 +1,27 @@
+body.PopupShown {
+	overflow: hidden;
+}
+
+.PopupContainer {
+	position: fixed;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	background: rgba(0, 0, 0, 0.4);
+	z-index: 1000;
+}
+
+.PopupContainer-content {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	max-width: 90%;
+	max-height: 80%;
+	border-radius: 4px;
+	background-color: #eee;
+	color: #444;
+	overflow: auto;
+	box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+}

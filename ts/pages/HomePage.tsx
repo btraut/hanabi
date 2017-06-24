@@ -2,6 +2,7 @@ import * as React from 'react';
 import { ComponentBase } from 'resub';
 
 import CountdownTimer from '../components/CountdownTimer';
+import Lightbox, { Album } from '../components/Lightbox';
 import ParallaxImage from '../components/ParallaxImage';
 import ScrollUtils from '../utils/ScrollUtils';
 import WeddingMap from '../components/WeddingMap';
@@ -9,7 +10,67 @@ import WeddingMap from '../components/WeddingMap';
 import * as ampersandSVG from '../../public/images/ampersand.svg';
 
 interface HomePageProps extends React.Props<HomePage> {}
-interface HomePageState {}
+interface HomePageState {
+	showLightbox: number | null;
+}
+
+const album: Album = {
+	id: '',
+	name: 'Nestldown',
+	photos: [{
+		id: '1',
+		title: '',
+		thumb: {
+			url: '/images/nestldown-1.jpg',
+			width: 1080,
+			height: 1080
+		},
+		large: {
+			url: '/images/nestldown-1.jpg',
+			width: 1080,
+			height: 1080
+		}
+	}, {
+		id: '2',
+		title: '',
+		thumb: {
+			url: '/images/nestldown-2.jpg',
+			width: 1080,
+			height: 809
+		},
+		large: {
+			url: '/images/nestldown-2.jpg',
+			width: 1080,
+			height: 809
+		}
+	}, {
+		id: '3',
+		title: '',
+		thumb: {
+			url: '/images/nestldown-3.jpg',
+			width: 800,
+			height: 534
+		},
+		large: {
+			url: '/images/nestldown-3.jpg',
+			width: 800,
+			height: 534
+		}
+	}, {
+		id: '4',
+		title: '',
+		thumb: {
+			url: '/images/nestldown-4.jpg',
+			width: 1080,
+			height: 718
+		},
+		large: {
+			url: '/images/nestldown-4.jpg',
+			width: 1080,
+			height: 718
+		}
+	}]
+};
 
 export default class HomePage extends ComponentBase<HomePageProps, HomePageState> {
 	private _splashImage: ParallaxImage;
@@ -19,11 +80,30 @@ export default class HomePage extends ComponentBase<HomePageProps, HomePageState
 	private _headerContainer: HTMLElement;
 	private _downArrow: HTMLElement;
 	
-	public static getScripts() {
-		return ['/js/home.js'];
+	protected _buildState(props: HomePageProps, initialBuild: boolean): Partial<HomePageState> {
+		const newState: Partial<HomePageState> = {};
+		
+		if (initialBuild || props !== this.props) {
+			newState.showLightbox = null;
+		}
+		
+		return newState;
 	}
 	
 	public render(): JSX.Element | null {
+		let lightbox: JSX.Element | null = null;
+		if (this.state.showLightbox !== null) {
+			lightbox = <Lightbox album={ album } defaultDisplayedPhotoIndex={ this.state.showLightbox } onClose={ () => { this.setState({ showLightbox: null }); } } />;
+		}
+		
+		const venuePhotosListItems = album.photos.map((photo, index) => {
+			return (
+				<li className="HomePage-VenuePhotoListItem">
+					<div className="HomePage-VenuePhoto" style={{ backgroundImage: `url('${ photo.thumb.url }')` }} data-index={ index } onClick={ this._handleVenuePhotoClick } />
+				</li>
+			);
+		});
+		
 		return (
 			<div className="HomePage" ref={ (ele) => { this._container = ele; } }>
 				<section className="HomePage-SplashSection" ref={ (ele) => { this._splashSection = ele; } }>
@@ -82,6 +162,9 @@ export default class HomePage extends ComponentBase<HomePageProps, HomePageState
 									Los Gatos, CA 95030 <br />
 									<a href="http://nestldown.com/Nestldown-map-&-directions.pdf" target="_blank">Directions</a>
 								</p>
+								<ul className="HomePage-VenuePhotoList">
+									{ venuePhotosListItems }
+								</ul>
 							</div>
 						</div>
 						<div className="HomePage-MapContainer">
@@ -93,6 +176,8 @@ export default class HomePage extends ComponentBase<HomePageProps, HomePageState
 				<footer className="HomePage-Footer">
 					<p className="HomePage-FooterHelp">Made in California with help from 🐶🐶🐱.</p>
 				</footer>
+				
+				{ lightbox }
 			</div>
 		);
 	}
@@ -150,5 +235,10 @@ export default class HomePage extends ComponentBase<HomePageProps, HomePageState
 	private _handleDownArrowClick = () => {
 		const viewportHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
 		ScrollUtils.scrollTo(0, viewportHeight, 1000);
+	}
+	
+	private _handleVenuePhotoClick = (event: React.MouseEvent<HTMLElement>) => {
+		const index = parseInt(event.currentTarget.dataset.index!, 10);
+		this.setState({ showLightbox: index });
 	}
 }

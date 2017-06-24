@@ -3,6 +3,7 @@ import { ComponentBase } from 'resub';
 
 interface CountdownTimerProps extends React.Props<CountdownTimer> {
 	endDate: Date;
+	className?: string;
 }
 interface CountdownTimerState {
 	remainingSeconds: number;
@@ -27,8 +28,13 @@ export default class CountdownTimer extends ComponentBase<CountdownTimerProps, C
 		const minutes = Math.floor((this.state.remainingSeconds % (60 * 60)) / 60);
 		const seconds = this.state.remainingSeconds % 60;
 		
+		let classes = ['CountdownTimer'];
+		if (this.props.className) {
+			classes = [...classes, ...this.props.className.split(' ')];
+		}
+		
 		return (
-			<div className="CountdownTimer">
+			<div className={ classes.join(' ') }>
 				<div className="CountdownTimer-Section">
 					<div className="CountdownTimer-Number">{ days }</div>
 					<div className="CountdownTimer-Label">{ days === 1 ? 'Day' : 'Days' }</div>

@@ -17,7 +17,11 @@ export default class ParallaxImage extends ComponentBase<ParallaxImageProps, Par
 	private _waitingForNextAnimationFrame = false;
 	
 	public render(): JSX.Element | null {
-		const classes = ['ParallaxImage', ...this.props.className.split(' ')];
+		let classes = ['ParallaxImage'];
+		if (this.props.className) {
+			classes = [...classes, ...this.props.className.split(' ')];
+		}
+		
 		return <div className={ classes.join(' ') } ref={ (ele) => { this._image = ele; } } />;
 	}
 	

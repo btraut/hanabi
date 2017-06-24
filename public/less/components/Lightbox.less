@@ -1,0 +1,150 @@
+.Lightbox {
+	position: fixed;
+	top: 0;
+	bottom: 0;
+	right: 0;
+	left: 0;
+	background-color: black;
+	opacity: 1;
+	transition: opacity 200ms ease-in-out;
+	display: flex;
+	z-index: 1000;
+}
+
+.Lightbox-Hidden {
+	opacity: 0;
+}
+
+.Lightbox-Photos {
+	flex: 1 1 0;
+	align-self: stretch;
+}
+
+.Lightbox-Photo {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: 100%;
+	height: 100%;
+	background-size: contain;
+	background-position: center center;
+	background-repeat: no-repeat;
+	opacity: 1;
+	transform: scale(1, 1);
+}
+
+.Lightbox-Photo-Animating {
+	transition: left 300ms ease-in-out, transform 300ms ease-in-out, opacity 300ms ease-in-out;
+}
+
+.Lightbox-Photo-OffScreen {
+	opacity: 0.5;
+}
+
+.Lightbox-Photo-OffScreenLeft {
+	transform: translateX(-100vw) scale(0.8, 0.8);
+}
+
+.Lightbox-Photo-OffScreenRight {
+	transform: translateX(100vw) scale(0.8, 0.8);
+}
+
+.Lightbox-Overlay {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	opacity: 1;
+}
+
+.Lightbox-Overlay-Hidden {
+	opacity: 0;
+	transition: opacity 800ms ease-in-out;
+}
+
+.Lightbox-Control {
+	.ButtonStripped();
+	
+	opacity: 0.8;
+	transition: opacity 100ms ease-in-out;
+	
+	svg {
+		transition: transform 100ms ease-in-out;
+	}
+	
+	&:hover,
+	&:focus {
+		opacity: 1;
+		
+		svg {
+			transform: scale(1.1, 1.1);
+		}
+	}
+}
+
+.Lightbox-Control-Close {
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 80px;
+	height: 80px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	
+	svg {
+		width: 20px;
+		height: 20px;
+	}
+}
+
+.Lightbox-Control-Previous {
+	position: absolute;
+	top: 80px;
+	bottom: 80px;
+	left: 0;
+	width: 10%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	
+	svg {
+		width: 50px;
+		height: 50px;
+	}
+}
+
+.Lightbox-Control-Next {
+	position: absolute;
+	top: 80px;
+	bottom: 80px;
+	right: 0;
+	width: 10%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	
+	svg {
+		width: 50px;
+		height: 50px;
+	}
+	
+	// &:hover,
+	// &:focus {
+	// 	background-size: 55px 55px;
+	// }
+}
+
+.Lightbox-Title {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(0, 0, 0, 0.4);
+	margin: 0;
+	padding: 20px;
+	.HindLight();
+	font-size: 32px;
+	color: white;
+}
