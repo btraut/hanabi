@@ -60,6 +60,7 @@
     "postcss-loader": "^1.2.2",
     "pug": "^2.0.0-beta6",
     "raw-loader": "^0.5.1",
+    "react-player": "^0.18.0",
     "resub": "^0.0.16",
     "route-parser": "^0.0.5",
     "style-loader": "^0.13.1",

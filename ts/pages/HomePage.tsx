@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { ComponentBase } from 'resub';
+import * as ReactPlayer from 'react-player';
 
 import CountdownTimer from '../components/CountdownTimer';
 import Lightbox, { Album } from '../components/Lightbox';
@@ -8,6 +9,7 @@ import ScrollUtils from '../utils/ScrollUtils';
 import WeddingMap from '../components/WeddingMap';
 
 import * as ampersandSVG from '../../public/images/ampersand.svg';
+import * as emailSVG from '../../public/images/email.svg';
 
 interface HomePageProps extends React.Props<HomePage> {}
 interface HomePageState {
@@ -146,6 +148,27 @@ export default class HomePage extends ComponentBase<HomePageProps, HomePageState
 						<p className="HomePage-CountdownTimerHeader">We’ll say yes in…</p>
 						<CountdownTimer endDate={ new Date('May 19, 2018 16:00:00') } />
 					</div>
+				</section>
+				
+				<section className="HomePage-EngagementSection">
+					<h3 className="HomePage-SectionHeader" data-aos="zoom-in">The Engagement</h3>
+					<h4 className="HomePage-SectionSubheader" data-aos="zoom-in">High atop Half Dome</h4>
+					<div className="HomePage-EngagementVideo">
+						<ReactPlayer url="https://vimeo.com/192174619" />
+					</div>
+				</section>
+				
+				<section className="HomePage-ContactUsSection">
+					<h3 className="HomePage-SectionHeader" data-aos="fade-left">Contact Us</h3>
+					<h4 className="HomePage-SectionSubheader" data-aos="fade-left">Reach out</h4>
+					<a className="HomePage-ContactUsButton" href="mailto:brent@traut.com,mary.do@me.com?subject=Whasssup!??!?" data-aos="fade-right">
+						<i dangerouslySetInnerHTML={{ __html: emailSVG }} />
+						<span>Email</span>
+					</a>
+					<p className="HomePage-PhoneNumbers" data-aos="fade-left">
+						Mary: 248-520-0222<br />
+						Brent: 320-223-0017
+					</p>
 				</section>
 				
 				<section className="HomePage-MapSection">
