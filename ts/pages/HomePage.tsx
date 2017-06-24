@@ -82,6 +82,9 @@ export default class HomePage extends ComponentBase<HomePageProps, HomePageState
 	private _headerContainer: HTMLElement;
 	private _downArrow: HTMLElement;
 	
+	private _newScrollTop = 0;
+	private _waitingForNextAnimationFrame = false;
+	
 	protected _buildState(props: HomePageProps, initialBuild: boolean): Partial<HomePageState> {
 		const newState: Partial<HomePageState> = {};
 		
@@ -239,11 +242,22 @@ export default class HomePage extends ComponentBase<HomePageProps, HomePageState
 	}
 	
 	private _handleScroll = () => {
+		this._newScrollTop = document.body.scrollTop;
+		
+		if (!this._waitingForNextAnimationFrame) {
+			this._waitingForNextAnimationFrame = true;
+			window.requestAnimationFrame(this._updateScrollContent);
+		}
+	}
+	
+	private _updateScrollContent = () => {
 		const viewportHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
 		const scrollProgress = Math.min(document.body.scrollTop, viewportHeight) / viewportHeight;
 		
 		this._headerContainer.style.transform = `translate(-50%, calc(-50% - ${ Math.floor(200 * scrollProgress) }px))`;
 		this._downArrow.style.opacity = String(Math.floor(Math.max(1 - 2.5 * scrollProgress, 0) * 100) / 100);
+		
+		this._waitingForNextAnimationFrame = false;
 	}
 	
 	private _handleResize = () => {
