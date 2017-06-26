@@ -3,76 +3,22 @@ import { ComponentBase } from 'resub';
 import * as ReactPlayer from 'react-player';
 
 import CountdownTimer from '../components/CountdownTimer';
-import Lightbox, { Album } from '../components/Lightbox';
+import Lightbox from '../components/Lightbox';
 import ParallaxImage from '../components/ParallaxImage';
 import ScrollUtils from '../utils/ScrollUtils';
 import WeddingMap from '../components/WeddingMap';
+
+import EngagementShootAlbum from '../config/EngagementShootAlbum';
+import NestldownAlbum from '../config/NestldownAlbum';
 
 import * as ampersandSVG from '../../public/images/ampersand.svg';
 import * as emailSVG from '../../public/images/email.svg';
 
 interface HomePageProps extends React.Props<HomePage> {}
 interface HomePageState {
-	showLightbox: number | null;
+	showVenueLightbox: number | null;
+	showEngagementLightbox: number | null;
 }
-
-const album: Album = {
-	id: '',
-	name: 'Nestldown',
-	photos: [{
-		id: '1',
-		title: '',
-		thumb: {
-			url: '/images/nestldown-1.jpg',
-			width: 1080,
-			height: 1080
-		},
-		large: {
-			url: '/images/nestldown-1.jpg',
-			width: 1080,
-			height: 1080
-		}
-	}, {
-		id: '4',
-		title: '',
-		thumb: {
-			url: '/images/nestldown-4.jpg',
-			width: 1080,
-			height: 718
-		},
-		large: {
-			url: '/images/nestldown-4.jpg',
-			width: 1080,
-			height: 718
-		}
-	}, {
-		id: '2',
-		title: '',
-		thumb: {
-			url: '/images/nestldown-2.jpg',
-			width: 1080,
-			height: 809
-		},
-		large: {
-			url: '/images/nestldown-2.jpg',
-			width: 1080,
-			height: 809
-		}
-	}, {
-		id: '3',
-		title: '',
-		thumb: {
-			url: '/images/nestldown-3.jpg',
-			width: 800,
-			height: 534
-		},
-		large: {
-			url: '/images/nestldown-3.jpg',
-			width: 800,
-			height: 534
-		}
-	}]
-};
 
 export default class HomePage extends ComponentBase<HomePageProps, HomePageState> {
 	private _splashImage: ParallaxImage;
@@ -89,7 +35,8 @@ export default class HomePage extends ComponentBase<HomePageProps, HomePageState
 		const newState: Partial<HomePageState> = {};
 		
 		if (initialBuild || props !== this.props) {
-			newState.showLightbox = null;
+			newState.showVenueLightbox = null;
+			newState.showEngagementLightbox = null;
 		}
 		
 		return newState;
@@ -97,14 +44,24 @@ export default class HomePage extends ComponentBase<HomePageProps, HomePageState
 	
 	public render(): JSX.Element | null {
 		let lightbox: JSX.Element | null = null;
-		if (this.state.showLightbox !== null) {
-			lightbox = <Lightbox album={ album } defaultDisplayedPhotoIndex={ this.state.showLightbox } onClose={ () => { this.setState({ showLightbox: null }); } } />;
+		if (this.state.showVenueLightbox !== null) {
+			lightbox = <Lightbox album={ NestldownAlbum } defaultDisplayedPhotoIndex={ this.state.showVenueLightbox } onClose={ () => { this.setState({ showVenueLightbox: null }); } } />;
+		} else if (this.state.showEngagementLightbox !== null) {
+			lightbox = <Lightbox album={ EngagementShootAlbum } defaultDisplayedPhotoIndex={ this.state.showEngagementLightbox } onClose={ () => { this.setState({ showEngagementLightbox: null }); } } />;
 		}
 		
-		const venuePhotosListItems = album.photos.map((photo, index) => {
+		const venuePhotosListItems = NestldownAlbum.photos.map((photo, index) => {
 			return (
 				<li className="HomePage-VenuePhotoListItem">
 					<div className="HomePage-VenuePhoto" style={{ backgroundImage: `url('${ photo.thumb.url }')` }} data-index={ index } onClick={ this._handleVenuePhotoClick } />
+				</li>
+			);
+		});
+		
+		const engagementPhotosListItems = EngagementShootAlbum.photos.map((photo, index) => {
+			return (
+				<li className="HomePage-EngagementPhotoListItem" data-aos="fade-down" data-aos-delay={ index * 100 }>
+					<img className="HomePage-EngagementPhoto" src={ photo.thumb.url } data-index={ index } onClick={ this._handleEngagementPhotoClick } />
 				</li>
 			);
 		});
@@ -145,12 +102,10 @@ export default class HomePage extends ComponentBase<HomePageProps, HomePageState
 					</div>
 				</section>
 				
-				<section className="HomePage-CountdownTimerSection">
-					<ParallaxImage width={ 1920 } height={ 1280 } offset={ -50 } className="HomePage-CountdownTimerImage" />
-					<div className="HomePage-CountdownTimerSectionInner" data-aos="fade-in" data-aos-offset="200">
-						<p className="HomePage-CountdownTimerHeader">We’ll say yes in…</p>
-						<CountdownTimer endDate={ new Date('May 19, 2018 16:00:00') } />
-					</div>
+				<section className="HomePage-EngagementPhotosSection">
+					<ul className="HomePage-EngagementPhotoList">
+						{ engagementPhotosListItems }
+					</ul>
 				</section>
 				
 				<section className="HomePage-EngagementSection">
@@ -161,17 +116,12 @@ export default class HomePage extends ComponentBase<HomePageProps, HomePageState
 					</div>
 				</section>
 				
-				<section className="HomePage-ContactUsSection">
-					<h3 className="HomePage-SectionHeader" data-aos="fade-left">Contact Us</h3>
-					<h4 className="HomePage-SectionSubheader" data-aos="fade-left">Reach out</h4>
-					<a className="HomePage-ContactUsButton" href="mailto:brent@traut.com,mary.do@me.com?subject=Whasssup!??!?" data-aos="fade-right">
-						<i dangerouslySetInnerHTML={{ __html: emailSVG }} />
-						<span>Email</span>
-					</a>
-					<p className="HomePage-PhoneNumbers" data-aos="fade-left">
-						Mary: 248-520-0222<br />
-						Brent: 320-223-0017
-					</p>
+				<section className="HomePage-CountdownTimerSection">
+					<ParallaxImage width={ 1920 } height={ 1280 } offset={ -50 } className="HomePage-CountdownTimerImage" />
+					<div className="HomePage-CountdownTimerSectionInner" data-aos="fade-in" data-aos-offset="200">
+						<p className="HomePage-CountdownTimerHeader">We’ll say yes in…</p>
+						<CountdownTimer endDate={ new Date('May 19, 2018 16:00:00') } />
+					</div>
 				</section>
 				
 				<section className="HomePage-MapSection">
@@ -197,6 +147,19 @@ export default class HomePage extends ComponentBase<HomePageProps, HomePageState
 							<WeddingMap />
 						</div>
 					</div>
+				</section>
+				
+				<section className="HomePage-ContactUsSection">
+					<h3 className="HomePage-SectionHeader" data-aos="fade-left">Contact Us</h3>
+					<h4 className="HomePage-SectionSubheader" data-aos="fade-left">Reach out</h4>
+					<a className="HomePage-ContactUsButton" href="mailto:brent@traut.com,mary.do@me.com?subject=Whasssup!??!?" data-aos="fade-right">
+						<i dangerouslySetInnerHTML={{ __html: emailSVG }} />
+						<span>Email</span>
+					</a>
+					<p className="HomePage-PhoneNumbers" data-aos="fade-left">
+						Mary: 248-520-0222<br />
+						Brent: 320-223-0017
+					</p>
 				</section>
 				
 				<footer className="HomePage-Footer">
@@ -276,6 +239,11 @@ export default class HomePage extends ComponentBase<HomePageProps, HomePageState
 	
 	private _handleVenuePhotoClick = (event: React.MouseEvent<HTMLElement>) => {
 		const index = parseInt(event.currentTarget.dataset.index!, 10);
-		this.setState({ showLightbox: index });
+		this.setState({ showVenueLightbox: index });
+	}
+	
+	private _handleEngagementPhotoClick = (event: React.MouseEvent<HTMLElement>) => {
+		const index = parseInt(event.currentTarget.dataset.index!, 10);
+		this.setState({ showEngagementLightbox: index });
 	}
 }
