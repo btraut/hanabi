@@ -6,7 +6,7 @@ import { RouteResult, RouteRequest } from '../stores/Router';
 class ErrorController {
 	public async getError404(_req: RouteRequest, res: RouteResult) {
 		res.content = <Error404Page />;
-		res.title = 'Marying Brent | 404';
+		res.title = 'Mary and Brent | 404';
 	}
 }
 
