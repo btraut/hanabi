@@ -88,7 +88,7 @@
     "react-dom": "^15.4.2"
   },
   "engines": {
-    "node": "7.5.0",
+    "node": "7.10.1",
     "yarn": "0.24.6"
   },
   "license": "MIT"
