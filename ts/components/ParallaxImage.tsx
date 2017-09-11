@@ -50,7 +50,7 @@ export default class ParallaxImage extends ComponentBase<ParallaxImageProps, Par
 	}
 	
 	private _handleScroll = () => {
-		this._newScrollTop = document.body.scrollTop;
+		this._newScrollTop = window.scrollY;
 		
 		if (!this._waitingForNextAnimationFrame) {
 			this._waitingForNextAnimationFrame = true;

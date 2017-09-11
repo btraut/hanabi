@@ -52,7 +52,7 @@ export default class HomePage extends ComponentBase<HomePageProps, HomePageState
 		
 		const venuePhotosListItems = NestldownAlbum.photos.map((photo, index) => {
 			return (
-				<li className="HomePage-VenuePhotoListItem">
+				<li className="HomePage-VenuePhotoListItem" key={ `VenuePhotoListItem-${ photo.id }` }>
 					<div className="HomePage-VenuePhoto" style={{ backgroundImage: `url('${ photo.thumb.url }')` }} data-index={ index } onClick={ this._handleVenuePhotoClick } />
 				</li>
 			);
@@ -60,7 +60,7 @@ export default class HomePage extends ComponentBase<HomePageProps, HomePageState
 		
 		const engagementPhotosListItems = EngagementShootAlbum.photos.map((photo, index) => {
 			return (
-				<li className="HomePage-EngagementPhotoListItem" data-aos="fade-down" data-aos-delay={ index * 100 }>
+				<li className="HomePage-EngagementPhotoListItem" data-aos="fade-down" data-aos-delay={ index * 100 } key={ `VenuePhotoListItem-${ photo.id }` }>
 					<img className="HomePage-EngagementPhoto" src={ photo.thumb.url } data-index={ index } onClick={ this._handleEngagementPhotoClick } />
 				</li>
 			);
