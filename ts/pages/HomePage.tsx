@@ -5,6 +5,7 @@ import * as ReactPlayer from 'react-player';
 import CountdownTimer from '../components/CountdownTimer';
 import Lightbox from '../components/Lightbox';
 import ParallaxImage from '../components/ParallaxImage';
+import ResponsiveDesignStore, { ResponsiveSize } from '../stores/ResponsiveDesignStore';
 import ScrollUtils from '../utils/ScrollUtils';
 import WeddingMap from '../components/WeddingMap';
 
@@ -18,6 +19,8 @@ interface HomePageProps extends React.Props<HomePage> {}
 interface HomePageState {
 	showVenueLightbox: number | null;
 	showEngagementLightbox: number | null;
+	
+	responsiveSize: ResponsiveSize;
 }
 
 export default class HomePage extends ComponentBase<HomePageProps, HomePageState> {
@@ -38,6 +41,8 @@ export default class HomePage extends ComponentBase<HomePageProps, HomePageState
 			newState.showVenueLightbox = null;
 			newState.showEngagementLightbox = null;
 		}
+		
+		newState.responsiveSize = ResponsiveDesignStore.getResponsiveSize();
 		
 		return newState;
 	}
@@ -66,10 +71,19 @@ export default class HomePage extends ComponentBase<HomePageProps, HomePageState
 			);
 		});
 		
+		let splashOffset = 0;
+		switch (this.state.responsiveSize) {
+		case ResponsiveSize.Giant: splashOffset = 0; break;
+		case ResponsiveSize.Large: splashOffset = -100; break;
+		case ResponsiveSize.Medium: splashOffset = -200; break;
+		case ResponsiveSize.Small: splashOffset = -200; break;
+		case ResponsiveSize.ExtraSmall: splashOffset = -280; break;
+		}
+		
 		return (
 			<div className="HomePage" ref={ (ele) => { this._container = ele; } }>
 				<section className="HomePage-SplashSection" ref={ (ele) => { this._splashSection = ele; } }>
-					<ParallaxImage width={ 2000 } height={ 1348 } offset={ -10 } className="HomePage-SplashImage" ref={ (ele) => { this._splashImage = ele; } } />
+					<ParallaxImage width={ 2000 } height={ 1348 } offsetX={ splashOffset } offsetY={ -50 } className="HomePage-SplashImage" ref={ (ele) => { this._splashImage = ele; } } />
 					<div className="HomePage-HeaderContainer" ref={ (ele) => { this._headerContainer = ele; } }>
 						<h2 className="HomePage-SplashDate" data-aos="fade-up" data-aos-duration="1000">May 19, 2018</h2>
 						<h1 className="HomePage-Header" data-aos="fade-up" data-aos-duration="1000">
@@ -117,7 +131,7 @@ export default class HomePage extends ComponentBase<HomePageProps, HomePageState
 				</section>
 				
 				<section className="HomePage-CountdownTimerSection">
-					<ParallaxImage width={ 1920 } height={ 1280 } offset={ -50 } className="HomePage-CountdownTimerImage" />
+					<ParallaxImage width={ 1920 } height={ 1280 } offsetY={ -50 } className="HomePage-CountdownTimerImage" />
 					<div className="HomePage-CountdownTimerSectionInner" data-aos="fade-in" data-aos-offset="200">
 						<p className="HomePage-CountdownTimerHeader">We’ll say yes in…</p>
 						<CountdownTimer endDate={ new Date('May 19, 2018 16:00:00') } />
@@ -205,7 +219,7 @@ export default class HomePage extends ComponentBase<HomePageProps, HomePageState
 	}
 	
 	private _handleScroll = () => {
-		this._newScrollTop = document.body.scrollTop;
+		this._newScrollTop = window.scrollY;
 		
 		if (!this._waitingForNextAnimationFrame) {
 			this._waitingForNextAnimationFrame = true;
@@ -215,7 +229,7 @@ export default class HomePage extends ComponentBase<HomePageProps, HomePageState
 	
 	private _updateScrollContent = () => {
 		const viewportHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
-		const scrollProgress = Math.min(document.body.scrollTop, viewportHeight) / viewportHeight;
+		const scrollProgress = Math.min(window.scrollY, viewportHeight) / viewportHeight;
 		
 		this._headerContainer.style.transform = `translate(-50%, calc(-50% - ${ Math.floor(200 * scrollProgress) }px))`;
 		this._downArrow.style.opacity = String(Math.floor(Math.max(1 - 2.5 * scrollProgress, 0) * 100) / 100);

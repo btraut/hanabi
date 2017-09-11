@@ -178,14 +178,16 @@
 
 .HomePage-EngagementPhotosSection {
 	background-color: white;
+	padding: 20px;
+	overflow: auto;
+	-webkit-overflow-scrolling: touch;
 }
 
 .HomePage-EngagementPhotoList {
 	margin: 0;
-	padding: 20px 0;
+	padding: 0;
 	display: flex;
-	justify-content: center;
-	overflow: hidden;
+	justify-content: flex-start;
 	list-style: none;
 }
 
@@ -365,6 +367,13 @@
 	text-align: center;
 }
 
+@media (max-width: @screen-md-max) {
+	.HomePage-Bio {
+		max-width: 360px;
+		margin-right: 20px;
+	}
+}
+
 @media (max-width: @screen-sm-max) {
 	.HomePage-HeaderContainer {
 		top: 44%;
@@ -384,16 +393,7 @@
 		margin: 0 0 20px;
 		font-size: 20px;
 	}
-}
 
-@media (max-width: @screen-md-max) {
-	.HomePage-Bio {
-		max-width: 360px;
-		margin-right: 20px;
-	}
-}
-
-@media (max-width: @screen-sm-max) {
 	.HomePage-Bios {
 		flex-direction: column;
 		align-items: center;

@@ -4,7 +4,8 @@ import { ComponentBase } from 'resub';
 interface ParallaxImageProps extends React.Props<ParallaxImage> {
 	width: number;
 	height: number;
-	offset?: number;
+	offsetX?: number;
+	offsetY?: number;
 	travel?: number;
 	className: string;
 }
@@ -78,9 +79,10 @@ export default class ParallaxImage extends ComponentBase<ParallaxImageProps, Par
 		}
 		
 		const travel = this.props.travel || 200;
-		const offset = this.props.offset || 0;
+		const offsetY = this.props.offsetY || 0;
+		const offsetX = this.props.offsetX || 0;
 		
-		this._image.style.transform = `translate3d(0, ${ (travel * scrollProgress) + (offset - travel) }px, 0)`;
+		this._image.style.transform = `translate3d(${ offsetX }px, ${ (travel * scrollProgress) + (offsetY - travel) }px, 0)`;
 		
 		this._waitingForNextAnimationFrame = false;
 	}
