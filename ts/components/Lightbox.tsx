@@ -82,7 +82,7 @@ export default class Lightbox extends ComponentBase<LightboxProps, LightboxState
 		}
 		
 		return (
-			<div className={ classes.join(' ') } onMouseMove={ this._handleLightboxMouseMove }>
+			<div className={ classes.join(' ') } onMouseMove={ this._handleLightboxMouseMove } onClick={ this._handleLightboxClick }>
 				<div className="Lightbox-Photos">
 					<div className={ [...photoClasses, 'Lightbox-Photo-OffScreen', 'Lightbox-Photo-OffScreenLeft'].join(' ') } key={ this.props.album.photos[previousPhotoIndex].id } style={{ backgroundImage: `url(${ this.props.album.photos[previousPhotoIndex].large.url })` }} />
 					<div className={ photoClasses.join(' ') } key={ this.props.album.photos[currentPhotoIndex].id } style={{ backgroundImage: `url(${ this.props.album.photos[currentPhotoIndex].large.url })` }} />
@@ -112,6 +112,10 @@ export default class Lightbox extends ComponentBase<LightboxProps, LightboxState
 		super.componentWillUnmount();
 		
 		document.body.removeEventListener('keydown', this._handleBodyKeydown);
+	}
+	
+	private _handleLightboxClick = () => {
+		this._resetOverlayTimeout();
 	}
 	
 	private _handleLightboxMouseMove = () => {

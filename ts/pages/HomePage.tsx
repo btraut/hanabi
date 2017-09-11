@@ -50,9 +50,9 @@ export default class HomePage extends ComponentBase<HomePageProps, HomePageState
 	public render(): JSX.Element | null {
 		let lightbox: JSX.Element | null = null;
 		if (this.state.showVenueLightbox !== null) {
-			lightbox = <Lightbox album={ NestldownAlbum } defaultDisplayedPhotoIndex={ this.state.showVenueLightbox } onClose={ () => { this.setState({ showVenueLightbox: null }); } } />;
+			lightbox = <Lightbox album={ NestldownAlbum } defaultDisplayedPhotoIndex={ this.state.showVenueLightbox } onClose={ this._handleVenueLightboxClosed } />;
 		} else if (this.state.showEngagementLightbox !== null) {
-			lightbox = <Lightbox album={ EngagementShootAlbum } defaultDisplayedPhotoIndex={ this.state.showEngagementLightbox } onClose={ () => { this.setState({ showEngagementLightbox: null }); } } />;
+			lightbox = <Lightbox album={ EngagementShootAlbum } defaultDisplayedPhotoIndex={ this.state.showEngagementLightbox } onClose={ this._handleEngagementLightboxClosed } />;
 		}
 		
 		const venuePhotosListItems = NestldownAlbum.photos.map((photo, index) => {
@@ -217,6 +217,14 @@ export default class HomePage extends ComponentBase<HomePageProps, HomePageState
 		window.removeEventListener('scroll', this._handleScroll);
 		window.removeEventListener('resize', this._handleResize);
 	}
+	
+	private _handleVenueLightboxClosed = () => {
+		this.setState({ showVenueLightbox: null });
+	};
+	
+	private _handleEngagementLightboxClosed = () => {
+		this.setState({ showEngagementLightbox: null });
+	};
 	
 	private _handleScroll = () => {
 		this._newScrollTop = window.scrollY;
