@@ -48,7 +48,7 @@ export default class Ajax {
 			
 			return json;
 		} catch (error) {
-			throw new Error('There was an error with the request to the MaryingBrent server.');
+			throw new Error('The connection to Lost in Translation was… uh… lost.');
 		}
 	}
 }

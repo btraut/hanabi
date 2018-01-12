@@ -1,7 +1,9 @@
 import * as React from 'react';
+import { Route } from 'react-router-dom';
 import { ComponentBase } from 'resub';
 
-import MBRouter from '../stores/MBRouter';
+import HomePage from '../pages/HomePage';
+
 import PopupContainer from './PopupContainer';
 import PopupStore, { PopupEntry } from '../stores/PopupStore';
 
@@ -14,11 +16,10 @@ interface AppState {
 export default class App extends ComponentBase<AppProps, AppState> {
 	protected _buildState(_props: AppProps, _initialBuild: boolean): Partial<AppState> {
 		return {
-			content: MBRouter.getContent(),
 			popup: PopupStore.getTopPopup()
 		};
 	}
-	
+
 	public render(): JSX.Element | null {
 		let popup: JSX.Element | null = null;
 		if (this.state.popup) {
@@ -31,7 +32,8 @@ export default class App extends ComponentBase<AppProps, AppState> {
 		
 		return (
 			<div className="App">
-				{ this.state.content }
+				<Route path="/" component={HomePage}/>
+				
 				{ popup }
 			</div>
 		);

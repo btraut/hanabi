@@ -161,7 +161,6 @@ const clientConfig = {
         new webpack.DefinePlugin({
             DOMAIN_BASE: JSON.stringify(process.env.DOMAIN_BASE),
             NODE_ENV: JSON.stringify(process.env.NODE_ENV),
-            GOOGLE_MAPS_API_KEY: JSON.stringify(process.env.GOOGLE_MAPS_API_KEY)
         })
     ]
 };
@@ -170,7 +169,7 @@ const serverConfig = {
     ...baseConfig,
     
     entry: {
-        server: './server.ts'
+        server: './server.tsx'
     },
     output: {
         path: SERVER_BUILD_PATH,
@@ -195,7 +194,6 @@ const serverConfig = {
             ENV_PATH: JSON.stringify('../../.env'),
             PUBLIC_ASSETS_PATH: JSON.stringify('../client'),
             SERVER_VIEWS_PATH: JSON.stringify('views'),
-            GOOGLE_MAPS_API_KEY: JSON.stringify(process.env.GOOGLE_MAPS_API_KEY)
         })
     ],
     node: {

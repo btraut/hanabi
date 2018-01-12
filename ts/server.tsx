@@ -1,3 +1,4 @@
+import * as React from 'react';
 import * as bodyParser from 'body-parser';
 import * as cookieParser from 'cookie-parser';
 import * as compress from 'compression';
@@ -10,10 +11,11 @@ import * as methodOverride from 'method-override';
 import * as moment from 'moment';
 import * as path from 'path';
 import * as ReactDOMServer from 'react-dom/server';
+import { StaticRouter } from 'react-router';
 import * as url from 'url';
 
+import App from './components/App';
 import Logger from './utils/Logger';
-import MBRouter from './stores/MBRouter';
 
 // Define globals from webpack.
 declare const DOMAIN_BASE: string;
@@ -82,14 +84,17 @@ declare const SERVER_VIEWS_PATH: string;
 		
 		// Render the client.
 		app.get('*', async (req: express.Request, res: express.Response) => {
-			await MBRouter.navigateToPath(req.path, null, true);
-			
-			const content = MBRouter.getContent();
-			const markup = ReactDOMServer.renderToStaticMarkup(content!);
+			const context = {};
+
+			const markup = ReactDOMServer.renderToString(
+				<StaticRouter location={req.url} context={context}>
+					<App />
+				</StaticRouter>
+			);
 			
 			return res.render('app', {
 				content: markup,
-				title: MBRouter.getPageTitle()
+				title: 'Lost in Translation'
 			});
 		});
 		
@@ -109,7 +114,7 @@ declare const SERVER_VIEWS_PATH: string;
 		Logger.info(
 			'' + '\n\n' +
 			'———————————————————————————————————————————————————————————————————' + '\n' +
-			' maryandbrent.com' + '\n' +
+			' lost in translation' + '\n' +
 			` http://localhost:${ app.get('port') }/` + '\n' +
 			' ' + '\n' +
 			` Listening for requests in ${ process.env.NODE_ENV } mode.` + '\n' +
