@@ -136,7 +136,7 @@ const clientConfig = {
             failOnError: false,
             syntax: 'less'
         }),
-        // new CleanWebpackPlugin([CLIENT_BUILD_PATH]),
+        new CleanWebpackPlugin([CLIENT_BUILD_PATH]),
         new ExtractTextPlugin({
             filename: clientStylesFilename,
             allChunks: true
