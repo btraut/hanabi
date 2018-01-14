@@ -9,10 +9,16 @@ import * as logger from 'morgan';
 import * as methodOverride from 'method-override';
 import * as path from 'path';
 import * as ReactDOMServer from 'react-dom/server';
-import { StaticRouter } from 'react-router';
+import { StaticRouter, matchPath } from 'react-router';
 import * as url from 'url';
+import { createStore, applyMiddleware } from 'redux';
+import { Provider as StoreProvider } from 'react-redux';
+import thunk from 'redux-thunk';
 import 'cross-fetch/polyfill';
 
+import routes from './routes';
+import { StoreData } from './reducers/root';
+import { reducer } from './reducers/root';
 import App from './components/App';
 import Logger from './utils/Logger';
 
@@ -84,15 +90,31 @@ declare const SERVER_VIEWS_PATH: string;
 		app.get('*', async (req: express.Request, res: express.Response) => {
 			const context = {};
 
+			// Create the redux store.
+			const store = createStore<StoreData>(reducer, applyMiddleware(thunk));
+
+			// Match url to path.
+			const matchedRoute = routes.find(route => !!matchPath(req.url, { path: route.path, exact: true }));
+
+			// Call custom populateStore method.
+			if (matchedRoute && matchedRoute.preload) {
+				await matchedRoute.preload(store);
+			}
+
+			// Render markup.
 			const markup = ReactDOMServer.renderToString(
-				<StaticRouter location={req.url} context={context}>
-					<App />
-				</StaticRouter>
+				<StoreProvider store={store}>
+					<StaticRouter location={req.url} context={context}>
+						<App />
+					</StaticRouter>
+				</StoreProvider>
 			);
 			
+			// Create the response via pug view.
 			return res.render('app', {
+				title: matchedRoute && matchedRoute.title || 'Lost in Translation',
 				content: markup,
-				title: 'Lost in Translation'
+				preloadedState: store
 			});
 		});
 		

@@ -12,10 +12,9 @@ html
 	body
 		#AppContainer!=content
 		
-		script(src='/js/react.min.js')
-		script(src='/js/react-dom.min.js')
-		
 		script(src=clientScriptPath)
 		
+		script!="window.__PRELOADED_STATE__ = " + JSON.stringify(preloadedState).replace(/</g, '\\u003c') + ";"
+
 		if env.NODE_ENV == 'development'
 			script(src='//localhost:35729/livereload.js')

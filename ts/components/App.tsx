@@ -1,10 +1,14 @@
 import * as React from 'react';
 import { Route } from 'react-router-dom';
 
-import HomePage from '../pages/HomePage';
+import routes from '../routes';
 
-export default () => (
+const App: React.StatelessComponent<{}> = () => (
 	<div className="App">
-		<Route path="/" component={HomePage}/>
+		{ routes.map(route => <Route key={route.path} path={route.path} component={route.component}/>) }
 	</div>
 );
+
+App.displayName = 'App';
+
+export default App;

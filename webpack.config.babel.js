@@ -97,10 +97,6 @@ const clientConfig = {
         filename: clientScriptFilename,
         publicPath: '/'
     },
-    externals: {
-        'react': 'React',
-        'react-dom': 'ReactDOM'
-    },
     module: {
         rules: [
             ...baseModuleRules,
@@ -136,20 +132,12 @@ const clientConfig = {
             failOnError: false,
             syntax: 'less'
         }),
-        new CleanWebpackPlugin([CLIENT_BUILD_PATH]),
+        // new CleanWebpackPlugin([CLIENT_BUILD_PATH]),
         new ExtractTextPlugin({
             filename: clientStylesFilename,
             allChunks: true
         }),
         new CopyWebpackPlugin([{
-            context: SOURCE_PATH + '/node_modules/react/dist/',
-            from: '*.js',
-            to: CLIENT_BUILD_PATH + '/js/'
-        }, {
-            context: SOURCE_PATH + '/node_modules/react-dom/dist/',
-            from: '*.js',
-            to: CLIENT_BUILD_PATH + '/js/'
-        }, {
             context: SOURCE_PATH + '/public/images/',
             from: '**/*',
             to: CLIENT_BUILD_PATH + '/images/'
