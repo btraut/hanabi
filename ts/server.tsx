@@ -5,13 +5,13 @@ import * as compress from 'compression';
 import * as dotenv from 'dotenv';
 import * as express from 'express';
 import * as fs from 'fs';
-import 'isomorphic-fetch';
 import * as logger from 'morgan';
 import * as methodOverride from 'method-override';
 import * as path from 'path';
 import * as ReactDOMServer from 'react-dom/server';
 import { StaticRouter } from 'react-router';
 import * as url from 'url';
+import 'cross-fetch/polyfill';
 
 import App from './components/App';
 import Logger from './utils/Logger';

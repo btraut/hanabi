@@ -43,10 +43,6 @@
   version "4.6.2"
   resolved "https://registry.yarnpkg.com/@types/history/-/history-4.6.2.tgz#12cfaba693ba20f114ed5765467ff25fdf67ddb0"
 
-"@types/isomorphic-fetch@^0.0.33":
-  version "0.0.33"
-  resolved "https://registry.yarnpkg.com/@types/isomorphic-fetch/-/isomorphic-fetch-0.0.33.tgz#3ea1b86f8b73e6a7430d01d4dbd5b1f63fd72718"
-
 "@types/lodash@^4.14.54":
   version "4.14.64"
   resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.64.tgz#979cf3a3d4a368670840bf9b3e448dc33ffe84ee"
@@ -1474,6 +1470,13 @@ create-hmac@^1.1.0, create-hmac@^1.1.2, create-hmac@^1.1.4:
     ripemd160 "^2.0.0"
     safe-buffer "^5.0.1"
     sha.js "^2.4.8"
+
+cross-fetch@^1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/cross-fetch/-/cross-fetch-1.1.1.tgz#dede6865ae30f37eae62ac90ebb7bdac002b05a0"
+  dependencies:
+    node-fetch "1.7.3"
+    whatwg-fetch "2.0.3"
 
 cross-spawn-async@^2.1.1:
   version "2.2.5"
@@ -3155,7 +3158,7 @@ isobject@^2.0.0:
   dependencies:
     isarray "1.0.0"
 
-isomorphic-fetch@^2.1.1, isomorphic-fetch@^2.2.1:
+isomorphic-fetch@^2.1.1:
   version "2.2.1"
   resolved "https://registry.yarnpkg.com/isomorphic-fetch/-/isomorphic-fetch-2.2.1.tgz#611ae1acf14f5e81f729507472819fe9733558a9"
   dependencies:
@@ -3824,6 +3827,13 @@ node-dir@^0.1.10:
   resolved "https://registry.yarnpkg.com/node-dir/-/node-dir-0.1.16.tgz#d2ef583aa50b90d93db8cdd26fcea58353957fe4"
   dependencies:
     minimatch "^3.0.2"
+
+node-fetch@1.7.3:
+  version "1.7.3"
+  resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-1.7.3.tgz#980f6f72d85211a5347c6b2bc18c5b84c3eb47ef"
+  dependencies:
+    encoding "^0.1.11"
+    is-stream "^1.0.1"
 
 node-fetch@^1.0.1:
   version "1.7.0"
@@ -6175,7 +6185,7 @@ websocket-extensions@>=0.1.1:
   version "0.1.1"
   resolved "https://registry.yarnpkg.com/websocket-extensions/-/websocket-extensions-0.1.1.tgz#76899499c184b6ef754377c2dbb0cd6cb55d29e7"
 
-whatwg-fetch@>=0.10.0:
+whatwg-fetch@2.0.3, whatwg-fetch@>=0.10.0:
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/whatwg-fetch/-/whatwg-fetch-2.0.3.tgz#9c84ec2dcf68187ff00bc64e1274b442176e1c84"
 
