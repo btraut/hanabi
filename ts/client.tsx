@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
+import { hydrate } from 'react-dom';
 import { BrowserRouter } from 'react-router-dom';
 
 import App from './components/App';
@@ -10,7 +10,7 @@ import 'isomorphic-fetch';
 import './../public/less/main.less';
 
 // Start the app.
-ReactDOM.render(
+hydrate(
 	<BrowserRouter>
 		<App />
 	</BrowserRouter>,

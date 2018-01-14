@@ -8,7 +8,6 @@ import * as fs from 'fs';
 import 'isomorphic-fetch';
 import * as logger from 'morgan';
 import * as methodOverride from 'method-override';
-import * as moment from 'moment';
 import * as path from 'path';
 import * as ReactDOMServer from 'react-dom/server';
 import { StaticRouter } from 'react-router';
@@ -73,7 +72,6 @@ declare const SERVER_VIEWS_PATH: string;
 		app.use(methodOverride());
 		app.use(cookieParser());
 		app.use((_req, _res, next) => {
-			app.locals.moment = moment;
 			app.locals.env = process.env;
 			app.locals.clientScriptPath = webpackAssetsData.client.js;
 			app.locals.clientStylesPath = webpackAssetsData.client.css;

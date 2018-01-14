@@ -21,8 +21,8 @@
     "@types/method-override": "0.0.29",
     "@types/morgan": "^1.7.32",
     "@types/node": "^7.0.5",
-    "@types/react": "^15.0.12",
-    "@types/react-dom": "^0.14.21",
+    "@types/react": "^16.0.34",
+    "@types/react-dom": "^16.0.3",
     "@types/react-router": "^4.0.20",
     "@types/react-router-dom": "^4.2.3",
     "@types/winston": "^2.2.0",
@@ -58,7 +58,6 @@
     "raw-loader": "^0.5.1",
     "react-router": "^4.2.0",
     "react-router-dom": "^4.2.2",
-    "resub": "^0.0.16",
     "style-loader": "^0.13.1",
     "stylelint": "^7.7.1",
     "stylelint-config-standard": "^16.0.0",
@@ -80,8 +79,8 @@
   },
   "dependencies": {
     "bootstrap": "^3.3.7",
-    "react": "^15.4.2",
-    "react-dom": "^15.4.2"
+    "react": "^16.2.0",
+    "react-dom": "^16.2.0"
   },
   "license": "MIT"
 }
