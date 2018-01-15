@@ -7,7 +7,9 @@ import 'cross-fetch/polyfill';
 
 import { StoreData } from './reducers/root';
 import { reducer } from './reducers/root';
+import routes from './routes';
 import App from './components/App';
+import ScrollRestoration from './components/ScrollRestoration';
 
 // Import styles. This forces webpack to include them in the build, but
 // ExtractTextPlugin will strip them from the JS output.
@@ -25,7 +27,9 @@ const store = createStore<StoreData>(reducer, preloadedState);
 hydrate(
 	<StoreProvider store={store}>
 		<BrowserRouter>
-			<App />
+			<ScrollRestoration>
+				<App routes={routes} />
+			</ScrollRestoration>
 		</BrowserRouter>
 	</StoreProvider>,
 	document.getElementById('AppContainer')

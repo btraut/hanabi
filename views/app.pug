@@ -15,6 +15,6 @@ html
 		script(src=clientScriptPath)
 		
 		script!="window.__PRELOADED_STATE__ = " + JSON.stringify(preloadedState).replace(/</g, '\\u003c') + ";"
-
+		
 		if env.NODE_ENV == 'development'
 			script(src='//localhost:35729/livereload.js')

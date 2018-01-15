@@ -89,30 +89,40 @@ declare const SERVER_VIEWS_PATH: string;
 		// Render the client.
 		app.get('*', async (req: express.Request, res: express.Response) => {
 			const context = {};
-
+			
 			// Create the redux store.
 			const store = createStore<StoreData>(reducer, applyMiddleware(thunk));
-
+			
 			// Match url to path.
 			const matchedRoute = routes.find(route => !!matchPath(req.url, { path: route.path, exact: true }));
-
+			
 			// Call custom populateStore method.
 			if (matchedRoute && matchedRoute.preload) {
 				await matchedRoute.preload(store);
 			}
-
+			
+			// Figure out the page title.
+			let title = 'Lost in Translation';
+			if (matchedRoute && matchedRoute.title) {
+				if (typeof matchedRoute.title === 'string') {
+					title = matchedRoute.title;
+				} else {
+					title = await matchedRoute.title(store);
+				}
+			}
+			
 			// Render markup.
 			const markup = ReactDOMServer.renderToString(
 				<StoreProvider store={store}>
 					<StaticRouter location={req.url} context={context}>
-						<App />
+						<App routes={routes} />
 					</StaticRouter>
 				</StoreProvider>
 			);
 			
 			// Create the response via pug view.
 			return res.render('app', {
-				title: matchedRoute && matchedRoute.title || 'Lost in Translation',
+				title,
 				content: markup,
 				preloadedState: store
 			});
