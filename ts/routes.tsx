@@ -1,22 +1,15 @@
-import { ComponentClass, StatelessComponent } from 'react';
-import { Store } from 'redux';
+import { RouteProps } from 'react-router';
 
-import { StoreData } from './reducers/root';
+import { PageClass } from './pages/Page';
+import HomePage from './pages/HomePage';
 
-import HomePage, { preload as preloadHomePage, title as HomePageTitle } from './pages/HomePage';
+type AsyncRouteProps = RouteProps & {
+	component: PageClass;
+};
 
-export interface Route {
-	path: string;
-	component: ComponentClass | StatelessComponent;
-	preload?: (store?: Store<StoreData>) => Promise<void>;
-	title?: string | ((store?: Store<StoreData>) => Promise<string>);
-}
-
-const routes: Route[] = [{
+const routes: AsyncRouteProps[] = [{
 	path: '/',
-	component: HomePage,
-	title: HomePageTitle,
-	preload: preloadHomePage
+	component: HomePage
 }];
 
 export default routes;

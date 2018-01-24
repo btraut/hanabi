@@ -88,30 +88,33 @@ declare const SERVER_VIEWS_PATH: string;
 		
 		// Render the client.
 		app.get('*', async (req: express.Request, res: express.Response) => {
-			const context = {};
-			
 			// Create the redux store.
-			const store = createStore<StoreData>(reducer, applyMiddleware(thunk));
+			const initialState: StoreData = { foo: 123 };
+			const store = createStore<StoreData>(reducer, initialState, applyMiddleware(thunk));
 			
 			// Match url to path.
 			const matchedRoute = routes.find(route => !!matchPath(req.url, { path: route.path, exact: true }));
 			
 			// Call custom populateStore method.
-			if (matchedRoute && matchedRoute.preload) {
-				await matchedRoute.preload(store);
+			if (matchedRoute && matchedRoute.component && matchedRoute.component.preload) {
+				await matchedRoute.component.preload();
 			}
 			
 			// Figure out the page title.
 			let title = 'Lost in Translation';
-			if (matchedRoute && matchedRoute.title) {
-				if (typeof matchedRoute.title === 'string') {
-					title = matchedRoute.title;
+			if (matchedRoute && matchedRoute.component && matchedRoute.component.title) {
+				if (typeof matchedRoute.component.title === 'string') {
+					title = matchedRoute.component.title;
 				} else {
-					title = await matchedRoute.title(store);
+					title = await matchedRoute.component.title();
 				}
 			}
 			
-			// Render markup.
+			// Initialize a context obj to pass-by-ref into StaticRouter. Unfortunately
+			// there are no types for this.
+			const context: any = {};
+			
+			// Render markup. Collect the list of modules we've used to render.
 			const markup = ReactDOMServer.renderToString(
 				<StoreProvider store={store}>
 					<StaticRouter location={req.url} context={context}>
@@ -120,11 +123,18 @@ declare const SERVER_VIEWS_PATH: string;
 				</StoreProvider>
 			);
 			
+			// context.url will contain the URL to redirect to if a <Redirect> was used
+			if (context.url) {
+				res.writeHead(302, { Location: context.url });
+				res.end();
+				return;
+			}
+			
 			// Create the response via pug view.
 			return res.render('app', {
 				title,
 				content: markup,
-				preloadedState: store
+				preloadedState: store.getState()
 			});
 		});
 		

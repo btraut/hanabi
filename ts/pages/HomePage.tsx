@@ -1,14 +1,15 @@
 import * as React from 'react';
+import { RouteProps } from 'react-router';
 
-export const title = 'Lost in Translation | Home';
-
-export async function preload() {
-	console.log('homepage preloaded');
-};
-
-export default class HomePage extends React.PureComponent<{}, {}> {
+export default class HomePage extends React.PureComponent<RouteProps> {
+	public static async preload() {
+		console.log('homepage preloaded');
+	}
+	
+	public static title = 'Lost in Translation | Home';
+	
 	public componentDidMount() {
-		document.title = title;
+		document.title = HomePage.title;
 	}
 	
 	public render() {

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { hydrate } from 'react-dom';
 import { BrowserRouter } from 'react-router-dom';
-import { createStore } from 'redux'
+import { createStore } from 'redux';
 import { Provider as StoreProvider } from 'react-redux';
 import 'cross-fetch/polyfill';
 

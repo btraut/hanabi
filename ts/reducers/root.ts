@@ -1,3 +1,5 @@
-export interface StoreData {}
+export interface StoreData {
+	foo: number;
+}
 
-export const reducer = () => ({});
+export const reducer = (state: StoreData) => state;

@@ -1,16 +1,14 @@
 import * as React from 'react';
-import { Route, Switch } from 'react-router-dom';
-
-import { Route as RouteDefinition } from '../routes';
+import { Route, Switch, RouteProps } from 'react-router-dom';
 
 interface AppProps {
-	routes: RouteDefinition[];
+	routes: RouteProps[];
 };
 
 const App: React.StatelessComponent<AppProps> = ({ routes }) => (
 	<div className="App">
 		<Switch>
-			{ routes.map(route => <Route key={route.path} path={route.path} component={route.component}/>) }
+			{ routes.map(route => <Route key={route.path} {...route} />) }
 		</Switch>
 	</div>
 );
