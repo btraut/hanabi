@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { RouteProps } from 'react-router';
+import { Link } from 'react-router-dom';
 
 export default class HomePage extends React.PureComponent<RouteProps> {
 	public static async preload() {
@@ -14,7 +15,10 @@ export default class HomePage extends React.PureComponent<RouteProps> {
 	
 	public render() {
 		return (
-			<div>Here's the app!</div>
+			<div className="HomePage">
+				<p><Link to="/join">Join a Game</Link></p>
+				<p><Link to="/host">Start a Game</Link></p>
+			</div>
 		);
 	}
 };

@@ -8,7 +8,7 @@ interface AppProps {
 const App: React.StatelessComponent<AppProps> = ({ routes }) => (
 	<div className="App">
 		<Switch>
-			{ routes.map(route => <Route key={route.path} {...route} />) }
+			{ routes.map(route => <Route key={route.path || '*'} {...route} />) }
 		</Switch>
 	</div>
 );

@@ -5,6 +5,8 @@ import * as compress from 'compression';
 import * as dotenv from 'dotenv';
 import * as express from 'express';
 import * as fs from 'fs';
+import * as http from 'http';
+import * as socket from 'socket.io';
 import * as logger from 'morgan';
 import * as methodOverride from 'method-override';
 import * as path from 'path';
@@ -21,6 +23,7 @@ import { StoreData } from './reducers/root';
 import { reducer } from './reducers/root';
 import App from './components/App';
 import Logger from './utils/Logger';
+import SocketManager from './models/SocketManager';
 
 // Define globals from webpack.
 declare const DOMAIN_BASE: string;
@@ -140,7 +143,22 @@ declare const SERVER_VIEWS_PATH: string;
 		
 		// Start Express server.
 		await (new Promise<express.Express>((resolve, reject) => {
-			app.listen(app.get('port'), (error: any) => {
+			const server = http.createServer(app);
+			
+			const io = socket(server);
+			io.on('connection', (client) => {
+				SocketManager.handleConnection(client.id);
+				
+				client.on('event', (data: any) => {
+					SocketManager.handleEvent(client.id, data);
+				});
+				
+				client.on('disconnect', () => {
+					SocketManager.handleDisconnection(client.id);
+				});
+			});
+			
+			server.listen(app.get('port'), (error: any) => {
 				if (error) {
 					reject(error);
 					return;

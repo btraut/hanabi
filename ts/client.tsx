@@ -2,6 +2,7 @@ import * as React from 'react';
 import { hydrate } from 'react-dom';
 import { BrowserRouter } from 'react-router-dom';
 import { createStore } from 'redux';
+import * as socket from 'socket.io-client';
 import { Provider as StoreProvider } from 'react-redux';
 import 'cross-fetch/polyfill';
 
@@ -22,6 +23,12 @@ delete (window as any).__PRELOADED_STATE__;
 
 // Create Redux store with initial state.
 const store = createStore<StoreData>(reducer, preloadedState);
+
+// Create a socket.io connection.
+const io = socket('http://localhost:3000');
+io.on('connect', () => { console.log('connected'); });
+io.on('event', (data: any) => { console.log(data); });
+io.on('disconnect', () => { console.log('disconnected'); });
 
 // Start the app.
 hydrate(
