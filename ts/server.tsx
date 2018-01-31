@@ -6,11 +6,12 @@ import * as dotenv from 'dotenv';
 import * as express from 'express';
 import * as fs from 'fs';
 import * as http from 'http';
-import * as socket from 'socket.io';
 import * as logger from 'morgan';
 import * as methodOverride from 'method-override';
 import * as path from 'path';
 import * as ReactDOMServer from 'react-dom/server';
+import * as session from 'express-session';
+import * as uuid from 'uuid';
 import { StaticRouter, matchPath } from 'react-router';
 import * as url from 'url';
 import { createStore, applyMiddleware } from 'redux';
@@ -23,7 +24,7 @@ import { StoreData } from './reducers/root';
 import { reducer } from './reducers/root';
 import App from './components/App';
 import Logger from './utils/Logger';
-import SocketManager from './models/SocketManager';
+import ServerSocketManager from './utils/ServerSocketManager';
 
 // Define globals from webpack.
 declare const DOMAIN_BASE: string;
@@ -61,6 +62,13 @@ declare const SERVER_VIEWS_PATH: string;
 		app.set('view engine', 'pug');
 		app.use(compress());
 		app.use(logger('dev'));
+		app.use(session({
+			secret: process.env.SESSION_COOKIE_SECRET,
+			resave: false,
+			saveUninitialized: true,
+			cookie: { secure: true },
+			genid: () => uuid()
+		}));
 		
 		if (process.env.REDIRECT_URL_PROTOCOL_AND_SUBDOMAIN) {
 			app.all(/.*/, (req, res, next) => {
@@ -88,6 +96,11 @@ declare const SERVER_VIEWS_PATH: string;
 			next();
 		});
 		app.use(express.static(path.resolve(__dirname, PUBLIC_ASSETS_PATH), { maxAge: 31557600000 }));
+		
+		app.get('/api/auth-socket', async (req: express.Request, res: express.Response) => {
+			const token = ServerSocketManager.addTokenForUser(req.sessionID!);
+			res.json({ token });
+		});
 		
 		// Render the client.
 		app.get('*', async (req: express.Request, res: express.Response) => {
@@ -141,23 +154,12 @@ declare const SERVER_VIEWS_PATH: string;
 			});
 		});
 		
-		// Start Express server.
+		// Start Express and socket.io servers.
+		const server = http.createServer(app);
+		
+		ServerSocketManager.connect(server);
+		
 		await (new Promise<express.Express>((resolve, reject) => {
-			const server = http.createServer(app);
-			
-			const io = socket(server);
-			io.on('connection', (client) => {
-				SocketManager.handleConnection(client.id);
-				
-				client.on('event', (data: any) => {
-					SocketManager.handleEvent(client.id, data);
-				});
-				
-				client.on('disconnect', () => {
-					SocketManager.handleDisconnection(client.id);
-				});
-			});
-			
 			server.listen(app.get('port'), (error: any) => {
 				if (error) {
 					reject(error);
