@@ -5,7 +5,7 @@ import { createStore } from 'redux';
 import { Provider as StoreProvider } from 'react-redux';
 import 'cross-fetch/polyfill';
 
-import ClientSocketManager from './utils/ClientSocketManager';
+import ClientSocketConnectionManager from './utils/ClientSocketConnectionManager';
 import { StoreData } from './reducers/root';
 import { reducer } from './reducers/root';
 import routes from './routes';
@@ -26,10 +26,8 @@ const store = createStore<StoreData>(reducer, preloadedState);
 
 // Create a socket.io connection.
 (async () => {
-	await ClientSocketManager.connect();
-	console.log('connected!');
-	await ClientSocketManager.authenticate();
-	console.log('authenticated!');
+	const manager = new ClientSocketConnectionManager(123 as any);
+	manager.connect();
 })();
 
 // Start the app.

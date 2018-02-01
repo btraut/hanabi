@@ -1,7 +1,15 @@
+// ClientSocketManager.ts
+//
+// ClientSocketManager is a singleton utility that handles connections to
+// socket.io. In addition to connection/disconnection, ClientSocketManager
+// will do an authentication handshake with the server to associate this
+// socket.io connection to a user cookie and ultimately his session.
+
 import * as socket from 'socket.io-client';
 
 import { SocketMessage, AuthenticateSocketMessage } from '../models/SocketMessage';
 import Ajax from './Ajax';
+import PubSub from './PubSub';
 
 export interface ClientSocketManagerSendOptions {
 	requireAuth?: boolean;
@@ -17,10 +25,6 @@ class ClientSocketManager {
 	// socket.io Client
 	private _socket?: SocketIOClient.Socket;
 	
-	// If this method exists, it means we're connecting to socket.io and
-	// the connection hasn't resolved yet.
-	private _connectionPromiseResolve?: () => void;
-	
 	// Connections need authentication after connecting before sending data.
 	private _authenticated = false;
 
@@ -29,29 +33,22 @@ class ClientSocketManager {
 	// halt until we receive our expected messages from the server.
 	private _expectations: ClientSocketManagerExpectation[] = [];
 	
-	public async connect() {
-		// Turning connect into a promise is complicated. First, we have to
-		// treat reconnections different from regular connections. Second,
-		// we have to wait for socket.on('connect') to be emitted once
-		// connecting before we can resolve.
+	public onConnect = new PubSub<void>();
+	public onAuthenticate = new PubSub<void>();
+	public onDisconnect = new PubSub<void>();
+	public onMessage = new PubSub<SocketMessage>();
+	
+	public connect() {
 		if (this._socket) {
 			if (!this._socket.connected) {
-				return new Promise((resolve) => {
-					this._connectionPromiseResolve = resolve;
-					
-					this._socket!.connect();
-				});
+				this._socket!.connect();
 			}
 		} else {
-			return new Promise((resolve) => {
-				this._connectionPromiseResolve = resolve;
+			this._socket = socket('http://localhost:3000');
 				
-				this._socket = socket('http://localhost:3000');
-				
-				this._socket.on('connect', this._handleConnect);
-				this._socket.on('message', this._handleMessage);
-				this._socket.on('disconnect', this._handleDisconnect);
-			});
+			this._socket.on('connect', this._handleConnect);
+			this._socket.on('message', this._handleMessage);
+			this._socket.on('disconnect', this._handleDisconnect);
 		}
 	}
 	
@@ -83,7 +80,7 @@ class ClientSocketManager {
 		});
 	}
 	
-	public async authenticate() {
+	private async _authenticate() {
 		if (!this._socket || !this._socket.connected) {
 			throw new Error('Can’t send a message on a closed socket.io connection.');
 		}
@@ -104,6 +101,13 @@ class ClientSocketManager {
 		if (message.type === 'AuthenticateResponseSocketMessage') {
 			if (message.data.success) {
 				this._authenticated = true;
+				
+				console.log('socket.io authenticated');
+
+				// Notify others of the connect. Note that we've already
+				// been connected for a while, but we don't want to notify
+				// externally until our connection has been authenticated.
+				this.onConnect.emit();
 			} else {
 				throw new Error(message.data.error);
 			}
@@ -113,23 +117,24 @@ class ClientSocketManager {
 	private _handleConnect = () => {
 		console.log('socket.io connected');
 		
-		if (this._connectionPromiseResolve) {
-			const resolve = this._connectionPromiseResolve;
-			delete this._connectionPromiseResolve;
-			resolve();
-		}
+		this._authenticate();
 	}
 	
 	private _handleDisconnect = () =>  {
 		console.log('socket.io disconnected');
 		
+		// Reset authentication.
 		this._authenticated = false;
 		
+		// Handle expectations.
 		for (const expectation of this._expectations) {
 			expectation.reject('Server disconnected.');
 		}
 		
 		this._expectations = [];
+		
+		// Notify others of the disconnect.
+		this.onDisconnect.emit();
 	}
 	
 	private _handleMessage = (message: SocketMessage) =>  {
@@ -151,6 +156,9 @@ class ClientSocketManager {
 			const index = this._expectations.indexOf(resolvedExpectation);
 			this._expectations.splice(index, 1);
 		}
+		
+		// Post the message.
+		this.onMessage.emit(message);
 	}
 }
 

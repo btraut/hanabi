@@ -1,4 +1,4 @@
-export type PubSubHandler<T> = (data: T) => void;
+export type PubSubHandler<T> = (data?: T) => void;
 export type PubSubToken = number;
 
 export default class PubSub<T> {
@@ -18,9 +18,9 @@ export default class PubSub<T> {
 		delete this._subscriptions[nonce];
 	}
 	
-	public emit(data: T) {
+	public emit(data?: T) {
 		for (const nonce of Object.keys(this._subscriptions)) {
-			this._subscriptions[nonce](data);
+			this._subscriptions[nonce].apply(this, data ? [data] : []);
 		}
 	}
 }
