@@ -12,6 +12,7 @@ import { Dispatch } from 'react-redux';
 
 import ClientSocketManager from './ClientSocketManager';
 import { StoreData } from '../reducers/root';
+import { clientSocketConnectionActions } from '../reducers/ClientSocketConnection';
 
 export default class ClientSocketConnectionManager {
 	private _isConnected = false;
@@ -31,15 +32,15 @@ export default class ClientSocketConnectionManager {
 			return;
 		}
 		
-		// TODO: Notify redux that we're connecting.
-		// this._dispatch();
+		// Notify redux that we're connecting.
+		this._dispatch(clientSocketConnectionActions.connecting());
 		
 		ClientSocketManager.connect();
 	}
 	
 	public disconnect() {
-		// TODO: Notify redux that we're disconnecting.
-		// this._dispatch();
+		// Notify redux that we're disconnecting.
+		this._dispatch(clientSocketConnectionActions.disconnecting());
 
 		ClientSocketManager.disconnect();
 	}
@@ -47,14 +48,14 @@ export default class ClientSocketConnectionManager {
 	private _handleConnected = () => {
 		this._isConnected = true;
 		
-		// TODO: Notify redux that we've connected.
-		// this._dispatch();
+		// Notify redux that we've connected.
+		this._dispatch(clientSocketConnectionActions.connected());
 	}
 	
 	private _handleDisconnected = () => {
 		this._isConnected = false;
 		
-		// TODO: Notify redux that we've disconnected.
-		// this._dispatch();
+		// Notify redux that we've disconnected.
+		this._dispatch(clientSocketConnectionActions.disconnected());
 	}
 }

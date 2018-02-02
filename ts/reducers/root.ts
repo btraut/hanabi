@@ -16,5 +16,5 @@ export const initialState: StoreData = {
 
 // Combine all reducers.
 export const reducer = combineReducers<StoreData>({
-	clientSocketConnectionReducer
+	clientSocketConnection: clientSocketConnectionReducer
 });

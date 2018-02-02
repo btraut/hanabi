@@ -23,12 +23,6 @@ delete (window as any).__PRELOADED_STATE__;
 // Create Redux store with initial state.
 const store = createStore<StoreData>(reducer, preloadedState);
 
-// Create a socket.io connection.
-(async () => {
-	const manager = new ClientSocketConnectionManager(123 as any);
-	manager.connect();
-})();
-
 // Start the app.
 hydrate(
 	<StoreProvider store={store}>
@@ -40,3 +34,9 @@ hydrate(
 	</StoreProvider>,
 	document.getElementById('AppContainer')
 );
+
+// Create a socket.io connection.
+(async () => {
+	const manager = new ClientSocketConnectionManager(store.dispatch);
+	manager.connect();
+})();

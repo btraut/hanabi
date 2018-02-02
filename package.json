@@ -78,6 +78,7 @@
     "svgo": "^0.7.2",
     "svgo-loader": "^1.1.2",
     "ts-loader": "^2.0.1",
+    "tslib": "^1.9.0",
     "tslint": "^4.4.2",
     "tslint-loader": "^3.3.0",
     "typesafe-actions": "^1.1.2",

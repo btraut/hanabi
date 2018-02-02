@@ -27,14 +27,16 @@ export const initialState: RootState = {
 	clientSocketConnection: {
 		connectionState: ConnectionState.Disconnected
 	}
-}
+};
 
 export const clientSocketConnectionReducer = combineReducers<ClientSocketConnectionState>({
-	isConnected: (state = false, action) => {
+	connectionState: (state = ConnectionState.Disconnected, action) => {
 		switch (action.type) {
-			case getType(clientSocketConnectionActions.connected): return state;
+			case getType(clientSocketConnectionActions.connecting): return ConnectionState.Connecting;
+			case getType(clientSocketConnectionActions.connected): return ConnectionState.Connected;
+			case getType(clientSocketConnectionActions.disconnecting): return ConnectionState.Disconnecting;
+			case getType(clientSocketConnectionActions.disconnected): return ConnectionState.Disconnected;
+			default: return state;
 		}
-		
-		return state;
 	}
 });
