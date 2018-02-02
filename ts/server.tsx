@@ -20,8 +20,7 @@ import thunk from 'redux-thunk';
 import 'cross-fetch/polyfill';
 
 import routes from './routes';
-import { StoreData } from './reducers/root';
-import { reducer } from './reducers/root';
+import { StoreData, reducer, initialState } from './reducers/root';
 import App from './components/App';
 import Logger from './utils/Logger';
 import ServerSocketManager from './utils/ServerSocketManager';
@@ -105,7 +104,6 @@ declare const SERVER_VIEWS_PATH: string;
 		// Render the client.
 		app.get('*', async (req: express.Request, res: express.Response) => {
 			// Create the redux store.
-			const initialState: StoreData = { foo: 123 };
 			const store = createStore<StoreData>(reducer, initialState, applyMiddleware(thunk));
 			
 			// Match url to path.

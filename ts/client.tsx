@@ -6,8 +6,7 @@ import { Provider as StoreProvider } from 'react-redux';
 import 'cross-fetch/polyfill';
 
 import ClientSocketConnectionManager from './utils/ClientSocketConnectionManager';
-import { StoreData } from './reducers/root';
-import { reducer } from './reducers/root';
+import { StoreData, reducer } from './reducers/root';
 import routes from './routes';
 import App from './components/App';
 import ScrollRestoration from './components/ScrollRestoration';
