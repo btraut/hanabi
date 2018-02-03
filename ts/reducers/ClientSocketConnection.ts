@@ -19,14 +19,8 @@ export interface ClientSocketConnectionState {
 	readonly connectionState: ConnectionState;
 }
 
-export interface RootState {
-	clientSocketConnection: ClientSocketConnectionState;
-}
-
-export const initialState: RootState = {
-	clientSocketConnection: {
-		connectionState: ConnectionState.Disconnected
-	}
+export const initialState: ClientSocketConnectionState = {
+	connectionState: ConnectionState.Disconnected
 };
 
 export const clientSocketConnectionReducer = combineReducers<ClientSocketConnectionState>({

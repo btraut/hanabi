@@ -14,7 +14,7 @@ export default class HostPage extends React.PureComponent<RouteProps> {
 	
 	public render() {
 		const code = 'abc123';
-		const url = `http://localhost:3000/join`;
+		const url = `http://localhost:3000/game`;
 		
 		return (
 			<div className="HostPage">

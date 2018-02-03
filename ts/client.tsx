@@ -5,7 +5,6 @@ import { createStore } from 'redux';
 import { Provider as StoreProvider } from 'react-redux';
 import 'cross-fetch/polyfill';
 
-import ClientSocketConnectionManager from './utils/ClientSocketConnectionManager';
 import { StoreData, reducer } from './reducers/root';
 import routes from './routes';
 import App from './components/App';
@@ -34,9 +33,3 @@ hydrate(
 	</StoreProvider>,
 	document.getElementById('AppContainer')
 );
-
-// Create a socket.io connection.
-(async () => {
-	const manager = new ClientSocketConnectionManager(store.dispatch);
-	manager.connect();
-})();

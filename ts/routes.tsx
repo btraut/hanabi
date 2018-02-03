@@ -4,7 +4,7 @@ import { PageClass } from './pages/Page';
 import Error404Page from './pages/Error404Page';
 import HomePage from './pages/HomePage';
 import HostPage from './pages/HostPage';
-import JoinPage from './pages/JoinPage';
+import GameViewPage from './pages/GameViewPage';
 
 type AsyncRouteProps = RouteProps & {
 	component: PageClass;
@@ -15,8 +15,8 @@ const routes: AsyncRouteProps[] = [{
 	component: HomePage,
 	exact: true
 }, {
-	path: '/join',
-	component: JoinPage,
+	path: '/game',
+	component: GameViewPage,
 	exact: true
 }, {
 	path: '/host',

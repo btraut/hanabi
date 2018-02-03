@@ -1,7 +1,9 @@
 import * as React from 'react';
 import { RouteProps } from 'react-router';
 
-export default class JoinPage extends React.PureComponent<RouteProps> {
+import GameView from '../components/GameView';
+
+export default class GameViewPage extends React.PureComponent<RouteProps> {
 	public static async preload() {
 		console.log('join page preloaded');
 	}
@@ -9,15 +11,12 @@ export default class JoinPage extends React.PureComponent<RouteProps> {
 	public static title = 'Lost in Translation | Join Game';
 	
 	public componentDidMount() {
-		document.title = JoinPage.title;
+		document.title = GameViewPage.title;
 	}
 	
 	public render() {
 		return (
-			<div className="JoinPage">
-				<div>What's your game code?</div>
-				<input type="text" />
-			</div>
+			<GameView />
 		);
 	}
 };

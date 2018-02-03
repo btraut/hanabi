@@ -13,6 +13,8 @@ import { Dispatch } from 'react-redux';
 import ClientSocketManager from './ClientSocketManager';
 import { StoreData } from '../reducers/root';
 import { clientSocketConnectionActions } from '../reducers/ClientSocketConnection';
+import PubSub from './PubSub';
+import { SocketMessage } from '../models/SocketMessage';
 
 export default class ClientSocketConnectionManager {
 	private _isConnected = false;
@@ -23,10 +25,19 @@ export default class ClientSocketConnectionManager {
 	constructor(dispatch: Dispatch<StoreData>) {
 		this._dispatch = dispatch;
 		
-		ClientSocketManager.onConnect.subscribe(this._handleConnected);
-		ClientSocketManager.onDisconnect.subscribe(this._handleDisconnected);
+		ClientSocketManager.onConnect.subscribe(this._handleConnect);
+		ClientSocketManager.onDisconnect.subscribe(this._handleDisconnect);
+		ClientSocketManager.onMessage.subscribe(this._handleMessage);
 	}
+
+	private _onConnect = new PubSub<void>();
+	private _onDisconnect = new PubSub<void>();
+	private _onMessage = new PubSub<SocketMessage>();
 	
+	public get onConnect() { return this._onConnect; }
+	public get onDisconnect() { return this._onDisconnect; }
+	public get onMessage() { return this._onMessage; }
+
 	public connect() {
 		if (this._isConnected) {
 			return;
@@ -45,17 +56,31 @@ export default class ClientSocketConnectionManager {
 		ClientSocketManager.disconnect();
 	}
 	
-	private _handleConnected = () => {
+	public send(message: SocketMessage) {
+		// Pass through to ClientSocketManager.
+		return ClientSocketManager.send(message);
+	}
+	
+	public async expect(isCorrectMessage: (message: SocketMessage) => boolean): Promise<SocketMessage> {
+		// Pass through to ClientSocketManager.
+		return ClientSocketManager.expect(isCorrectMessage);
+	}
+	
+	private _handleConnect = () => {
 		this._isConnected = true;
 		
 		// Notify redux that we've connected.
 		this._dispatch(clientSocketConnectionActions.connected());
 	}
 	
-	private _handleDisconnected = () => {
+	private _handleDisconnect = () => {
 		this._isConnected = false;
 		
 		// Notify redux that we've disconnected.
 		this._dispatch(clientSocketConnectionActions.disconnected());
+	}
+	
+	private _handleMessage = (message: SocketMessage) => {
+		this._onMessage.emit(message);
 	}
 }

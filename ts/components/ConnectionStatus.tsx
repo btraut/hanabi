@@ -4,6 +4,8 @@ import { connect } from 'react-redux';
 import { StoreData } from '../reducers/root';
 import { ConnectionState, ClientSocketConnectionState } from '../reducers/ClientSocketConnection';
 
+interface ExternalConnectionStatusProps {};
+
 function ConnectionStatus({ connectionState }: ClientSocketConnectionState) {
 	let statusText = '--loading--';
 	
@@ -17,4 +19,5 @@ function ConnectionStatus({ connectionState }: ClientSocketConnectionState) {
 	return <div>{ statusText }</div>;
 }
 
-export default connect(({ clientSocketConnection }: StoreData) => clientSocketConnection)(ConnectionStatus);
+export default connect(({ clientSocketConnection }: StoreData) =>
+	clientSocketConnection)(ConnectionStatus) as React.ComponentClass<ExternalConnectionStatusProps>;
