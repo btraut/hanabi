@@ -2,6 +2,7 @@ import * as React from 'react';
 import { RouteProps } from 'react-router';
 
 import GameView from '../components/GameView';
+import ClientGameManagerProvider from '../components/ClientGameManagerProvider';
 
 export default class GameViewPage extends React.PureComponent<RouteProps> {
 	public static async preload() {
@@ -16,7 +17,9 @@ export default class GameViewPage extends React.PureComponent<RouteProps> {
 	
 	public render() {
 		return (
-			<GameView />
+			<ClientGameManagerProvider>
+				<GameView />
+			</ClientGameManagerProvider>
 		);
 	}
 };
