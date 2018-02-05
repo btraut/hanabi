@@ -13,6 +13,7 @@ import { Dispatch } from 'react-redux';
 import ClientSocketManager from './ClientSocketManager';
 import { StoreData } from '../reducers/root';
 import { clientSocketConnectionActions } from '../reducers/ClientSocketConnection';
+import ConnectionState from '../models/ConnectionState';
 import PubSub from './PubSub';
 import { SocketMessage } from '../models/SocketMessage';
 
@@ -44,14 +45,14 @@ export default class ClientSocketConnectionManager {
 		}
 		
 		// Notify redux that we're connecting.
-		this._dispatch(clientSocketConnectionActions.connecting());
+		this._dispatch(clientSocketConnectionActions.changeConnectionState(ConnectionState.Connecting));
 		
 		ClientSocketManager.connect();
 	}
 	
 	public disconnect() {
 		// Notify redux that we're disconnecting.
-		this._dispatch(clientSocketConnectionActions.disconnecting());
+		this._dispatch(clientSocketConnectionActions.changeConnectionState(ConnectionState.Disconnecting));
 
 		ClientSocketManager.disconnect();
 	}
@@ -70,17 +71,24 @@ export default class ClientSocketConnectionManager {
 		this._isConnected = true;
 		
 		// Notify redux that we've connected.
-		this._dispatch(clientSocketConnectionActions.connected());
+		this._dispatch(clientSocketConnectionActions.changeConnectionState(ConnectionState.Connected));
+		
+		// Notify subscribers that we've connected.
+		this._onConnect.emit();
 	}
 	
 	private _handleDisconnect = () => {
 		this._isConnected = false;
 		
 		// Notify redux that we've disconnected.
-		this._dispatch(clientSocketConnectionActions.disconnected());
+		this._dispatch(clientSocketConnectionActions.changeConnectionState(ConnectionState.Disconnected));
+		
+		// Notify subscribers that we've disconnected.
+		this._onDisconnect.emit();
 	}
 	
 	private _handleMessage = (message: SocketMessage) => {
+		// Notify subscribers that we got a message.
 		this._onMessage.emit(message);
 	}
 }

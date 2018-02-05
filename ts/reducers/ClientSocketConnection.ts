@@ -1,19 +1,16 @@
 import { combineReducers } from 'redux';
 import { createAction, getType } from 'typesafe-actions';
 
-export const clientSocketConnectionActions = {
-	connecting: createAction('CONNECTING'),
-	connected: createAction('CONNECTED'),
-	disconnecting: createAction('DISCONNECTING'),
-	disconnected: createAction('DISCONNECTED')
-};
+import ConnectionState from '../models/ConnectionState';
 
-export enum ConnectionState {
-	Connecting,
-	Connected,
-	Disconnecting,
-	Disconnected
-}
+const prefix = (p: string) => `ClientSocketConnection/${p}`;
+
+export const clientSocketConnectionActions = {
+	changeConnectionState: createAction(
+		prefix('CHANGE_CONNECTION_STATE'),
+		(state: ConnectionState) => ({ type: prefix('CHANGE_CONNECTION_STATE'), state })
+	)
+};
 
 export interface ClientSocketConnectionState {
 	readonly connectionState: ConnectionState;
@@ -26,10 +23,7 @@ export const initialState: ClientSocketConnectionState = {
 export const clientSocketConnectionReducer = combineReducers<ClientSocketConnectionState>({
 	connectionState: (state = ConnectionState.Disconnected, action) => {
 		switch (action.type) {
-			case getType(clientSocketConnectionActions.connecting): return ConnectionState.Connecting;
-			case getType(clientSocketConnectionActions.connected): return ConnectionState.Connected;
-			case getType(clientSocketConnectionActions.disconnecting): return ConnectionState.Disconnecting;
-			case getType(clientSocketConnectionActions.disconnected): return ConnectionState.Disconnected;
+			case getType(clientSocketConnectionActions.changeConnectionState): return action.state;
 			default: return state;
 		}
 	}
