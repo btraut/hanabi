@@ -1,20 +1,18 @@
 // ClientGameManager.ts
 //
 // ClientGameManager serves two purposes. First, it's an abstraction over
-// SclientSocketConnectionManger (and in turn, ClientSocketManager).
-// Second, it controls the state of the game and keeps it in sync with
-// the server.
+// the low level ClientSocketManager. Second, it controls the state of the
+// game and keeps it in sync with the server.
 
 import { Dispatch } from 'react-redux';
 
-import ClientSocketConnectionManager from './ClientSocketConnectionManager';
+import ClientSocketManager from './ClientSocketManager';
 import ClientGameManagerState from '../models/ClientGameManagerState';
 import { SocketMessage } from '../models/SocketMessage';
 import { StoreData } from '../reducers/root';
 import { gameActions } from '../reducers/Game';
 
 export default class ClientGameManager {
-	private _socketConnectionManager: ClientSocketConnectionManager;
 	private _state = ClientGameManagerState.Disconnected;
 	
 	private _dispatch: Dispatch<StoreData>;
@@ -22,11 +20,9 @@ export default class ClientGameManager {
 	constructor(dispatch: Dispatch<StoreData>) {
 		this._dispatch = dispatch;
 		
-		this._socketConnectionManager = new ClientSocketConnectionManager(dispatch);
-		
-		this._socketConnectionManager.onConnect.subscribe(this._handleConnect);
-		this._socketConnectionManager.onDisconnect.subscribe(this._handleDisconnect);
-		this._socketConnectionManager.onMessage.subscribe(this._handleMessage);
+		ClientSocketManager.onConnect.subscribe(this._handleConnect);
+		ClientSocketManager.onDisconnect.subscribe(this._handleDisconnect);
+		ClientSocketManager.onMessage.subscribe(this._handleMessage);
 	}
 	
 	public connect() {
@@ -34,7 +30,7 @@ export default class ClientGameManager {
 			this._state = ClientGameManagerState.Connecting;
 			this._dispatch(gameActions.changeState(ClientGameManagerState.Connecting));
 			
-			this._socketConnectionManager.connect();
+			ClientSocketManager.connect();
 		}
 	}
 	
@@ -42,7 +38,17 @@ export default class ClientGameManager {
 		this._state = ClientGameManagerState.Disconnected;
 		this._dispatch(gameActions.changeState(ClientGameManagerState.Disconnected));
 
-		this._socketConnectionManager.disconnect();
+		ClientSocketManager.disconnect();
+	}
+	
+	public send(message: SocketMessage) {
+		// Pass through to ClientSocketManager.
+		return ClientSocketManager.send(message);
+	}
+	
+	public async expect(isCorrectMessage: (message: SocketMessage) => boolean): Promise<SocketMessage> {
+		// Pass through to ClientSocketManager.
+		return ClientSocketManager.expect(isCorrectMessage);
 	}
 	
 	private _handleConnect = () => {
