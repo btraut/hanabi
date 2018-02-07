@@ -12,6 +12,7 @@ import { SocketMessage, RequestInitialDataMessage } from '../models/SocketMessag
 import { StoreData } from '../reducers/root';
 import { gameActions } from '../reducers/Game';
 import GameState from '../models/GameState';
+import { GameObject } from '../models/Game';
 
 export default class ClientGameManager {
 	private _state = ClientGameManagerState.Disconnected;
@@ -57,9 +58,9 @@ export default class ClientGameManager {
 		})();
 	}
 	
-	private _restoreGame(gameState: GameState, _data: null) {
+	private _restoreGame(gameState: GameState, _data: GameObject) {
 		let gameManagerState = ClientGameManagerState.JoinGame;
-				
+		
 		// TODO: Unload data.
 		
 		// TODO: Set to proper state.
@@ -105,10 +106,10 @@ export default class ClientGameManager {
 	private _handleMessage = (message: SocketMessage) => {
 		if (message.type === 'InitialDataResponseMessage') {
 			// Unload the game state data.
-			if (message.data.state === null) {
+			if (!message.data.game) {
 				this._changeState(ClientGameManagerState.JoinGame);
 			} else {
-				this._restoreGame(message.data.state, message.data.data);
+				this._restoreGame(message.data.game.state, message.data.game);
 			}
 		}
 	}

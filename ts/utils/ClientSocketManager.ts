@@ -34,10 +34,13 @@ class ClientSocketManager {
 	// halt until we receive our expected messages from the server.
 	private _expectations: ClientSocketManagerExpectation[] = [];
 	
-	public onConnect = new PubSub<void>();
-	public onAuthenticate = new PubSub<void>();
-	public onDisconnect = new PubSub<void>();
-	public onMessage = new PubSub<SocketMessage>();
+	public _onConnect = new PubSub<void>();
+	public _onDisconnect = new PubSub<void>();
+	public _onMessage = new PubSub<SocketMessage>();
+	
+	public get onConnect() { return this._onConnect; }
+	public get onDisconnect() { return this._onDisconnect; }
+	public get onMessage() { return this._onMessage; }
 	
 	public connect() {
 		if (this._socket) {
@@ -118,7 +121,7 @@ class ClientSocketManager {
 				// Notify others of the connect. Note that we've already
 				// been connected for a while, but we don't want to notify
 				// externally until our connection has been authenticated.
-				this.onConnect.emit();
+				this._onConnect.emit();
 			} else {
 				throw new Error(message.data.error);
 			}
@@ -146,7 +149,7 @@ class ClientSocketManager {
 		this._expectations = [];
 		
 		// Notify others of the disconnect.
-		this.onDisconnect.emit();
+		this._onDisconnect.emit();
 	}
 	
 	private _handleMessage = (message: SocketMessage) =>  {
@@ -171,7 +174,7 @@ class ClientSocketManager {
 		}
 		
 		// Post the message.
-		this.onMessage.emit(message);
+		this._onMessage.emit(message);
 	}
 }
 

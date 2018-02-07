@@ -1,6 +1,7 @@
 import { Server } from 'http';
 import * as socket from 'socket.io';
 import * as uuid from 'uuid';
+import { invert } from 'lodash';
 
 import Logger from '../utils/Logger';
 import { SocketMessage, AuthenticateSocketMessage, AuthenticateResponseSocketMessage } from '../models/SocketMessage';
@@ -20,7 +21,12 @@ class ServerSocketManager {
 	private _authenticatedUsers: { [socketId: string]: string } = {};
 	private _tokens: { [token: string]: AuthToken } = {};
 	
-	private _onMessage = new PubSub<{ userId: string, message: SocketMessage }>();
+	public _onConnect = new PubSub<{ userId: string }>();
+	public _onDisconnect = new PubSub<{ userId: string }>();
+	public _onMessage = new PubSub<{ userId: string, message: SocketMessage }>();
+	
+	public get onConnect() { return this._onConnect; }
+	public get onDisconnect() { return this._onDisconnect; }
 	public get onMessage() { return this._onMessage; }
 	
 	constructor() {
@@ -67,6 +73,9 @@ class ServerSocketManager {
 	private _handleDisconnect = (socketId: string) =>  {
 		Logger.debug(`socket.io disconnected: ${ socketId }`);
 		
+		const userId = this._authenticatedUsers[socketId];
+		this._onDisconnect.emit({ userId });
+		
 		delete this._authenticatedUsers[socketId];
 	}
 	
@@ -89,6 +98,7 @@ class ServerSocketManager {
 			const userId = this._tokens[token].userId;
 			delete this._tokens[token];
 			this._authenticatedUsers[socketId] = userId;
+			this._onConnect.emit({ userId });
 			
 			this._send(socketId, {
 				type: 'AuthenticateResponseSocketMessage',
@@ -107,6 +117,17 @@ class ServerSocketManager {
 	
 	private _send(socketId: string, message: SocketMessage) {
 		this._server!.to(socketId).emit('message', message);
+	}
+	
+	public send(userId: string, message: SocketMessage) {
+		const authenticatedSockets = invert(this._authenticatedUsers) as { [userId: string]: string };
+		const socketId = authenticatedSockets[userId];
+		
+		if (!socketId) {
+			throw new Error('Invalid userid.');
+		}
+		
+		this._send(socketId, message);
 	}
 }
 
