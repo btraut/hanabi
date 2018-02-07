@@ -19,6 +19,7 @@ interface ClientSocketManagerExpectation {
 	resolve: (message: SocketMessage) => void;
 	reject: (error: string) => void;
 	isCorrectMessage: (message: SocketMessage) => boolean;
+	timeoutToken: any;
 }
 
 class ClientSocketManager {
@@ -72,10 +73,16 @@ class ClientSocketManager {
 	
 	public async expect(isCorrectMessage: (message: SocketMessage) => boolean): Promise<SocketMessage> {
 		return new Promise<SocketMessage>((resolve, reject) => {
+			const timeoutToken = setTimeout(() => {
+				this._expectations = this._expectations.filter((expectation) => expectation.resolve !== resolve);
+				reject('Socket message timed out.');
+			}, 2000);
+			
 			this._expectations.push({
 				resolve,
 				reject,
-				isCorrectMessage
+				isCorrectMessage,
+				timeoutToken
 			});
 		});
 	}
@@ -132,6 +139,7 @@ class ClientSocketManager {
 		
 		// Handle expectations.
 		for (const expectation of this._expectations) {
+			clearTimeout(expectation.timeoutToken);
 			expectation.reject('Server disconnected.');
 		}
 		
@@ -150,6 +158,7 @@ class ClientSocketManager {
 		// Check to see if this message matches any of the expected ones.
 		for (const expectation of this._expectations) {
 			if (expectation.isCorrectMessage(message)) {
+				clearTimeout(expectation.timeoutToken);
 				expectation.resolve(message);
 				resolvedExpectations.push(expectation);
 			}

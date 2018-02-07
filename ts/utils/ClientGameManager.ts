@@ -8,7 +8,7 @@ import { Dispatch } from 'react-redux';
 
 import ClientSocketManager from './ClientSocketManager';
 import ClientGameManagerState from '../models/ClientGameManagerState';
-import { SocketMessage, RequestInitialDataMessage, InitialDataResponseMessage } from '../models/SocketMessage';
+import { SocketMessage, RequestInitialDataMessage } from '../models/SocketMessage';
 import { StoreData } from '../reducers/root';
 import { gameActions } from '../reducers/Game';
 import GameState from '../models/GameState';
@@ -40,31 +40,19 @@ export default class ClientGameManager {
 		ClientSocketManager.disconnect();
 	}
 	
-	public send(message: SocketMessage) {
-		// Pass through to ClientSocketManager.
-		return ClientSocketManager.send(message);
-	}
-	
-	public async expect(isCorrectMessage: (message: SocketMessage) => boolean): Promise<SocketMessage> {
-		// Pass through to ClientSocketManager.
-		return ClientSocketManager.expect(isCorrectMessage);
-	}
-	
 	private _handleConnect = () => {
 		(async () => {
 			this._changeState(ClientGameManagerState.WaitingForInitialData);
-			
+		
 			console.log('Got connected! Now we need to fetch initial data.');
 			
-			// Send initial data fetch request.
-			ClientSocketManager.send({ type: 'RequestInitialDataMessage' } as RequestInitialDataMessage);
-			const message = await ClientSocketManager.expectMessageOfType<InitialDataResponseMessage>('InitialDataResponseMessage');
-			
-			// Unload the game state data.
-			if (message.data.state === null) {
-				this._changeState(ClientGameManagerState.JoinGame);
-			} else {
-				this._restoreGame(message.data.state, message.data.data);
+			try {
+				// Send initial data fetch request. _handleMessage will get the rest.
+				// Expect a response for the sake of timeout error handling.
+				ClientSocketManager.send({ type: 'RequestInitialDataMessage' } as RequestInitialDataMessage);
+				await ClientSocketManager.expectMessageOfType('InitialDataResponseMessage');
+			} catch (error) {
+				console.log(error);
 			}
 		})();
 	}
@@ -114,8 +102,15 @@ export default class ClientGameManager {
 		}
 	}
 	
-	private _handleMessage = (_message: SocketMessage) => {
-		// TODO
+	private _handleMessage = (message: SocketMessage) => {
+		if (message.type === 'InitialDataResponseMessage') {
+			// Unload the game state data.
+			if (message.data.state === null) {
+				this._changeState(ClientGameManagerState.JoinGame);
+			} else {
+				this._restoreGame(message.data.state, message.data.data);
+			}
+		}
 	}
 	
 	private _changeState(state: ClientGameManagerState) {
