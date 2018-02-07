@@ -63,7 +63,7 @@ declare const SERVER_VIEWS_PATH: string;
 		app.use(compress());
 		app.use(logger('dev'));
 		app.use(session({
-			secret: process.env.SESSION_COOKIE_SECRET,
+			secret: process.env.SESSION_COOKIE_SECRET!,
 			resave: false,
 			saveUninitialized: true,
 			cookie: { secure: true },
