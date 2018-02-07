@@ -4,10 +4,10 @@ import ServerSocketManager from './ServerSocketManager';
 
 const GAME_EXPIRATION_MINUTES = 30;
 
-export default class GameManager {
+class ServerGameManager {
 	private _games: { [code: string]: Game } = {};
 	
-	constructor() {
+	public connect() {
 		ServerSocketManager.onConnect.subscribe(this._handleConnect);
 		ServerSocketManager.onDisconnect.subscribe(this._handleDisconnect);
 		ServerSocketManager.onMessage.subscribe(this._handleMessage);
@@ -47,10 +47,6 @@ export default class GameManager {
 		return prunedEntries;
 	}
 	
-	private _getGameForUser(userId: string) {
-		return Object.values(this._games).find(game => game.players.includes(userId));
-	}
-	
 	private _handleConnect = ({ userId }: { userId: string }) => {
 		console.log(`${ userId } connected.`);
 	}
@@ -69,8 +65,10 @@ export default class GameManager {
 	}
 	
 	private _handleRequestInitialDataMessage(userId: string) {
-		const game = this._getGameForUser(userId);
-			
+		const playerGame = Object.values(this._games).find(game => game.players.includes(userId));
+		const ownerGame = Object.values(this._games).find(game => game.ownerId === userId);
+		const game = playerGame || ownerGame;
+		
 		ServerSocketManager.send(userId, {
 			type: 'InitialDataResponseMessage',
 			data: { game: game ? game.toObject() : undefined }
@@ -85,3 +83,6 @@ export default class GameManager {
 		}
 	}
 }
+
+const instance = new ServerGameManager();
+export default instance;

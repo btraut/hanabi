@@ -1,4 +1,4 @@
-import { GameObject } from './Game';
+import { GameData } from './Game';
 
 interface SocketMessageTemplate<T, D> {
 	type: T;
@@ -13,12 +13,12 @@ export type AuthenticateResponseSocketMessage = SocketMessageTemplate<'Authentic
 
 export type RequestInitialDataMessage = SocketMessageTemplate<'RequestInitialDataMessage', string>;
 export type InitialDataResponseMessage = SocketMessageTemplate<'InitialDataResponseMessage', {
-	game?: GameObject;
+	game?: GameData;
 }>;
 
 export type CreateGameMessage = SocketMessageTemplate<'CreateGameMessage', string>;
 export type GameCreatedMessage = SocketMessageTemplate<'GameCreatedMessage', {
-	game: GameObject
+	game: GameData
 }>;
 
 export type SocketMessage =

@@ -24,6 +24,7 @@ import { StoreData, reducer, initialState } from './reducers/root';
 import App from './components/App';
 import Logger from './utils/Logger';
 import ServerSocketManager from './utils/ServerSocketManager';
+import ServerGameManager from './utils/ServerGameManager';
 
 // Define globals from webpack.
 declare const DOMAIN_BASE: string;
@@ -154,7 +155,8 @@ declare const SERVER_VIEWS_PATH: string;
 		
 		// Start Express and socket.io servers.
 		const server = http.createServer(app);
-		
+
+		ServerGameManager.connect();
 		ServerSocketManager.connect(server);
 		
 		await (new Promise<express.Express>((resolve, reject) => {

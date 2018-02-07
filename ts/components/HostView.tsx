@@ -7,12 +7,12 @@ import { GameState as GameReduxState } from '../reducers/Game';
 import { GameState } from '../models/Game';
 import withClientGameManager, { ClientGameManagerProviderPropsAdditions } from './withClientGameManager';
 
-type ExternalGameViewProps = React.Props<GameViewPage>;
-type GameViewProps = {
+type ExternalHostViewProps = React.Props<HostViewPage>;
+type HostViewProps = {
 	game: GameReduxState
-} & ExternalGameViewProps & ClientGameManagerProviderPropsAdditions;
+} & ExternalHostViewProps & ClientGameManagerProviderPropsAdditions;
 
-class GameViewPage extends React.PureComponent<GameViewProps> {
+class HostViewPage extends React.PureComponent<HostViewProps> {
 	public componentDidMount() {
 		this.props.clientGameManager.connect();
 	}
@@ -29,33 +29,22 @@ class GameViewPage extends React.PureComponent<GameViewProps> {
 		}
 		
 		switch (gameData.state) {
-		case GameState.WaitingForPlayers: return <div>InGameLobby…</div>;
-		
-		case GameState.WaitingForPlayerDescriptions:
-			// TODO: Look at data to determine if we need to enter name, draw
-			// picture, or neither.
-			return <div>Waiting for game to begin…</div>;
-			
-		case GameState.WaitingForTextSubmissions:
-			// TODO: Look at game data to determine if we've already submitted text.
-			return <div>Waiting for others to enter text…</div>;
-			
-		case GameState.WaitingForPictureSubmissions:
-			// TODO: Look at game data to determine if we've already submitted a picture.
-			return <div>Waiting for others to draw a picture…</div>;
-			
+		case GameState.WaitingForPlayers: return <div>Players are joining…</div>;
+		case GameState.WaitingForPlayerDescriptions: return <div>Players are naming themselves…</div>;
+		case GameState.WaitingForTextSubmissions: return <div>Players are submitting text…</div>;
+		case GameState.WaitingForPictureSubmissions: return <div>Players are submitting drawings…</div>;
 		case GameState.ReviewingStories: return <div>Reviewing sequences…</div>;
-	
 		case GameState.PlayAgainOptions: return <div>Play again?</div>;
 		}
 	}
 	
 	public render() {
-		const { game: { connected } } = this.props;
+		const { game: { connected, gameData } } = this.props;
 		
 		return (
 			<div className="GameView">
 				{ !connected && <p>Connecting…</p> }
+				{ connected && !gameData && <p>Loading…</p> }
 				{ this.renderGameState() }
 			</div>
 		);
@@ -65,4 +54,4 @@ class GameViewPage extends React.PureComponent<GameViewProps> {
 export default compose(
 	withClientGameManager,
 	connect(({ game }: StoreData) => ({ game }))
-)(GameViewPage) as any as React.ComponentClass<ExternalGameViewProps>;
+)(HostViewPage) as any as React.ComponentClass<ExternalHostViewProps>;

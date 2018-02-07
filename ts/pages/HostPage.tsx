@@ -1,6 +1,9 @@
 import * as React from 'react';
 import { RouteProps } from 'react-router';
 
+import HostView from '../components/HostView';
+import ClientGameManagerProvider from '../components/ClientGameManagerProvider';
+
 export default class HostPage extends React.PureComponent<RouteProps> {
 	public static async preload() {
 		console.log('host page preloaded');
@@ -13,14 +16,10 @@ export default class HostPage extends React.PureComponent<RouteProps> {
 	}
 	
 	public render() {
-		const code = 'abc123';
-		const url = `http://localhost:3000/game`;
-		
 		return (
-			<div className="HostPage">
-				<div>Have others join the game at:</div>
-				<div>{ url } + { code }</div>
-			</div>
+			<ClientGameManagerProvider>
+				<HostView />
+			</ClientGameManagerProvider>
 		);
 	}
 };

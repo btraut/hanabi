@@ -1,29 +1,46 @@
 import { combineReducers } from 'redux';
 import { createAction, getType } from 'typesafe-actions';
-import ClientGameManagerState from '../models/ClientGameManagerState';
+import { GameData } from '../models/Game';
 
 const prefix = (p: string) => `Game/${p}`;
 
 export const gameActions = {
-	changeState: createAction(
-		prefix('CHANGE_STATE'),
-		(state: ClientGameManagerState) => ({ type: prefix('CHANGE_STATE'), state })
+	connect: createAction(
+		prefix('CONNECT'),
+		() => ({ type: prefix('CONNECT') })
+	),
+	disconnect: createAction(
+		prefix('DISCONNECT'),
+		() => ({ type: prefix('DISCONNECT') })
+	),
+	restoreGame: createAction(
+		prefix('RESTORE_GAME'),
+		(gameData?: GameData) => ({ type: prefix('RESTORE_GAME'), gameData })
 	)
 };
 
 export interface GameState {
-	readonly state: ClientGameManagerState;
+	readonly connected: boolean;
+	readonly gameData: GameData | null;
 }
 
 export const initialState: GameState = {
-	state: ClientGameManagerState.Disconnected
+	connected: false,
+	gameData: null
 };
 
 export const gameReducer = combineReducers<GameState>({
-	state: (state = ClientGameManagerState.Disconnected, action) => {
+	connected: (connected = false, action) => {
 		switch (action.type) {
-			case getType(gameActions.changeState): return action.state;
-			default: return state;
+			case getType(gameActions.connect): return true;
+			case getType(gameActions.disconnect): return false;
+			default: return connected;
+		}
+	},
+	gameData: (gameData: GameData | null = null, action) => {
+		switch (action.type) {
+			case getType(gameActions.restoreGame): return action.gameData || null;
+			default: return gameData;
 		}
 	}
 });

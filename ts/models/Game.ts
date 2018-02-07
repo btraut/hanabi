@@ -1,8 +1,16 @@
 import * as uuid from 'uuid';
 
-import GameState from './GameState';
+export enum GameState {
+	WaitingForPlayers,
+	WaitingForPlayerDescriptions,
+	WaitingForTextSubmissions,
+	WaitingForPictureSubmissions,
+	AllSubmissionsRecieved,
+	ReviewingStories,
+	PlayAgainOptions
+}
 
-export interface GameObject {
+export interface GameData {
 	code: string;
 	state: GameState;
 }
@@ -26,7 +34,7 @@ export class Game {
 		this._ownerId = ownerId;
 	}
 	
-	public toObject(): GameObject {
+	public toObject(): GameData {
 		return {
 			code: this._code,
 			state: this._state
