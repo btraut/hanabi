@@ -1,3 +1,5 @@
+import GameState from './GameState';
+
 interface SocketMessageTemplate<T, D> {
 	type: T;
 	data: D;
@@ -9,8 +11,15 @@ export type AuthenticateResponseSocketMessage = SocketMessageTemplate<'Authentic
 	success: boolean,
 	error?: string
 }>;
+export type RequestInitialDataMessage = SocketMessageTemplate<'RequestInitialDataMessage', string>;
+export type InitialDataResponseMessage = SocketMessageTemplate<'InitialDataResponseMessage', {
+	state: GameState | null,
+	data: null
+}>;
 
 export type SocketMessage =
 	LogSocketMessage |
 	AuthenticateSocketMessage |
-	AuthenticateResponseSocketMessage;
+	AuthenticateResponseSocketMessage |
+	RequestInitialDataMessage |
+	InitialDataResponseMessage;

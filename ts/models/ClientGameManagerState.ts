@@ -2,15 +2,17 @@ enum ClientGameManagerState {
 	Disconnected,
 	Connecting,
 	WaitingForInitialData,
+	JoinGame,
 	InGameLobby,
 	NameYourself,
 	DrawYourself,
-	WaitingForNextPhase,
+	WaitingForGameToBegin,
 	EnterText,
 	WaitingForOthersToEnterText,
 	DrawPicture,
 	WaitingForOthersToDrawPicture,
-	ReviewingSequences
+	ReviewingSequences,
+	PlayAgainOptions
 }
 
 export default ClientGameManagerState;

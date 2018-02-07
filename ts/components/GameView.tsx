@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { Link } from 'react-router-dom';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
 
@@ -25,19 +24,24 @@ class GameViewPage extends React.PureComponent<GameViewProps> {
 	public render() {
 		const { game } = this.props;
 		
-		let stateText = '';
 		switch (game.state) {
-		case ClientGameManagerState.Connecting: stateText = 'Connecting'; break;
-		case ClientGameManagerState.Disconnected: stateText = 'Disconnected'; break;
-		default: stateText = 'Connected! Waiting for server.'; break;
+		case ClientGameManagerState.Connecting: return <div>Loading…</div>;
+		case ClientGameManagerState.Disconnected: return <div>Disconnected. Reconnecting…</div>;
+		case ClientGameManagerState.WaitingForInitialData: return <div>WaitingForInitialData…</div>;
+		case ClientGameManagerState.JoinGame: return <div>JoinGame…</div>;
+		case ClientGameManagerState.InGameLobby: return <div>InGameLobby…</div>;
+		case ClientGameManagerState.NameYourself: return <div>NameYourself…</div>;
+		case ClientGameManagerState.DrawYourself: return <div>DrawYourself…</div>;
+		case ClientGameManagerState.WaitingForGameToBegin: return <div>WaitingForGameToBegin…</div>;
+		case ClientGameManagerState.EnterText: return <div>EnterText…</div>;
+		case ClientGameManagerState.WaitingForOthersToEnterText: return <div>WaitingForOthersToEnterText…</div>;
+		case ClientGameManagerState.DrawPicture: return <div>DrawPicture…</div>;
+		case ClientGameManagerState.WaitingForOthersToDrawPicture: return <div>WaitingForOthersToDrawPicture…</div>;
+		case ClientGameManagerState.ReviewingSequences: return <div>ReviewingSequences…</div>;
+		case ClientGameManagerState.PlayAgainOptions: return <div>PlayAgainOptions…</div>;
 		}
 		
-		return (
-			<div>
-				<p><Link to="/">Home</Link></p>
-				<p>{ stateText }</p>
-			</div>
-		);
+		return null;
 	}
 };
 

@@ -80,6 +80,10 @@ class ClientSocketManager {
 		});
 	}
 	
+	public async expectMessageOfType<T extends SocketMessage>(type: string): Promise<T> {
+		return this.expect(response => response.type === type) as Promise<T>;
+	}
+	
 	private async _authenticate() {
 		if (!this._socket || !this._socket.connected) {
 			throw new Error('Can’t send a message on a closed socket.io connection.');

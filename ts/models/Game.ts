@@ -1,16 +1,9 @@
 import * as uuid from 'uuid';
 
+import GameState from './GameState';
+
 export type Owner = string;
 export type Player = string;
-
-export enum GameState {
-	WaitingForPlayers,
-	Starting,
-	WaitingForSubmissions,
-	AllSubmissionsRecieved,
-	ReviewStories,
-	PlayAgain
-}
 
 export class Game {
 	public get created() { return this._created; }
