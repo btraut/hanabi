@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Route, Switch, RouteProps } from 'react-router-dom';
 
 interface AppProps {
-	routes: RouteProps[];
+	readonly routes: RouteProps[];
 };
 
 const App: React.StatelessComponent<AppProps> = ({ routes }) => (

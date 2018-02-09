@@ -4,30 +4,43 @@ import { connect } from 'react-redux';
 
 import { StoreData } from '../reducers/root';
 import { GameState as GameReduxState } from '../reducers/Game';
-import { GameState } from '../models/Game';
+import { GameState, GameData } from '../models/Game';
 import withClientGameManager, { ClientGameManagerProviderPropsAdditions } from './withClientGameManager';
 
 type ExternalHostViewProps = React.Props<HostViewPage>;
 type HostViewProps = {
-	game: GameReduxState
+	readonly connected: boolean;
+	readonly initialDataLoaded: boolean;
+	readonly gameData: GameData | null;
 } & ExternalHostViewProps & ClientGameManagerProviderPropsAdditions;
 
 class HostViewPage extends React.PureComponent<HostViewProps> {
 	public componentDidMount() {
-		this.props.clientGameManager.connect();
+		this._connect();
+	}
+	
+	public componentDidUpdate() {
+		this._connect();
+	}
+	
+	private _connect() {
+		const { clientGameManager, initialDataLoaded, connected, gameData } = this.props;
+		
+		if (connected) {
+			if (initialDataLoaded && !gameData) {
+				clientGameManager.createGame();
+			}
+		} else {
+			clientGameManager.connect();
+		}
 	}
 	
 	public componentWillUnmount() {
-		this.props.clientGameManager.disconnect();
+		const { clientGameManager } = this.props;
+		clientGameManager.disconnect();
 	}
 	
-	public renderGameState() {
-		const { game: { gameData } } = this.props;
-
-		if (!gameData) {
-			return <div><p>Join Game:</p><input /><input type="submit" value="Join" /></div>;
-		}
-		
+	public renderGameState(gameData: GameData) {
 		switch (gameData.state) {
 		case GameState.WaitingForPlayers: return <div>Players are joining…</div>;
 		case GameState.WaitingForPlayerDescriptions: return <div>Players are naming themselves…</div>;
@@ -39,13 +52,19 @@ class HostViewPage extends React.PureComponent<HostViewProps> {
 	}
 	
 	public render() {
-		const { game: { connected, gameData } } = this.props;
+		const { connected, gameData, initialDataLoaded } = this.props;
+		
+		if (!connected) {
+			return <div>Connecting…</div>;
+		}
+		
+		if (!initialDataLoaded || !gameData) {
+			return <div>Loading…</div>;
+		}
 		
 		return (
 			<div className="GameView">
-				{ !connected && <p>Connecting…</p> }
-				{ connected && !gameData && <p>Loading…</p> }
-				{ this.renderGameState() }
+				{ this.renderGameState(gameData) }
 			</div>
 		);
 	}
@@ -53,5 +72,7 @@ class HostViewPage extends React.PureComponent<HostViewProps> {
 
 export default compose(
 	withClientGameManager,
-	connect(({ game }: StoreData) => ({ game }))
+	connect(({ game: { initialDataLoaded, connected, gameData } }: StoreData) => ({
+		initialDataLoaded, connected, gameData
+	}))
 )(HostViewPage) as any as React.ComponentClass<ExternalHostViewProps>;

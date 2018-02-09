@@ -13,19 +13,21 @@ export const gameActions = {
 		prefix('DISCONNECT'),
 		() => ({ type: prefix('DISCONNECT') })
 	),
-	restoreGame: createAction(
-		prefix('RESTORE_GAME'),
-		(gameData?: GameData) => ({ type: prefix('RESTORE_GAME'), gameData })
+	loadGame: createAction(
+		prefix('LOAD_GAME'),
+		(gameData?: GameData) => ({ type: prefix('LOAD_GAME'), gameData })
 	)
 };
 
 export interface GameState {
 	readonly connected: boolean;
+	readonly initialDataLoaded: boolean;
 	readonly gameData: GameData | null;
 }
 
 export const initialState: GameState = {
 	connected: false,
+	initialDataLoaded: false,
 	gameData: null
 };
 
@@ -37,9 +39,16 @@ export const gameReducer = combineReducers<GameState>({
 			default: return connected;
 		}
 	},
+	initialDataLoaded: (initialDataLoaded = false, action) => {
+		switch (action.type) {
+			case getType(gameActions.disconnect): return false;
+			case getType(gameActions.loadGame): return true;
+			default: return initialDataLoaded;
+		}
+	},
 	gameData: (gameData: GameData | null = null, action) => {
 		switch (action.type) {
-			case getType(gameActions.restoreGame): return action.gameData || null;
+			case getType(gameActions.loadGame): return action.gameData || null;
 			default: return gameData;
 		}
 	}

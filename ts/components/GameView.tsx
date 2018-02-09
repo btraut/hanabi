@@ -9,7 +9,7 @@ import withClientGameManager, { ClientGameManagerProviderPropsAdditions } from '
 
 type ExternalGameViewProps = React.Props<GameViewPage>;
 type GameViewProps = {
-	game: GameReduxState
+	readonly game: GameReduxState
 } & ExternalGameViewProps & ClientGameManagerProviderPropsAdditions;
 
 class GameViewPage extends React.PureComponent<GameViewProps> {

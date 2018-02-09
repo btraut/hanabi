@@ -4,7 +4,7 @@ import * as PropTypes from 'prop-types';
 import ClientGameManager from '../utils/ClientGameManager';
 
 export interface ClientGameManagerProviderPropsAdditions {
-	clientGameManager: ClientGameManager;
+	readonly clientGameManager: ClientGameManager;
 }
 
 export default function withClientGameManager<P extends React.Props<any>>(Subject: React.ComponentClass<P & ClientGameManagerProviderPropsAdditions>) {

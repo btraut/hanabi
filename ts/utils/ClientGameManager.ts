@@ -7,7 +7,7 @@
 import { Dispatch } from 'react-redux';
 
 import ClientSocketManager from './ClientSocketManager';
-import { SocketMessage, RequestInitialDataMessage } from '../models/SocketMessage';
+import { SocketMessage, RequestInitialDataMessage, CreateGameMessage } from '../models/SocketMessage';
 import { StoreData } from '../reducers/root';
 import { gameActions } from '../reducers/Game';
 
@@ -30,8 +30,17 @@ export default class ClientGameManager {
 		ClientSocketManager.disconnect();
 	}
 	
+	public async createGame() {
+		// Call to create a game. Expect a response for the sake of error handling.
+		ClientSocketManager.send({ type: 'CreateGameMessage' } as CreateGameMessage);
+		await ClientSocketManager.expectMessageOfType('GameCreatedMessage');
+	}
+	
 	private _handleConnect = () => {
 		(async () => {
+			// Note that we've connected, but haven't yet gotten initial data.
+			this._dispatch(gameActions.connect());
+			
 			// Send initial data fetch request. _handleMessage will get the rest.
 			// Expect a response for the sake of timeout error handling.
 			ClientSocketManager.send({ type: 'RequestInitialDataMessage' } as RequestInitialDataMessage);
@@ -45,8 +54,11 @@ export default class ClientGameManager {
 	
 	private _handleMessage = (message: SocketMessage) => {
 		if (message.type === 'InitialDataResponseMessage') {
-			this._dispatch(gameActions.restoreGame(message.data.game));
-			this._dispatch(gameActions.connect());
+			// Save the game data.
+			this._dispatch(gameActions.loadGame(message.data.game));
+		} else if (message.type === 'GameCreatedMessage') {
+			// Save the new game.
+			this._dispatch(gameActions.loadGame(message.data.game));
 		}
 	}
 }
