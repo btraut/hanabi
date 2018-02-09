@@ -1,25 +1,38 @@
 import { GameData } from './Game';
+import Player from './Player';
 
 interface SocketMessageTemplate<T, D> {
 	type: T;
 	data: D;
 }
 
-export type AuthenticateSocketMessage = SocketMessageTemplate<'AuthenticateSocketMessage', string>;
+export type AuthenticateSocketMessage = SocketMessageTemplate<'AuthenticateSocketMessage', void>;
 export type AuthenticateResponseSocketMessage = SocketMessageTemplate<'AuthenticateResponseSocketMessage', {
 	success: boolean;
 	error?: string;
 }>;
 
-export type RequestInitialDataMessage = SocketMessageTemplate<'RequestInitialDataMessage', string>;
+export type RequestInitialDataMessage = SocketMessageTemplate<'RequestInitialDataMessage', void>;
 export type InitialDataResponseMessage = SocketMessageTemplate<'InitialDataResponseMessage', {
 	game?: GameData;
 }>;
 
-export type CreateGameMessage = SocketMessageTemplate<'CreateGameMessage', string>;
+export type CreateGameMessage = SocketMessageTemplate<'CreateGameMessage', void>;
 export type GameCreatedMessage = SocketMessageTemplate<'GameCreatedMessage', {
-	game: GameData
+	game: GameData;
 }>;
+
+export type JoinGameMessage = SocketMessageTemplate<'JoinGameMessage', {
+	code: string;
+}>;
+export type GameJoinedMessage = SocketMessageTemplate<'GameJoinedMessage', {
+	error?: string;
+	game?: GameData;
+}>;
+
+export type PlayerAddedMessage = SocketMessageTemplate<'PlayerAddedMessage', { player: Player; }>;
+export type PlayerUpdatedMessage = SocketMessageTemplate<'PlayerUpdatedMessage', { player: Player; }>;
+export type PlayerRemovedMessage = SocketMessageTemplate<'PlayerRemovedMessage', { player: Player; }>;
 
 export type SocketMessage =
 	AuthenticateSocketMessage |
@@ -27,4 +40,9 @@ export type SocketMessage =
 	RequestInitialDataMessage |
 	InitialDataResponseMessage |
 	CreateGameMessage |
-	GameCreatedMessage;
+	GameCreatedMessage |
+	JoinGameMessage |
+	GameJoinedMessage |
+	PlayerAddedMessage |
+	PlayerUpdatedMessage |
+	PlayerRemovedMessage;

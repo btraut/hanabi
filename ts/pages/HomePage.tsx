@@ -16,7 +16,7 @@ export default class HomePage extends React.PureComponent<RouteProps> {
 	public render() {
 		return (
 			<div className="HomePage">
-				<p><Link to="/game">Join a Game</Link></p>
+				<p><Link to="/join">Join a Game</Link></p>
 				<p><Link to="/host">Start a Game</Link></p>
 			</div>
 		);

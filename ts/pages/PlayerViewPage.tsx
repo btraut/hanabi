@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { RouteProps } from 'react-router';
 
-import GameView from '../components/GameView';
+import PlayerView from '../components/PlayerView';
 import ClientGameManagerProvider from '../components/ClientGameManagerProvider';
 
-export default class GameViewPage extends React.PureComponent<RouteProps> {
+export default class PlayerViewPage extends React.PureComponent<RouteProps> {
 	public static async preload() {
 		console.log('join page preloaded');
 	}
@@ -12,13 +12,13 @@ export default class GameViewPage extends React.PureComponent<RouteProps> {
 	public static title = 'Lost in Translation | Join Game';
 	
 	public componentDidMount() {
-		document.title = GameViewPage.title;
+		document.title = PlayerViewPage.title;
 	}
 	
 	public render() {
 		return (
 			<ClientGameManagerProvider>
-				<GameView />
+				<PlayerView />
 			</ClientGameManagerProvider>
 		);
 	}

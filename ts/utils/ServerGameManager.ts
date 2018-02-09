@@ -1,5 +1,12 @@
-import { Game } from '../models/Game';
-import { SocketMessage, GameCreatedMessage, InitialDataResponseMessage } from '../models/SocketMessage';
+import { Game, GameState } from '../models/Game';
+import {
+	SocketMessage,
+	GameCreatedMessage,
+	InitialDataResponseMessage,
+	GameJoinedMessage,
+	PlayerAddedMessage,
+	PlayerRemovedMessage
+} from '../models/SocketMessage';
 import ServerSocketManager from './ServerSocketManager';
 
 const GAME_EXPIRATION_MINUTES = 30;
@@ -65,7 +72,7 @@ class ServerGameManager {
 	}
 	
 	private _handleRequestInitialDataMessage(userId: string) {
-		const playerGame = Object.values(this._games).find(game => game.players.includes(userId));
+		const playerGame = Object.values(this._games).find(game => !!game.players.find(player => player.id === userId));
 		const ownerGame = Object.values(this._games).find(game => game.ownerId === userId);
 		const game = playerGame || ownerGame;
 		
@@ -75,11 +82,76 @@ class ServerGameManager {
 		} as InitialDataResponseMessage);
 	}
 	
+	private _handleJoinGameMessage(userId: string, gameCode: string) {
+		// Check to see if we can find the new game.
+		const gameToJoin = this._games[gameCode];
+		
+		if (!gameToJoin) {
+			ServerSocketManager.send(userId, {
+				type: 'GameJoinedMessage',
+				data: { error: 'Invalid game code' }
+			} as GameJoinedMessage);
+			return;
+		}
+		
+		// Check to see if the user is already part of a game.
+		const existingGame = Object.values(this._games).find(game => !!game.players.find(player => player.id === userId));
+		
+		if (existingGame) {
+			// Remove the user from the existing game.
+			const removedPlayer = existingGame.removePlayer(userId);
+			
+			if (removedPlayer) {
+				// Make a list of all users we need to notify.
+				const removeUserIdsToNotify = [...gameToJoin.players.map(player => player.id), gameToJoin.ownerId];
+				
+				// Notify all clients that the user has been added.
+				for (const removeUserIdToNotify of removeUserIdsToNotify) {
+					ServerSocketManager.send(removeUserIdToNotify, {
+						type: 'PlayerRemovedMessage',
+						data: { player: removedPlayer }
+					} as PlayerRemovedMessage);
+				}
+			}
+		}
+		
+		// Ensure the game is in the right state.
+		if (gameToJoin.state !== GameState.WaitingForPlayers) {
+			ServerSocketManager.send(userId, {
+				type: 'GameJoinedMessage',
+				data: { error: 'Game isn’t accepting players right now.' }
+			} as GameJoinedMessage);
+			return;
+		}
+		
+		// Make a list of which users (clients + host) to notify.
+		const joinUserIdsToNotify = [...gameToJoin.players.map(player => player.id), gameToJoin.ownerId];
+		
+		// Join the new game.
+		const joinedplayer = gameToJoin.addPlayer(userId);
+		
+		// Respond to the user who joined.
+		ServerSocketManager.send(userId, {
+			type: 'GameJoinedMessage',
+			data: { game: gameToJoin.toObject() }
+		} as GameJoinedMessage);
+		
+		// Notify all clients that the user has been added.
+		for (const joinUserIdToNotify of joinUserIdsToNotify) {
+			ServerSocketManager.send(joinUserIdToNotify, {
+				type: 'PlayerAddedMessage',
+				data: { player: joinedplayer }
+			} as PlayerAddedMessage);
+		}
+	}
+	
 	private _handleMessage = ({ userId, message }: { userId: string, message: SocketMessage }) =>  {
 		if (message.type === 'CreateGameMessage') {
 			this._handleCreateGameMessage(userId);
 		} else if (message.type === 'RequestInitialDataMessage') {
 			this._handleRequestInitialDataMessage(userId);
+		} else if (message.type === 'JoinGameMessage') {
+			this._handleJoinGameMessage(userId, message.data.code);
 		}
 	}
 }

@@ -1,6 +1,7 @@
 import { combineReducers } from 'redux';
 import { createAction, getType } from 'typesafe-actions';
 import { GameData } from '../models/Game';
+import Player from '../models/Player';
 
 const prefix = (p: string) => `Game/${p}`;
 
@@ -16,6 +17,22 @@ export const gameActions = {
 	loadGame: createAction(
 		prefix('LOAD_GAME'),
 		(gameData?: GameData) => ({ type: prefix('LOAD_GAME'), gameData })
+	),
+	gameJoinError: createAction(
+		prefix('GAME_JOIN_ERROR'),
+		(errorText: string) => ({ type: prefix('GAME_JOIN_ERROR'), errorText })
+	),
+	addPlayer: createAction(
+		prefix('ADD_PLAYER'),
+		(player: Player) => ({ type: prefix('ADD_PLAYER'), player })
+	),
+	updatePlayer: createAction(
+		prefix('UPDATE_PLAYER'),
+		(player: Player) => ({ type: prefix('UPDATE_PLAYER'), player })
+	),
+	removePlayer: createAction(
+		prefix('REMOVE_PLAYER'),
+		(player: Player) => ({ type: prefix('REMOVE_PLAYER'), player })
 	)
 };
 
@@ -23,12 +40,14 @@ export interface GameState {
 	readonly connected: boolean;
 	readonly initialDataLoaded: boolean;
 	readonly gameData: GameData | null;
+	readonly joinGameError: string | null;
 }
 
 export const initialState: GameState = {
 	connected: false,
 	initialDataLoaded: false,
-	gameData: null
+	gameData: null,
+	joinGameError: null
 };
 
 export const gameReducer = combineReducers<GameState>({
@@ -48,8 +67,38 @@ export const gameReducer = combineReducers<GameState>({
 	},
 	gameData: (gameData: GameData | null = null, action) => {
 		switch (action.type) {
-			case getType(gameActions.loadGame): return action.gameData || null;
-			default: return gameData;
+			case getType(gameActions.loadGame):
+				return action.gameData || null;
+			
+			case getType(gameActions.addPlayer):
+			case getType(gameActions.updatePlayer):
+			{
+				if (!gameData) {
+					return gameData;
+				}
+				
+				const newPlayers = [...gameData.players.filter(player => player.id !== action.player.id), action.player];
+				return { ...gameData, players: newPlayers };
+			}
+
+			case getType(gameActions.removePlayer):
+			{
+				if (!gameData) {
+					return gameData;
+				}
+				
+				const newPlayers = [...gameData.players.filter(player => player.id !== action.player.id)];
+				return { ...gameData, players: newPlayers };
+			}
+		
+			default:
+				return gameData;
+		}
+	},
+	joinGameError: (errorText: string | null = null, action) => {
+		switch (action.type) {
+			case getType(gameActions.gameJoinError): return action.errorText;
+			default: return errorText;
 		}
 	}
 });

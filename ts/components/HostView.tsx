@@ -3,7 +3,6 @@ import { compose } from 'redux';
 import { connect } from 'react-redux';
 
 import { StoreData } from '../reducers/root';
-import { GameState as GameReduxState } from '../reducers/Game';
 import { GameState, GameData } from '../models/Game';
 import withClientGameManager, { ClientGameManagerProviderPropsAdditions } from './withClientGameManager';
 
@@ -40,9 +39,23 @@ class HostViewPage extends React.PureComponent<HostViewProps> {
 		clientGameManager.disconnect();
 	}
 	
-	public renderGameState(gameData: GameData) {
+	private _renderWaitingForPlayers(gameData: GameData) {
+		return (
+			<div>
+				<h1>Your game has been created!</h1>
+				<p>Players can join the game using the code <strong>{ gameData.code }</strong>.</p>
+				<ul>
+					{ gameData.players.map(player => (
+						<li key={player.id}>{ player.id }: { player.name || 'anonymous player' }</li>
+					)) }
+				</ul>
+			</div>
+		);
+	}
+	
+	private _renderGameState(gameData: GameData) {
 		switch (gameData.state) {
-		case GameState.WaitingForPlayers: return <div>Players are joining…</div>;
+		case GameState.WaitingForPlayers: return this._renderWaitingForPlayers(gameData);
 		case GameState.WaitingForPlayerDescriptions: return <div>Players are naming themselves…</div>;
 		case GameState.WaitingForTextSubmissions: return <div>Players are submitting text…</div>;
 		case GameState.WaitingForPictureSubmissions: return <div>Players are submitting drawings…</div>;
@@ -63,8 +76,8 @@ class HostViewPage extends React.PureComponent<HostViewProps> {
 		}
 		
 		return (
-			<div className="GameView">
-				{ this.renderGameState(gameData) }
+			<div className="PlayerView">
+				{ this._renderGameState(gameData) }
 			</div>
 		);
 	}

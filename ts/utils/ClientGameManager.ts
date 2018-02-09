@@ -7,7 +7,7 @@
 import { Dispatch } from 'react-redux';
 
 import ClientSocketManager from './ClientSocketManager';
-import { SocketMessage, RequestInitialDataMessage, CreateGameMessage } from '../models/SocketMessage';
+import { SocketMessage, RequestInitialDataMessage, CreateGameMessage, JoinGameMessage } from '../models/SocketMessage';
 import { StoreData } from '../reducers/root';
 import { gameActions } from '../reducers/Game';
 
@@ -36,6 +36,12 @@ export default class ClientGameManager {
 		await ClientSocketManager.expectMessageOfType('GameCreatedMessage');
 	}
 	
+	public async joinGame(code: string) {
+		// Call to join a game. Expect a response for the sake of error handling.
+		ClientSocketManager.send({ type: 'JoinGameMessage', data: { code } } as JoinGameMessage);
+		await ClientSocketManager.expectMessageOfType('GameJoinedMessage');
+	}
+	
 	private _handleConnect = () => {
 		(async () => {
 			// Note that we've connected, but haven't yet gotten initial data.
@@ -54,11 +60,21 @@ export default class ClientGameManager {
 	
 	private _handleMessage = (message: SocketMessage) => {
 		if (message.type === 'InitialDataResponseMessage') {
-			// Save the game data.
 			this._dispatch(gameActions.loadGame(message.data.game));
 		} else if (message.type === 'GameCreatedMessage') {
-			// Save the new game.
 			this._dispatch(gameActions.loadGame(message.data.game));
+		} else if (message.type === 'GameJoinedMessage') {
+			if (message.data.error) {
+				this._dispatch(gameActions.gameJoinError(message.data.error));
+			} else if (message.data.game) {
+				this._dispatch(gameActions.loadGame(message.data.game));
+			}
+		} else if (message.type === 'PlayerAddedMessage') {
+			this._dispatch(gameActions.addPlayer(message.data.player));
+		} else if (message.type === 'PlayerUpdatedMessage') {
+			this._dispatch(gameActions.updatePlayer(message.data.player));
+		} else if (message.type === 'PlayerRemovedMessage') {
+			this._dispatch(gameActions.removePlayer(message.data.player));
 		}
 	}
 }
