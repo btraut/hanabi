@@ -26,9 +26,9 @@ export const gameActions = {
 		prefix('ADD_PLAYER'),
 		(player: Player) => ({ type: prefix('ADD_PLAYER'), player })
 	),
-	updatePlayer: createAction(
-		prefix('UPDATE_PLAYER'),
-		(player: Player) => ({ type: prefix('UPDATE_PLAYER'), player })
+	updateUser: createAction(
+		prefix('UPDATE_USER'),
+		(player: Player) => ({ type: prefix('UPDATE_USER'), player })
 	),
 	removePlayer: createAction(
 		prefix('REMOVE_PLAYER'),
@@ -71,10 +71,23 @@ export const gameReducer = combineReducers<GameState>({
 				return action.gameData || null;
 			
 			case getType(gameActions.addPlayer):
-			case getType(gameActions.updatePlayer):
 			{
 				if (!gameData) {
 					return gameData;
+				}
+				
+				const newPlayers = [...gameData.players.filter(player => player.id !== action.player.id), action.player];
+				return { ...gameData, players: newPlayers };
+			}
+
+			case getType(gameActions.updateUser):
+			{
+				if (!gameData) {
+					return gameData;
+				}
+				
+				if (gameData.owner.id === action.player.id) {
+					return { ...gameData, owner: action.player };
 				}
 				
 				const newPlayers = [...gameData.players.filter(player => player.id !== action.player.id), action.player];

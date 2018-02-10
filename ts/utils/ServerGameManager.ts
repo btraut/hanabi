@@ -1,10 +1,12 @@
 import { Game, GameState } from '../models/Game';
+import Player from '../models/Player';
 import {
 	SocketMessage,
 	GameCreatedMessage,
 	InitialDataResponseMessage,
 	GameJoinedMessage,
 	PlayerAddedMessage,
+	UserUpdatedMessage,
 	PlayerRemovedMessage
 } from '../models/SocketMessage';
 import ServerSocketManager from './ServerSocketManager';
@@ -56,10 +58,56 @@ class ServerGameManager {
 	
 	private _handleConnect = ({ userId }: { userId: string }) => {
 		console.log(`${ userId } connected.`);
+
+		this._updateAllGamesWithUser(userId, { connected: true });
 	}
 	
 	private _handleDisconnect = ({ userId }: { userId: string }) =>  {
 		console.log(`${ userId } disconnected.`);
+
+		this._updateAllGamesWithUser(userId, { connected: false });
+	}
+	
+	private _updateAllGamesWithUser(userId: string, updates: Partial<Player>) {
+		// Update any games that have this user as a player.
+		const playerGames = Object.values(this._games).filter(game => !!game.players[userId]);
+		
+		for (const game of playerGames) {
+			// Update the player.
+			const updatedUser = game.updatePlayer(userId, updates);
+			if (updatedUser) {
+				// Notify the other game players.
+				for (const notifyUserId of Object.values(game.players).filter(p => p.id !== userId).map(p => p.id)) {
+					ServerSocketManager.send(notifyUserId, {
+						type: 'UserUpdatedMessage',
+						data: { player: updatedUser }
+					} as UserUpdatedMessage);
+				}
+				
+				// Notify the game owner.
+				ServerSocketManager.send(game.owner.id, {
+					type: 'UserUpdatedMessage',
+					data: { player: updatedUser }
+				} as UserUpdatedMessage);
+			}
+		}
+		
+		// Update any games that have this user as the owner.
+		const ownerGames = Object.values(this._games).filter(game => game.owner.id === userId);
+		
+		for (const game of ownerGames) {
+			// Update the owner.
+			const updatedUser = game.updateOwner(updates);
+			if (updatedUser) {
+				// Notify the game players.
+				for (const notifyUserId of Object.values(game.players).map(p => p.id)) {
+					ServerSocketManager.send(notifyUserId, {
+						type: 'UserUpdatedMessage',
+						data: { player: updatedUser }
+					} as UserUpdatedMessage);
+				}
+			}
+		}
 	}
 	
 	private _handleCreateGameMessage(userId: string) {
@@ -72,8 +120,8 @@ class ServerGameManager {
 	}
 	
 	private _handleRequestInitialDataMessage(userId: string) {
-		const playerGame = Object.values(this._games).find(game => !!game.players.find(player => player.id === userId));
-		const ownerGame = Object.values(this._games).find(game => game.ownerId === userId);
+		const playerGame = Object.values(this._games).find(game => !!game.players[userId]);
+		const ownerGame = Object.values(this._games).find(game => game.owner.id === userId);
 		const game = playerGame || ownerGame;
 		
 		ServerSocketManager.send(userId, {
@@ -95,7 +143,7 @@ class ServerGameManager {
 		}
 		
 		// Check to see if the user is already part of a game.
-		const existingGame = Object.values(this._games).find(game => !!game.players.find(player => player.id === userId));
+		const existingGame = Object.values(this._games).find(game => !!game.players[userId]);
 		
 		if (existingGame) {
 			// Remove the user from the existing game.
@@ -103,7 +151,7 @@ class ServerGameManager {
 			
 			if (removedPlayer) {
 				// Make a list of all users we need to notify.
-				const removeUserIdsToNotify = [...gameToJoin.players.map(player => player.id), gameToJoin.ownerId];
+				const removeUserIdsToNotify = [...Object.keys(gameToJoin.players), gameToJoin.owner.id];
 				
 				// Notify all clients that the user has been added.
 				for (const removeUserIdToNotify of removeUserIdsToNotify) {
@@ -125,7 +173,7 @@ class ServerGameManager {
 		}
 		
 		// Make a list of which users (clients + host) to notify.
-		const joinUserIdsToNotify = [...gameToJoin.players.map(player => player.id), gameToJoin.ownerId];
+		const joinUserIdsToNotify = [...Object.keys(gameToJoin.players), gameToJoin.owner.id];
 		
 		// Join the new game.
 		const joinedplayer = gameToJoin.addPlayer(userId);

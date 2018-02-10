@@ -6,7 +6,7 @@ interface SocketMessageTemplate<T, D> {
 	data: D;
 }
 
-export type AuthenticateSocketMessage = SocketMessageTemplate<'AuthenticateSocketMessage', void>;
+export type AuthenticateSocketMessage = SocketMessageTemplate<'AuthenticateSocketMessage', string>;
 export type AuthenticateResponseSocketMessage = SocketMessageTemplate<'AuthenticateResponseSocketMessage', {
 	success: boolean;
 	error?: string;
@@ -31,7 +31,7 @@ export type GameJoinedMessage = SocketMessageTemplate<'GameJoinedMessage', {
 }>;
 
 export type PlayerAddedMessage = SocketMessageTemplate<'PlayerAddedMessage', { player: Player; }>;
-export type PlayerUpdatedMessage = SocketMessageTemplate<'PlayerUpdatedMessage', { player: Player; }>;
+export type UserUpdatedMessage = SocketMessageTemplate<'UserUpdatedMessage', { player: Player; }>;
 export type PlayerRemovedMessage = SocketMessageTemplate<'PlayerRemovedMessage', { player: Player; }>;
 
 export type SocketMessage =
@@ -44,5 +44,5 @@ export type SocketMessage =
 	JoinGameMessage |
 	GameJoinedMessage |
 	PlayerAddedMessage |
-	PlayerUpdatedMessage |
+	UserUpdatedMessage |
 	PlayerRemovedMessage;

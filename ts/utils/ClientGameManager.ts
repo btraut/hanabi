@@ -71,8 +71,8 @@ export default class ClientGameManager {
 			}
 		} else if (message.type === 'PlayerAddedMessage') {
 			this._dispatch(gameActions.addPlayer(message.data.player));
-		} else if (message.type === 'PlayerUpdatedMessage') {
-			this._dispatch(gameActions.updatePlayer(message.data.player));
+		} else if (message.type === 'UserUpdatedMessage') {
+			this._dispatch(gameActions.updateUser(message.data.player));
 		} else if (message.type === 'PlayerRemovedMessage') {
 			this._dispatch(gameActions.removePlayer(message.data.player));
 		}

@@ -46,7 +46,9 @@ class HostViewPage extends React.PureComponent<HostViewProps> {
 				<p>Players can join the game using the code <strong>{ gameData.code }</strong>.</p>
 				<ul>
 					{ gameData.players.map(player => (
-						<li key={player.id}>{ player.id }: { player.name || 'anonymous player' }</li>
+						<li key={player.id}>
+							{ player.id }: { player.name || 'anonymous player' }, { player.connected ? 'connected' : 'disconnected' }
+						</li>
 					)) }
 				</ul>
 			</div>

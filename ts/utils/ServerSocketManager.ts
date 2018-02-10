@@ -73,10 +73,11 @@ class ServerSocketManager {
 	private _handleDisconnect = (socketId: string) =>  {
 		Logger.debug(`socket.io disconnected: ${ socketId }`);
 		
+		// Remove the user from our authenticated list.
 		const userId = this._authenticatedUsers[socketId];
-		this._onDisconnect.emit({ userId });
-		
 		delete this._authenticatedUsers[socketId];
+		
+		this._onDisconnect.emit({ userId });
 	}
 	
 	private _handleMessage = (socketId: string, message: SocketMessage) =>  {
@@ -126,6 +127,8 @@ class ServerSocketManager {
 		if (!socketId) {
 			throw new Error('Invalid userid.');
 		}
+		
+		console.log(`sending message to ${ userId }:`, message);
 		
 		this._send(socketId, message);
 	}
