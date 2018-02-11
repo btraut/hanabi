@@ -86,8 +86,8 @@ export const gameReducer = combineReducers<GameState>({
 					return gameData;
 				}
 				
-				if (gameData.owner.id === action.player.id) {
-					return { ...gameData, owner: action.player };
+				if (gameData.host.id === action.player.id) {
+					return { ...gameData, host: action.player };
 				}
 				
 				const newPlayers = [...gameData.players.filter(player => player.id !== action.player.id), action.player];

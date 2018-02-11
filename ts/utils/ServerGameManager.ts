@@ -24,9 +24,9 @@ class ServerGameManager {
 		setInterval(this._pruneOldGames, GAME_EXPIRATION_MINUTES * 60 * 1000);
 	}
 	
-	private _startNewGame(ownerId: string) {
+	private _startNewGame(hostId: string) {
 		// Make a new game.
-		const newGame = new Game(ownerId);
+		const newGame = new Game(hostId);
 		
 		// Make sure the game code is unique.
 		while (this._games[newGame.code]) {
@@ -84,20 +84,20 @@ class ServerGameManager {
 					} as UserUpdatedMessage);
 				}
 				
-				// Notify the game owner.
-				ServerSocketManager.send(game.owner.id, {
+				// Notify the game host.
+				ServerSocketManager.send(game.host.id, {
 					type: 'UserUpdatedMessage',
 					data: { player: updatedUser }
 				} as UserUpdatedMessage);
 			}
 		}
 		
-		// Update any games that have this user as the owner.
-		const ownerGames = Object.values(this._games).filter(game => game.owner.id === userId);
+		// Update any games that have this user as the host.
+		const hostGames = Object.values(this._games).filter(game => game.host.id === userId);
 		
-		for (const game of ownerGames) {
-			// Update the owner.
-			const updatedUser = game.updateOwner(updates);
+		for (const game of hostGames) {
+			// Update the host.
+			const updatedUser = game.updateHost(updates);
 			if (updatedUser) {
 				// Notify the game players.
 				for (const notifyUserId of Object.values(game.players).map(p => p.id)) {
@@ -121,8 +121,8 @@ class ServerGameManager {
 	
 	private _handleRequestInitialDataMessage(userId: string) {
 		const playerGame = Object.values(this._games).find(game => !!game.players[userId]);
-		const ownerGame = Object.values(this._games).find(game => game.owner.id === userId);
-		const game = playerGame || ownerGame;
+		const hostGame = Object.values(this._games).find(game => game.host.id === userId);
+		const game = playerGame || hostGame;
 		
 		ServerSocketManager.send(userId, {
 			type: 'InitialDataResponseMessage',
@@ -151,7 +151,7 @@ class ServerGameManager {
 			
 			if (removedPlayer) {
 				// Make a list of all users we need to notify.
-				const removeUserIdsToNotify = [...Object.keys(gameToJoin.players), gameToJoin.owner.id];
+				const removeUserIdsToNotify = [...Object.keys(gameToJoin.players), gameToJoin.host.id];
 				
 				// Notify all clients that the user has been added.
 				for (const removeUserIdToNotify of removeUserIdsToNotify) {
@@ -173,7 +173,7 @@ class ServerGameManager {
 		}
 		
 		// Make a list of which users (clients + host) to notify.
-		const joinUserIdsToNotify = [...Object.keys(gameToJoin.players), gameToJoin.owner.id];
+		const joinUserIdsToNotify = [...Object.keys(gameToJoin.players), gameToJoin.host.id];
 		
 		// Join the new game.
 		const joinedplayer = gameToJoin.addPlayer(userId);

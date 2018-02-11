@@ -15,14 +15,14 @@ export enum GameState {
 export interface GameData {
 	readonly code: string;
 	readonly state: GameState;
-	readonly owner: Player;
+	readonly host: Player;
 	readonly players: Player[];
 }
 
 export class Game {
 	public get created() { return this._created; }
 	public get updated() { return this._updated; }
-	public get owner() { return this._owner; }
+	public get host() { return this._host; }
 	public get players() { return this._players; }
 	public get code() { return this._code; }
 	public get state() { return this._state; }
@@ -30,14 +30,14 @@ export class Game {
 	private _created = new Date();
 	private _updated = new Date();
 	private _players: { [playerId: string]: Player } = {};
-	private _owner: Player;
+	private _host: Player;
 	private _code: string = this._generateCode();
 	private _state = GameState.WaitingForPlayers;
 	
-	constructor(ownerId: string) {
-		this._owner = {
-			name: 'owner',
-			id: ownerId,
+	constructor(hostId: string) {
+		this._host = {
+			name: 'host',
+			id: hostId,
 			connected: true
 		};
 	}
@@ -46,7 +46,7 @@ export class Game {
 		return {
 			code: this._code,
 			state: this._state,
-			owner: this._owner,
+			host: this._host,
 			players: Object.values(this._players)
 		};
 	}
@@ -99,11 +99,11 @@ export class Game {
 		return removedPlayer;
 	}
 	
-	public updateOwner(updates: Partial<Player>) {
-		this._owner = { ...this._owner, ...updates };
+	public updateHost(updates: Partial<Player>) {
+		this._host = { ...this._host, ...updates };
 		
 		this._updated = new Date();
 		
-		return this._owner;
+		return this._host;
 	}
 }
