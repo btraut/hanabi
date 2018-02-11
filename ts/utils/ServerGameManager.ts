@@ -8,7 +8,9 @@ import {
 	PlayerAddedMessage,
 	UserUpdatedMessage,
 	PlayerRemovedMessage,
-	GameStartedMessage
+	GameStartedMessage,
+	PlayerNameSetMessage,
+	PlayerPictureSetMessage
 } from '../models/SocketMessage';
 import ServerSocketManager from './ServerSocketManager';
 import Logger from '../utils/Logger';
@@ -144,7 +146,6 @@ class ServerGameManager {
 	private _handleJoinGameMessage(userId: string, gameCode: string) {
 		// Check to see if we can find the new game.
 		const gameToJoin = this._games[gameCode];
-		
 		if (!gameToJoin) {
 			ServerSocketManager.send(userId, {
 				type: 'GameJoinedMessage',
@@ -155,7 +156,6 @@ class ServerGameManager {
 		
 		// Check to see if the user is already part of a game.
 		const existingGame = Object.values(this._games).find(game => !!game.players[userId]);
-		
 		if (existingGame) {
 			// Remove the user from the existing game.
 			const removedPlayer = existingGame.removePlayer(userId);
@@ -199,7 +199,7 @@ class ServerGameManager {
 		for (const joinUserIdToNotify of joinUserIdsToNotify) {
 			ServerSocketManager.send(joinUserIdToNotify, {
 				type: 'PlayerAddedMessage',
-				data: { player: joinedplayer }
+				data: { player: joinedplayer, gameCode: gameToJoin.code }
 			} as PlayerAddedMessage);
 		}
 	}
@@ -211,6 +211,15 @@ class ServerGameManager {
 			ServerSocketManager.send(userId, {
 				type: 'GameStartedMessage',
 				data: { error: 'Invalid game.' }
+			} as GameStartedMessage);
+			return;
+		}
+		
+		// Ensure the user is in the game.
+		if (!game.players[userId] && game.host.id !== userId) {
+			ServerSocketManager.send(userId, {
+				type: 'GameStartedMessage',
+				data: { error: 'User isn’t a player in or host of this game.' }
 			} as GameStartedMessage);
 			return;
 		}
@@ -251,6 +260,100 @@ class ServerGameManager {
 		} as GameStartedMessage);
 	}
 	
+	private _handleSetPlayerNameMessage(playerId: string, gameCode: string, name: string) {
+		// Validate game.
+		const game = this._games[gameCode];
+		if (!game) {
+			ServerSocketManager.send(playerId, {
+				type: 'PlayerNameSetMessage',
+				data: { error: 'Invalid game.' }
+			} as PlayerNameSetMessage);
+			return;
+		}
+		
+		// Ensure the user is in the game.
+		if (!game.players[playerId] && game.host.id !== playerId) {
+			ServerSocketManager.send(playerId, {
+				type: 'PlayerNameSetMessage',
+				data: { error: 'User isn’t a player in or host of this game.' }
+			} as PlayerNameSetMessage);
+			return;
+		}
+		
+		// Ensure the game is in the right state.
+		if (game.state !== GameState.WaitingForPlayerDescriptions) {
+			ServerSocketManager.send(playerId, {
+				type: 'PlayerNameSetMessage',
+				data: { error: 'User data can’t be updated right now.' }
+			} as PlayerNameSetMessage);
+			return;
+		}
+		
+		// Update the player name.
+		game.updatePlayer(playerId, { name });
+		
+		// Notify the other game players.
+		for (const notifyUserId of Object.values(game.players).map(p => p.id)) {
+			ServerSocketManager.send(notifyUserId, {
+				type: 'PlayerNameSetMessage',
+				data: { gameCode, name, playerId }
+			} as PlayerNameSetMessage);
+		}
+		
+		// Notify the game host.
+		ServerSocketManager.send(game.host.id, {
+			type: 'PlayerNameSetMessage',
+			data: { gameCode, name, playerId }
+		} as PlayerNameSetMessage);
+	}
+	
+	private _handleSetPlayerPictureMessage(playerId: string, gameCode: string, pictureData: string) {
+		// Validate game.
+		const game = this._games[gameCode];
+		if (!game) {
+			ServerSocketManager.send(playerId, {
+				type: 'PlayerPictureSetMessage',
+				data: { error: 'Invalid game.' }
+			} as PlayerPictureSetMessage);
+			return;
+		}
+		
+		// Ensure the user is in the game.
+		if (!game.players[playerId] && game.host.id !== playerId) {
+			ServerSocketManager.send(playerId, {
+				type: 'PlayerPictureSetMessage',
+				data: { error: 'User isn’t a player in or host of this game.' }
+			} as PlayerPictureSetMessage);
+			return;
+		}
+		
+		// Ensure the game is in the right state.
+		if (game.state !== GameState.WaitingForPlayerDescriptions) {
+			ServerSocketManager.send(playerId, {
+				type: 'PlayerPictureSetMessage',
+				data: { error: 'User data can’t be updated right now.' }
+			} as PlayerPictureSetMessage);
+			return;
+		}
+		
+		// Update the player picture data.
+		game.updatePlayer(playerId, { pictureData });
+		
+		// Notify the other game players.
+		for (const notifyUserId of Object.values(game.players).map(p => p.id)) {
+			ServerSocketManager.send(notifyUserId, {
+				type: 'PlayerPictureSetMessage',
+				data: { gameCode, pictureData, playerId }
+			} as PlayerPictureSetMessage);
+		}
+		
+		// Notify the game host.
+		ServerSocketManager.send(game.host.id, {
+			type: 'PlayerPictureSetMessage',
+			data: { gameCode, pictureData, playerId }
+		} as PlayerPictureSetMessage);
+	}
+	
 	private _handleMessage = ({ userId, message }: { userId: string, message: SocketMessage }) =>  {
 		try {
 			if (message.type === 'CreateGameMessage') {
@@ -261,6 +364,10 @@ class ServerGameManager {
 				this._handleJoinGameMessage(userId, message.data.gameCode);
 			} else if (message.type === 'StartGameMessage') {
 				this._handleStartGameMessage(userId, message.data.gameCode);
+			} else if (message.type === 'SetPlayerNameMessage') {
+				this._handleSetPlayerNameMessage(userId, message.data.gameCode, message.data.name);
+			} else if (message.type === 'SetPlayerPictureMessage') {
+				this._handleSetPlayerPictureMessage(userId, message.data.gameCode, message.data.pictureData);
 			}
 		} catch (error) {
 			Logger.warn(error);

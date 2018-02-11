@@ -28,14 +28,48 @@ export type GameJoinedMessage = SocketMessageTemplate<'GameJoinedMessage', {
 	game?: GameData;
 }>;
 
-export type PlayerAddedMessage = SocketMessageTemplate<'PlayerAddedMessage', { gameCode: string, player: Player; }>;
-export type UserUpdatedMessage = SocketMessageTemplate<'UserUpdatedMessage', { gameCode: string, player: Player; }>;
-export type PlayerRemovedMessage = SocketMessageTemplate<'PlayerRemovedMessage', { gameCode: string, player: Player; }>;
+export type PlayerAddedMessage = SocketMessageTemplate<'PlayerAddedMessage', {
+	gameCode?: string;
+	player?: Player;
+	error?: string;
+}>;
+export type PlayerRemovedMessage = SocketMessageTemplate<'PlayerRemovedMessage', {
+	gameCode?: string;
+	player?: Player;
+	error?: string;
+}>;
+export type UserUpdatedMessage = SocketMessageTemplate<'UserUpdatedMessage', {
+	gameCode?: string;
+	player?: Player;
+	error?: string;
+}>;
 
 export type StartGameMessage = SocketMessageTemplate<'StartGameMessage', { gameCode: string }>;
 export type GameStartedMessage = SocketMessageTemplate<'GameStartedMessage', {
 	error?: string;
-	gameCode?: string
+	gameCode?: string;
+}>;
+
+export type SetPlayerNameMessage = SocketMessageTemplate<'SetPlayerNameMessage', {
+	gameCode: string;
+	name: string;
+}>;
+export type PlayerNameSetMessage = SocketMessageTemplate<'PlayerNameSetMessage', {
+	error?: string;
+	gameCode?: string;
+	playerId?: string;
+	name?: string;
+}>;
+
+export type SetPlayerPictureMessage = SocketMessageTemplate<'SetPlayerPictureMessage', {
+	gameCode: string;
+	pictureData: string;
+}>;
+export type PlayerPictureSetMessage = SocketMessageTemplate<'PlayerPictureSetMessage', {
+	error?: string;
+	gameCode?: string;
+	playerId?: string;
+	pictureData?: string;
 }>;
 
 export type SocketMessage =
@@ -48,7 +82,11 @@ export type SocketMessage =
 	JoinGameMessage |
 	GameJoinedMessage |
 	PlayerAddedMessage |
-	UserUpdatedMessage |
 	PlayerRemovedMessage |
+	UserUpdatedMessage |
 	StartGameMessage |
-	GameStartedMessage;
+	GameStartedMessage |
+	SetPlayerNameMessage |
+	PlayerNameSetMessage |
+	SetPlayerPictureMessage |
+	PlayerPictureSetMessage;

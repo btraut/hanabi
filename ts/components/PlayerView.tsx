@@ -110,9 +110,17 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 	}
 	
 	private _handleEnterUserNameSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+		const { clientGameManager, gameData } = this.props;
+		
+		if (!gameData) {
+			return;
+		}
+		
 		event.preventDefault();
 		
-		console.log(`Name entered: ${ this._enterNameInput ? this._enterNameInput.value : '' }`);
+		if (this._enterNameInput) {
+			clientGameManager.setPlayerName(gameData.code, this._enterNameInput.value);
+		}
 	}
 	
 	private _renderDrawUserPicture() {
@@ -130,9 +138,15 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 	}
 	
 	private _handleDrawUserPictureSubmit = (event: React.MouseEvent<HTMLButtonElement>) => {
+		const { clientGameManager, gameData } = this.props;
+		
+		if (!gameData) {
+			return;
+		}
+		
 		event.preventDefault();
 		
-		console.log('Picture drawn!');
+		clientGameManager.setPlayerPicture(gameData.code, ':)');
 	}
 	
 	private _renderWaitingForOtherPlayerDescriptions() {

@@ -12,7 +12,9 @@ import {
 	RequestInitialDataMessage,
 	CreateGameMessage,
 	JoinGameMessage,
-	StartGameMessage
+	StartGameMessage,
+	SetPlayerNameMessage,
+	SetPlayerPictureMessage
 } from '../models/SocketMessage';
 import { StoreData } from '../reducers/root';
 import { gameActions } from '../reducers/Game';
@@ -54,6 +56,18 @@ export default class ClientGameManager {
 		await ClientSocketManager.expectMessageOfType('GameStartedMessage');
 	}
 	
+	public async setPlayerName(gameCode: string, name: string) {
+		// Send the player's name. Expect a response for the sake of error handling.
+		ClientSocketManager.send({ type: 'SetPlayerNameMessage', data: { gameCode, name } } as SetPlayerNameMessage);
+		await ClientSocketManager.expectMessageOfType('PlayerNameSetMessage');
+	}
+	
+	public async setPlayerPicture(gameCode: string, pictureData: string) {
+		// Send the player's picture data. Expect a response for the sake of error handling.
+		ClientSocketManager.send({ type: 'SetPlayerPictureMessage', data: { gameCode, pictureData } } as SetPlayerPictureMessage);
+		await ClientSocketManager.expectMessageOfType('PlayerPictureSetMessage');
+	}
+	
 	private _handleConnect = () => {
 		(async () => {
 			// Note that we've connected, but haven't yet gotten initial data.
@@ -72,10 +86,18 @@ export default class ClientGameManager {
 	
 	private _handleMessage = (message: SocketMessage) => {
 		if (message.type === 'InitialDataResponseMessage') {
-			this._dispatch(gameActions.loadUserId(message.data.userId || null));
-			this._dispatch(gameActions.loadGame(message.data.game || null));
+			if (message.data.error) {
+				// TODO: Handle error.
+			} else {
+				this._dispatch(gameActions.loadUserId(message.data.userId || null));
+				this._dispatch(gameActions.loadGame(message.data.game || null));
+			}
 		} else if (message.type === 'GameCreatedMessage') {
-			this._dispatch(gameActions.loadGame(message.data.game || null));
+			if (message.data.error) {
+				// TODO: Handle error.
+			} else {
+				this._dispatch(gameActions.loadGame(message.data.game || null));
+			}
 		} else if (message.type === 'GameJoinedMessage') {
 			if (message.data.error) {
 				this._dispatch(gameActions.joinGameError(message.data.error));
@@ -84,17 +106,41 @@ export default class ClientGameManager {
 				this._dispatch(gameActions.loadGame(message.data.game || null));
 			}
 		} else if (message.type === 'PlayerAddedMessage') {
-			this._dispatch(gameActions.addPlayer(message.data.player, message.data.gameCode));
+			if (message.data.error) {
+				// TODO: Handle error.
+			} else if (message.data.player && message.data.gameCode) {
+				this._dispatch(gameActions.addPlayer(message.data.player, message.data.gameCode));
+			}
 		} else if (message.type === 'UserUpdatedMessage') {
-			this._dispatch(gameActions.updateUser(message.data.player, message.data.gameCode));
+			if (message.data.error) {
+				// TODO: Handle error.
+			} else if (message.data.player && message.data.gameCode) {
+				this._dispatch(gameActions.updateUser(message.data.player, message.data.gameCode));
+			}
 		} else if (message.type === 'PlayerRemovedMessage') {
-			this._dispatch(gameActions.removePlayer(message.data.player, message.data.gameCode));
+			if (message.data.error) {
+				// TODO: Handle error.
+			} else if (message.data.player && message.data.gameCode) {
+				this._dispatch(gameActions.removePlayer(message.data.player, message.data.gameCode));
+			}
 		} else if (message.type === 'GameStartedMessage') {
 			if (message.data.error) {
 				this._dispatch(gameActions.startGameError(message.data.error));
 			} else if (message.data.gameCode) {
 				this._dispatch(gameActions.clearErrors());
 				this._dispatch(gameActions.gameStarted(message.data.gameCode));
+			}
+		} else if (message.type === 'PlayerNameSetMessage') {
+			if (message.data.error) {
+				this._dispatch(gameActions.startGameError(message.data.error));
+			} else if (message.data.name && message.data.gameCode && message.data.playerId) {
+				this._dispatch(gameActions.setPlayerName(message.data.playerId, message.data.name, message.data.gameCode));
+			}
+		} else if (message.type === 'PlayerPictureSetMessage') {
+			if (message.data.error) {
+				this._dispatch(gameActions.startGameError(message.data.error));
+			} else if (message.data.pictureData && message.data.gameCode && message.data.playerId) {
+				this._dispatch(gameActions.setPlayerPicture(message.data.playerId, message.data.pictureData, message.data.gameCode));
 			}
 		}
 	}

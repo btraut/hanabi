@@ -22,6 +22,10 @@ export const gameActions = {
 		prefix('LOAD_USER_ID'),
 		(userId: string | null) => ({ type: prefix('LOAD_USER_ID'), userId })
 	),
+	clearErrors: createAction(
+		prefix('CLEAR_ERRORS'),
+		() => ({ type: prefix('CLEAR_ERRORS') })
+	),
 	joinGameError: createAction(
 		prefix('JOIN_GAME_ERROR'),
 		(errorText: string) => ({ type: prefix('JOIN_GAME_ERROR'), errorText })
@@ -46,13 +50,19 @@ export const gameActions = {
 		prefix('START_GAME_ERROR'),
 		(errorText: string) => ({ type: prefix('START_GAME_ERROR'), errorText })
 	),
-	clearErrors: createAction(
-		prefix('CLEAR_ERRORS'),
-		() => ({ type: prefix('CLEAR_ERRORS') })
+	setPlayerName: createAction(
+		prefix('SET_PLAYER_NAME'),
+		(playerId: string, name: string, gameCode: string) =>
+			({ type: prefix('SET_PLAYER_NAME'), playerId, name, gameCode })
 	),
 	setPlayerNameError: createAction(
 		prefix('SET_PLAYER_NAME_ERROR'),
 		(errorText: string) => ({ type: prefix('SET_PLAYER_NAME_ERROR'), errorText })
+	),
+	setPlayerPicture: createAction(
+		prefix('SET_PLAYER_PICTURE'),
+		(playerId: string, pictureData: string, gameCode: string) =>
+			({ type: prefix('SET_PLAYER_PICTURE'), playerId, pictureData, gameCode })
 	),
 	setPlayerPictureError: createAction(
 		prefix('SET_PLAYER_PICTURE_ERROR'),
@@ -109,13 +119,16 @@ export const gameReducer = combineReducers<GameState>({
 			case getType(gameActions.loadGame):
 				return action.gameData || null;
 			
+			case getType(gameActions.disconnect):
+				return null;
+			
 			case getType(gameActions.addPlayer):
 			{
 				if (!gameData || gameData.code !== action.gameCode) {
 					return gameData;
 				}
 				
-				const newPlayers = [...gameData.players.filter(player => player.id !== action.player.id), action.player];
+				const newPlayers = [...gameData.players.filter(p => p.id !== action.player.id), action.player];
 				return { ...gameData, players: newPlayers };
 			}
 
@@ -129,7 +142,7 @@ export const gameReducer = combineReducers<GameState>({
 					return { ...gameData, host: action.player };
 				}
 				
-				const newPlayers = [...gameData.players.filter(player => player.id !== action.player.id), action.player];
+				const newPlayers = [...gameData.players.filter(p => p.id !== action.player.id), action.player];
 				return { ...gameData, players: newPlayers };
 			}
 
@@ -139,7 +152,7 @@ export const gameReducer = combineReducers<GameState>({
 					return gameData;
 				}
 				
-				const newPlayers = [...gameData.players.filter(player => player.id !== action.player.id)];
+				const newPlayers = [...gameData.players.filter(p => p.id !== action.player.id)];
 				return { ...gameData, players: newPlayers };
 			}
 		
@@ -152,9 +165,46 @@ export const gameReducer = combineReducers<GameState>({
 				return { ...gameData, state: GameDataState.WaitingForPlayerDescriptions };
 			}
 		
-			case getType(gameActions.disconnect):
-				return null;
-			
+			case getType(gameActions.setPlayerName):
+			{
+				// Verify we're updating this game.
+				if (!gameData || gameData.code !== action.gameCode) {
+					return gameData;
+				}
+				
+				// Grab the existing player entry.
+				const oldPlayer = gameData.players.find(p => p.id === action.playerId);
+				if (!oldPlayer) {
+					throw new Error('Player doesn’t exist in this game.');
+				}
+				
+				// Create a new player obj, add it to a new player list, and add that
+				// player list into a new gameData obj.
+				const newPlayer = { ...oldPlayer, name: action.name };
+				const newPlayers = [...gameData.players.filter(p => p.id !== action.playerId), newPlayer];
+				return { ...gameData, players: newPlayers };
+			}
+
+			case getType(gameActions.setPlayerPicture):
+			{
+				// Verify we're updating this game.
+				if (!gameData || gameData.code !== action.gameCode) {
+					return gameData;
+				}
+				
+				// Grab the existing player entry.
+				const oldPlayer = gameData.players.find(p => p.id === action.playerId);
+				if (!oldPlayer) {
+					throw new Error('Player doesn’t exist in this game.');
+				}
+				
+				// Create a new player obj, add it to a new player list, and add that
+				// player list into a new gameData obj.
+				const newPlayer = { ...oldPlayer, pictureData: action.pictureData };
+				const newPlayers = [...gameData.players.filter(p => p.id !== action.playerId), newPlayer];
+				return { ...gameData, players: newPlayers };
+			}
+
 			default:
 				return gameData;
 		}
