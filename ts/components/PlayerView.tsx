@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
+import * as JSONPretty from 'react-json-pretty';
 
 import { StoreData } from '../reducers/root';
 import { GameState, GameData } from '../models/Game';
@@ -42,6 +43,10 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		);
 	}
 	
+	private _renderInGameLobby(gameState: GameState) {
+		return <div>In Game Lobby…</div>
+	}
+	
 	private _handleJoinGameSubmit = (event: React.FormEvent<HTMLFormElement>) => {
 		const { clientGameManager } = this.props;
 		
@@ -54,7 +59,7 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 	
 	private _renderGameState(gameData: GameData) {
 		switch (gameData.state) {
-		case GameState.WaitingForPlayers: return <div>In Game Lobby…</div>;
+		case GameState.WaitingForPlayers: return this._renderInGameLobby(GameState);
 		
 		case GameState.WaitingForPlayerDescriptions:
 			// TODO: Look at data to determine if we need to enter name, draw
@@ -89,7 +94,7 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		return (
 			<div className="PlayerView">
 				{ this._renderGameState(gameData) }
-				<p>Game State: { JSON.stringify(gameData) }</p>
+				<JSONPretty json={gameData} />
 			</div>
 		);
 	}

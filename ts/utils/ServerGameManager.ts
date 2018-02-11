@@ -10,6 +10,7 @@ import {
 	PlayerRemovedMessage
 } from '../models/SocketMessage';
 import ServerSocketManager from './ServerSocketManager';
+import Logger from '../utils/Logger';
 
 const GAME_EXPIRATION_MINUTES = 30;
 
@@ -59,13 +60,21 @@ class ServerGameManager {
 	private _handleConnect = ({ userId }: { userId: string }) => {
 		console.log(`${ userId } connected.`);
 
-		this._updateAllGamesWithUser(userId, { connected: true });
+		try {
+			this._updateAllGamesWithUser(userId, { connected: true });
+		} catch (error) {
+			Logger.warn(error);
+		}
 	}
 	
 	private _handleDisconnect = ({ userId }: { userId: string }) =>  {
 		console.log(`${ userId } disconnected.`);
 
-		this._updateAllGamesWithUser(userId, { connected: false });
+		try {
+			this._updateAllGamesWithUser(userId, { connected: false });
+		} catch (error) {
+			Logger.warn(error);
+		}
 	}
 	
 	private _updateAllGamesWithUser(userId: string, updates: Partial<Player>) {
@@ -194,12 +203,16 @@ class ServerGameManager {
 	}
 	
 	private _handleMessage = ({ userId, message }: { userId: string, message: SocketMessage }) =>  {
-		if (message.type === 'CreateGameMessage') {
-			this._handleCreateGameMessage(userId);
-		} else if (message.type === 'RequestInitialDataMessage') {
-			this._handleRequestInitialDataMessage(userId);
-		} else if (message.type === 'JoinGameMessage') {
-			this._handleJoinGameMessage(userId, message.data.code);
+		try {
+			if (message.type === 'CreateGameMessage') {
+				this._handleCreateGameMessage(userId);
+			} else if (message.type === 'RequestInitialDataMessage') {
+				this._handleRequestInitialDataMessage(userId);
+			} else if (message.type === 'JoinGameMessage') {
+				this._handleJoinGameMessage(userId, message.data.code);
+			}
+		} catch (error) {
+			Logger.warn(error);
 		}
 	}
 }

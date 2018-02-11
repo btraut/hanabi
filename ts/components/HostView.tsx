@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
+import * as JSONPretty from 'react-json-pretty';
 
 import { StoreData } from '../reducers/root';
 import { GameState, GameData } from '../models/Game';
@@ -80,6 +81,7 @@ class HostViewPage extends React.PureComponent<HostViewProps> {
 		return (
 			<div className="PlayerView">
 				{ this._renderGameState(gameData) }
+				<JSONPretty json={gameData} />
 			</div>
 		);
 	}
