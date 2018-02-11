@@ -16,7 +16,11 @@ export const gameActions = {
 	),
 	loadGame: createAction(
 		prefix('LOAD_GAME'),
-		(gameData?: GameData) => ({ type: prefix('LOAD_GAME'), gameData })
+		(gameData: GameData | null) => ({ type: prefix('LOAD_GAME'), gameData })
+	),
+	loadUserId: createAction(
+		prefix('LOAD_USER_ID'),
+		(userId: string | null) => ({ type: prefix('LOAD_USER_ID'), userId })
 	),
 	joinGameError: createAction(
 		prefix('JOIN_GAME_ERROR'),
@@ -45,23 +49,44 @@ export const gameActions = {
 	clearErrors: createAction(
 		prefix('CLEAR_ERRORS'),
 		() => ({ type: prefix('CLEAR_ERRORS') })
+	),
+	setPlayerNameError: createAction(
+		prefix('SET_PLAYER_NAME_ERROR'),
+		(errorText: string) => ({ type: prefix('SET_PLAYER_NAME_ERROR'), errorText })
+	),
+	setPlayerPictureError: createAction(
+		prefix('SET_PLAYER_PICTURE_ERROR'),
+		(errorText: string) => ({ type: prefix('SET_PLAYER_PICTURE_ERROR'), errorText })
 	)
 };
 
 export interface GameState {
+	// Connection states:
 	readonly connected: boolean;
 	readonly initialDataLoaded: boolean;
+	
+	// The current user's user id:
+	readonly userId: string | null;
+	
+	// Current game:
 	readonly gameData: GameData | null;
+	
+	// Error messages during setup and gameplay:
 	readonly joinGameError: string | null;
 	readonly startGameError: string | null;
+	readonly setPlayerNameError: string | null;
+	readonly setPlayerPictureError: string | null;
 }
 
 export const initialState: GameState = {
 	connected: false,
 	initialDataLoaded: false,
 	gameData: null,
+	userId: null,
 	joinGameError: null,
-	startGameError: null
+	startGameError: null,
+	setPlayerNameError: null,
+	setPlayerPictureError: null
 };
 
 export const gameReducer = combineReducers<GameState>({
@@ -127,8 +152,18 @@ export const gameReducer = combineReducers<GameState>({
 				return { ...gameData, state: GameDataState.WaitingForPlayerDescriptions };
 			}
 		
+			case getType(gameActions.disconnect):
+				return null;
+			
 			default:
 				return gameData;
+		}
+	},
+	userId: (userId: string | null = null, action) => {
+		switch (action.type) {
+			case getType(gameActions.loadUserId): return action.userId || null;
+			case getType(gameActions.disconnect): return null;
+			default: return userId;
 		}
 	},
 	joinGameError: (errorText: string | null = null, action) => {
@@ -142,6 +177,22 @@ export const gameReducer = combineReducers<GameState>({
 	startGameError: (errorText: string | null = null, action) => {
 		switch (action.type) {
 			case getType(gameActions.startGameError): return action.errorText;
+			case getType(gameActions.clearErrors): return null;
+			case getType(gameActions.connect): return null;
+			default: return errorText;
+		}
+	},
+	setPlayerNameError: (errorText: string | null = null, action) => {
+		switch (action.type) {
+			case getType(gameActions.setPlayerNameError): return action.errorText;
+			case getType(gameActions.clearErrors): return null;
+			case getType(gameActions.connect): return null;
+			default: return errorText;
+		}
+	},
+	setPlayerPictureError: (errorText: string | null = null, action) => {
+		switch (action.type) {
+			case getType(gameActions.setPlayerPictureError): return action.errorText;
 			case getType(gameActions.clearErrors): return null;
 			case getType(gameActions.connect): return null;
 			default: return errorText;

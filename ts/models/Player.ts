@@ -2,4 +2,5 @@ export default interface Player {
 	id: string;
 	name: string;
 	connected: boolean;
+	pictureData?: string;
 };

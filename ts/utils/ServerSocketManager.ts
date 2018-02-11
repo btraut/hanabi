@@ -102,22 +102,21 @@ class ServerSocketManager {
 			this._onConnect.emit({ userId });
 			
 			this._send(socketId, {
-				type: 'AuthenticateResponseSocketMessage',
-				data: { success: true }
+				type: 'AuthenticateResponseSocketMessage'
 			} as AuthenticateResponseSocketMessage);
 		} else {
 			this._send(socketId, {
 				type: 'AuthenticateResponseSocketMessage',
 				data: {
-					success: false,
 					error: 'Invalid auth token'
 				}
 			} as AuthenticateResponseSocketMessage);
 		}
 	}
 	
-	private _send(socketId: string, message: SocketMessage) {
-		this._server!.to(socketId).emit('message', message);
+	private _send(socketId: string, message: Partial<SocketMessage>) {
+		const blankMessage = { type: '', data: {} };
+		this._server!.to(socketId).emit('message', { ...blankMessage, ...message });
 	}
 	
 	public send(userId: string, message: SocketMessage) {

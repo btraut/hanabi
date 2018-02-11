@@ -72,15 +72,16 @@ export default class ClientGameManager {
 	
 	private _handleMessage = (message: SocketMessage) => {
 		if (message.type === 'InitialDataResponseMessage') {
-			this._dispatch(gameActions.loadGame(message.data.game));
+			this._dispatch(gameActions.loadUserId(message.data.userId || null));
+			this._dispatch(gameActions.loadGame(message.data.game || null));
 		} else if (message.type === 'GameCreatedMessage') {
-			this._dispatch(gameActions.loadGame(message.data.game));
+			this._dispatch(gameActions.loadGame(message.data.game || null));
 		} else if (message.type === 'GameJoinedMessage') {
 			if (message.data.error) {
 				this._dispatch(gameActions.joinGameError(message.data.error));
 			} else if (message.data.game) {
 				this._dispatch(gameActions.clearErrors());
-				this._dispatch(gameActions.loadGame(message.data.game));
+				this._dispatch(gameActions.loadGame(message.data.game || null));
 			}
 		} else if (message.type === 'PlayerAddedMessage') {
 			this._dispatch(gameActions.addPlayer(message.data.player, message.data.gameCode));

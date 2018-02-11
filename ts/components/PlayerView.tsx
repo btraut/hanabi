@@ -12,13 +12,17 @@ type ExternalPlayerViewProps = React.Props<PlayerViewPage>;
 type PlayerViewProps = {
 	readonly connected: boolean;
 	readonly initialDataLoaded: boolean;
+	readonly userId: string | null;
 	readonly gameData: GameData | null;
 	readonly joinGameError: string | null;
 	readonly startGameError: string | null;
+	readonly setPlayerNameError: string | null;
+	readonly setPlayerPictureError: string | null;
 } & ExternalPlayerViewProps & ClientGameManagerProviderPropsAdditions;
 
 class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 	private _joinGameInput: HTMLInputElement | null = null;
+	private _enterNameInput: HTMLInputElement | null = null;
 	
 	public componentDidMount() {
 		const { clientGameManager } = this.props;
@@ -70,6 +74,71 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		);
 	}
 	
+	private _renderWaitingForPlayerDescriptions(gameData: GameData) {
+		const { userId } = this.props;
+		
+		const player = gameData.players.find(p => p.id === userId);
+		
+		if (!player) {
+			throw new Error('Can’t find your user in the game.');
+		}
+		
+		if (!player.name) {
+			return this._renderEnterUserName();
+		}
+		
+		if (!player.pictureData) {
+			return this._renderDrawUserPicture();
+		}
+		
+		return this._renderWaitingForOtherPlayerDescriptions();
+	}
+	
+	private _renderEnterUserName() {
+		const { setPlayerNameError } = this.props;
+		
+		return (
+			<form onSubmit={this._handleEnterUserNameSubmit}>
+				<h1>You need to enter your name!</h1>
+				<p>
+					<input type="text" ref={(input: HTMLInputElement | null) => { this._enterNameInput = input; }} />
+					<input type="submit" value="Join" />
+					{ setPlayerNameError && <p style={{ color: 'red' }}>{ setPlayerNameError }</p>}
+				</p>
+			</form>
+		);
+	}
+	
+	private _handleEnterUserNameSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+		event.preventDefault();
+		
+		console.log(`Name entered: ${ this._enterNameInput ? this._enterNameInput.value : '' }`);
+	}
+	
+	private _renderDrawUserPicture() {
+		const { setPlayerPictureError } = this.props;
+		
+		return (
+			<div>
+				<h1>You need to draw your picture!</h1>
+				<p>
+					<button onClick={this._handleDrawUserPictureSubmit}>Submit Picture</button>
+					{ setPlayerPictureError && <p style={{ color: 'red' }}>{ setPlayerPictureError }</p>}
+				</p>
+			</div>
+		);
+	}
+	
+	private _handleDrawUserPictureSubmit = (event: React.MouseEvent<HTMLButtonElement>) => {
+		event.preventDefault();
+		
+		console.log('Picture drawn!');
+	}
+	
+	private _renderWaitingForOtherPlayerDescriptions() {
+		return <h1>Waiting for other players to name and draw themselves…</h1>;
+	}
+	
 	private _handleStartGameButtonClick = () => {
 		const { clientGameManager, gameData } = this.props;
 		
@@ -83,12 +152,8 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 	private _renderGameState(gameData: GameData) {
 		switch (gameData.state) {
 		case GameState.WaitingForPlayers: return this._renderInGameLobby(gameData);
+		case GameState.WaitingForPlayerDescriptions: return this._renderWaitingForPlayerDescriptions(gameData);
 		
-		case GameState.WaitingForPlayerDescriptions:
-			// TODO: Look at data to determine if we need to enter name, draw
-			// picture, or neither.
-			return <div>Waiting for game to begin…</div>;
-			
 		case GameState.WaitingForTextSubmissions:
 			// TODO: Look at game data to determine if we've already submitted text.
 			return <div>Waiting for others to enter text…</div>;
@@ -126,8 +191,10 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 export default compose(
 	withClientGameManager,
 	connect(({ game: {
-		initialDataLoaded, connected, gameData, joinGameError, startGameError
+		initialDataLoaded, connected, userId, gameData, joinGameError, startGameError,
+		setPlayerNameError, setPlayerPictureError
 	} }: StoreData) => ({
-		initialDataLoaded, connected, gameData, joinGameError, startGameError
+		initialDataLoaded, connected, userId, gameData, joinGameError, startGameError,
+		setPlayerNameError, setPlayerPictureError
 	}))
 )(PlayerViewPage) as any as React.ComponentClass<ExternalPlayerViewProps>;

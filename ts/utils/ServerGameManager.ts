@@ -137,7 +137,7 @@ class ServerGameManager {
 		
 		ServerSocketManager.send(userId, {
 			type: 'InitialDataResponseMessage',
-			data: { game: game ? game.toObject() : undefined }
+			data: { game: game ? game.toObject() : undefined, userId }
 		} as InitialDataResponseMessage);
 	}
 	

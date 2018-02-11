@@ -113,7 +113,7 @@ class ClientSocketManager {
 		const message = await this.expect(response => response.type === 'AuthenticateResponseSocketMessage');
 		
 		if (message.type === 'AuthenticateResponseSocketMessage') {
-			if (message.data.success) {
+			if (!message.data.error) {
 				this._authenticated = true;
 				
 				console.log('socket.io authenticated');

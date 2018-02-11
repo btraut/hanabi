@@ -7,16 +7,20 @@ interface SocketMessageTemplate<T, D> {
 }
 
 export type AuthenticateSocketMessage = SocketMessageTemplate<'AuthenticateSocketMessage', string>;
-export type AuthenticateResponseSocketMessage = SocketMessageTemplate<'AuthenticateResponseSocketMessage', {
-	success: boolean;
-	error?: string;
-}>;
+export type AuthenticateResponseSocketMessage = SocketMessageTemplate<'AuthenticateResponseSocketMessage', { error?: string; }>;
 
 export type RequestInitialDataMessage = SocketMessageTemplate<'RequestInitialDataMessage', void>;
-export type InitialDataResponseMessage = SocketMessageTemplate<'InitialDataResponseMessage', { game?: GameData; }>;
+export type InitialDataResponseMessage = SocketMessageTemplate<'InitialDataResponseMessage', {
+	error?: string;
+	game?: GameData;
+	userId?: string;
+}>;
 
 export type CreateGameMessage = SocketMessageTemplate<'CreateGameMessage', void>;
-export type GameCreatedMessage = SocketMessageTemplate<'GameCreatedMessage', { game: GameData; }>;
+export type GameCreatedMessage = SocketMessageTemplate<'GameCreatedMessage', {
+	error?: string;
+	game?: GameData;
+}>;
 
 export type JoinGameMessage = SocketMessageTemplate<'JoinGameMessage', { gameCode: string; }>;
 export type GameJoinedMessage = SocketMessageTemplate<'GameJoinedMessage', {
