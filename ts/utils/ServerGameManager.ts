@@ -7,10 +7,12 @@ import {
 	GameJoinedMessage,
 	PlayerAddedMessage,
 	UserUpdatedMessage,
-	PlayerRemovedMessage
+	PlayerRemovedMessage,
+	GameStartedMessage
 } from '../models/SocketMessage';
 import ServerSocketManager from './ServerSocketManager';
 import Logger from '../utils/Logger';
+import { MINIMUM_PLAYERS_IN_GAME } from '../models/Rules';
 
 const GAME_EXPIRATION_MINUTES = 30;
 
@@ -202,6 +204,53 @@ class ServerGameManager {
 		}
 	}
 	
+	private _handleStartGameMessage(userId: string, gameCode: string) {
+		// Validate game.
+		const game = this._games[gameCode];
+		if (!game) {
+			ServerSocketManager.send(userId, {
+				type: 'GameStartedMessage',
+				data: { error: 'Invalid game.' }
+			} as GameStartedMessage);
+			return;
+		}
+		
+		// Ensure the game is in the right state.
+		if (game.state !== GameState.WaitingForPlayers) {
+			ServerSocketManager.send(userId, {
+				type: 'GameStartedMessage',
+				data: { error: 'Game can’t be started right now.' }
+			} as GameStartedMessage);
+			return;
+		}
+
+		// Ensure there are enough players.
+		if (Object.keys(game.players).length < MINIMUM_PLAYERS_IN_GAME) {
+			ServerSocketManager.send(userId, {
+				type: 'GameStartedMessage',
+				data: { error: 'Not enough players to start game.' }
+			} as GameStartedMessage);
+			return;
+		}
+		
+		// Update the game.
+		game.start();
+		
+		// Notify the other game players.
+		for (const notifyUserId of Object.values(game.players).map(p => p.id)) {
+			ServerSocketManager.send(notifyUserId, {
+				type: 'GameStartedMessage',
+				data: { gameCode }
+			} as GameStartedMessage);
+		}
+		
+		// Notify the game host.
+		ServerSocketManager.send(game.host.id, {
+			type: 'GameStartedMessage',
+			data: { gameCode }
+		} as GameStartedMessage);
+	}
+	
 	private _handleMessage = ({ userId, message }: { userId: string, message: SocketMessage }) =>  {
 		try {
 			if (message.type === 'CreateGameMessage') {
@@ -209,7 +258,9 @@ class ServerGameManager {
 			} else if (message.type === 'RequestInitialDataMessage') {
 				this._handleRequestInitialDataMessage(userId);
 			} else if (message.type === 'JoinGameMessage') {
-				this._handleJoinGameMessage(userId, message.data.code);
+				this._handleJoinGameMessage(userId, message.data.gameCode);
+			} else if (message.type === 'StartGameMessage') {
+				this._handleStartGameMessage(userId, message.data.gameCode);
 			}
 		} catch (error) {
 			Logger.warn(error);

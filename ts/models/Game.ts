@@ -106,4 +106,8 @@ export class Game {
 		
 		return this._host;
 	}
+	
+	public start() {
+		this._state = GameState.WaitingForPlayerDescriptions;
+	}
 }

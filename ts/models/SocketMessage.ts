@@ -13,26 +13,26 @@ export type AuthenticateResponseSocketMessage = SocketMessageTemplate<'Authentic
 }>;
 
 export type RequestInitialDataMessage = SocketMessageTemplate<'RequestInitialDataMessage', void>;
-export type InitialDataResponseMessage = SocketMessageTemplate<'InitialDataResponseMessage', {
-	game?: GameData;
-}>;
+export type InitialDataResponseMessage = SocketMessageTemplate<'InitialDataResponseMessage', { game?: GameData; }>;
 
 export type CreateGameMessage = SocketMessageTemplate<'CreateGameMessage', void>;
-export type GameCreatedMessage = SocketMessageTemplate<'GameCreatedMessage', {
-	game: GameData;
-}>;
+export type GameCreatedMessage = SocketMessageTemplate<'GameCreatedMessage', { game: GameData; }>;
 
-export type JoinGameMessage = SocketMessageTemplate<'JoinGameMessage', {
-	code: string;
-}>;
+export type JoinGameMessage = SocketMessageTemplate<'JoinGameMessage', { gameCode: string; }>;
 export type GameJoinedMessage = SocketMessageTemplate<'GameJoinedMessage', {
 	error?: string;
 	game?: GameData;
 }>;
 
-export type PlayerAddedMessage = SocketMessageTemplate<'PlayerAddedMessage', { player: Player; }>;
-export type UserUpdatedMessage = SocketMessageTemplate<'UserUpdatedMessage', { player: Player; }>;
-export type PlayerRemovedMessage = SocketMessageTemplate<'PlayerRemovedMessage', { player: Player; }>;
+export type PlayerAddedMessage = SocketMessageTemplate<'PlayerAddedMessage', { gameCode: string, player: Player; }>;
+export type UserUpdatedMessage = SocketMessageTemplate<'UserUpdatedMessage', { gameCode: string, player: Player; }>;
+export type PlayerRemovedMessage = SocketMessageTemplate<'PlayerRemovedMessage', { gameCode: string, player: Player; }>;
+
+export type StartGameMessage = SocketMessageTemplate<'StartGameMessage', { gameCode: string }>;
+export type GameStartedMessage = SocketMessageTemplate<'GameStartedMessage', {
+	error?: string;
+	gameCode?: string
+}>;
 
 export type SocketMessage =
 	AuthenticateSocketMessage |
@@ -45,4 +45,6 @@ export type SocketMessage =
 	GameJoinedMessage |
 	PlayerAddedMessage |
 	UserUpdatedMessage |
-	PlayerRemovedMessage;
+	PlayerRemovedMessage |
+	StartGameMessage |
+	GameStartedMessage;

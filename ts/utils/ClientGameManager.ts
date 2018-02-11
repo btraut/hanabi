@@ -7,7 +7,13 @@
 import { Dispatch } from 'react-redux';
 
 import ClientSocketManager from './ClientSocketManager';
-import { SocketMessage, RequestInitialDataMessage, CreateGameMessage, JoinGameMessage } from '../models/SocketMessage';
+import {
+	SocketMessage,
+	RequestInitialDataMessage,
+	CreateGameMessage,
+	JoinGameMessage,
+	StartGameMessage
+} from '../models/SocketMessage';
 import { StoreData } from '../reducers/root';
 import { gameActions } from '../reducers/Game';
 
@@ -36,10 +42,16 @@ export default class ClientGameManager {
 		await ClientSocketManager.expectMessageOfType('GameCreatedMessage');
 	}
 	
-	public async joinGame(code: string) {
+	public async joinGame(gameCode: string) {
 		// Call to join a game. Expect a response for the sake of error handling.
-		ClientSocketManager.send({ type: 'JoinGameMessage', data: { code } } as JoinGameMessage);
+		ClientSocketManager.send({ type: 'JoinGameMessage', data: { gameCode } } as JoinGameMessage);
 		await ClientSocketManager.expectMessageOfType('GameJoinedMessage');
+	}
+	
+	public async startGame(gameCode: string) {
+		// Call to start the game. Expect a response for the sake of error handling.
+		ClientSocketManager.send({ type: 'StartGameMessage', data: { gameCode } } as StartGameMessage);
+		await ClientSocketManager.expectMessageOfType('GameStartedMessage');
 	}
 	
 	private _handleConnect = () => {
@@ -65,16 +77,24 @@ export default class ClientGameManager {
 			this._dispatch(gameActions.loadGame(message.data.game));
 		} else if (message.type === 'GameJoinedMessage') {
 			if (message.data.error) {
-				this._dispatch(gameActions.gameJoinError(message.data.error));
+				this._dispatch(gameActions.joinGameError(message.data.error));
 			} else if (message.data.game) {
+				this._dispatch(gameActions.clearErrors());
 				this._dispatch(gameActions.loadGame(message.data.game));
 			}
 		} else if (message.type === 'PlayerAddedMessage') {
-			this._dispatch(gameActions.addPlayer(message.data.player));
+			this._dispatch(gameActions.addPlayer(message.data.player, message.data.gameCode));
 		} else if (message.type === 'UserUpdatedMessage') {
-			this._dispatch(gameActions.updateUser(message.data.player));
+			this._dispatch(gameActions.updateUser(message.data.player, message.data.gameCode));
 		} else if (message.type === 'PlayerRemovedMessage') {
-			this._dispatch(gameActions.removePlayer(message.data.player));
+			this._dispatch(gameActions.removePlayer(message.data.player, message.data.gameCode));
+		} else if (message.type === 'GameStartedMessage') {
+			if (message.data.error) {
+				this._dispatch(gameActions.startGameError(message.data.error));
+			} else if (message.data.gameCode) {
+				this._dispatch(gameActions.clearErrors());
+				this._dispatch(gameActions.gameStarted(message.data.gameCode));
+			}
 		}
 	}
 }
