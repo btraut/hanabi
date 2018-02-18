@@ -3,7 +3,7 @@ import { RouteProps } from 'react-router';
 import { PageClass } from './pages/Page';
 import Error404Page from './pages/Error404Page';
 import HomePage from './pages/HomePage';
-import HostPage from './pages/HostPage';
+import HostViewPage from './pages/HostViewPage';
 import PlayerViewPage from './pages/PlayerViewPage';
 
 type AsyncRouteProps = RouteProps & {
@@ -20,7 +20,7 @@ const routes: AsyncRouteProps[] = [{
 	exact: true
 }, {
 	path: '/host',
-	component: HostPage,
+	component: HostViewPage,
 	exact: true
 }, {
 	component: Error404Page

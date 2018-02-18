@@ -5,7 +5,7 @@ import HostView from '../components/HostView';
 import ClientGameManagerProvider from '../components/ClientGameManagerProvider';
 import ClientGameManager from '../components/ClientGameManager';
 
-export default class HostPage extends React.PureComponent<RouteProps> {
+export default class HostViewPage extends React.PureComponent<RouteProps> {
 	public static async preload() {
 		console.log('host page preloaded');
 	}
@@ -13,7 +13,7 @@ export default class HostPage extends React.PureComponent<RouteProps> {
 	public static title = 'Lost in Translation | Start Game';
 	
 	public componentDidMount() {
-		document.title = HostPage.title;
+		document.title = HostViewPage.title;
 	}
 	
 	public render() {
