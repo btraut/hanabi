@@ -1,18 +1,17 @@
 import * as React from 'react';
-import { compose } from 'redux';
 import { connect } from 'react-redux';
 import * as JSONPretty from 'react-json-pretty';
 
 import { StoreData } from '../reducers/root';
 import { GameState, GameData } from '../models/Game';
-import withClientGameManager, { ClientGameManagerProviderPropsAdditions } from './withClientGameManager';
+import { ClientGameManagerPropsAdditions } from './ClientGameManager';
 
-type ExternalHostViewProps = React.Props<HostViewPage>;
+type ExternalHostViewProps = React.Props<HostViewPage> & ClientGameManagerPropsAdditions;
 type HostViewProps = {
 	readonly connected: boolean;
 	readonly initialDataLoaded: boolean;
 	readonly gameData: GameData | null;
-} & ExternalHostViewProps & ClientGameManagerProviderPropsAdditions;
+} & ExternalHostViewProps;
 
 class HostViewPage extends React.PureComponent<HostViewProps> {
 	public componentDidMount() {
@@ -87,9 +86,6 @@ class HostViewPage extends React.PureComponent<HostViewProps> {
 	}
 };
 
-export default compose(
-	withClientGameManager,
-	connect(({ game: { initialDataLoaded, connected, gameData } }: StoreData) => ({
-		initialDataLoaded, connected, gameData
-	}))
-)(HostViewPage) as any as React.ComponentClass<ExternalHostViewProps>;
+export default connect(({ game: { initialDataLoaded, connected, gameData } }: StoreData) => ({
+	initialDataLoaded, connected, gameData
+}))(HostViewPage) as any as React.ComponentClass<ExternalHostViewProps>;

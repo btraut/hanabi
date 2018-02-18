@@ -3,6 +3,7 @@ import { RouteProps } from 'react-router';
 
 import HostView from '../components/HostView';
 import ClientGameManagerProvider from '../components/ClientGameManagerProvider';
+import ClientGameManager from '../components/ClientGameManager';
 
 export default class HostPage extends React.PureComponent<RouteProps> {
 	public static async preload() {
@@ -18,7 +19,9 @@ export default class HostPage extends React.PureComponent<RouteProps> {
 	public render() {
 		return (
 			<ClientGameManagerProvider>
-				<HostView />
+				<ClientGameManager>
+					{clientGameManager => <HostView clientGameManager={clientGameManager} />}
+				</ClientGameManager>
 			</ClientGameManagerProvider>
 		);
 	}

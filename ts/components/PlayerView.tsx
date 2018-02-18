@@ -1,14 +1,13 @@
 import * as React from 'react';
-import { compose } from 'redux';
 import { connect } from 'react-redux';
 import * as JSONPretty from 'react-json-pretty';
 
 import { StoreData } from '../reducers/root';
 import { GameState, GameData } from '../models/Game';
-import withClientGameManager, { ClientGameManagerProviderPropsAdditions } from './withClientGameManager';
 import { MINIMUM_PLAYERS_IN_GAME } from '../models/Rules';
+import { ClientGameManagerPropsAdditions } from './ClientGameManager';
 
-type ExternalPlayerViewProps = React.Props<PlayerViewPage>;
+type ExternalPlayerViewProps = React.Props<PlayerViewPage> & ClientGameManagerPropsAdditions;
 type PlayerViewProps = {
 	readonly connected: boolean;
 	readonly initialDataLoaded: boolean;
@@ -18,7 +17,7 @@ type PlayerViewProps = {
 	readonly startGameError: string | null;
 	readonly setPlayerNameError: string | null;
 	readonly setPlayerPictureError: string | null;
-} & ExternalPlayerViewProps & ClientGameManagerProviderPropsAdditions;
+} & ExternalPlayerViewProps;
 
 class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 	private _joinGameInput: HTMLInputElement | null = null;
@@ -202,13 +201,10 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 	}
 };
 
-export default compose(
-	withClientGameManager,
-	connect(({ game: {
-		initialDataLoaded, connected, userId, gameData, joinGameError, startGameError,
-		setPlayerNameError, setPlayerPictureError
-	} }: StoreData) => ({
-		initialDataLoaded, connected, userId, gameData, joinGameError, startGameError,
-		setPlayerNameError, setPlayerPictureError
-	}))
-)(PlayerViewPage) as any as React.ComponentClass<ExternalPlayerViewProps>;
+export default connect(({ game: {
+	initialDataLoaded, connected, userId, gameData, joinGameError, startGameError,
+	setPlayerNameError, setPlayerPictureError
+} }: StoreData) => ({
+	initialDataLoaded, connected, userId, gameData, joinGameError, startGameError,
+	setPlayerNameError, setPlayerPictureError
+}))(PlayerViewPage) as any as React.ComponentClass<ExternalPlayerViewProps>;

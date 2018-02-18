@@ -13,9 +13,8 @@ import * as ReactDOMServer from 'react-dom/server';
 import * as uuid from 'uuid';
 import { StaticRouter, matchPath } from 'react-router';
 import * as url from 'url';
-import { createStore, applyMiddleware } from 'redux';
+import { createStore } from 'redux';
 import { Provider as StoreProvider } from 'react-redux';
-import thunk from 'redux-thunk';
 import 'cross-fetch/polyfill';
 
 import routes from './routes';
@@ -119,7 +118,7 @@ const SESSION_COOKIE_NAME = 'SESSION';
 		// Render the client.
 		app.get('*', async (req: express.Request, res: express.Response) => {
 			// Create the redux store.
-			const store = createStore<StoreData>(reducer, initialState, applyMiddleware(thunk));
+			const store = createStore<StoreData>(reducer, initialState);
 			
 			// Match url to path.
 			const matchedRoute = routes.find(route => !!matchPath(req.url, { path: route.path, exact: true }));
