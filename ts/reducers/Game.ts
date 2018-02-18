@@ -262,11 +262,12 @@ export const gameReducer = combineReducers<GameState>({
 				
 				// Update phrases.
 				const phrases = [...gameData.phrases];
-				if (!phrases[gameData.currentRound - 1]) {
-					phrases[gameData.currentRound - 1] = {};
+				const index = gameData.currentRound / 2;
+				if (!phrases[index]) {
+					phrases[index] = {};
 				}
 				
-				phrases[gameData.currentRound - 1][action.playerId] = action.phrase;
+				phrases[index][action.playerId] = action.phrase;
 				
 				return { ...gameData, phrases };
 			}
@@ -279,12 +280,13 @@ export const gameReducer = combineReducers<GameState>({
 				}
 				
 				// Update pictures.
+				const index = (gameData.currentRound - 1) / 2;
 				const pictures = [...gameData.pictures];
-				if (!pictures[gameData.currentRound - 1]) {
-					pictures[gameData.currentRound - 1] = {};
+				if (!pictures[index]) {
+					pictures[index] = {};
 				}
 				
-				pictures[gameData.currentRound - 1][action.playerId] = action.phrase;
+				pictures[index][action.playerId] = action.phrase;
 				
 				return { ...gameData, pictures };
 			}

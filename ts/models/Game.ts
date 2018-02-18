@@ -136,19 +136,21 @@ export class Game {
 	}
 	
 	public enterPhrase(playerId: string, round: number, phrase: string) {
-		if (!this._phrases[round - 1]) {
-			this._phrases[round - 1] = {};
+		const index = round / 2;
+		if (!this._phrases[index]) {
+			this._phrases[index] = {};
 		}
-		this._phrases[round - 1][playerId] = phrase;
+		this._phrases[index][playerId] = phrase;
 
 		this._updated = new Date();
 	}
 	
 	public enterPicture(playerId: string, round: number, pictureData: string) {
-		if (!this._pictures[round - 1]) {
-			this._pictures[round - 1] = {};
+		const index = (round - 1) / 2;
+		if (!this._pictures[index]) {
+			this._pictures[index] = {};
 		}
-		this._pictures[round - 1][playerId] = pictureData;
+		this._pictures[index][playerId] = pictureData;
 		
 		this._updated = new Date();
 	}

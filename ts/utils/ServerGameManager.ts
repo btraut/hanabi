@@ -278,10 +278,11 @@ class ServerGameManager {
 				}
 			}
 			
-			nextRound = 1;
+			nextRound = 0;
 			nextState = GameState.WaitingForPhraseSubmissions;
 		} else if (game.state === GameState.WaitingForPhraseSubmissions) {
-			const phrases = game.phrases[game.currentRound - 1];
+			const index = game.currentRound / 2;
+			const phrases = game.phrases[index];
 			if (!phrases || Object.keys(phrases).length !== Object.keys(game.players).length) {
 				allPlayersSubmitted = false;
 			}
@@ -289,13 +290,19 @@ class ServerGameManager {
 			nextRound = game.currentRound;
 			nextState = GameState.WaitingForPictureSubmissions;
 		} else if (game.state === GameState.WaitingForPictureSubmissions) {
-			const pictures = game.pictures[game.currentRound - 1];
+			const index = (game.currentRound - 1) / 2;
+			const pictures = game.pictures[index];
 			if (!pictures || Object.keys(pictures).length !== Object.keys(game.players).length) {
 				allPlayersSubmitted = false;
 			}
 			
 			nextRound = game.currentRound + 1;
 			nextState = GameState.WaitingForPhraseSubmissions;
+		}
+		
+		// If we've hit the max rounds, move to finish.
+		if (nextRound >= game.rounds) {
+			nextState = GameState.ReviewingStories;
 		}
 		
 		// Conditionally move to next phase.
