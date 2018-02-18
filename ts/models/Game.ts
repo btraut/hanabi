@@ -5,7 +5,7 @@ import Player from './Player';
 export enum GameState {
 	WaitingForPlayers,
 	WaitingForPlayerDescriptions,
-	WaitingForTextSubmissions,
+	WaitingForPhraseSubmissions,
 	WaitingForPictureSubmissions,
 	AllSubmissionsRecieved,
 	ReviewingStories,
@@ -17,6 +17,10 @@ export interface GameData {
 	readonly state: GameState;
 	readonly host: Player;
 	readonly players: Player[];
+	readonly currentRound: number;
+	readonly rounds: number;
+	readonly phrases: Array<{ [playerId: string]: string }>;
+	readonly pictures: Array<{ [playerId: string]: string }>;
 }
 
 export class Game {
@@ -24,14 +28,22 @@ export class Game {
 	public get updated() { return this._updated; }
 	public get host() { return this._host; }
 	public get players() { return this._players; }
+	public get phrases() { return this._phrases; }
+	public get pictures() { return this._pictures; }
 	public get code() { return this._code; }
+	public get currentRound() { return this._currentRound; }
+	public get rounds() { return this._rounds; }
 	public get state() { return this._state; }
 	public get allUsers() { return [...Object.values(this._players).map(p => p.id), this._host.id]; }
 	
 	private _created = new Date();
 	private _updated = new Date();
 	private _players: { [playerId: string]: Player } = {};
+	private _phrases: Array<{ [playerId: string]: string }> = [];
+	private _pictures: Array<{ [playerId: string]: string }> = [];
 	private _host: Player;
+	private _currentRound: number = 0;
+	private _rounds: number = 5;
 	private _code: string = this._generateCode();
 	private _state = GameState.WaitingForPlayers;
 	
@@ -48,7 +60,11 @@ export class Game {
 			code: this._code,
 			state: this._state,
 			host: this._host,
-			players: Object.values(this._players)
+			players: Object.values(this._players),
+			currentRound: this._currentRound,
+			rounds: this._rounds,
+			phrases: this._phrases,
+			pictures: this._pictures
 		};
 	}
 	
@@ -110,11 +126,30 @@ export class Game {
 	
 	public start() {
 		this._state = GameState.WaitingForPlayerDescriptions;
+		this._updated = new Date();
 	}
 	
-	public moveToNextPhase() {
-		if (this._state === GameState.WaitingForPlayerDescriptions) {
-			this._state = GameState.WaitingForTextSubmissions;
+	public moveToState(state: GameState, round: number) {
+		this._state = state;
+		this._currentRound = round;
+		this._updated = new Date();
+	}
+	
+	public enterPhrase(playerId: string, round: number, phrase: string) {
+		if (!this._phrases[round - 1]) {
+			this._phrases[round - 1] = {};
 		}
+		this._phrases[round - 1][playerId] = phrase;
+
+		this._updated = new Date();
+	}
+	
+	public enterPicture(playerId: string, round: number, pictureData: string) {
+		if (!this._pictures[round - 1]) {
+			this._pictures[round - 1] = {};
+		}
+		this._pictures[round - 1][playerId] = pictureData;
+		
+		this._updated = new Date();
 	}
 }

@@ -70,7 +70,26 @@ export const gameActions = {
 	),
 	setGameState: createAction(
 		prefix('SET_GAME_STATE'),
-		(state: GameDataState, gameCode: string) => ({ type: prefix('SET_GAME_STATE'), state, gameCode })
+		(state: GameDataState, currentRound: number, gameCode: string) =>
+			({ type: prefix('SET_GAME_STATE'), state, currentRound, gameCode })
+	),
+	enterPhrase: createAction(
+		prefix('ENTER_PHRASE'),
+		(playerId: string, phrase: string, gameCode: string) =>
+			({ type: prefix('ENTER_PHRASE'), playerId, phrase, gameCode })
+	),
+	enterPhraseError: createAction(
+		prefix('ENTER_PHRASE_ERROR'),
+		(errorText: string) => ({ type: prefix('ENTER_PHRASE_ERROR'), errorText })
+	),
+	enterPicture: createAction(
+		prefix('ENTER_PICTURE'),
+		(playerId: string, pictureData: string, gameCode: string) =>
+			({ type: prefix('ENTER_PICTURE'), playerId, pictureData, gameCode })
+	),
+	enterPictureError: createAction(
+		prefix('ENTER_PICTURE_ERROR'),
+		(errorText: string) => ({ type: prefix('ENTER_PICTURE_ERROR'), errorText })
 	)
 };
 
@@ -90,6 +109,8 @@ export interface GameState {
 	readonly startGameError: string | null;
 	readonly setPlayerNameError: string | null;
 	readonly setPlayerPictureError: string | null;
+	readonly enterPhraseError: string | null;
+	readonly enterPictureError: string | null;
 }
 
 export const initialState: GameState = {
@@ -100,7 +121,9 @@ export const initialState: GameState = {
 	joinGameError: null,
 	startGameError: null,
 	setPlayerNameError: null,
-	setPlayerPictureError: null
+	setPlayerPictureError: null,
+	enterPhraseError: null,
+	enterPictureError: null
 };
 
 export const gameReducer = combineReducers<GameState>({
@@ -217,7 +240,53 @@ export const gameReducer = combineReducers<GameState>({
 				}
 				
 				// Update the state.
-				return { ...gameData, state: action.state };
+				const phrases = [...gameData.phrases];
+				if (!gameData.phrases[gameData.currentRound - 1]) {
+					gameData.phrases[gameData.currentRound - 1] = {};
+				}
+				
+				const pictures = [...gameData.pictures];
+				if (!gameData.pictures[gameData.currentRound - 1]) {
+					gameData.pictures[gameData.currentRound - 1] = {};
+				}
+				
+				return { ...gameData, state: action.state, currentRound: action.currentRound, phrases, pictures };
+			}
+			
+			case getType(gameActions.enterPhrase):
+			{
+				// Verify we're updating this game.
+				if (!gameData || gameData.code !== action.gameCode) {
+					return gameData;
+				}
+				
+				// Update phrases.
+				const phrases = [...gameData.phrases];
+				if (!phrases[gameData.currentRound - 1]) {
+					phrases[gameData.currentRound - 1] = {};
+				}
+				
+				phrases[gameData.currentRound - 1][action.playerId] = action.phrase;
+				
+				return { ...gameData, phrases };
+			}
+			
+			case getType(gameActions.enterPicture):
+			{
+				// Verify we're updating this game.
+				if (!gameData || gameData.code !== action.gameCode) {
+					return gameData;
+				}
+				
+				// Update pictures.
+				const pictures = [...gameData.pictures];
+				if (!pictures[gameData.currentRound - 1]) {
+					pictures[gameData.currentRound - 1] = {};
+				}
+				
+				pictures[gameData.currentRound - 1][action.playerId] = action.phrase;
+				
+				return { ...gameData, pictures };
 			}
 			
 			default:
@@ -258,6 +327,22 @@ export const gameReducer = combineReducers<GameState>({
 	setPlayerPictureError: (errorText: string | null = null, action) => {
 		switch (action.type) {
 			case getType(gameActions.setPlayerPictureError): return action.errorText;
+			case getType(gameActions.clearErrors): return null;
+			case getType(gameActions.connect): return null;
+			default: return errorText;
+		}
+	},
+	enterPhraseError: (errorText: string | null = null, action) => {
+		switch (action.type) {
+			case getType(gameActions.enterPhraseError): return action.errorText;
+			case getType(gameActions.clearErrors): return null;
+			case getType(gameActions.connect): return null;
+			default: return errorText;
+		}
+	},
+	enterPictureError: (errorText: string | null = null, action) => {
+		switch (action.type) {
+			case getType(gameActions.enterPictureError): return action.errorText;
 			case getType(gameActions.clearErrors): return null;
 			case getType(gameActions.connect): return null;
 			default: return errorText;

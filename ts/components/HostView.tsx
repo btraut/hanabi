@@ -59,7 +59,7 @@ class HostViewPage extends React.PureComponent<HostViewProps> {
 		switch (gameData.state) {
 		case GameState.WaitingForPlayers: return this._renderWaitingForPlayers(gameData);
 		case GameState.WaitingForPlayerDescriptions: return <div>Players are naming themselves…</div>;
-		case GameState.WaitingForTextSubmissions: return <div>Players are submitting text…</div>;
+		case GameState.WaitingForPhraseSubmissions: return <div>Players are submitting phrases…</div>;
 		case GameState.WaitingForPictureSubmissions: return <div>Players are submitting drawings…</div>;
 		case GameState.ReviewingStories: return <div>Reviewing sequences…</div>;
 		case GameState.PlayAgainOptions: return <div>Play again?</div>;

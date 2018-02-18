@@ -17,11 +17,14 @@ type PlayerViewProps = {
 	readonly startGameError: string | null;
 	readonly setPlayerNameError: string | null;
 	readonly setPlayerPictureError: string | null;
+	readonly enterPhraseError: string | null;
+	readonly enterPictureError: string | null;
 } & ExternalPlayerViewProps;
 
 class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 	private _joinGameInput: HTMLInputElement | null = null;
 	private _enterNameInput: HTMLInputElement | null = null;
+	private _enterPhraseInput: HTMLInputElement | null = null;
 	
 	public componentDidMount() {
 		const { clientGameManager } = this.props;
@@ -73,9 +76,7 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		);
 	}
 	
-	private _renderWaitingForPlayerDescriptions(gameData: GameData) {
-		const { userId } = this.props;
-		
+	private _renderWaitingForPlayerDescriptions(gameData: GameData, userId: string | null) {
 		const player = gameData.players.find(p => p.id === userId);
 		
 		if (!player) {
@@ -91,6 +92,53 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		}
 		
 		return this._renderWaitingForOtherPlayerDescriptions();
+	}
+	
+	private _renderWaitingForPhraseSubmissions(gameData: GameData, userId: string | null) {
+		const phrases = gameData.phrases[gameData.currentRound - 1] || {};
+		
+		if (!userId || !phrases[userId]) {
+			return this._renderEnterPhrase();
+		}
+		
+		return this._renderWaitingForOtherPlayersToSubmitPhrases();
+	}
+	
+	private _renderEnterPhrase() {
+		const { enterPhraseError } = this.props;
+		
+		return (
+			<form onSubmit={this._handleEnterPhraseSubmit}>
+				<h1>Enter a phrase!</h1>
+				<p>
+					<input type="text" ref={(input: HTMLInputElement | null) => { this._enterPhraseInput = input; }} />
+					<input type="submit" value="Submit" />
+					{ enterPhraseError && <p style={{ color: 'red' }}>{ enterPhraseError }</p>}
+				</p>
+			</form>
+		);
+	}
+	
+	private _handleEnterPhraseSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+		const { clientGameManager, gameData } = this.props;
+		
+		if (!gameData) {
+			return;
+		}
+		
+		event.preventDefault();
+		
+		if (this._enterPhraseInput) {
+			clientGameManager.enterPhrase(gameData.code, gameData.currentRound, this._enterPhraseInput.value);
+		}
+	}
+
+	private _renderWaitingForOtherPlayersToSubmitPhrases() {
+		return (
+			<div>
+				<h1>Waiting for other players to submit phrase…</h1>
+			</div>
+		);
 	}
 	
 	private _renderEnterUserName() {
@@ -162,14 +210,11 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		clientGameManager.startGame(gameData.code);
 	}
 	
-	private _renderGameState(gameData: GameData) {
+	private _renderGameState(gameData: GameData, userId: string | null) {
 		switch (gameData.state) {
 		case GameState.WaitingForPlayers: return this._renderInGameLobby(gameData);
-		case GameState.WaitingForPlayerDescriptions: return this._renderWaitingForPlayerDescriptions(gameData);
-		
-		case GameState.WaitingForTextSubmissions:
-			// TODO: Look at game data to determine if we've already submitted text.
-			return <div>Waiting for others to enter text…</div>;
+		case GameState.WaitingForPlayerDescriptions: return this._renderWaitingForPlayerDescriptions(gameData, userId);
+		case GameState.WaitingForPhraseSubmissions: return this._renderWaitingForPhraseSubmissions(gameData, userId);
 			
 		case GameState.WaitingForPictureSubmissions:
 			// TODO: Look at game data to determine if we've already submitted a picture.
@@ -182,7 +227,7 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 	}
 	
 	public render() {
-		const { connected, gameData } = this.props;
+		const { connected, gameData, userId } = this.props;
 		
 		if (!connected) {
 			return <div>Connecting…</div>;
@@ -194,7 +239,7 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		
 		return (
 			<div className="PlayerView">
-				{ this._renderGameState(gameData) }
+				{ this._renderGameState(gameData, userId) }
 				<JSONPretty json={gameData} />
 			</div>
 		);
@@ -203,8 +248,8 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 
 export default connect(({ game: {
 	initialDataLoaded, connected, userId, gameData, joinGameError, startGameError,
-	setPlayerNameError, setPlayerPictureError
+	setPlayerNameError, setPlayerPictureError, enterPhraseError, enterPictureError
 } }: StoreData) => ({
 	initialDataLoaded, connected, userId, gameData, joinGameError, startGameError,
-	setPlayerNameError, setPlayerPictureError
+	setPlayerNameError, setPlayerPictureError, enterPhraseError, enterPictureError
 }))(PlayerViewPage) as any as React.ComponentClass<ExternalPlayerViewProps>;

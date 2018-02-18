@@ -14,7 +14,9 @@ import {
 	JoinGameMessage,
 	StartGameMessage,
 	SetPlayerNameMessage,
-	SetPlayerPictureMessage
+	SetPlayerPictureMessage,
+	EnterPhraseMessage,
+	EnterPictureMessage
 } from '../models/SocketMessage';
 import { StoreData } from '../reducers/root';
 import { gameActions } from '../reducers/Game';
@@ -66,6 +68,18 @@ export default class ClientGameManager {
 		// Send the player's picture data. Expect a response for the sake of error handling.
 		ClientSocketManager.send({ type: 'SetPlayerPictureMessage', data: { gameCode, pictureData } } as SetPlayerPictureMessage);
 		await ClientSocketManager.expectMessageOfType('PlayerPictureSetMessage');
+	}
+	
+	public async enterPhrase(gameCode: string, round: number, phrase: string) {
+		// Send the player's phrase. Expect a response for the sake of error handling.
+		ClientSocketManager.send({ type: 'EnterPhraseMessage', data: { gameCode, phrase, round } } as EnterPhraseMessage);
+		await ClientSocketManager.expectMessageOfType('PhraseEnteredMessage');
+	}
+	
+	public async enterPicture(gameCode: string, round: number, pictureData: string) {
+		// Send the player's picture. Expect a response for the sake of error handling.
+		ClientSocketManager.send({ type: 'EnterPictureMessage', data: { gameCode, pictureData, round } } as EnterPictureMessage);
+		await ClientSocketManager.expectMessageOfType('PictureEnteredMessage');
 	}
 	
 	private _handleConnect = () => {
@@ -132,18 +146,30 @@ export default class ClientGameManager {
 			}
 		} else if (message.type === 'PlayerNameSetMessage') {
 			if (message.data.error) {
-				this._dispatch(gameActions.startGameError(message.data.error));
+				this._dispatch(gameActions.setPlayerNameError(message.data.error));
 			} else if (message.data.name && message.data.gameCode && message.data.playerId) {
 				this._dispatch(gameActions.setPlayerName(message.data.playerId, message.data.name, message.data.gameCode));
 			}
 		} else if (message.type === 'PlayerPictureSetMessage') {
 			if (message.data.error) {
-				this._dispatch(gameActions.startGameError(message.data.error));
+				this._dispatch(gameActions.setPlayerPictureError(message.data.error));
 			} else if (message.data.pictureData && message.data.gameCode && message.data.playerId) {
 				this._dispatch(gameActions.setPlayerPicture(message.data.playerId, message.data.pictureData, message.data.gameCode));
 			}
 		} else if (message.type === 'SetGameStateMessage') {
-			this._dispatch(gameActions.setGameState(message.data.gameState, message.data.gameCode));
+			this._dispatch(gameActions.setGameState(message.data.gameState, message.data.currentRound, message.data.gameCode));
+		} else if (message.type === 'PhraseEnteredMessage') {
+			if (message.data.error) {
+				this._dispatch(gameActions.enterPhraseError(message.data.error));
+			} else if (message.data.phrase && message.data.gameCode && message.data.playerId) {
+				this._dispatch(gameActions.enterPhrase(message.data.playerId, message.data.phrase, message.data.gameCode));
+			}
+		} else if (message.type === 'PictureEnteredMessage') {
+			if (message.data.error) {
+				this._dispatch(gameActions.enterPictureError(message.data.error));
+			} else if (message.data.pictureData && message.data.gameCode && message.data.playerId) {
+				this._dispatch(gameActions.enterPicture(message.data.playerId, message.data.pictureData, message.data.gameCode));
+			}
 		}
 	}
 }

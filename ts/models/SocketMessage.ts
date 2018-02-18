@@ -63,6 +63,7 @@ export type PlayerNameSetMessage = SocketMessageTemplate<'PlayerNameSetMessage',
 
 export type SetGameStateMessage = SocketMessageTemplate<'SetGameStateMessage', {
 	gameState: GameState;
+	currentRound: number;
 	gameCode: string;
 }>;
 
@@ -74,6 +75,32 @@ export type PlayerPictureSetMessage = SocketMessageTemplate<'PlayerPictureSetMes
 	error?: string;
 	gameCode?: string;
 	playerId?: string;
+	pictureData?: string;
+}>;
+
+export type EnterPhraseMessage = SocketMessageTemplate<'EnterPhraseMessage', {
+	gameCode: string;
+	round: number;
+	phrase: string;
+}>;
+export type PhraseEnteredMessage = SocketMessageTemplate<'PhraseEnteredMessage', {
+	error?: string;
+	gameCode?: string;
+	playerId?: string;
+	round?: number;
+	phrase?: string;
+}>;
+
+export type EnterPictureMessage = SocketMessageTemplate<'EnterPictureMessage', {
+	gameCode: string;
+	round: number;
+	pictureData: string;
+}>;
+export type PictureEnteredMessage = SocketMessageTemplate<'PictureEnteredMessage', {
+	error?: string;
+	gameCode?: string;
+	playerId?: string;
+	round?: number;
 	pictureData?: string;
 }>;
 
@@ -95,4 +122,8 @@ export type SocketMessage =
 	PlayerNameSetMessage |
 	SetPlayerPictureMessage |
 	PlayerPictureSetMessage |
-	SetGameStateMessage;
+	SetGameStateMessage |
+	EnterPhraseMessage |
+	PhraseEnteredMessage |
+	EnterPictureMessage |
+	PictureEnteredMessage;
