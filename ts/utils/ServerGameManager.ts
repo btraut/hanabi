@@ -46,7 +46,7 @@ class ServerGameManager {
 		return newGame;
 	}
 	
-	private _pruneOldGames() {
+	private _pruneOldGames = () => {
 		// Games older than an hour should be deleted.
 		const oldestGameTime = new Date((new Date()).getTime() - GAME_EXPIRATION_MINUTES * 60 * 1000);
 		
