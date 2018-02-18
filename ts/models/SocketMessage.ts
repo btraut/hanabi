@@ -1,4 +1,4 @@
-import { GameData } from './Game';
+import { GameData, GameState } from './Game';
 import Player from './Player';
 
 interface SocketMessageTemplate<T, D> {
@@ -61,6 +61,11 @@ export type PlayerNameSetMessage = SocketMessageTemplate<'PlayerNameSetMessage',
 	name?: string;
 }>;
 
+export type SetGameStateMessage = SocketMessageTemplate<'SetGameStateMessage', {
+	gameState: GameState;
+	gameCode: string;
+}>;
+
 export type SetPlayerPictureMessage = SocketMessageTemplate<'SetPlayerPictureMessage', {
 	gameCode: string;
 	pictureData: string;
@@ -89,4 +94,5 @@ export type SocketMessage =
 	SetPlayerNameMessage |
 	PlayerNameSetMessage |
 	SetPlayerPictureMessage |
-	PlayerPictureSetMessage;
+	PlayerPictureSetMessage |
+	SetGameStateMessage;

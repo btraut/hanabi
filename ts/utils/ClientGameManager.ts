@@ -142,6 +142,8 @@ export default class ClientGameManager {
 			} else if (message.data.pictureData && message.data.gameCode && message.data.playerId) {
 				this._dispatch(gameActions.setPlayerPicture(message.data.playerId, message.data.pictureData, message.data.gameCode));
 			}
+		} else if (message.type === 'SetGameStateMessage') {
+			this._dispatch(gameActions.setGameState(message.data.gameState, message.data.gameCode));
 		}
 	}
 }

@@ -67,6 +67,10 @@ export const gameActions = {
 	setPlayerPictureError: createAction(
 		prefix('SET_PLAYER_PICTURE_ERROR'),
 		(errorText: string) => ({ type: prefix('SET_PLAYER_PICTURE_ERROR'), errorText })
+	),
+	setGameState: createAction(
+		prefix('SET_GAME_STATE'),
+		(state: GameDataState, gameCode: string) => ({ type: prefix('SET_GAME_STATE'), state, gameCode })
 	)
 };
 
@@ -205,6 +209,17 @@ export const gameReducer = combineReducers<GameState>({
 				return { ...gameData, players: newPlayers };
 			}
 
+			case getType(gameActions.setGameState):
+			{
+				// Verify we're updating this game.
+				if (!gameData || gameData.code !== action.gameCode) {
+					return gameData;
+				}
+				
+				// Update the state.
+				return { ...gameData, state: action.state };
+			}
+			
 			default:
 				return gameData;
 		}

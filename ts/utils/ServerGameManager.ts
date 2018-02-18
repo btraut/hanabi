@@ -10,7 +10,8 @@ import {
 	PlayerRemovedMessage,
 	GameStartedMessage,
 	PlayerNameSetMessage,
-	PlayerPictureSetMessage
+	PlayerPictureSetMessage,
+	SetGameStateMessage
 } from '../models/SocketMessage';
 import ServerSocketManager from './ServerSocketManager';
 import Logger from '../utils/Logger';
@@ -89,16 +90,8 @@ class ServerGameManager {
 			// Update the player.
 			const updatedUser = game.updatePlayer(userId, updates);
 			if (updatedUser) {
-				// Notify the other game players.
-				for (const notifyUserId of Object.values(game.players).filter(p => p.id !== userId).map(p => p.id)) {
-					ServerSocketManager.send(notifyUserId, {
-						type: 'UserUpdatedMessage',
-						data: { player: updatedUser }
-					} as UserUpdatedMessage);
-				}
-				
 				// Notify the game host.
-				ServerSocketManager.send(game.host.id, {
+				ServerSocketManager.send(game.allUsers.filter(id => id !== userId), {
 					type: 'UserUpdatedMessage',
 					data: { player: updatedUser }
 				} as UserUpdatedMessage);
@@ -113,12 +106,10 @@ class ServerGameManager {
 			const updatedUser = game.updateHost(updates);
 			if (updatedUser) {
 				// Notify the game players.
-				for (const notifyUserId of Object.values(game.players).map(p => p.id)) {
-					ServerSocketManager.send(notifyUserId, {
-						type: 'UserUpdatedMessage',
-						data: { player: updatedUser }
-					} as UserUpdatedMessage);
-				}
+				ServerSocketManager.send(Object.values(game.players).map(p => p.id), {
+					type: 'UserUpdatedMessage',
+					data: { player: updatedUser }
+				} as UserUpdatedMessage);
 			}
 		}
 	}
@@ -161,17 +152,12 @@ class ServerGameManager {
 			const removedPlayer = existingGame.removePlayer(userId);
 			
 			if (removedPlayer) {
-				// Make a list of all users we need to notify.
-				const removeUserIdsToNotify = [...Object.keys(gameToJoin.players), gameToJoin.host.id];
-				
 				// Notify all clients that the user has been added.
-				for (const removeUserIdToNotify of removeUserIdsToNotify) {
-					ServerSocketManager.send(removeUserIdToNotify, {
-						type: 'PlayerRemovedMessage',
-						data: { player: removedPlayer }
-					} as PlayerRemovedMessage);
-				}
-			}
+				ServerSocketManager.send(gameToJoin.allUsers, {
+					type: 'PlayerRemovedMessage',
+					data: { player: removedPlayer }
+				} as PlayerRemovedMessage);
+		}
 		}
 		
 		// Ensure the game is in the right state.
@@ -183,9 +169,6 @@ class ServerGameManager {
 			return;
 		}
 		
-		// Make a list of which users (clients + host) to notify.
-		const joinUserIdsToNotify = [...Object.keys(gameToJoin.players), gameToJoin.host.id];
-		
 		// Join the new game.
 		const joinedplayer = gameToJoin.addPlayer(userId);
 		
@@ -196,12 +179,10 @@ class ServerGameManager {
 		} as GameJoinedMessage);
 		
 		// Notify all clients that the user has been added.
-		for (const joinUserIdToNotify of joinUserIdsToNotify) {
-			ServerSocketManager.send(joinUserIdToNotify, {
-				type: 'PlayerAddedMessage',
-				data: { player: joinedplayer, gameCode: gameToJoin.code }
-			} as PlayerAddedMessage);
-		}
+		ServerSocketManager.send(gameToJoin.allUsers, {
+			type: 'PlayerAddedMessage',
+			data: { player: joinedplayer, gameCode: gameToJoin.code }
+		} as PlayerAddedMessage);
 	}
 	
 	private _handleStartGameMessage(userId: string, gameCode: string) {
@@ -245,16 +226,8 @@ class ServerGameManager {
 		// Update the game.
 		game.start();
 		
-		// Notify the other game players.
-		for (const notifyUserId of Object.values(game.players).map(p => p.id)) {
-			ServerSocketManager.send(notifyUserId, {
-				type: 'GameStartedMessage',
-				data: { gameCode }
-			} as GameStartedMessage);
-		}
-		
-		// Notify the game host.
-		ServerSocketManager.send(game.host.id, {
+		// Notify all players and host.
+		ServerSocketManager.send(game.allUsers, {
 			type: 'GameStartedMessage',
 			data: { gameCode }
 		} as GameStartedMessage);
@@ -292,16 +265,8 @@ class ServerGameManager {
 		// Update the player name.
 		game.updatePlayer(playerId, { name });
 		
-		// Notify the other game players.
-		for (const notifyUserId of Object.values(game.players).map(p => p.id)) {
-			ServerSocketManager.send(notifyUserId, {
-				type: 'PlayerNameSetMessage',
-				data: { gameCode, name, playerId }
-			} as PlayerNameSetMessage);
-		}
-		
-		// Notify the game host.
-		ServerSocketManager.send(game.host.id, {
+		// Notify all players and host.
+		ServerSocketManager.send(game.allUsers, {
 			type: 'PlayerNameSetMessage',
 			data: { gameCode, name, playerId }
 		} as PlayerNameSetMessage);
@@ -339,19 +304,30 @@ class ServerGameManager {
 		// Update the player picture data.
 		game.updatePlayer(playerId, { pictureData });
 		
-		// Notify the other game players.
-		for (const notifyUserId of Object.values(game.players).map(p => p.id)) {
-			ServerSocketManager.send(notifyUserId, {
-				type: 'PlayerPictureSetMessage',
-				data: { gameCode, pictureData, playerId }
-			} as PlayerPictureSetMessage);
-		}
-		
-		// Notify the game host.
-		ServerSocketManager.send(game.host.id, {
+		// Notify all players and host.
+		ServerSocketManager.send(game.allUsers, {
 			type: 'PlayerPictureSetMessage',
 			data: { gameCode, pictureData, playerId }
 		} as PlayerPictureSetMessage);
+		
+		// Is it time to move to next phase?
+		let allPlayersSubmittedPhotos = true;
+		for (const player of Object.values(game.players)) {
+			if (!player.pictureData) {
+				allPlayersSubmittedPhotos = false;
+				break;
+			}
+		}
+		
+		// Conditionally move to next phase.
+		if (allPlayersSubmittedPhotos) {
+			game.moveToNextPhase();
+			
+			ServerSocketManager.send(game.allUsers, {
+				type: 'SetGameStateMessage',
+				data: { gameCode: game.code, gameState: game.state }
+			} as SetGameStateMessage);
+		}
 	}
 	
 	private _handleMessage = ({ userId, message }: { userId: string, message: SocketMessage }) =>  {

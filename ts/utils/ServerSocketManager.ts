@@ -119,17 +119,21 @@ class ServerSocketManager {
 		this._server!.to(socketId).emit('message', { ...blankMessage, ...message });
 	}
 	
-	public send(userId: string, message: SocketMessage) {
-		const authenticatedSockets = invert(this._authenticatedUsers) as { [userId: string]: string };
-		const socketId = authenticatedSockets[userId];
+	public send(idOrIds: string | string[], message: SocketMessage) {
+		const userIds = typeof idOrIds === 'string' ? [idOrIds] : idOrIds;
 		
-		if (!socketId) {
-			throw new Error('Invalid userid.');
+		for (const userId of userIds) {
+			const authenticatedSockets = invert(this._authenticatedUsers) as { [userId: string]: string };
+			const socketId = authenticatedSockets[userId];
+			
+			if (!socketId) {
+				throw new Error('Invalid userid.');
+			}
+			
+			console.log(`sending message to ${ userId }:`, message);
+			
+			this._send(socketId, message);
 		}
-		
-		console.log(`sending message to ${ userId }:`, message);
-		
-		this._send(socketId, message);
 	}
 }
 

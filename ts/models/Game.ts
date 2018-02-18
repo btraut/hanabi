@@ -26,6 +26,7 @@ export class Game {
 	public get players() { return this._players; }
 	public get code() { return this._code; }
 	public get state() { return this._state; }
+	public get allUsers() { return [...Object.values(this._players).map(p => p.id), this._host.id]; }
 	
 	private _created = new Date();
 	private _updated = new Date();
@@ -109,5 +110,11 @@ export class Game {
 	
 	public start() {
 		this._state = GameState.WaitingForPlayerDescriptions;
+	}
+	
+	public moveToNextPhase() {
+		if (this._state === GameState.WaitingForPlayerDescriptions) {
+			this._state = GameState.WaitingForTextSubmissions;
+		}
 	}
 }
