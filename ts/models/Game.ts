@@ -93,6 +93,40 @@ export class Game {
 		return this._players[playerId];
 	}
 	
+	public validateName(name: string) {
+		if (name === '') {
+			return 'Names can’t be blank.';
+		}
+		
+		if (name.length > 20) {
+			return 'Try a shorter name.';
+		}
+		
+		for (const player of Object.values(this._players)) {
+			if (name === player.name) {
+				return `Someone already snagged the name "${name}". Try another one.`;
+			}
+		}
+		
+		return null;
+	}
+	
+	public validatePhrase(phrase: string) {
+		if (phrase === '') {
+			return 'Phrases can’t be blank.';
+		}
+		
+		if (phrase.length < 3) {
+			return 'Try a longer phrase.';
+		}
+		
+		if (phrase.length > 100) {
+			return 'Try a shorter phrase.';
+		}
+		
+		return null;
+	}
+	
 	public updatePlayer(playerId: string, updates: Partial<Player>) {
 		const updatedPlayer = this._players[playerId] as Player | undefined;
 		if (updatedPlayer) {

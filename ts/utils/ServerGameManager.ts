@@ -255,13 +255,25 @@ class ServerGameManager {
 		
 		const game = this._games[gameCode];
 		
+		// Validate and scrub the name.
+		const cleanName = name.trim();
+		const error = game.validateName(cleanName);
+		
+		if (error) {
+			ServerSocketManager.send(playerId, {
+				type: 'PlayerNameSetMessage',
+				data: { error }
+			} as PlayerNameSetMessage);
+			return;
+		}
+		
 		// Update the player name.
-		game.updatePlayer(playerId, { name });
+		game.updatePlayer(playerId, { name: cleanName });
 		
 		// Notify all players and host.
 		ServerSocketManager.send(game.allUsers, {
 			type: 'PlayerNameSetMessage',
-			data: { gameCode, name, playerId }
+			data: { gameCode, name: cleanName, playerId }
 		} as PlayerNameSetMessage);
 	}
 	
@@ -347,13 +359,25 @@ class ServerGameManager {
 		
 		const game = this._games[gameCode];
 		
+		// Validate and scrub the phrase.
+		const cleanPhrase = phrase.trim();
+		const error = game.validatePhrase(cleanPhrase);
+		
+		if (error) {
+			ServerSocketManager.send(playerId, {
+				type: 'PlayerNameSetMessage',
+				data: { error }
+			} as PlayerNameSetMessage);
+			return;
+		}
+		
 		// Set the player's phrase.
-		game.enterPhrase(playerId, round, phrase);
+		game.enterPhrase(playerId, round, cleanPhrase);
 		
 		// Notify all players and host.
 		ServerSocketManager.send(game.allUsers, {
 			type: 'PhraseEnteredMessage',
-			data: { gameCode, phrase, round: game.currentRound, playerId }
+			data: { gameCode, phrase: cleanPhrase, round: game.currentRound, playerId }
 		} as PhraseEnteredMessage);
 		
 		// Conditionally move to next state.
