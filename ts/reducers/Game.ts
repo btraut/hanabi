@@ -56,7 +56,7 @@ export const gameActions = {
 	),
 	gameStarted: createAction(
 		prefix('GAME_STARTED'),
-		(gameCode: string) => ({ type: prefix('GAME_STARTED'), gameCode })
+		(gameCode: string, playerOrders: string[]) => ({ type: prefix('GAME_STARTED'), gameCode, playerOrders })
 	),
 	startGameError: createAction(
 		prefix('START_GAME_ERROR'),
@@ -243,7 +243,21 @@ export const gameReducer = combineReducers<GameState>({
 					return gameData;
 				}
 				
-				return { ...gameData, state: GameDataState.WaitingForPlayerDescriptions };
+				// Clone all players, adding player order.
+				const players = [];
+				for (const player of gameData.players) {
+					players.push({
+						...player,
+						order: action.playerOrders.indexOf(player.id)
+					});
+				}
+				
+				// Add the new state and players list into game data.
+				return {
+					...gameData,
+					state: GameDataState.WaitingForPlayerDescriptions,
+					players
+				};
 			}
 		
 			case getType(gameActions.setPlayerName):

@@ -162,6 +162,24 @@ export class Game {
 		this._updated = new Date();
 	}
 	
+	public shufflePlayerOrders() {
+		const orders = [];
+		const playerIds = Object.keys(this._players);
+		
+		for (let i = 0; i < playerIds.length; i += 1) {
+			orders.push(i);
+		}
+		
+		for (let i = orders.length - 1; i > 0; i--) {
+			const j = Math.floor(Math.random() * (i + 1));
+			[orders[i], orders[j]] = [orders[j], orders[i]];
+		}
+
+		for (let i = 0; i < playerIds.length; i += 1) {
+			this._players[playerIds[i]].order = orders[i];
+		}
+	}
+	
 	public moveToState(state: GameState, round: number) {
 		this._state = state;
 		this._currentRound = round;

@@ -48,6 +48,7 @@ export type StartGameMessage = SocketMessageTemplate<'StartGameMessage', { gameC
 export type GameStartedMessage = SocketMessageTemplate<'GameStartedMessage', {
 	error?: string;
 	gameCode?: string;
+	playerOrders?: string[];
 }>;
 
 export type SetPlayerNameMessage = SocketMessageTemplate<'SetPlayerNameMessage', {

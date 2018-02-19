@@ -239,11 +239,15 @@ class ServerGameManager {
 		
 		// Update the game.
 		game.start();
+		game.shufflePlayerOrders();
+		
+		// Build the list of player orders.
+		const playerOrders = Object.values(game.players).sort((a, b) => a.order! < b.order! ? -1 : 1).map(p => p.id);;
 		
 		// Notify all players and host.
 		ServerSocketManager.send(game.allUsers, {
 			type: 'GameStartedMessage',
-			data: { gameCode }
+			data: { gameCode, playerOrders }
 		} as GameStartedMessage);
 	}
 	
@@ -431,6 +435,7 @@ class ServerGameManager {
 		
 		// Create a new game and add it to the list.
 		const newGame = game.startOver();
+		newGame.shufflePlayerOrders();
 		
 		// Make sure the game code is unique.
 		while (this._games[newGame.code]) {
@@ -443,7 +448,7 @@ class ServerGameManager {
 		// Remove the old game from the list.
 		delete this._games[gameCode];
 		
-		// Notify all players and host.
+		// Notify all players and host that the game has restarted.
 		ServerSocketManager.send(game.allUsers, {
 			type: 'StartedOverMessage',
 			data: { gameCode, gameData: newGame.toObject() }

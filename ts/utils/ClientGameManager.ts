@@ -161,9 +161,9 @@ export default class ClientGameManager {
 		} else if (message.type === 'GameStartedMessage') {
 			if (message.data.error) {
 				this._dispatch(gameActions.startGameError(message.data.error));
-			} else if (message.data.gameCode) {
+			} else if (message.data.gameCode && message.data.playerOrders) {
 				this._dispatch(gameActions.clearErrors());
-				this._dispatch(gameActions.gameStarted(message.data.gameCode));
+				this._dispatch(gameActions.gameStarted(message.data.gameCode, message.data.playerOrders));
 			}
 		} else if (message.type === 'PlayerNameSetMessage') {
 			if (message.data.error) {
