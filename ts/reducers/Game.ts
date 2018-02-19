@@ -286,7 +286,7 @@ export const gameReducer = combineReducers<GameState>({
 					pictures[index] = {};
 				}
 				
-				pictures[index][action.playerId] = action.phrase;
+				pictures[index][action.playerId] = action.pictureData;
 				
 				return { ...gameData, pictures };
 			}

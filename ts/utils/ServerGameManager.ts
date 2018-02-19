@@ -210,7 +210,7 @@ class ServerGameManager {
 		if (gameState && game.state !== gameState) {
 			ServerSocketManager.send(userId, {
 				type: errorMessageType,
-				data: { error: 'Game can’t be started right now.' }
+				data: { error: 'Game isn’t in the right state.' }
 			} as SocketMessage);
 			return;
 		}
@@ -287,7 +287,7 @@ class ServerGameManager {
 				allPlayersSubmitted = false;
 			}
 			
-			nextRound = game.currentRound;
+			nextRound = game.currentRound + 1;
 			nextState = GameState.WaitingForPictureSubmissions;
 		} else if (game.state === GameState.WaitingForPictureSubmissions) {
 			const index = (game.currentRound - 1) / 2;
@@ -360,7 +360,7 @@ class ServerGameManager {
 	
 	private _handleEnterPictureMessage(playerId: string, gameCode: string, round: number, pictureData: string) {
 		// Validate game, membership, and state.
-		if (!this._ensureUserIsInGame('PictureEnteredMessage', playerId, gameCode, GameState.WaitingForPhraseSubmissions)) {
+		if (!this._ensureUserIsInGame('PictureEnteredMessage', playerId, gameCode, GameState.WaitingForPictureSubmissions)) {
 			return;
 		}
 		

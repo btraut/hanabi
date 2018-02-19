@@ -43,7 +43,7 @@ export class Game {
 	private _pictures: Array<{ [playerId: string]: string }> = [];
 	private _host: Player;
 	private _currentRound: number = 0;
-	private _rounds: number = 5;
+	private _rounds: number = 3;
 	private _code: string = this._generateCode();
 	private _state = GameState.WaitingForPlayers;
 	

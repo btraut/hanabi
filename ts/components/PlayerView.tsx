@@ -42,10 +42,10 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		return (
 			<form onSubmit={this._handleJoinGameSubmit}>
 				<h1>Join Game:</h1>
-				<p>
+				<div>
 					<input type="text" ref={(input: HTMLInputElement | null) => { this._joinGameInput = input; }} />
 					<input type="submit" value="Join" />
-				</p>
+				</div>
 				{ joinGameError && <p style={{ color: 'red' }}>{ joinGameError }</p>}
 			</form>
 		);
@@ -76,6 +76,75 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		);
 	}
 	
+	private _handleStartGameButtonClick = () => {
+		const { clientGameManager, gameData } = this.props;
+		
+		if (!gameData) {
+			return;
+		}
+		
+		clientGameManager.startGame(gameData.code);
+	}
+	
+	private _renderEnterUserName() {
+		const { setPlayerNameError } = this.props;
+		
+		return (
+			<form onSubmit={this._handleEnterUserNameSubmit}>
+				<h1>You need to enter your name!</h1>
+				<div>
+					<input type="text" ref={(input: HTMLInputElement | null) => { this._enterNameInput = input; }} />
+					<input type="submit" value="Join" />
+					{ setPlayerNameError && <p style={{ color: 'red' }}>{ setPlayerNameError }</p>}
+				</div>
+			</form>
+		);
+	}
+	
+	private _handleEnterUserNameSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+		const { clientGameManager, gameData } = this.props;
+		
+		if (!gameData) {
+			return;
+		}
+		
+		event.preventDefault();
+		
+		if (this._enterNameInput) {
+			clientGameManager.setPlayerName(gameData.code, this._enterNameInput.value);
+		}
+	}
+	
+	private _renderDrawUserPicture() {
+		const { setPlayerPictureError } = this.props;
+		
+		return (
+			<div>
+				<h1>You need to draw your picture!</h1>
+				<div>
+					<button onClick={this._handleDrawUserPictureSubmit}>Submit Picture</button>
+					{ setPlayerPictureError && <p style={{ color: 'red' }}>{ setPlayerPictureError }</p>}
+				</div>
+			</div>
+		);
+	}
+	
+	private _handleDrawUserPictureSubmit = (event: React.MouseEvent<HTMLButtonElement>) => {
+		const { clientGameManager, gameData } = this.props;
+		
+		if (!gameData) {
+			return;
+		}
+		
+		event.preventDefault();
+		
+		clientGameManager.setPlayerPicture(gameData.code, ':)');
+	}
+	
+	private _renderWaitingForOtherPlayerDescriptions() {
+		return <h1>Waiting for other players to name and draw themselves…</h1>;
+	}
+	
 	private _renderWaitingForPlayerDescriptions(gameData: GameData, userId: string | null) {
 		const player = gameData.players.find(p => p.id === userId);
 		
@@ -95,7 +164,8 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 	}
 	
 	private _renderWaitingForPhraseSubmissions(gameData: GameData, userId: string | null) {
-		const phrases = gameData.phrases[gameData.currentRound - 1] || {};
+		const index = gameData.currentRound / 2;
+		const phrases = gameData.phrases[index] || {};
 		
 		if (!userId || !phrases[userId]) {
 			return this._renderEnterPhrase();
@@ -110,11 +180,11 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		return (
 			<form onSubmit={this._handleEnterPhraseSubmit}>
 				<h1>Enter a phrase!</h1>
-				<p>
+				<div>
 					<input type="text" ref={(input: HTMLInputElement | null) => { this._enterPhraseInput = input; }} />
 					<input type="submit" value="Submit" />
 					{ enterPhraseError && <p style={{ color: 'red' }}>{ enterPhraseError }</p>}
-				</p>
+				</div>
 			</form>
 		);
 	}
@@ -141,50 +211,32 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		);
 	}
 	
-	private _renderEnterUserName() {
-		const { setPlayerNameError } = this.props;
+	private _renderWaitingForPictureSubmissions(gameData: GameData, userId: string | null) {
+		const index = (gameData.currentRound - 1) / 2;
+		const pictures = gameData.pictures[index] || {};
 		
-		return (
-			<form onSubmit={this._handleEnterUserNameSubmit}>
-				<h1>You need to enter your name!</h1>
-				<p>
-					<input type="text" ref={(input: HTMLInputElement | null) => { this._enterNameInput = input; }} />
-					<input type="submit" value="Join" />
-					{ setPlayerNameError && <p style={{ color: 'red' }}>{ setPlayerNameError }</p>}
-				</p>
-			</form>
-		);
-	}
-	
-	private _handleEnterUserNameSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-		const { clientGameManager, gameData } = this.props;
-		
-		if (!gameData) {
-			return;
+		if (!userId || !pictures[userId]) {
+			return this._renderDrawPicture();
 		}
 		
-		event.preventDefault();
-		
-		if (this._enterNameInput) {
-			clientGameManager.setPlayerName(gameData.code, this._enterNameInput.value);
-		}
+		return this._renderWaitingForOtherPlayersToSubmitPictures();
 	}
 	
-	private _renderDrawUserPicture() {
-		const { setPlayerPictureError } = this.props;
+	private _renderDrawPicture() {
+		const { enterPictureError } = this.props;
 		
 		return (
 			<div>
 				<h1>You need to draw your picture!</h1>
-				<p>
-					<button onClick={this._handleDrawUserPictureSubmit}>Submit Picture</button>
-					{ setPlayerPictureError && <p style={{ color: 'red' }}>{ setPlayerPictureError }</p>}
-				</p>
+				<div>
+					<button onClick={this._handleDrawPictureSubmit}>Submit Picture</button>
+					{ enterPictureError && <p style={{ color: 'red' }}>{ enterPictureError }</p>}
+				</div>
 			</div>
 		);
 	}
 	
-	private _handleDrawUserPictureSubmit = (event: React.MouseEvent<HTMLButtonElement>) => {
+	private _handleDrawPictureSubmit = (event: React.MouseEvent<HTMLButtonElement>) => {
 		const { clientGameManager, gameData } = this.props;
 		
 		if (!gameData) {
@@ -193,21 +245,15 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		
 		event.preventDefault();
 		
-		clientGameManager.setPlayerPicture(gameData.code, ':)');
+		clientGameManager.enterPicture(gameData.code, gameData.currentRound, ':)');
 	}
 	
-	private _renderWaitingForOtherPlayerDescriptions() {
-		return <h1>Waiting for other players to name and draw themselves…</h1>;
-	}
-	
-	private _handleStartGameButtonClick = () => {
-		const { clientGameManager, gameData } = this.props;
-		
-		if (!gameData) {
-			return;
-		}
-		
-		clientGameManager.startGame(gameData.code);
+	private _renderWaitingForOtherPlayersToSubmitPictures() {
+		return (
+			<div>
+				<h1>Waiting for other players to submit pictures…</h1>
+			</div>
+		);
 	}
 	
 	private _renderGameState(gameData: GameData, userId: string | null) {
@@ -215,10 +261,7 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		case GameState.WaitingForPlayers: return this._renderInGameLobby(gameData);
 		case GameState.WaitingForPlayerDescriptions: return this._renderWaitingForPlayerDescriptions(gameData, userId);
 		case GameState.WaitingForPhraseSubmissions: return this._renderWaitingForPhraseSubmissions(gameData, userId);
-			
-		case GameState.WaitingForPictureSubmissions:
-			// TODO: Look at game data to determine if we've already submitted a picture.
-			return <div>Waiting for others to draw a picture…</div>;
+		case GameState.WaitingForPictureSubmissions: return this._renderWaitingForPictureSubmissions(gameData, userId);
 			
 		case GameState.ReviewingStories: return <div>Reviewing sequences…</div>;
 	
