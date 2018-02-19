@@ -1,6 +1,8 @@
 import * as React from 'react';
+import { compose } from 'redux';
 import { connect } from 'react-redux';
 import * as JSONPretty from 'react-json-pretty';
+import { withRouter, RouteComponentProps } from 'react-router';
 
 import { StoreData } from '../reducers/root';
 import { GameState, GameData } from '../models/Game';
@@ -11,7 +13,7 @@ type HostViewProps = {
 	readonly connected: boolean;
 	readonly initialDataLoaded: boolean;
 	readonly gameData: GameData | null;
-} & ExternalHostViewProps;
+} & ExternalHostViewProps & RouteComponentProps<any>;
 
 class HostViewPage extends React.PureComponent<HostViewProps> {
 	public componentDidMount() {
@@ -40,7 +42,13 @@ class HostViewPage extends React.PureComponent<HostViewProps> {
 	}
 	
 	public componentWillReceiveProps(newProps: HostViewProps) {
-		const { gameData, clientGameManager } = this.props;
+		const { gameData, clientGameManager, history } = this.props;
+		
+		// If the user has switched to reviewing stories, set a timer to
+		// finish the game.
+		if (gameData && !newProps.gameData) {
+			history.push('/');
+		}
 		
 		// If the user has switched to reviewing stories, set a timer to
 		// finish the game.
@@ -51,6 +59,7 @@ class HostViewPage extends React.PureComponent<HostViewProps> {
 			setTimeout(() => {
 				clientGameManager.finishReviewing(gameData.code);
 			}, 5000);
+			return;
 		}
 	}
 	
@@ -101,6 +110,9 @@ class HostViewPage extends React.PureComponent<HostViewProps> {
 	}
 };
 
-export default connect(({ game: { initialDataLoaded, connected, gameData } }: StoreData) => ({
-	initialDataLoaded, connected, gameData
-}))(HostViewPage) as any as React.ComponentClass<ExternalHostViewProps>;
+export default (compose(
+	connect(({ game: { initialDataLoaded, connected, gameData } }: StoreData) => ({
+		initialDataLoaded, connected, gameData
+	})) as any,
+	withRouter as any
+) as any)(HostViewPage) as any as React.ComponentClass<ExternalHostViewProps>;

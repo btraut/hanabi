@@ -18,7 +18,8 @@ import {
 	EnterPhraseMessage,
 	EnterPictureMessage,
 	FinishReviewingMessage,
-	StartOverMessage
+	StartOverMessage,
+	EndGameMessage
 } from '../models/SocketMessage';
 import { StoreData } from '../reducers/root';
 import { gameActions } from '../reducers/Game';
@@ -96,6 +97,12 @@ export default class ClientGameManager {
 		await ClientSocketManager.expectMessageOfType('StartedOverMessage');
 	}
 	
+	public async endGame(gameCode: string) {
+		// Send the end game message. Expect a response for the sake of error handling.
+		ClientSocketManager.send({ type: 'EndGameMessage', data: { gameCode } } as EndGameMessage);
+		await ClientSocketManager.expectMessageOfType('GameEndedMessage');
+	}
+	
 	private _handleConnect = () => {
 		(async () => {
 			// Note that we've connected, but haven't yet gotten initial data.
@@ -135,19 +142,19 @@ export default class ClientGameManager {
 			}
 		} else if (message.type === 'PlayerAddedMessage') {
 			if (message.data.error) {
-				// TODO: Handle error.
+				this._dispatch(gameActions.addPlayerError(message.data.error));
 			} else if (message.data.player && message.data.gameCode) {
 				this._dispatch(gameActions.addPlayer(message.data.player, message.data.gameCode));
 			}
 		} else if (message.type === 'UserUpdatedMessage') {
 			if (message.data.error) {
-				// TODO: Handle error.
+				this._dispatch(gameActions.updateUserError(message.data.error));
 			} else if (message.data.player && message.data.gameCode) {
 				this._dispatch(gameActions.updateUser(message.data.player, message.data.gameCode));
 			}
 		} else if (message.type === 'PlayerRemovedMessage') {
 			if (message.data.error) {
-				// TODO: Handle error.
+				this._dispatch(gameActions.removePlayerError(message.data.error));
 			} else if (message.data.player && message.data.gameCode) {
 				this._dispatch(gameActions.removePlayer(message.data.player, message.data.gameCode));
 			}
@@ -199,6 +206,12 @@ export default class ClientGameManager {
 				this._dispatch(gameActions.startOverError(message.data.error));
 			} else if (message.data.gameCode && message.data.gameData) {
 				this._dispatch(gameActions.startOver(message.data.gameCode, message.data.gameData));
+			}
+		} else if (message.type === 'GameEndedMessage') {
+			if (message.data.error) {
+				this._dispatch(gameActions.endGameError(message.data.error));
+			} else if (message.data.gameCode) {
+				this._dispatch(gameActions.endGame(message.data.gameCode));
 			}
 		}
 	}

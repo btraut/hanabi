@@ -15,7 +15,8 @@ import {
 	GameStateSetMessage,
 	PictureEnteredMessage,
 	ReviewingFinishedMessage,
-	StartedOverMessage
+	StartedOverMessage,
+	GameEndedMessage
 } from '../models/SocketMessage';
 import ServerSocketManager from './ServerSocketManager';
 import Logger from '../utils/Logger';
@@ -425,6 +426,24 @@ class ServerGameManager {
 		} as StartedOverMessage);
 	}
 	
+	private _handleEndGameMessage(playerId: string, gameCode: string) {
+		// Validate game, membership, and state.
+		if (!this._ensureUserIsInGame('GameEndedMessage', playerId, gameCode, GameState.PlayAgainOptions)) {
+			return;
+		}
+		
+		const game = this._games[gameCode];
+		
+		// Remove the old game from the list.
+		delete this._games[gameCode];
+		
+		// Notify all players and host.
+		ServerSocketManager.send(game.allUsers, {
+			type: 'GameEndedMessage',
+			data: { gameCode, gameData: game.toObject() }
+		} as GameEndedMessage);
+	}
+	
 	private _handleMessage = ({ userId, message }: { userId: string, message: SocketMessage }) => {
 		try {
 			if (message.type === 'CreateGameMessage') {
@@ -447,6 +466,8 @@ class ServerGameManager {
 				this._handleFinishReviewingMessage(userId, message.data.gameCode);
 			} else if (message.type === 'StartOverMessage') {
 				this._handleStartOverMessage(userId, message.data.gameCode);
+			} else if (message.type === 'EndGameMessage') {
+				this._handleEndGameMessage(userId, message.data.gameCode);
 			}
 		} catch (error) {
 			Logger.warn(error);

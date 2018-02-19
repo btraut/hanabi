@@ -34,13 +34,25 @@ export const gameActions = {
 		prefix('ADD_PLAYER'),
 		(player: Player, gameCode: string) => ({ type: prefix('ADD_PLAYER'), player, gameCode })
 	),
+	addPlayerError: createAction(
+		prefix('ADD_PLAYER_ERROR'),
+		(errorText: string) => ({ type: prefix('ADD_PLAYER_ERROR'), errorText })
+	),
 	updateUser: createAction(
 		prefix('UPDATE_USER'),
 		(player: Player, gameCode: string) => ({ type: prefix('UPDATE_USER'), player, gameCode })
 	),
+	updateUserError: createAction(
+		prefix('UPDATE_USER_ERROR'),
+		(errorText: string) => ({ type: prefix('UPDATE_USER_ERROR'), errorText })
+	),
 	removePlayer: createAction(
 		prefix('REMOVE_PLAYER'),
 		(player: Player, gameCode: string) => ({ type: prefix('REMOVE_PLAYER'), player, gameCode })
+	),
+	removePlayerError: createAction(
+		prefix('REMOVE_PLAYER_ERROR'),
+		(errorText: string) => ({ type: prefix('REMOVE_PLAYER_ERROR'), errorText })
 	),
 	gameStarted: createAction(
 		prefix('GAME_STARTED'),
@@ -110,6 +122,14 @@ export const gameActions = {
 	startOverError: createAction(
 		prefix('START_OVER_ERROR'),
 		(errorText: string) => ({ type: prefix('START_OVER_ERROR'), errorText })
+	),
+	endGame: createAction(
+		prefix('END_GAME'),
+		(gameCode: string) => ({ type: prefix('END_GAME'), gameCode })
+	),
+	endGameError: createAction(
+		prefix('END_GAME_ERROR'),
+		(errorText: string) => ({ type: prefix('END_GAME_ERROR'), errorText })
 	)
 };
 
@@ -127,6 +147,9 @@ export interface GameState {
 	// Error messages during setup and gameplay:
 	readonly joinGameError: string | null;
 	readonly startGameError: string | null;
+	readonly addPlayerError: string | null;
+	readonly updateUserError: string | null;
+	readonly removePlayerError: string | null;
 	readonly setPlayerNameError: string | null;
 	readonly setPlayerPictureError: string | null;
 	readonly enterPhraseError: string | null;
@@ -134,6 +157,7 @@ export interface GameState {
 	readonly setGameStateError: string | null;
 	readonly reviewingFinishedError: string | null;
 	readonly startOverError: string | null;
+	readonly endGameError: string | null;
 }
 
 export const initialState: GameState = {
@@ -143,13 +167,17 @@ export const initialState: GameState = {
 	userId: null,
 	joinGameError: null,
 	startGameError: null,
+	addPlayerError: null,
+	updateUserError: null,
+	removePlayerError: null,
 	setPlayerNameError: null,
 	setPlayerPictureError: null,
 	enterPhraseError: null,
 	enterPictureError: null,
 	setGameStateError: null,
 	reviewingFinishedError: null,
-	startOverError: null
+	startOverError: null,
+	endGameError: null
 };
 
 export const gameReducer = combineReducers<GameState>({
@@ -333,6 +361,17 @@ export const gameReducer = combineReducers<GameState>({
 				return action.gameData;
 			}
 			
+			case getType(gameActions.endGame):
+			{
+				// Verify we're updating this game.
+				if (!gameData || gameData.code !== action.gameCode) {
+					return gameData;
+				}
+				
+				// Trash the current game.
+				return null;
+			}
+			
 			default:
 				return gameData;
 		}
@@ -355,6 +394,30 @@ export const gameReducer = combineReducers<GameState>({
 	startGameError: (errorText: string | null = null, action) => {
 		switch (action.type) {
 			case getType(gameActions.startGameError): return action.errorText;
+			case getType(gameActions.clearErrors): return null;
+			case getType(gameActions.connect): return null;
+			default: return errorText;
+		}
+	},
+	addPlayerError: (errorText: string | null = null, action) => {
+		switch (action.type) {
+			case getType(gameActions.addPlayerError): return action.errorText;
+			case getType(gameActions.clearErrors): return null;
+			case getType(gameActions.connect): return null;
+			default: return errorText;
+		}
+	},
+	updateUserError: (errorText: string | null = null, action) => {
+		switch (action.type) {
+			case getType(gameActions.updateUserError): return action.errorText;
+			case getType(gameActions.clearErrors): return null;
+			case getType(gameActions.connect): return null;
+			default: return errorText;
+		}
+	},
+	removePlayerError: (errorText: string | null = null, action) => {
+		switch (action.type) {
+			case getType(gameActions.removePlayerError): return action.errorText;
 			case getType(gameActions.clearErrors): return null;
 			case getType(gameActions.connect): return null;
 			default: return errorText;
@@ -411,6 +474,14 @@ export const gameReducer = combineReducers<GameState>({
 	startOverError: (errorText: string | null = null, action) => {
 		switch (action.type) {
 			case getType(gameActions.startOverError): return action.errorText;
+			case getType(gameActions.clearErrors): return null;
+			case getType(gameActions.connect): return null;
+			default: return errorText;
+		}
+	},
+	endGameError: (errorText: string | null = null, action) => {
+		switch (action.type) {
+			case getType(gameActions.endGameError): return action.errorText;
 			case getType(gameActions.clearErrors): return null;
 			case getType(gameActions.connect): return null;
 			default: return errorText;

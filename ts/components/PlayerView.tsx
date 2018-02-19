@@ -1,6 +1,8 @@
 import * as React from 'react';
+import { compose } from 'redux';
 import { connect } from 'react-redux';
 import * as JSONPretty from 'react-json-pretty';
+import { withRouter, RouteComponentProps } from 'react-router';
 
 import { StoreData } from '../reducers/root';
 import { GameState, GameData } from '../models/Game';
@@ -20,7 +22,8 @@ type PlayerViewProps = {
 	readonly enterPhraseError: string | null;
 	readonly enterPictureError: string | null;
 	readonly startOverError: string | null;
-} & ExternalPlayerViewProps;
+	readonly endGameError: string | null;
+} & ExternalPlayerViewProps & RouteComponentProps<any>;
 
 class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 	private _joinGameInput: HTMLInputElement | null = null;
@@ -35,6 +38,16 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 	public componentWillUnmount() {
 		const { clientGameManager } = this.props;
 		clientGameManager.disconnect();
+	}
+	
+	public componentWillReceiveProps(newProps: PlayerViewProps) {
+		const { gameData, history } = this.props;
+		
+		// If the user has switched to reviewing stories, set a timer to
+		// finish the game.
+		if (gameData && !newProps.gameData) {
+			history.push('/');
+		}
 	}
 	
 	private _renderJoinGame() {
@@ -268,20 +281,22 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 	}
 	
 	private _renderPlayAgainOptions() {
-		const { startOverError } = this.props;
+		const { startOverError, endGameError } = this.props;
 		
 		return (
 			<div>
 				<h1>Game Over</h1>
 				<div>
-					<button onClick={this._handlePlayAgainSubmit}>Play Again?</button>
+					<button onClick={this._handlePlayAgainClick}>Play Again</button>
+					<button onClick={this._handleEndGameClick}>End Game</button>
 					{ startOverError && <p style={{ color: 'red' }}>{ startOverError }</p>}
+					{ endGameError && <p style={{ color: 'red' }}>{ endGameError }</p>}
 				</div>
 			</div>
 		);
 	}
 	
-	private _handlePlayAgainSubmit = (event: React.MouseEvent<HTMLButtonElement>) => {
+	private _handlePlayAgainClick = (event: React.MouseEvent<HTMLButtonElement>) => {
 		const { clientGameManager, gameData } = this.props;
 		
 		if (!gameData) {
@@ -291,6 +306,18 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		event.preventDefault();
 		
 		clientGameManager.startOver(gameData.code);
+	}
+	
+	private _handleEndGameClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+		const { clientGameManager, gameData } = this.props;
+		
+		if (!gameData) {
+			return;
+		}
+		
+		event.preventDefault();
+		
+		clientGameManager.endGame(gameData.code);
 	}
 	
 	private _renderGameState() {
@@ -326,12 +353,15 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 	}
 };
 
-export default connect(({ game: {
-	initialDataLoaded, connected, userId, gameData, joinGameError, startGameError,
-	setPlayerNameError, setPlayerPictureError, enterPhraseError, enterPictureError,
-	startOverError
-} }: StoreData) => ({
-	initialDataLoaded, connected, userId, gameData, joinGameError, startGameError,
-	setPlayerNameError, setPlayerPictureError, enterPhraseError, enterPictureError,
-	startOverError
-}))(PlayerViewPage) as any as React.ComponentClass<ExternalPlayerViewProps>;
+export default (compose(
+	connect(({ game: {
+		initialDataLoaded, connected, userId, gameData, joinGameError, startGameError,
+		setPlayerNameError, setPlayerPictureError, enterPhraseError, enterPictureError,
+		startOverError, endGameError
+	} }: StoreData) => ({
+		initialDataLoaded, connected, userId, gameData, joinGameError, startGameError,
+		setPlayerNameError, setPlayerPictureError, enterPhraseError, enterPictureError,
+		startOverError, endGameError
+	})) as any,
+	withRouter as any
+) as any)(PlayerViewPage) as any as React.ComponentClass<ExternalPlayerViewProps>;

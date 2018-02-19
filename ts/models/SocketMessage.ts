@@ -118,6 +118,12 @@ export type StartedOverMessage = SocketMessageTemplate<'StartedOverMessage', {
 	gameData?: GameData;
 }>;
 
+export type EndGameMessage = SocketMessageTemplate<'EndGameMessage', { gameCode: string; }>;
+export type GameEndedMessage = SocketMessageTemplate<'GameEndedMessage', {
+	error?: string;
+	gameCode?: string;
+}>;
+
 export type SocketMessage =
 	AuthenticateSocketMessage |
 	AuthenticateResponseSocketMessage |
@@ -144,4 +150,6 @@ export type SocketMessage =
 	FinishReviewingMessage |
 	ReviewingFinishedMessage |
 	StartOverMessage |
-	StartedOverMessage;
+	StartedOverMessage |
+	EndGameMessage |
+	GameEndedMessage;
