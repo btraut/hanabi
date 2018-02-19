@@ -105,7 +105,7 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		
 		return (
 			<form onSubmit={this._handleEnterUserNameSubmit}>
-				<h1>You need to enter your name!</h1>
+				<h1>Enter your name:</h1>
 				<div>
 					<input type="text" ref={(input: HTMLInputElement | null) => { this._enterNameInput = input; }} />
 					<input type="submit" value="Join" />
@@ -134,7 +134,7 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		
 		return (
 			<div>
-				<h1>You need to draw your picture!</h1>
+				<h1>Draw a picture of yourself:</h1>
 				<div>
 					<button onClick={this._handleDrawUserPictureSubmit}>Submit Picture</button>
 					{ setPlayerPictureError && <p style={{ color: 'red' }}>{ setPlayerPictureError }</p>}
@@ -193,11 +193,29 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 	}
 	
 	private _renderEnterPhrase() {
-		const { enterPhraseError } = this.props;
+		const { enterPhraseError, gameData, userId } = this.props;
+		
+		if (!gameData) {
+			return null;
+		}
+		
+		let header = 'Enter a starting phrase:';
+		let pictureData = null;
+		
+		if (gameData.currentRound !== 0) {
+			const playerOrder = gameData.players.find(p => p.id === userId)!.order!;
+			const nextOrder = playerOrder === gameData.players.length - 1 ? 0 : playerOrder + 1;
+			const nextPlayerId = gameData.players.find(p => p.order === nextOrder)!.id;
+			const pictureIndex = (gameData.currentRound - 2) / 2;
+			
+			header = 'Describe this picture:';
+			pictureData = gameData.pictures[pictureIndex][nextPlayerId];
+		}
 		
 		return (
 			<form onSubmit={this._handleEnterPhraseSubmit}>
-				<h1>Enter a phrase!</h1>
+				<h1>{ header }</h1>
+				{ pictureData && <h1>{ pictureData }</h1> }
 				<div>
 					<input type="text" ref={(input: HTMLInputElement | null) => { this._enterPhraseInput = input; }} />
 					<input type="submit" value="Submit" />
@@ -243,11 +261,22 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 	}
 	
 	private _renderDrawPicture() {
-		const { enterPictureError } = this.props;
+		const { enterPictureError, gameData, userId } = this.props;
+		
+		if (!gameData) {
+			return null;
+		}
+		
+		const playerOrder = gameData.players.find(p => p.id === userId)!.order!;
+		const nextOrder = playerOrder === gameData.players.length - 1 ? 0 : playerOrder + 1;
+		const nextPlayerId = gameData.players.find(p => p.order === nextOrder)!.id;
+		const phraseIndex = (gameData.currentRound - 1) / 2;
+		const previousPhrase = gameData.phrases[phraseIndex][nextPlayerId];
 		
 		return (
 			<div>
-				<h1>You need to draw your picture!</h1>
+				<h1>Draw a picture that represents:</h1>
+				<h1>{ previousPhrase }</h1>
 				<div>
 					<button onClick={this._handleDrawPictureSubmit}>Submit Picture</button>
 					{ enterPictureError && <p style={{ color: 'red' }}>{ enterPictureError }</p>}
