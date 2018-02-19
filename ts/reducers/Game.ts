@@ -70,8 +70,12 @@ export const gameActions = {
 	),
 	setGameState: createAction(
 		prefix('SET_GAME_STATE'),
-		(state: GameDataState, currentRound: number, gameCode: string) =>
+		(gameCode: string, state?: GameDataState, currentRound?: number) =>
 			({ type: prefix('SET_GAME_STATE'), state, currentRound, gameCode })
+	),
+	setGameStateError: createAction(
+		prefix('SET_GAME_STATE_ERROR'),
+		(errorText: string) => ({ type: prefix('SET_GAME_STATE_ERROR'), errorText })
 	),
 	enterPhrase: createAction(
 		prefix('ENTER_PHRASE'),
@@ -90,6 +94,22 @@ export const gameActions = {
 	enterPictureError: createAction(
 		prefix('ENTER_PICTURE_ERROR'),
 		(errorText: string) => ({ type: prefix('ENTER_PICTURE_ERROR'), errorText })
+	),
+	reviewingFinished: createAction(
+		prefix('REVIEWING_FINISHED'),
+		(gameCode: string) => ({ type: prefix('REVIEWING_FINISHED'), gameCode })
+	),
+	reviewingFinishedError: createAction(
+		prefix('REVIEWING_FINISHED_ERROR'),
+		(errorText: string) => ({ type: prefix('REVIEWING_FINISHED_ERROR'), errorText })
+	),
+	startOver: createAction(
+		prefix('START_OVER'),
+		(gameCode: string, gameData: GameData) => ({ type: prefix('START_OVER'), gameCode, gameData })
+	),
+	startOverError: createAction(
+		prefix('START_OVER_ERROR'),
+		(errorText: string) => ({ type: prefix('START_OVER_ERROR'), errorText })
 	)
 };
 
@@ -111,6 +131,9 @@ export interface GameState {
 	readonly setPlayerPictureError: string | null;
 	readonly enterPhraseError: string | null;
 	readonly enterPictureError: string | null;
+	readonly setGameStateError: string | null;
+	readonly reviewingFinishedError: string | null;
+	readonly startOverError: string | null;
 }
 
 export const initialState: GameState = {
@@ -123,7 +146,10 @@ export const initialState: GameState = {
 	setPlayerNameError: null,
 	setPlayerPictureError: null,
 	enterPhraseError: null,
-	enterPictureError: null
+	enterPictureError: null,
+	setGameStateError: null,
+	reviewingFinishedError: null,
+	startOverError: null
 };
 
 export const gameReducer = combineReducers<GameState>({
@@ -239,18 +265,12 @@ export const gameReducer = combineReducers<GameState>({
 					return gameData;
 				}
 				
-				// Update the state.
-				const phrases = [...gameData.phrases];
-				if (!gameData.phrases[gameData.currentRound - 1]) {
-					gameData.phrases[gameData.currentRound - 1] = {};
-				}
-				
-				const pictures = [...gameData.pictures];
-				if (!gameData.pictures[gameData.currentRound - 1]) {
-					gameData.pictures[gameData.currentRound - 1] = {};
-				}
-				
-				return { ...gameData, state: action.state, currentRound: action.currentRound, phrases, pictures };
+				// Copy game state and round to data.
+				return {
+					...gameData,
+					state: typeof action.state !== 'undefined' ? action.state : gameData.state,
+					currentRound: typeof action.state !== 'undefined' ? action.currentRound : gameData.currentRound
+				};
 			}
 			
 			case getType(gameActions.enterPhrase):
@@ -289,6 +309,28 @@ export const gameReducer = combineReducers<GameState>({
 				pictures[index][action.playerId] = action.pictureData;
 				
 				return { ...gameData, pictures };
+			}
+			
+			case getType(gameActions.reviewingFinished):
+			{
+				// Verify we're updating this game.
+				if (!gameData || gameData.code !== action.gameCode) {
+					return gameData;
+				}
+				
+				// Update game state.
+				return { ...gameData, state: GameDataState.PlayAgainOptions };
+			}
+			
+			case getType(gameActions.startOver):
+			{
+				// Verify we're updating this game.
+				if (!gameData || gameData.code !== action.gameCode) {
+					return gameData;
+				}
+				
+				// Replace the game data with that of the action's.
+				return action.gameData;
 			}
 			
 			default:
@@ -345,6 +387,30 @@ export const gameReducer = combineReducers<GameState>({
 	enterPictureError: (errorText: string | null = null, action) => {
 		switch (action.type) {
 			case getType(gameActions.enterPictureError): return action.errorText;
+			case getType(gameActions.clearErrors): return null;
+			case getType(gameActions.connect): return null;
+			default: return errorText;
+		}
+	},
+	setGameStateError: (errorText: string | null = null, action) => {
+		switch (action.type) {
+			case getType(gameActions.setGameStateError): return action.errorText;
+			case getType(gameActions.clearErrors): return null;
+			case getType(gameActions.connect): return null;
+			default: return errorText;
+		}
+	},
+	reviewingFinishedError: (errorText: string | null = null, action) => {
+		switch (action.type) {
+			case getType(gameActions.reviewingFinishedError): return action.errorText;
+			case getType(gameActions.clearErrors): return null;
+			case getType(gameActions.connect): return null;
+			default: return errorText;
+		}
+	},
+	startOverError: (errorText: string | null = null, action) => {
+		switch (action.type) {
+			case getType(gameActions.startOverError): return action.errorText;
 			case getType(gameActions.clearErrors): return null;
 			case getType(gameActions.connect): return null;
 			default: return errorText;

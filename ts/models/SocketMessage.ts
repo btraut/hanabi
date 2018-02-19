@@ -19,13 +19,13 @@ export type InitialDataResponseMessage = SocketMessageTemplate<'InitialDataRespo
 export type CreateGameMessage = SocketMessageTemplate<'CreateGameMessage', void>;
 export type GameCreatedMessage = SocketMessageTemplate<'GameCreatedMessage', {
 	error?: string;
-	game?: GameData;
+	gameData?: GameData;
 }>;
 
 export type JoinGameMessage = SocketMessageTemplate<'JoinGameMessage', { gameCode: string; }>;
 export type GameJoinedMessage = SocketMessageTemplate<'GameJoinedMessage', {
 	error?: string;
-	game?: GameData;
+	gameData?: GameData;
 }>;
 
 export type PlayerAddedMessage = SocketMessageTemplate<'PlayerAddedMessage', {
@@ -61,10 +61,11 @@ export type PlayerNameSetMessage = SocketMessageTemplate<'PlayerNameSetMessage',
 	name?: string;
 }>;
 
-export type SetGameStateMessage = SocketMessageTemplate<'SetGameStateMessage', {
-	gameState: GameState;
-	currentRound: number;
-	gameCode: string;
+export type GameStateSetMessage = SocketMessageTemplate<'GameStateSetMessage', {
+	error?: string;
+	gameState?: GameState;
+	currentRound?: number;
+	gameCode?: string;
 }>;
 
 export type SetPlayerPictureMessage = SocketMessageTemplate<'SetPlayerPictureMessage', {
@@ -104,6 +105,19 @@ export type PictureEnteredMessage = SocketMessageTemplate<'PictureEnteredMessage
 	pictureData?: string;
 }>;
 
+export type FinishReviewingMessage = SocketMessageTemplate<'FinishReviewingMessage', { gameCode: string; }>;
+export type ReviewingFinishedMessage = SocketMessageTemplate<'ReviewingFinishedMessage', {
+	error?: string;
+	gameCode?: string;
+}>;
+
+export type StartOverMessage = SocketMessageTemplate<'StartOverMessage', { gameCode: string; }>;
+export type StartedOverMessage = SocketMessageTemplate<'StartedOverMessage', {
+	error?: string;
+	gameCode?: string;
+	gameData?: GameData;
+}>;
+
 export type SocketMessage =
 	AuthenticateSocketMessage |
 	AuthenticateResponseSocketMessage |
@@ -122,8 +136,12 @@ export type SocketMessage =
 	PlayerNameSetMessage |
 	SetPlayerPictureMessage |
 	PlayerPictureSetMessage |
-	SetGameStateMessage |
+	GameStateSetMessage |
 	EnterPhraseMessage |
 	PhraseEnteredMessage |
 	EnterPictureMessage |
-	PictureEnteredMessage;
+	PictureEnteredMessage |
+	FinishReviewingMessage |
+	ReviewingFinishedMessage |
+	StartOverMessage |
+	StartedOverMessage;

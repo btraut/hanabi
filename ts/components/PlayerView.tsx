@@ -19,6 +19,7 @@ type PlayerViewProps = {
 	readonly setPlayerPictureError: string | null;
 	readonly enterPhraseError: string | null;
 	readonly enterPictureError: string | null;
+	readonly startOverError: string | null;
 } & ExternalPlayerViewProps;
 
 class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
@@ -61,14 +62,14 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		}
 	}
 	
-	private _renderInGameLobby(gameData: GameData) {
-		const { startGameError } = this.props;
+	private _renderInGameLobby() {
+		const { startGameError, gameData } = this.props;
 		
 		return (
 			<div>
 				<h1>In Game Lobby…</h1>
 				{
-					gameData.players.length >= MINIMUM_PLAYERS_IN_GAME &&
+					gameData!.players.length >= MINIMUM_PLAYERS_IN_GAME &&
 						<button onClick={this._handleStartGameButtonClick}>Start Game</button>
 				}
 				{ startGameError && <p style={{ color: 'red' }}>{ startGameError }</p>}
@@ -145,8 +146,10 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		return <h1>Waiting for other players to name and draw themselves…</h1>;
 	}
 	
-	private _renderWaitingForPlayerDescriptions(gameData: GameData, userId: string | null) {
-		const player = gameData.players.find(p => p.id === userId);
+	private _renderWaitingForPlayerDescriptions() {
+		const { gameData, userId } = this.props;
+		
+		const player = gameData!.players.find(p => p.id === userId);
 		
 		if (!player) {
 			throw new Error('Can’t find your user in the game.');
@@ -163,9 +166,11 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		return this._renderWaitingForOtherPlayerDescriptions();
 	}
 	
-	private _renderWaitingForPhraseSubmissions(gameData: GameData, userId: string | null) {
-		const index = gameData.currentRound / 2;
-		const phrases = gameData.phrases[index] || {};
+	private _renderWaitingForPhraseSubmissions() {
+		const { gameData, userId } = this.props;
+		
+		const index = gameData!.currentRound / 2;
+		const phrases = gameData!.phrases[index] || {};
 		
 		if (!userId || !phrases[userId]) {
 			return this._renderEnterPhrase();
@@ -211,9 +216,11 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		);
 	}
 	
-	private _renderWaitingForPictureSubmissions(gameData: GameData, userId: string | null) {
-		const index = (gameData.currentRound - 1) / 2;
-		const pictures = gameData.pictures[index] || {};
+	private _renderWaitingForPictureSubmissions() {
+		const { gameData, userId } = this.props;
+
+		const index = (gameData!.currentRound - 1) / 2;
+		const pictures = gameData!.pictures[index] || {};
 		
 		if (!userId || !pictures[userId]) {
 			return this._renderDrawPicture();
@@ -256,21 +263,51 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		);
 	}
 	
-	private _renderGameState(gameData: GameData, userId: string | null) {
-		switch (gameData.state) {
-		case GameState.WaitingForPlayers: return this._renderInGameLobby(gameData);
-		case GameState.WaitingForPlayerDescriptions: return this._renderWaitingForPlayerDescriptions(gameData, userId);
-		case GameState.WaitingForPhraseSubmissions: return this._renderWaitingForPhraseSubmissions(gameData, userId);
-		case GameState.WaitingForPictureSubmissions: return this._renderWaitingForPictureSubmissions(gameData, userId);
-			
-		case GameState.ReviewingStories: return <div>Reviewing sequences…</div>;
+	private _renderReviewingStories() {
+		return <h1>Reviewing sequences…</h1>;
+	}
 	
-		case GameState.PlayAgainOptions: return <div>Play again?</div>;
+	private _renderPlayAgainOptions() {
+		const { startOverError } = this.props;
+		
+		return (
+			<div>
+				<h1>Game Over</h1>
+				<div>
+					<button onClick={this._handlePlayAgainSubmit}>Play Again?</button>
+					{ startOverError && <p style={{ color: 'red' }}>{ startOverError }</p>}
+				</div>
+			</div>
+		);
+	}
+	
+	private _handlePlayAgainSubmit = (event: React.MouseEvent<HTMLButtonElement>) => {
+		const { clientGameManager, gameData } = this.props;
+		
+		if (!gameData) {
+			return;
+		}
+		
+		event.preventDefault();
+		
+		clientGameManager.startOver(gameData.code);
+	}
+	
+	private _renderGameState() {
+		const { gameData } = this.props;
+		
+		switch (gameData!.state) {
+		case GameState.WaitingForPlayers: return this._renderInGameLobby();
+		case GameState.WaitingForPlayerDescriptions: return this._renderWaitingForPlayerDescriptions();
+		case GameState.WaitingForPhraseSubmissions: return this._renderWaitingForPhraseSubmissions();
+		case GameState.WaitingForPictureSubmissions: return this._renderWaitingForPictureSubmissions();
+		case GameState.ReviewingStories: return this._renderReviewingStories();
+		case GameState.PlayAgainOptions: return this._renderPlayAgainOptions();
 		}
 	}
 	
 	public render() {
-		const { connected, gameData, userId } = this.props;
+		const { connected, gameData } = this.props;
 		
 		if (!connected) {
 			return <div>Connecting…</div>;
@@ -282,7 +319,7 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		
 		return (
 			<div className="PlayerView">
-				{ this._renderGameState(gameData, userId) }
+				{ this._renderGameState() }
 				<JSONPretty json={gameData} />
 			</div>
 		);
@@ -291,8 +328,10 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 
 export default connect(({ game: {
 	initialDataLoaded, connected, userId, gameData, joinGameError, startGameError,
-	setPlayerNameError, setPlayerPictureError, enterPhraseError, enterPictureError
+	setPlayerNameError, setPlayerPictureError, enterPhraseError, enterPictureError,
+	startOverError
 } }: StoreData) => ({
 	initialDataLoaded, connected, userId, gameData, joinGameError, startGameError,
-	setPlayerNameError, setPlayerPictureError, enterPhraseError, enterPictureError
+	setPlayerNameError, setPlayerPictureError, enterPhraseError, enterPictureError,
+	startOverError
 }))(PlayerViewPage) as any as React.ComponentClass<ExternalPlayerViewProps>;

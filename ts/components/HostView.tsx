@@ -39,6 +39,21 @@ class HostViewPage extends React.PureComponent<HostViewProps> {
 		clientGameManager.disconnect();
 	}
 	
+	public componentWillReceiveProps(newProps: HostViewProps) {
+		const { gameData, clientGameManager } = this.props;
+		
+		// If the user has switched to reviewing stories, set a timer to
+		// finish the game.
+		if (
+			newProps.gameData && newProps.gameData.state === GameState.ReviewingStories &&
+			gameData && gameData.state !== GameState.ReviewingStories
+		) {
+			setTimeout(() => {
+				clientGameManager.finishReviewing(gameData.code);
+			}, 5000);
+		}
+	}
+	
 	private _renderWaitingForPlayers(gameData: GameData) {
 		return (
 			<div>

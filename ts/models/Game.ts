@@ -93,8 +93,8 @@ export class Game {
 		return this._players[playerId];
 	}
 	
-	public updatePlayer(playerId: string, updates: Partial<Player>): Player | undefined {
-		const updatedPlayer = this._players[playerId];
+	public updatePlayer(playerId: string, updates: Partial<Player>) {
+		const updatedPlayer = this._players[playerId] as Player | undefined;
 		if (updatedPlayer) {
 			this._players[playerId] = { ...updatedPlayer, ...updates };
 		}
@@ -105,8 +105,7 @@ export class Game {
 	}
 	
 	public removePlayer(playerId: string) {
-		const removedPlayer = this._players[playerId];
-		
+		const removedPlayer = this._players[playerId] as Player | undefined;
 		if (removedPlayer) {
 			delete this._players[playerId];
 		}
@@ -153,5 +152,25 @@ export class Game {
 		this._pictures[index][playerId] = pictureData;
 		
 		this._updated = new Date();
+	}
+	
+	public finishReviewing() {
+		if (this._state === GameState.ReviewingStories) {
+			this._state = GameState.PlayAgainOptions;
+		}
+		
+		this._updated = new Date();
+	}
+	
+	public startOver() {
+		const newGame = new Game(this._host.id);
+		
+		newGame._host = this._host;
+		newGame._players = this._players;
+		newGame._state = GameState.WaitingForPhraseSubmissions;
+		newGame._currentRound = 0;
+		newGame._rounds = this._rounds;
+		
+		return newGame;
 	}
 }

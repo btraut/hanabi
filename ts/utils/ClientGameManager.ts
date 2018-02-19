@@ -16,7 +16,9 @@ import {
 	SetPlayerNameMessage,
 	SetPlayerPictureMessage,
 	EnterPhraseMessage,
-	EnterPictureMessage
+	EnterPictureMessage,
+	FinishReviewingMessage,
+	StartOverMessage
 } from '../models/SocketMessage';
 import { StoreData } from '../reducers/root';
 import { gameActions } from '../reducers/Game';
@@ -82,6 +84,18 @@ export default class ClientGameManager {
 		await ClientSocketManager.expectMessageOfType('PictureEnteredMessage');
 	}
 	
+	public async finishReviewing(gameCode: string) {
+		// Set the game state. Expect a response for the sake of error handling.
+		ClientSocketManager.send({ type: 'FinishReviewingMessage', data: { gameCode } } as FinishReviewingMessage);
+		await ClientSocketManager.expectMessageOfType('ReviewingFinishedMessage');
+	}
+	
+	public async startOver(gameCode: string) {
+		// Send the start over message. Expect a response for the sake of error handling.
+		ClientSocketManager.send({ type: 'StartOverMessage', data: { gameCode } } as StartOverMessage);
+		await ClientSocketManager.expectMessageOfType('StartedOverMessage');
+	}
+	
 	private _handleConnect = () => {
 		(async () => {
 			// Note that we've connected, but haven't yet gotten initial data.
@@ -110,14 +124,14 @@ export default class ClientGameManager {
 			if (message.data.error) {
 				// TODO: Handle error.
 			} else {
-				this._dispatch(gameActions.loadGame(message.data.game || null));
+				this._dispatch(gameActions.loadGame(message.data.gameData || null));
 			}
 		} else if (message.type === 'GameJoinedMessage') {
 			if (message.data.error) {
 				this._dispatch(gameActions.joinGameError(message.data.error));
-			} else if (message.data.game) {
+			} else if (message.data.gameData) {
 				this._dispatch(gameActions.clearErrors());
-				this._dispatch(gameActions.loadGame(message.data.game || null));
+				this._dispatch(gameActions.loadGame(message.data.gameData || null));
 			}
 		} else if (message.type === 'PlayerAddedMessage') {
 			if (message.data.error) {
@@ -156,8 +170,12 @@ export default class ClientGameManager {
 			} else if (message.data.pictureData && message.data.gameCode && message.data.playerId) {
 				this._dispatch(gameActions.setPlayerPicture(message.data.playerId, message.data.pictureData, message.data.gameCode));
 			}
-		} else if (message.type === 'SetGameStateMessage') {
-			this._dispatch(gameActions.setGameState(message.data.gameState, message.data.currentRound, message.data.gameCode));
+		} else if (message.type === 'GameStateSetMessage') {
+			if (message.data.error) {
+				this._dispatch(gameActions.setGameStateError(message.data.error));
+			} else if (message.data.gameCode) {
+				this._dispatch(gameActions.setGameState(message.data.gameCode, message.data.gameState, message.data.currentRound));
+			}
 		} else if (message.type === 'PhraseEnteredMessage') {
 			if (message.data.error) {
 				this._dispatch(gameActions.enterPhraseError(message.data.error));
@@ -169,6 +187,18 @@ export default class ClientGameManager {
 				this._dispatch(gameActions.enterPictureError(message.data.error));
 			} else if (message.data.pictureData && message.data.gameCode && message.data.playerId) {
 				this._dispatch(gameActions.enterPicture(message.data.playerId, message.data.pictureData, message.data.gameCode));
+			}
+		} else if (message.type === 'ReviewingFinishedMessage') {
+			if (message.data.error) {
+				this._dispatch(gameActions.reviewingFinishedError(message.data.error));
+			} else if (message.data.gameCode) {
+				this._dispatch(gameActions.reviewingFinished(message.data.gameCode));
+			}
+		} else if (message.type === 'StartedOverMessage') {
+			if (message.data.error) {
+				this._dispatch(gameActions.startOverError(message.data.error));
+			} else if (message.data.gameCode && message.data.gameData) {
+				this._dispatch(gameActions.startOver(message.data.gameCode, message.data.gameData));
 			}
 		}
 	}

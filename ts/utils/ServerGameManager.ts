@@ -11,9 +11,11 @@ import {
 	GameStartedMessage,
 	PlayerNameSetMessage,
 	PlayerPictureSetMessage,
-	SetGameStateMessage,
 	PhraseEnteredMessage,
-	PictureEnteredMessage
+	GameStateSetMessage,
+	PictureEnteredMessage,
+	ReviewingFinishedMessage,
+	StartedOverMessage
 } from '../models/SocketMessage';
 import ServerSocketManager from './ServerSocketManager';
 import Logger from '../utils/Logger';
@@ -121,7 +123,7 @@ class ServerGameManager {
 		
 		ServerSocketManager.send(userId, {
 			type: 'GameCreatedMessage',
-			data: { game: game.toObject() }
+			data: { gameData: game.toObject() }
 		} as GameCreatedMessage);
 	}
 	
@@ -148,18 +150,17 @@ class ServerGameManager {
 		}
 		
 		// Check to see if the user is already part of a game.
-		const existingGame = Object.values(this._games).find(game => !!game.players[userId]);
-		if (existingGame) {
+		const existingGames = Object.values(this._games).filter(game => !!game.players[userId]);
+		for (const existingGame of existingGames) {
 			// Remove the user from the existing game.
 			const removedPlayer = existingGame.removePlayer(userId);
-			
 			if (removedPlayer) {
 				// Notify all clients that the user has been added.
-				ServerSocketManager.send(gameToJoin.allUsers, {
+				ServerSocketManager.send(existingGame.allUsers, {
 					type: 'PlayerRemovedMessage',
 					data: { player: removedPlayer }
 				} as PlayerRemovedMessage);
-		}
+			}
 		}
 		
 		// Ensure the game is in the right state.
@@ -177,7 +178,7 @@ class ServerGameManager {
 		// Respond to the user who joined.
 		ServerSocketManager.send(userId, {
 			type: 'GameJoinedMessage',
-			data: { game: gameToJoin.toObject() }
+			data: { gameData: gameToJoin.toObject() }
 		} as GameJoinedMessage);
 		
 		// Notify all clients that the user has been added.
@@ -310,9 +311,9 @@ class ServerGameManager {
 			game.moveToState(nextState, nextRound);
 			
 			ServerSocketManager.send(game.allUsers, {
-				type: 'SetGameStateMessage',
+				type: 'GameStateSetMessage',
 				data: { gameCode: game.code, gameState: nextState, currentRound: nextRound }
-			} as SetGameStateMessage);
+			} as GameStateSetMessage);
 		}
 	}
 	
@@ -379,6 +380,51 @@ class ServerGameManager {
 		this._checkForNextState(game);
 	}
 	
+	private _handleFinishReviewingMessage(playerId: string, gameCode: string) {
+		// Validate game, membership, and state.
+		if (!this._ensureUserIsInGame('ReviewingFinishedMessage', playerId, gameCode, GameState.ReviewingStories)) {
+			return;
+		}
+		
+		const game = this._games[gameCode];
+		game.finishReviewing();
+		
+		// Notify all players and host.
+		ServerSocketManager.send(game.allUsers, {
+			type: 'ReviewingFinishedMessage',
+			data: { gameCode }
+		} as ReviewingFinishedMessage);
+	}
+	
+	private _handleStartOverMessage(playerId: string, gameCode: string) {
+		// Validate game, membership, and state.
+		if (!this._ensureUserIsInGame('StartedOverMessage', playerId, gameCode, GameState.PlayAgainOptions)) {
+			return;
+		}
+		
+		const game = this._games[gameCode];
+		
+		// Create a new game and add it to the list.
+		const newGame = game.startOver();
+		
+		// Make sure the game code is unique.
+		while (this._games[newGame.code]) {
+			newGame.regenerateCode();
+		}
+		
+		// Add the new game to the list.
+		this._games[newGame.code] = newGame;
+		
+		// Remove the old game from the list.
+		delete this._games[gameCode];
+		
+		// Notify all players and host.
+		ServerSocketManager.send(game.allUsers, {
+			type: 'StartedOverMessage',
+			data: { gameCode, gameData: newGame.toObject() }
+		} as StartedOverMessage);
+	}
+	
 	private _handleMessage = ({ userId, message }: { userId: string, message: SocketMessage }) => {
 		try {
 			if (message.type === 'CreateGameMessage') {
@@ -397,6 +443,10 @@ class ServerGameManager {
 				this._handleEnterPhraseMessage(userId, message.data.gameCode, message.data.round, message.data.phrase);
 			} else if (message.type === 'EnterPictureMessage') {
 				this._handleEnterPictureMessage(userId, message.data.gameCode, message.data.round, message.data.pictureData);
+			} else if (message.type === 'FinishReviewingMessage') {
+				this._handleFinishReviewingMessage(userId, message.data.gameCode);
+			} else if (message.type === 'StartOverMessage') {
+				this._handleStartOverMessage(userId, message.data.gameCode);
 			}
 		} catch (error) {
 			Logger.warn(error);
