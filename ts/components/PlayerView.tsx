@@ -8,6 +8,7 @@ import { StoreData } from '../reducers/root';
 import { GameState, GameData } from '../models/Game';
 import { MINIMUM_PLAYERS_IN_GAME } from '../models/Rules';
 import { ClientGameManagerPropsAdditions } from './ClientGameManager';
+import Canvas from './Canvas';
 
 type ExternalPlayerViewProps = React.Props<PlayerViewPage> & ClientGameManagerPropsAdditions;
 type PlayerViewProps = {
@@ -29,6 +30,9 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 	private _joinGameInput: HTMLInputElement | null = null;
 	private _enterNameInput: HTMLInputElement | null = null;
 	private _enterPhraseInput: HTMLInputElement | null = null;
+	
+	private _drawUserPictureCanvas: Canvas | null = null;
+	private _drawPictureCanvas: Canvas | null = null;
 	
 	public componentDidMount() {
 		const { clientGameManager } = this.props;
@@ -136,6 +140,7 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 			<div>
 				<h1>Draw a picture of yourself:</h1>
 				<div>
+					<Canvas ref={(ele: Canvas | null) => { this._drawUserPictureCanvas = ele; }} style={{ height: 500 }} />
 					<button onClick={this._handleDrawUserPictureSubmit}>Submit Picture</button>
 					{ setPlayerPictureError && <p style={{ color: 'red' }}>{ setPlayerPictureError }</p>}
 				</div>
@@ -144,15 +149,20 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 	}
 	
 	private _handleDrawUserPictureSubmit = (event: React.MouseEvent<HTMLButtonElement>) => {
+		event.preventDefault();
+		
 		const { clientGameManager, gameData } = this.props;
 		
-		if (!gameData) {
+		if (!gameData || !this._drawUserPictureCanvas) {
 			return;
 		}
 		
-		event.preventDefault();
+		const pictureData = this._drawUserPictureCanvas.getData();
+		if (!pictureData) {
+			return;
+		}
 		
-		clientGameManager.setPlayerPicture(gameData.code, ':)');
+		clientGameManager.setPlayerPicture(gameData.code, pictureData);
 	}
 	
 	private _renderWaitingForOtherPlayerDescriptions() {
@@ -215,7 +225,7 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		return (
 			<form onSubmit={this._handleEnterPhraseSubmit}>
 				<h1>{ header }</h1>
-				{ pictureData && <h1>{ pictureData }</h1> }
+				{ pictureData && <img src={pictureData} /> }
 				<div>
 					<input type="text" ref={(input: HTMLInputElement | null) => { this._enterPhraseInput = input; }} />
 					<input type="submit" value="Submit" />
@@ -278,6 +288,7 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 				<h1>Draw a picture that represents:</h1>
 				<h1>{ previousPhrase }</h1>
 				<div>
+					<Canvas ref={(ele: Canvas | null) => { this._drawPictureCanvas = ele; }} style={{ height: 500 }} />
 					<button onClick={this._handleDrawPictureSubmit}>Submit Picture</button>
 					{ enterPictureError && <p style={{ color: 'red' }}>{ enterPictureError }</p>}
 				</div>
@@ -286,15 +297,20 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 	}
 	
 	private _handleDrawPictureSubmit = (event: React.MouseEvent<HTMLButtonElement>) => {
+		event.preventDefault();
+		
 		const { clientGameManager, gameData } = this.props;
 		
-		if (!gameData) {
+		if (!gameData || !this._drawPictureCanvas) {
 			return;
 		}
 		
-		event.preventDefault();
+		const pictureData = this._drawPictureCanvas.getData();
+		if (!pictureData) {
+			return;
+		}
 		
-		clientGameManager.enterPicture(gameData.code, gameData.currentRound, ':)');
+		clientGameManager.enterPicture(gameData.code, gameData.currentRound, pictureData);
 	}
 	
 	private _renderWaitingForOtherPlayersToSubmitPictures() {

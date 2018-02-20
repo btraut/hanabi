@@ -25,7 +25,7 @@ export default class Canvas extends React.Component<CanvasProps, CanvasState> {
 		brushColor: '#000000',
 		lineWidth: 4,
 		style: {}
-	}
+	};
 	
 	private _canvas: HTMLCanvasElement | null = null;
 	private _context: CanvasRenderingContext2D | null = null;
@@ -197,6 +197,32 @@ export default class Canvas extends React.Component<CanvasProps, CanvasState> {
 		const height = this._canvas.height;
 		
 		this._context.clearRect(0, 0, width, height);
+	}
+	
+	public getData() {
+		if (!this._canvas) {
+			return null;
+		}
+		
+		return this._canvas.toDataURL();
+	}
+	
+	public setData(data: string) {
+		// Create a new image.
+		const image = new Image();
+		
+		// Set up a load handler for the image.
+		image.onload = () => {
+			if (!this._canvas || !this._context) {
+				return;
+			}
+
+			this._context.clearRect(0, 0, this._canvas.width, this._canvas.height);
+			this._context.drawImage(image, 0, 0);
+		};
+		
+		// Set the data on the image. It'll trigger the onload.
+		image.src = data;
 	}
 
 	public render() {
