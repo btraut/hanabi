@@ -11,14 +11,21 @@ import { ClientGameManagerPropsAdditions } from './ClientGameManager';
 // Define globals from webpack.
 declare const DOMAIN_BASE: string;
 
-type ExternalHostViewProps = React.Props<HostViewPage> & ClientGameManagerPropsAdditions;
+type ExternalHostViewProps = {
+	readonly showGameState?: boolean;
+} & React.Props<HostViewPage> & ClientGameManagerPropsAdditions;
 type HostViewProps = {
+	readonly showGameState: boolean;
 	readonly connected: boolean;
 	readonly initialDataLoaded: boolean;
 	readonly gameData: GameData | null;
 } & ExternalHostViewProps & RouteComponentProps<any>;
 
 class HostViewPage extends React.PureComponent<HostViewProps> {
+	public static defaultProps: Partial<HostViewProps> = {
+		showGameState: false
+	};
+	
 	public componentDidMount() {
 		this._connect();
 	}
@@ -98,7 +105,7 @@ class HostViewPage extends React.PureComponent<HostViewProps> {
 	}
 	
 	public render() {
-		const { connected, gameData, initialDataLoaded } = this.props;
+		const { connected, gameData, initialDataLoaded, showGameState } = this.props;
 		
 		if (!connected) {
 			return <div>Connecting…</div>;
@@ -111,7 +118,7 @@ class HostViewPage extends React.PureComponent<HostViewProps> {
 		return (
 			<div className="HostView">
 				{ this._renderGameState(gameData) }
-				<JSONPretty json={gameData} />
+				{ showGameState && <JSONPretty json={gameData} /> }
 			</div>
 		);
 	}

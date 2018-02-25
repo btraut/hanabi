@@ -15,7 +15,7 @@ interface CanvasState {
 export default class Canvas extends React.Component<CanvasProps, CanvasState> {
 	private static _defaultStyle = {
 		cursor: 'default',
-		backgroundColor: '#f4f4f4',
+		backgroundColor: '#fff',
 		userSelect: 'none',
 		width: '100%',
 		height: '100%'

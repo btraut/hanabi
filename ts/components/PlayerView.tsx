@@ -10,8 +10,11 @@ import { MINIMUM_PLAYERS_IN_GAME } from '../models/Rules';
 import { ClientGameManagerPropsAdditions } from './ClientGameManager';
 import Canvas from './Canvas';
 
-type ExternalPlayerViewProps = React.Props<PlayerViewPage> & ClientGameManagerPropsAdditions;
+type ExternalPlayerViewProps = {
+	readonly showGameState?: boolean;
+} & React.Props<PlayerViewPage> & ClientGameManagerPropsAdditions;
 type PlayerViewProps = {
+	readonly showGameState: boolean;
 	readonly connected: boolean;
 	readonly initialDataLoaded: boolean;
 	readonly userId: string | null;
@@ -27,6 +30,10 @@ type PlayerViewProps = {
 } & ExternalPlayerViewProps & RouteComponentProps<any>;
 
 class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
+	public static defaultProps: Partial<PlayerViewProps> = {
+		showGameState: false
+	};
+	
 	private _joinGameCodeInput: HTMLInputElement | null = null;
 	private _joinGameNameInput: HTMLInputElement | null = null;
 	private _enterPhraseInput: HTMLInputElement | null = null;
@@ -111,7 +118,6 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		return (
 			<>
 				<h1 className="PlayerView-Title">Draw yourself.</h1>
-				<p className="PlayerView-Description">Let’s see your best self-portrait.</p>
 				<Canvas ref={(ele: Canvas | null) => { this._drawUserPictureCanvas = ele; }} style={{ height: 500 }} />
 				{ setPlayerPictureError && <p className="PlayerView-ErrorText">{ setPlayerPictureError }</p>}
 				<button className="PlayerView-SubmitButton" onClick={this._handleDrawPlayerPictureSubmit}>Submit</button>
@@ -367,7 +373,7 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 	}
 	
 	public render() {
-		const { connected, gameData } = this.props;
+		const { connected, gameData, showGameState } = this.props;
 		
 		if (!connected) {
 			return <div>Connecting…</div>;
@@ -379,7 +385,7 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 			viewContent = (
 				<>
 					{ this._renderGameState() }
-					<JSONPretty json={gameData} />
+					{ showGameState && <JSONPretty json={gameData} /> }
 				</>
 			);
 		} else {
@@ -387,7 +393,7 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		}
 		
 		return (
-			<div className="HostView">
+			<div className="PlayerView">
 				{ viewContent }
 			</div>
 		);

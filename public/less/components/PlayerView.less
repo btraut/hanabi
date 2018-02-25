@@ -3,13 +3,15 @@
 	min-height: 100%;
 	display: flex;
 	flex-direction: column;
+	justify-content: center;
 	align-items: center;
 	padding: 20px;
 	background-image: url(../../images/grid-paper.png);
-	background-position: top center;
+	background-position: center center;
 }
 
 .PlayerView-GameForm {
+	width: 100%;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -44,6 +46,7 @@
 	align-items: center;
 	margin-bottom: 32px;
 	width: 400px;
+	max-width: 100%;
 }
 
 .PlayerView-GameFormButtons {
@@ -55,13 +58,12 @@
 	justify-self: end;
 	.FontSize-BodyLarge();
 	font-weight: bold;
-	text-align: right;
 }
 
 .PlayerView-TextEntryInput {
 	.TextInput();
 	
-	flex: 1 1 0;
+	width: 100%;
 	.FontSize-BodyLarge();
 	font-weight: bold;
 }
