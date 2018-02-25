@@ -1,0 +1,78 @@
+.PlayerView {
+	width: 100%;
+	min-height: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 20px;
+	background-image: url(../../images/grid-paper.png);
+	background-position: top center;
+}
+
+.PlayerView-JoinGameForm {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.PlayerView-Title {
+	margin: 0 0 32px;
+	.FontSize-GameTitle();
+	font-style: italic;
+	color: @wordart-orange;
+	text-shadow: 4px 5px 0 black;
+}
+
+@media (max-width: @screen-sm-max) {
+	.PlayerView-Title {
+		.FontSize-GameTitleSmall();
+		text-shadow: 3px 4px 0 black;
+	}
+}
+
+@media (max-width: @screen-xs-max) {
+	.PlayerView-Title {
+		.FontSize-GameTitleXSmall();
+	}
+}
+
+.PlayerView-JoinGameFormContainer {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	grid-gap: 16px;
+	align-items: center;
+	margin-bottom: 32px;
+	width: 400px;
+}
+
+.PlayerView-JoinGameFormButtons {
+	display: flex;
+	justify-content: center;
+}
+
+.PlayerView-JoinGameLabel {
+	justify-self: end;
+	.FontSize-BodyLarge();
+	font-weight: bold;
+	text-align: right;
+}
+
+.PlayerView-JoinGameInput {
+	.TextInput();
+	
+	flex: 1 1 0;
+	.FontSize-BodyLarge();
+	font-weight: bold;
+}
+
+.PlayerView-JoinGameButton {
+	.Button();
+}
+
+.PlayerView-ErrorText {
+	.FontSize-BodyLarge();
+	font-weight: bold;
+	background-color: @wordart-red;
+	color: white;
+	padding: 4px 8px;
+}

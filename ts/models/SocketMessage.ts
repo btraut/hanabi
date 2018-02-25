@@ -22,7 +22,10 @@ export type GameCreatedMessage = SocketMessageTemplate<'GameCreatedMessage', {
 	gameData?: GameData;
 }>;
 
-export type JoinGameMessage = SocketMessageTemplate<'JoinGameMessage', { gameCode: string; }>;
+export type JoinGameMessage = SocketMessageTemplate<'JoinGameMessage', {
+	gameCode: string;
+	name: string;
+}>;
 export type GameJoinedMessage = SocketMessageTemplate<'GameJoinedMessage', {
 	error?: string;
 	gameData?: GameData;
@@ -49,17 +52,6 @@ export type GameStartedMessage = SocketMessageTemplate<'GameStartedMessage', {
 	error?: string;
 	gameCode?: string;
 	playerOrders?: string[];
-}>;
-
-export type SetPlayerNameMessage = SocketMessageTemplate<'SetPlayerNameMessage', {
-	gameCode: string;
-	name: string;
-}>;
-export type PlayerNameSetMessage = SocketMessageTemplate<'PlayerNameSetMessage', {
-	error?: string;
-	gameCode?: string;
-	playerId?: string;
-	name?: string;
 }>;
 
 export type GameStateSetMessage = SocketMessageTemplate<'GameStateSetMessage', {
@@ -139,8 +131,6 @@ export type SocketMessage =
 	UserUpdatedMessage |
 	StartGameMessage |
 	GameStartedMessage |
-	SetPlayerNameMessage |
-	PlayerNameSetMessage |
 	SetPlayerPictureMessage |
 	PlayerPictureSetMessage |
 	GameStateSetMessage |

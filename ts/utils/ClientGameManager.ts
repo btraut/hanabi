@@ -13,7 +13,6 @@ import {
 	CreateGameMessage,
 	JoinGameMessage,
 	StartGameMessage,
-	SetPlayerNameMessage,
 	SetPlayerPictureMessage,
 	EnterPhraseMessage,
 	EnterPictureMessage,
@@ -49,9 +48,9 @@ export default class ClientGameManager {
 		await ClientSocketManager.expectMessageOfType('GameCreatedMessage');
 	}
 	
-	public async joinGame(gameCode: string) {
+	public async joinGame(gameCode: string, name: string) {
 		// Call to join a game. Expect a response for the sake of error handling.
-		ClientSocketManager.send({ type: 'JoinGameMessage', data: { gameCode } } as JoinGameMessage);
+		ClientSocketManager.send({ type: 'JoinGameMessage', data: { gameCode, name } } as JoinGameMessage);
 		await ClientSocketManager.expectMessageOfType('GameJoinedMessage');
 	}
 	
@@ -59,12 +58,6 @@ export default class ClientGameManager {
 		// Call to start the game. Expect a response for the sake of error handling.
 		ClientSocketManager.send({ type: 'StartGameMessage', data: { gameCode } } as StartGameMessage);
 		await ClientSocketManager.expectMessageOfType('GameStartedMessage');
-	}
-	
-	public async setPlayerName(gameCode: string, name: string) {
-		// Send the player's name. Expect a response for the sake of error handling.
-		ClientSocketManager.send({ type: 'SetPlayerNameMessage', data: { gameCode, name } } as SetPlayerNameMessage);
-		await ClientSocketManager.expectMessageOfType('PlayerNameSetMessage');
 	}
 	
 	public async setPlayerPicture(gameCode: string, pictureData: string) {
@@ -164,12 +157,6 @@ export default class ClientGameManager {
 			} else if (message.data.gameCode && message.data.playerOrders) {
 				this._dispatch(gameActions.clearErrors());
 				this._dispatch(gameActions.gameStarted(message.data.gameCode, message.data.playerOrders));
-			}
-		} else if (message.type === 'PlayerNameSetMessage') {
-			if (message.data.error) {
-				this._dispatch(gameActions.setPlayerNameError(message.data.error));
-			} else if (message.data.name && message.data.gameCode && message.data.playerId) {
-				this._dispatch(gameActions.setPlayerName(message.data.playerId, message.data.name, message.data.gameCode));
 			}
 		} else if (message.type === 'PlayerPictureSetMessage') {
 			if (message.data.error) {

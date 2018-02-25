@@ -9,7 +9,6 @@ import {
 	UserUpdatedMessage,
 	PlayerRemovedMessage,
 	GameStartedMessage,
-	PlayerNameSetMessage,
 	PlayerPictureSetMessage,
 	PhraseEnteredMessage,
 	GameStateSetMessage,
@@ -139,11 +138,11 @@ class ServerGameManager {
 		} as InitialDataResponseMessage);
 	}
 	
-	private _handleJoinGameMessage(userId: string, gameCode: string) {
+	private _handleJoinGameMessage(playerId: string, gameCode: string, name: string) {
 		// Check to see if we can find the new game.
 		const gameToJoin = this._games[gameCode];
 		if (!gameToJoin) {
-			ServerSocketManager.send(userId, {
+			ServerSocketManager.send(playerId, {
 				type: 'GameJoinedMessage',
 				data: { error: 'Invalid game code' }
 			} as GameJoinedMessage);
@@ -151,10 +150,10 @@ class ServerGameManager {
 		}
 		
 		// Check to see if the user is already part of a game.
-		const existingGames = Object.values(this._games).filter(game => !!game.players[userId]);
+		const existingGames = Object.values(this._games).filter(game => !!game.players[playerId]);
 		for (const existingGame of existingGames) {
 			// Remove the user from the existing game.
-			const removedPlayer = existingGame.removePlayer(userId);
+			const removedPlayer = existingGame.removePlayer(playerId);
 			if (removedPlayer) {
 				// Notify all clients that the user has been added.
 				ServerSocketManager.send(existingGame.allUsers, {
@@ -164,9 +163,21 @@ class ServerGameManager {
 			}
 		}
 		
+		// Validate and scrub the name.
+		const cleanName = name.trim();
+		const error = gameToJoin.validateName(cleanName);
+		
+		if (error) {
+			ServerSocketManager.send(playerId, {
+				type: 'GameJoinedMessage',
+				data: { error }
+			} as GameJoinedMessage);
+			return;
+		}
+		
 		// Ensure the game is in the right state.
 		if (gameToJoin.state !== GameState.WaitingForPlayers) {
-			ServerSocketManager.send(userId, {
+			ServerSocketManager.send(playerId, {
 				type: 'GameJoinedMessage',
 				data: { error: 'Game isn’t accepting players right now.' }
 			} as GameJoinedMessage);
@@ -174,10 +185,10 @@ class ServerGameManager {
 		}
 		
 		// Join the new game.
-		const joinedplayer = gameToJoin.addPlayer(userId);
+		const joinedPlayer = gameToJoin.addPlayer(playerId, cleanName);
 		
 		// Respond to the user who joined.
-		ServerSocketManager.send(userId, {
+		ServerSocketManager.send(playerId, {
 			type: 'GameJoinedMessage',
 			data: { gameData: gameToJoin.toObject() }
 		} as GameJoinedMessage);
@@ -185,7 +196,7 @@ class ServerGameManager {
 		// Notify all clients that the user has been added.
 		ServerSocketManager.send(gameToJoin.allUsers, {
 			type: 'PlayerAddedMessage',
-			data: { player: joinedplayer, gameCode: gameToJoin.code }
+			data: { player: joinedPlayer, gameCode: gameToJoin.code }
 		} as PlayerAddedMessage);
 	}
 	
@@ -249,36 +260,6 @@ class ServerGameManager {
 			type: 'GameStartedMessage',
 			data: { gameCode, playerOrders }
 		} as GameStartedMessage);
-	}
-	
-	private _handleSetPlayerNameMessage(playerId: string, gameCode: string, name: string) {
-		// Validate game, membership, and state.
-		if (!this._ensureUserIsInGame('PlayerNameSetMessage', playerId, gameCode, GameState.WaitingForPlayerDescriptions)) {
-			return;
-		}
-		
-		const game = this._games[gameCode];
-		
-		// Validate and scrub the name.
-		const cleanName = name.trim();
-		const error = game.validateName(cleanName);
-		
-		if (error) {
-			ServerSocketManager.send(playerId, {
-				type: 'PlayerNameSetMessage',
-				data: { error }
-			} as PlayerNameSetMessage);
-			return;
-		}
-		
-		// Update the player name.
-		game.updatePlayer(playerId, { name: cleanName });
-		
-		// Notify all players and host.
-		ServerSocketManager.send(game.allUsers, {
-			type: 'PlayerNameSetMessage',
-			data: { gameCode, name: cleanName, playerId }
-		} as PlayerNameSetMessage);
 	}
 	
 	private _checkForNextState(game: Game) {
@@ -369,9 +350,9 @@ class ServerGameManager {
 		
 		if (error) {
 			ServerSocketManager.send(playerId, {
-				type: 'PlayerNameSetMessage',
+				type: 'PhraseEnteredMessage',
 				data: { error }
-			} as PlayerNameSetMessage);
+			} as PhraseEnteredMessage);
 			return;
 		}
 		
@@ -480,11 +461,9 @@ class ServerGameManager {
 			} else if (message.type === 'RequestInitialDataMessage') {
 				this._handleRequestInitialDataMessage(userId);
 			} else if (message.type === 'JoinGameMessage') {
-				this._handleJoinGameMessage(userId, message.data.gameCode);
+				this._handleJoinGameMessage(userId, message.data.gameCode, message.data.name);
 			} else if (message.type === 'StartGameMessage') {
 				this._handleStartGameMessage(userId, message.data.gameCode);
-			} else if (message.type === 'SetPlayerNameMessage') {
-				this._handleSetPlayerNameMessage(userId, message.data.gameCode, message.data.name);
 			} else if (message.type === 'SetPlayerPictureMessage') {
 				this._handleSetPlayerPictureMessage(userId, message.data.gameCode, message.data.pictureData);
 			} else if (message.type === 'EnterPhraseMessage') {

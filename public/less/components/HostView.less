@@ -20,6 +20,7 @@
 @media (max-width: @screen-sm-max) {
 	.HostView-Title {
 		.FontSize-GameTitleSmall();
+		text-shadow: 3px 4px 0 black;
 	}
 }
 
@@ -39,6 +40,12 @@
 	.FontSize-BodyLarge();
 	font-weight: bold;
 	list-style-position: inside;
+}
+
+@media (max-width: @screen-sm-max) {
+	.HostView-LinkAndCodeContainerList {
+		.FontSize-Body();
+	}
 }
 
 .HostView-LinkAndCodeContainerListItem {

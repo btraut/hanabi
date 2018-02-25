@@ -27,8 +27,8 @@ type PlayerViewProps = {
 } & ExternalPlayerViewProps & RouteComponentProps<any>;
 
 class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
-	private _joinGameInput: HTMLInputElement | null = null;
-	private _enterNameInput: HTMLInputElement | null = null;
+	private _joinGameCodeInput: HTMLInputElement | null = null;
+	private _joinGameNameInput: HTMLInputElement | null = null;
 	private _enterPhraseInput: HTMLInputElement | null = null;
 	
 	private _drawUserPictureCanvas: Canvas | null = null;
@@ -58,13 +58,18 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		const { joinGameError } = this.props;
 		
 		return (
-			<form onSubmit={this._handleJoinGameSubmit}>
-				<h1>Join Game:</h1>
-				<div>
-					<input type="text" ref={(input: HTMLInputElement | null) => { this._joinGameInput = input; }} />
-					<input type="submit" value="Join" />
+			<form className="PlayerView-JoinGameForm" onSubmit={this._handleJoinGameSubmit}>
+				<h1 className="PlayerView-Title">Time to dive in.</h1>
+				{ joinGameError && <p className="PlayerView-ErrorText">{ joinGameError }</p>}
+				<div className="PlayerView-JoinGameFormContainer">
+					<label className="PlayerView-JoinGameLabel" htmlFor="PlayerView-Code">Code:</label>
+					<input className="PlayerView-JoinGameInput" id="PlayerView-Code" type="text" ref={(input: HTMLInputElement | null) => { this._joinGameCodeInput = input; }} />
+					<label className="PlayerView-JoinGameLabel" htmlFor="PlayerView-Name">Name:</label>
+					<input className="PlayerView-JoinGameInput" id="PlayerView-Name" type="text" ref={(input: HTMLInputElement | null) => { this._joinGameNameInput = input; }} />
 				</div>
-				{ joinGameError && <p style={{ color: 'red' }}>{ joinGameError }</p>}
+				<div className="PlayerView-JoinGameFormButtons">
+					<input className="PlayerView-JoinGameButton" type="submit" value="Join" />
+				</div>
 			</form>
 		);
 	}
@@ -74,8 +79,8 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		
 		event.preventDefault();
 		
-		if (this._joinGameInput) {
-			clientGameManager.joinGame(this._joinGameInput.value);
+		if (this._joinGameCodeInput && this._joinGameNameInput) {
+			clientGameManager.joinGame(this._joinGameCodeInput.value, this._joinGameNameInput.value);
 		}
 	}
 	
@@ -102,35 +107,6 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		}
 		
 		clientGameManager.startGame(gameData.code);
-	}
-	
-	private _renderEnterUserName() {
-		const { setPlayerNameError } = this.props;
-		
-		return (
-			<form onSubmit={this._handleEnterUserNameSubmit}>
-				<h1>Enter your name:</h1>
-				<div>
-					<input type="text" ref={(input: HTMLInputElement | null) => { this._enterNameInput = input; }} />
-					<input type="submit" value="Join" />
-					{ setPlayerNameError && <p style={{ color: 'red' }}>{ setPlayerNameError }</p>}
-				</div>
-			</form>
-		);
-	}
-	
-	private _handleEnterUserNameSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-		const { clientGameManager, gameData } = this.props;
-		
-		if (!gameData) {
-			return;
-		}
-		
-		event.preventDefault();
-		
-		if (this._enterNameInput) {
-			clientGameManager.setPlayerName(gameData.code, this._enterNameInput.value);
-		}
 	}
 	
 	private _renderDrawUserPicture() {
@@ -176,10 +152,6 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		
 		if (!player) {
 			throw new Error('Can’t find your user in the game.');
-		}
-		
-		if (!player.name) {
-			return this._renderEnterUserName();
 		}
 		
 		if (!player.pictureData) {
@@ -386,11 +358,15 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		}
 		
 		if (!gameData) {
-			return this._renderJoinGame();
+			return (
+				<div className="HostView">
+					{ this._renderJoinGame() }
+				</div>
+			);
 		}
 		
 		return (
-			<div className="PlayerView">
+			<div className="HostView">
 				{ this._renderGameState() }
 				<JSONPretty json={gameData} />
 			</div>
