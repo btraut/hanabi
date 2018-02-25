@@ -1,3 +1,91 @@
+.HomePage {
+	width: 100%;
+	min-height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 20px;
+	background-image: url(../../images/grid-paper.png);
+	background-position: center center;
+}
+
+.HomePage-Container {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 20px;
+}
+
+.HomePage-Title {
+	position: relative;
+	margin: 0;
+	padding: 0 10px;
+	.FontSize-MainTitle();
+	color: #ff8724;
+	font-style: italic;
+	text-shadow: 4px 5px 0 black;
+}
+
 @media (max-width: @screen-sm-max) {
-	// Build up in the future.
+	.HomePage-Title {
+		.FontSize-MainTitleSmall();
+	}
+}
+
+@media (max-width: @screen-xs-max) {
+	.HomePage-Title {
+		.FontSize-MainTitleXSmall();
+	}
+}
+
+.HomePage-DescriptionContainer {
+	margin: 20px 0;
+	padding: 16px 20px;
+	background: rgba(255, 255, 255, 0.6);
+}
+
+.HomePage-Description {
+	margin: 0 0 12px;
+	.FontSize-Body();
+	font-weight: bold;
+	
+	&:last-child {
+		margin: 0;
+	}
+}
+
+.HomePage-GameActionsList {
+	display: flex;
+	list-style: none;
+	padding: 0;
+}
+
+.HomePage-GameActionsListItem {
+	margin-right: 16px;
+	
+	&:last-child {
+		margin: 0;
+	}
+}
+
+.HomePage-GameAction {
+	display: block;
+	padding: 12px 20px;
+	border: 6px solid black;
+	background: rgba(255, 255, 255, 0.6);
+	text-transform: uppercase;
+	color: black;
+	cursor: pointer;
+	font-weight: bold;
+	transition: transform 50ms ease-out;
+	
+	&:hover,
+	&:focus {
+		color: black;
+		transform: scale(1.02, 1.02);
+	}
+	
+	&:active {
+		transform: scale(0.98, 0.98);
+	}
 }

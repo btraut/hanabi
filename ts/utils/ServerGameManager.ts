@@ -242,7 +242,7 @@ class ServerGameManager {
 		game.shufflePlayerOrders();
 		
 		// Build the list of player orders.
-		const playerOrders = Object.values(game.players).sort((a, b) => a.order! < b.order! ? -1 : 1).map(p => p.id);;
+		const playerOrders = Object.values(game.players).sort((a, b) => a.order! < b.order! ? -1 : 1).map(p => p.id);
 		
 		// Notify all players and host.
 		ServerSocketManager.send(game.allUsers, {

@@ -6,11 +6,9 @@ interface AppProps {
 };
 
 const App: React.StatelessComponent<AppProps> = ({ routes }) => (
-	<div className="App">
-		<Switch>
-			{ routes.map(route => <Route key={route.path || '*'} {...route} />) }
-		</Switch>
-	</div>
+	<Switch>
+		{ routes.map(route => <Route key={route.path || '*'} {...route} />) }
+	</Switch>
 );
 
 App.displayName = 'App';
