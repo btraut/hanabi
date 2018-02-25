@@ -255,7 +255,7 @@ export const gameReducer = combineReducers<GameState>({
 				// Add the new state and players list into game data.
 				return {
 					...gameData,
-					state: GameDataState.WaitingForPlayerDescriptions,
+					state: GameDataState.WaitingForPhraseSubmissions,
 					players
 				};
 			}

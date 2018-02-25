@@ -5,7 +5,6 @@ const CODE_GENERATION_LENGTH = 4;
 
 export enum GameState {
 	WaitingForPlayers,
-	WaitingForPlayerDescriptions,
 	WaitingForPhraseSubmissions,
 	WaitingForPictureSubmissions,
 	AllSubmissionsRecieved,
@@ -159,8 +158,7 @@ export class Game {
 	}
 	
 	public start() {
-		this._state = GameState.WaitingForPlayerDescriptions;
-		this._updated = new Date();
+		this.moveToState(GameState.WaitingForPhraseSubmissions, 0);
 	}
 	
 	public shufflePlayerOrders() {

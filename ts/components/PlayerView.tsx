@@ -59,7 +59,7 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		
 		return (
 			<form className="PlayerView-JoinGameForm" onSubmit={this._handleJoinGameSubmit}>
-				<h1 className="PlayerView-Title">Time to dive in.</h1>
+				<h1 className="PlayerView-Title">Let’s begin.</h1>
 				{ joinGameError && <p className="PlayerView-ErrorText">{ joinGameError }</p>}
 				<div className="PlayerView-JoinGameFormContainer">
 					<label className="PlayerView-JoinGameLabel" htmlFor="PlayerView-Code">Code:</label>
@@ -68,7 +68,7 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 					<input className="PlayerView-JoinGameInput" id="PlayerView-Name" type="text" ref={(input: HTMLInputElement | null) => { this._joinGameNameInput = input; }} />
 				</div>
 				<div className="PlayerView-JoinGameFormButtons">
-					<input className="PlayerView-JoinGameButton" type="submit" value="Join" />
+					<input className="PlayerView-SubmitButton" type="submit" value="Join" />
 				</div>
 			</form>
 		);
@@ -85,46 +85,42 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 	}
 	
 	private _renderInGameLobby() {
-		const { startGameError, gameData } = this.props;
+		const { gameData, userId } = this.props;
 		
-		return (
-			<div>
-				<h1>In Game Lobby…</h1>
-				{
-					gameData!.players.length >= MINIMUM_PLAYERS_IN_GAME &&
-						<button onClick={this._handleStartGameButtonClick}>Start Game</button>
-				}
-				{ startGameError && <p style={{ color: 'red' }}>{ startGameError }</p>}
-			</div>
-		);
-	}
-	
-	private _handleStartGameButtonClick = () => {
-		const { clientGameManager, gameData } = this.props;
+		const player = gameData!.players.find(p => p.id === userId);
 		
-		if (!gameData) {
-			return;
+		if (!player) {
+			throw new Error('Can’t find your user in the game.');
 		}
 		
-		clientGameManager.startGame(gameData.code);
+		if (!player.pictureData) {
+			return this._renderDrawPlayerPicture();
+		}
+		
+		const playersStillDrawing = gameData!.players.find(p => !p.pictureData);
+		if (playersStillDrawing || gameData!.players.length < MINIMUM_PLAYERS_IN_GAME) {
+			return this._renderWaitingForOtherPlayers();
+		}
+
+		return this._renderWaitingForStart();
 	}
 	
-	private _renderDrawUserPicture() {
+	private _renderDrawPlayerPicture() {
 		const { setPlayerPictureError } = this.props;
 		
 		return (
-			<div>
-				<h1>Draw a picture of yourself:</h1>
+			<div className="HostView">
+				<h1 className="PlayerView-Title">Waiting for others…</h1>
 				<div>
 					<Canvas ref={(ele: Canvas | null) => { this._drawUserPictureCanvas = ele; }} style={{ height: 500 }} />
-					<button onClick={this._handleDrawUserPictureSubmit}>Submit Picture</button>
+					<button onClick={this._handleDrawPlayerPictureSubmit}>Submit Picture</button>
 					{ setPlayerPictureError && <p style={{ color: 'red' }}>{ setPlayerPictureError }</p>}
 				</div>
 			</div>
 		);
 	}
 	
-	private _handleDrawUserPictureSubmit = (event: React.MouseEvent<HTMLButtonElement>) => {
+	private _handleDrawPlayerPictureSubmit = (event: React.MouseEvent<HTMLButtonElement>) => {
 		event.preventDefault();
 		
 		const { clientGameManager, gameData } = this.props;
@@ -141,24 +137,34 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		clientGameManager.setPlayerPicture(gameData.code, pictureData);
 	}
 	
-	private _renderWaitingForOtherPlayerDescriptions() {
-		return <h1>Waiting for other players to name and draw themselves…</h1>;
+	private _renderWaitingForOtherPlayers() {
+		return (
+			<div className="HostView">
+				<h1 className="PlayerView-Title">Waiting for others…</h1>
+			</div>
+		);
 	}
 	
-	private _renderWaitingForPlayerDescriptions() {
-		const { gameData, userId } = this.props;
+	private _renderWaitingForStart() {
+		const { startGameError } = this.props;
+
+		return (
+			<div className="HostView">
+				<h1 className="PlayerView-Title">Waiting for others…</h1>
+				{ startGameError && <p className="PlayerView-ErrorText">{ startGameError }</p>}
+				<button className="PlayerView-SubmitButton" onClick={this._handleStartGameButtonClick}>Everyone’s ready</button>
+			</div>
+		);
+	}
+	
+	private _handleStartGameButtonClick = () => {
+		const { clientGameManager, gameData } = this.props;
 		
-		const player = gameData!.players.find(p => p.id === userId);
-		
-		if (!player) {
-			throw new Error('Can’t find your user in the game.');
+		if (!gameData) {
+			return;
 		}
 		
-		if (!player.pictureData) {
-			return this._renderDrawUserPicture();
-		}
-		
-		return this._renderWaitingForOtherPlayerDescriptions();
+		clientGameManager.startGame(gameData.code);
 	}
 	
 	private _renderWaitingForPhraseSubmissions() {
@@ -342,7 +348,6 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		
 		switch (gameData!.state) {
 		case GameState.WaitingForPlayers: return this._renderInGameLobby();
-		case GameState.WaitingForPlayerDescriptions: return this._renderWaitingForPlayerDescriptions();
 		case GameState.WaitingForPhraseSubmissions: return this._renderWaitingForPhraseSubmissions();
 		case GameState.WaitingForPictureSubmissions: return this._renderWaitingForPictureSubmissions();
 		case GameState.ReviewingStories: return this._renderReviewingStories();

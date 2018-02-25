@@ -19,7 +19,7 @@ import {
 } from '../models/SocketMessage';
 import ServerSocketManager from './ServerSocketManager';
 import Logger from '../utils/Logger';
-import { MINIMUM_PLAYERS_IN_GAME } from '../models/Rules';
+import { MINIMUM_PLAYERS_IN_GAME, MAXIMUM_PLAYERS_IN_GAME } from '../models/Rules';
 
 const GAME_EXPIRATION_MINUTES = 30;
 
@@ -149,18 +149,32 @@ class ServerGameManager {
 			return;
 		}
 		
-		// Check to see if the user is already part of a game.
-		const existingGames = Object.values(this._games).filter(game => !!game.players[playerId]);
-		for (const existingGame of existingGames) {
-			// Remove the user from the existing game.
-			const removedPlayer = existingGame.removePlayer(playerId);
-			if (removedPlayer) {
-				// Notify all clients that the user has been added.
-				ServerSocketManager.send(existingGame.allUsers, {
-					type: 'PlayerRemovedMessage',
-					data: { player: removedPlayer }
-				} as PlayerRemovedMessage);
-			}
+		// Check if the user is already in the game. If he is, send a
+		// success message to him.
+		if (gameToJoin.players[playerId]) {
+			ServerSocketManager.send(playerId, {
+				type: 'GameJoinedMessage',
+				data: { gameData: gameToJoin.toObject() }
+			} as GameJoinedMessage);
+			return;
+		}
+		
+		// Make sure the game to join has room.
+		if (Object.keys(gameToJoin.players).length === MAXIMUM_PLAYERS_IN_GAME) {
+			ServerSocketManager.send(playerId, {
+				type: 'GameJoinedMessage',
+				data: { error: 'Game is full.' }
+			} as GameJoinedMessage);
+			return;
+		}
+		
+		// Ensure the game is in the right state.
+		if (gameToJoin.state !== GameState.WaitingForPlayers) {
+			ServerSocketManager.send(playerId, {
+				type: 'GameJoinedMessage',
+				data: { error: 'Game isn’t accepting players right now.' }
+			} as GameJoinedMessage);
+			return;
 		}
 		
 		// Validate and scrub the name.
@@ -171,15 +185,6 @@ class ServerGameManager {
 			ServerSocketManager.send(playerId, {
 				type: 'GameJoinedMessage',
 				data: { error }
-			} as GameJoinedMessage);
-			return;
-		}
-		
-		// Ensure the game is in the right state.
-		if (gameToJoin.state !== GameState.WaitingForPlayers) {
-			ServerSocketManager.send(playerId, {
-				type: 'GameJoinedMessage',
-				data: { error: 'Game isn’t accepting players right now.' }
 			} as GameJoinedMessage);
 			return;
 		}
@@ -248,6 +253,15 @@ class ServerGameManager {
 			return;
 		}
 		
+		// Ensure all players have drawn pictures.
+		if (Object.values(game.players).find(p => !p.pictureData)) {
+			ServerSocketManager.send(userId, {
+				type: 'GameStartedMessage',
+				data: { error: 'Not everyone has drawn their own picture yet.' }
+			} as GameStartedMessage);
+			return;
+		}
+		
 		// Update the game.
 		game.start();
 		game.shufflePlayerOrders();
@@ -269,17 +283,7 @@ class ServerGameManager {
 		
 		// Based on the state, check conditions for whether or not
 		// we're ready to move to the next.
-		if (game.state === GameState.WaitingForPlayerDescriptions) {
-			for (const player of Object.values(game.players)) {
-				if (!player.pictureData) {
-					allPlayersSubmitted = false;
-					break;
-				}
-			}
-			
-			nextRound = 0;
-			nextState = GameState.WaitingForPhraseSubmissions;
-		} else if (game.state === GameState.WaitingForPhraseSubmissions) {
+		if (game.state === GameState.WaitingForPhraseSubmissions) {
 			const index = game.currentRound / 2;
 			const phrases = game.phrases[index];
 			if (!phrases || Object.keys(phrases).length !== Object.keys(game.players).length) {
@@ -317,7 +321,7 @@ class ServerGameManager {
 	
 	private _handleSetPlayerPictureMessage(playerId: string, gameCode: string, pictureData: string) {
 		// Validate game, membership, and state.
-		if (!this._ensureUserIsInGame('PlayerPictureSetMessage', playerId, gameCode, GameState.WaitingForPlayerDescriptions)) {
+		if (!this._ensureUserIsInGame('PlayerPictureSetMessage', playerId, gameCode, GameState.WaitingForPlayers)) {
 			return;
 		}
 		
@@ -331,9 +335,6 @@ class ServerGameManager {
 			type: 'PlayerPictureSetMessage',
 			data: { gameCode, pictureData, playerId }
 		} as PlayerPictureSetMessage);
-		
-		// Conditionally move to next state.
-		this._checkForNextState(game);
 	}
 	
 	private _handleEnterPhraseMessage(playerId: string, gameCode: string, round: number, phrase: string) {
