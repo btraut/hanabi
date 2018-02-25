@@ -1,6 +1,7 @@
-import * as uuid from 'uuid';
-
 import Player from './Player';
+
+const CODE_GENERATION_ALPHABET = '23456789abdegjkmnpqrvwxyz';
+const CODE_GENERATION_LENGTH = 4;
 
 export enum GameState {
 	WaitingForPlayers,
@@ -44,7 +45,7 @@ export class Game {
 	private _host: Player;
 	private _currentRound: number = 0;
 	private _rounds: number = 3;
-	private _code: string = this._generateCode();
+	private _code: string = this.regenerateCode();
 	private _state = GameState.WaitingForPlayers;
 	
 	constructor(hostId: string) {
@@ -68,14 +69,14 @@ export class Game {
 		};
 	}
 	
-	private _generateCode() {
-		// TODO: Don't use annoying letters.
-		this._code = uuid().substr(0, 6);
-		return this._code;
-	}
-	
 	public regenerateCode() {
-		this._generateCode();
+		let code = '';
+		
+		for (let i = 0; i < CODE_GENERATION_LENGTH; i += 1) {
+			code += CODE_GENERATION_ALPHABET.charAt(Math.floor(Math.random() * CODE_GENERATION_ALPHABET.length));
+		}
+		
+		this._code = code;
 		return this._code;
 	}
 	
