@@ -22,10 +22,10 @@ export default class HomePage extends React.PureComponent<RouteProps> {
 						<p className="HomePage-Description">WordArt is a party game that combines drawing and interpretation.</p>
 						<p className="HomePage-Description">It’s like the classic game of Telephone, but it’s actually fun!</p>
 					</div>
-					<ul className="HomePage-GameActionsList">
-						<li className="HomePage-GameActionsListItem"><Link to="/host" className="HomePage-GameAction">Host</Link></li>
-						<li className="HomePage-GameActionsListItem"><Link to="/join" className="HomePage-GameAction">Join</Link></li>
-					</ul>
+					<div className="HomePage-GameActions">
+						<Link to="/host" className="HomePage-GameAction">Host</Link>
+						<Link to="/join" className="HomePage-GameAction">Join</Link>
+					</div>
 				</div>
 			</div>
 		);

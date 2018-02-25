@@ -110,12 +110,11 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		
 		return (
 			<>
-				<h1 className="PlayerView-Title">Waiting for others…</h1>
-				<div>
-					<Canvas ref={(ele: Canvas | null) => { this._drawUserPictureCanvas = ele; }} style={{ height: 500 }} />
-					<button onClick={this._handleDrawPlayerPictureSubmit}>Submit Picture</button>
-					{ setPlayerPictureError && <p style={{ color: 'red' }}>{ setPlayerPictureError }</p>}
-				</div>
+				<h1 className="PlayerView-Title">Draw yourself.</h1>
+				<p className="PlayerView-Description">Let’s see your best self-portrait.</p>
+				<Canvas ref={(ele: Canvas | null) => { this._drawUserPictureCanvas = ele; }} style={{ height: 500 }} />
+				{ setPlayerPictureError && <p className="PlayerView-ErrorText">{ setPlayerPictureError }</p>}
+				<button className="PlayerView-SubmitButton" onClick={this._handleDrawPlayerPictureSubmit}>Submit</button>
 			</>
 		);
 	}
@@ -267,15 +266,14 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		const previousPhrase = gameData.phrases[phraseIndex][nextPlayerId];
 		
 		return (
-			<div>
-				<h1>Draw a picture that represents:</h1>
-				<h1>{ previousPhrase }</h1>
-				<div>
-					<Canvas ref={(ele: Canvas | null) => { this._drawPictureCanvas = ele; }} style={{ height: 500 }} />
-					<button onClick={this._handleDrawPictureSubmit}>Submit Picture</button>
-					{ enterPictureError && <p style={{ color: 'red' }}>{ enterPictureError }</p>}
-				</div>
-			</div>
+			<>
+				<h1 className="PlayerView-Title">Let’s draw.</h1>
+				<p className="PlayerView-Description">Draw a picture that represents this phrase:</p>
+				<p className="PlayerView-Description">{ previousPhrase }</p>
+				<Canvas ref={(ele: Canvas | null) => { this._drawPictureCanvas = ele; }} style={{ height: 500 }} />
+				{ enterPictureError && <p className="PlayerView-ErrorText">{ enterPictureError }</p>}
+				<button className="PlayerView-SubmitButton" onClick={this._handleDrawPictureSubmit}>Submit</button>
+			</>
 		);
 	}
 	
@@ -298,29 +296,35 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 	
 	private _renderWaitingForOtherPlayersToSubmitPictures() {
 		return (
-			<div>
-				<h1>Waiting for other players to submit pictures…</h1>
-			</div>
+			<>
+				<h1 className="PlayerView-Title">Waiting for others…</h1>
+				<p className="PlayerView-BodyText">You’ll move on when everyone has finished drawing a picture.</p>
+			</>
 		);
 	}
 	
 	private _renderReviewingStories() {
-		return <h1>Reviewing sequences…</h1>;
+		return (
+			<>
+				<h1 className="PlayerView-Title">Let's review.</h1>
+				<p className="PlayerView-BodyText">Watch all the words and art on the main screen.</p>
+			</>
+		);
 	}
 	
 	private _renderPlayAgainOptions() {
 		const { startOverError, endGameError } = this.props;
 		
 		return (
-			<div>
-				<h1>Game Over</h1>
-				<div>
-					<button onClick={this._handlePlayAgainClick}>Play Again</button>
-					<button onClick={this._handleEndGameClick}>End Game</button>
-					{ startOverError && <p style={{ color: 'red' }}>{ startOverError }</p>}
-					{ endGameError && <p style={{ color: 'red' }}>{ endGameError }</p>}
+			<>
+				<h1 className="PlayerView-Title">Game over.</h1>
+				{ startOverError && <p className="PlayerView-ErrorText">{ startOverError }</p>}
+				{ endGameError && <p className="PlayerView-ErrorText">{ endGameError }</p>}
+				<div className="PlayerView-GameActions">
+					<button className="PlayerView-SubmitButton" onClick={this._handlePlayAgainClick}>Play Again</button>
+					<button className="PlayerView-SubmitButton" onClick={this._handleEndGameClick}>End Game</button>
 				</div>
-			</div>
+			</>
 		);
 	}
 	

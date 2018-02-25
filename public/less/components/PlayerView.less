@@ -66,8 +66,17 @@
 	font-weight: bold;
 }
 
+.PlayerView-GameActions {
+	display: flex;
+}
+
 .PlayerView-SubmitButton {
 	.Button();
+	margin-right: 16px;
+	
+	&:last-child {
+		margin-right: 0;
+	}
 }
 
 .PlayerView-ErrorText {
@@ -76,4 +85,10 @@
 	background-color: @wordart-red;
 	color: white;
 	padding: 4px 8px;
+}
+
+.PlayerView-BodyText {
+	.TransparentContainer();
+	.FontSize-BodyLarge();
+	font-weight: bold;
 }
