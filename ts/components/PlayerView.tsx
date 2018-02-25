@@ -29,16 +29,23 @@ type PlayerViewProps = {
 	readonly endGameError: string | null;
 } & ExternalPlayerViewProps & RouteComponentProps<any>;
 
-class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
+interface PlayerViewState {
+	drawPlayerPictureCanvasSize?: { width: number; height: number; };
+	drawPictureCanvasSize?: { width: number; height: number; };
+}
+
+class PlayerViewPage extends React.PureComponent<PlayerViewProps, PlayerViewState> {
 	public static defaultProps: Partial<PlayerViewProps> = {
 		showGameState: false
 	};
+	
+	public state: PlayerViewState = {};
 	
 	private _joinGameCodeInput: HTMLInputElement | null = null;
 	private _joinGameNameInput: HTMLInputElement | null = null;
 	private _enterPhraseInput: HTMLInputElement | null = null;
 	
-	private _drawUserPictureCanvas: Canvas | null = null;
+	private _drawPlayerPictureCanvas: Canvas | null = null;
 	private _drawPictureCanvas: Canvas | null = null;
 	
 	public componentDidMount() {
@@ -114,15 +121,34 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 	
 	private _renderDrawPlayerPicture() {
 		const { setPlayerPictureError } = this.props;
+		const { drawPlayerPictureCanvasSize } = this.state;
 		
 		return (
 			<>
 				<h1 className="PlayerView-Title">Draw yourself.</h1>
-				<Canvas ref={(ele: Canvas | null) => { this._drawUserPictureCanvas = ele; }} style={{ height: 500 }} />
+				<div className="PlayerView-CanvasContainer" ref={this._setDrawPlayerPictureCanvasSize}>
+					{ drawPlayerPictureCanvasSize && <Canvas
+						ref={(ele: Canvas | null) => { this._drawPlayerPictureCanvas = ele; }}
+						style={{ ...drawPlayerPictureCanvasSize }}
+					/> }
+				</div>
 				{ setPlayerPictureError && <p className="PlayerView-ErrorText">{ setPlayerPictureError }</p>}
 				<button className="PlayerView-SubmitButton" onClick={this._handleDrawPlayerPictureSubmit}>Submit</button>
 			</>
 		);
+	}
+	
+	private _setDrawPlayerPictureCanvasSize = (ref: HTMLDivElement | null) => {
+		const { drawPlayerPictureCanvasSize } = this.state;
+		
+		if (ref && !drawPlayerPictureCanvasSize) {
+			this.setState({ drawPlayerPictureCanvasSize: {
+				width: ref.offsetWidth,
+				height: ref.offsetHeight
+			}});
+		} else if (!ref && drawPlayerPictureCanvasSize) {
+			this.setState({ drawPlayerPictureCanvasSize: undefined });
+		}
 	}
 	
 	private _handleDrawPlayerPictureSubmit = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -130,11 +156,11 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		
 		const { clientGameManager, gameData } = this.props;
 		
-		if (!gameData || !this._drawUserPictureCanvas) {
+		if (!gameData || !this._drawPlayerPictureCanvas) {
 			return;
 		}
 		
-		const pictureData = this._drawUserPictureCanvas.getData();
+		const pictureData = this._drawPlayerPictureCanvas.getData();
 		if (!pictureData) {
 			return;
 		}
@@ -202,14 +228,14 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 			const nextPlayerId = gameData.players.find(p => p.order === nextOrder)!.id;
 			const pictureIndex = (gameData.currentRound - 2) / 2;
 			
-			header = 'Describe this picture.';
+			header = 'What is this?';
 			pictureData = gameData.pictures[pictureIndex][nextPlayerId];
 		}
 		
 		return (
 			<form className="PlayerView-GameForm" onSubmit={this._handleEnterPhraseSubmit}>
 				<h1 className="PlayerView-Title">{ header }</h1>
-				{ pictureData && <img src={pictureData} /> }
+				{ pictureData && <img className="PlayerView-Picture" src={pictureData} /> }
 				{ enterPhraseError && <p className="PlayerView-ErrorText">{ enterPhraseError }</p>}
 				<div className="PlayerView-GameFormContainer">
 					<label className="PlayerView-TextEntryLabel" htmlFor="PlayerView-Phrase">Phrase:</label>
@@ -260,6 +286,7 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 	
 	private _renderDrawPicture() {
 		const { enterPictureError, gameData, userId } = this.props;
+		const { drawPictureCanvasSize } = this.state;
 		
 		if (!gameData) {
 			return null;
@@ -276,13 +303,31 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 				<h1 className="PlayerView-Title">Let’s draw.</h1>
 				<p className="PlayerView-Description">Draw a picture that represents this phrase:</p>
 				<p className="PlayerView-Description">{ previousPhrase }</p>
-				<Canvas ref={(ele: Canvas | null) => { this._drawPictureCanvas = ele; }} style={{ height: 500 }} />
+				<div className="PlayerView-CanvasContainer" ref={this._setDrawPictureCanvasSize}>
+					{ drawPictureCanvasSize && <Canvas
+						ref={(ele: Canvas | null) => { this._drawPictureCanvas = ele; }}
+						style={{ ...drawPictureCanvasSize }}
+					/> }
+				</div>
 				{ enterPictureError && <p className="PlayerView-ErrorText">{ enterPictureError }</p>}
 				<button className="PlayerView-SubmitButton" onClick={this._handleDrawPictureSubmit}>Submit</button>
 			</>
 		);
 	}
 	
+	private _setDrawPictureCanvasSize = (ref: HTMLDivElement | null) => {
+		const { drawPictureCanvasSize } = this.state;
+		
+		if (ref && !drawPictureCanvasSize) {
+			this.setState({ drawPictureCanvasSize: {
+				width: ref.offsetWidth,
+				height: ref.offsetHeight
+			}});
+		} else if (!ref && drawPictureCanvasSize) {
+			this.setState({ drawPictureCanvasSize: undefined });
+		}
+	}
+
 	private _handleDrawPictureSubmit = (event: React.MouseEvent<HTMLButtonElement>) => {
 		event.preventDefault();
 		
