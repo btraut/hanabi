@@ -58,16 +58,16 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		const { joinGameError } = this.props;
 		
 		return (
-			<form className="PlayerView-JoinGameForm" onSubmit={this._handleJoinGameSubmit}>
+			<form className="PlayerView-GameForm" onSubmit={this._handleJoinGameSubmit}>
 				<h1 className="PlayerView-Title">Let’s begin.</h1>
 				{ joinGameError && <p className="PlayerView-ErrorText">{ joinGameError }</p>}
-				<div className="PlayerView-JoinGameFormContainer">
-					<label className="PlayerView-JoinGameLabel" htmlFor="PlayerView-Code">Code:</label>
-					<input className="PlayerView-JoinGameInput" id="PlayerView-Code" type="text" ref={(input: HTMLInputElement | null) => { this._joinGameCodeInput = input; }} />
-					<label className="PlayerView-JoinGameLabel" htmlFor="PlayerView-Name">Name:</label>
-					<input className="PlayerView-JoinGameInput" id="PlayerView-Name" type="text" ref={(input: HTMLInputElement | null) => { this._joinGameNameInput = input; }} />
+				<div className="PlayerView-GameFormContainer">
+					<label className="PlayerView-TextEntryLabel" htmlFor="PlayerView-Code">Code:</label>
+					<input className="PlayerView-TextEntryInput" id="PlayerView-Code" type="text" ref={(input: HTMLInputElement | null) => { this._joinGameCodeInput = input; }} />
+					<label className="PlayerView-TextEntryLabel" htmlFor="PlayerView-Name">Name:</label>
+					<input className="PlayerView-TextEntryInput" id="PlayerView-Name" type="text" ref={(input: HTMLInputElement | null) => { this._joinGameNameInput = input; }} />
 				</div>
-				<div className="PlayerView-JoinGameFormButtons">
+				<div className="PlayerView-GameFormButtons">
 					<input className="PlayerView-SubmitButton" type="submit" value="Join" />
 				</div>
 			</form>
@@ -109,14 +109,14 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		const { setPlayerPictureError } = this.props;
 		
 		return (
-			<div className="HostView">
+			<>
 				<h1 className="PlayerView-Title">Waiting for others…</h1>
 				<div>
 					<Canvas ref={(ele: Canvas | null) => { this._drawUserPictureCanvas = ele; }} style={{ height: 500 }} />
 					<button onClick={this._handleDrawPlayerPictureSubmit}>Submit Picture</button>
 					{ setPlayerPictureError && <p style={{ color: 'red' }}>{ setPlayerPictureError }</p>}
 				</div>
-			</div>
+			</>
 		);
 	}
 	
@@ -139,9 +139,10 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 	
 	private _renderWaitingForOtherPlayers() {
 		return (
-			<div className="HostView">
+			<>
 				<h1 className="PlayerView-Title">Waiting for others…</h1>
-			</div>
+				<p className="PlayerView-BodyText">You can start when everyone has finished drawing themselves.</p>
+			</>
 		);
 	}
 	
@@ -149,11 +150,11 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		const { startGameError } = this.props;
 
 		return (
-			<div className="HostView">
+			<>
 				<h1 className="PlayerView-Title">Waiting for others…</h1>
 				{ startGameError && <p className="PlayerView-ErrorText">{ startGameError }</p>}
 				<button className="PlayerView-SubmitButton" onClick={this._handleStartGameButtonClick}>Everyone’s ready</button>
-			</div>
+			</>
 		);
 	}
 	
@@ -187,7 +188,7 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 			return null;
 		}
 		
-		let header = 'Enter a starting phrase:';
+		let header = 'Enter a phrase.';
 		let pictureData = null;
 		
 		if (gameData.currentRound !== 0) {
@@ -196,18 +197,21 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 			const nextPlayerId = gameData.players.find(p => p.order === nextOrder)!.id;
 			const pictureIndex = (gameData.currentRound - 2) / 2;
 			
-			header = 'Describe this picture:';
+			header = 'Describe this picture.';
 			pictureData = gameData.pictures[pictureIndex][nextPlayerId];
 		}
 		
 		return (
-			<form onSubmit={this._handleEnterPhraseSubmit}>
-				<h1>{ header }</h1>
+			<form className="PlayerView-GameForm" onSubmit={this._handleEnterPhraseSubmit}>
+				<h1 className="PlayerView-Title">{ header }</h1>
 				{ pictureData && <img src={pictureData} /> }
-				<div>
-					<input type="text" ref={(input: HTMLInputElement | null) => { this._enterPhraseInput = input; }} />
-					<input type="submit" value="Submit" />
-					{ enterPhraseError && <p style={{ color: 'red' }}>{ enterPhraseError }</p>}
+				{ enterPhraseError && <p className="PlayerView-ErrorText">{ enterPhraseError }</p>}
+				<div className="PlayerView-GameFormContainer">
+					<label className="PlayerView-TextEntryLabel" htmlFor="PlayerView-Phrase">Phrase:</label>
+					<input className="PlayerView-TextEntryInput" id="PlayerView-Phrase" type="text" ref={(input: HTMLInputElement | null) => { this._enterPhraseInput = input; }} />
+				</div>
+				<div className="PlayerView-GameFormButtons">
+					<input className="PlayerView-SubmitButton" type="submit" value="Submit" />
 				</div>
 			</form>
 		);
@@ -229,9 +233,10 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 
 	private _renderWaitingForOtherPlayersToSubmitPhrases() {
 		return (
-			<div>
-				<h1>Waiting for other players to submit phrase…</h1>
-			</div>
+			<>
+				<h1 className="PlayerView-Title">Waiting for others…</h1>
+				<p className="PlayerView-BodyText">You’ll move on when everyone has finished typing a phrase.</p>
+			</>
 		);
 	}
 	
@@ -353,6 +358,8 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 		case GameState.ReviewingStories: return this._renderReviewingStories();
 		case GameState.PlayAgainOptions: return this._renderPlayAgainOptions();
 		}
+		
+		return null;
 	}
 	
 	public render() {
@@ -362,18 +369,22 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps> {
 			return <div>Connecting…</div>;
 		}
 		
-		if (!gameData) {
-			return (
-				<div className="HostView">
-					{ this._renderJoinGame() }
-				</div>
+		let viewContent: React.ReactElement<any> | null = null;
+		
+		if (gameData) {
+			viewContent = (
+				<>
+					{ this._renderGameState() }
+					<JSONPretty json={gameData} />
+				</>
 			);
+		} else {
+			viewContent = this._renderJoinGame();
 		}
 		
 		return (
 			<div className="HostView">
-				{ this._renderGameState() }
-				<JSONPretty json={gameData} />
+				{ viewContent }
 			</div>
 		);
 	}
