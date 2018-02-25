@@ -138,17 +138,6 @@ export class Game {
 		return this._players[playerId];
 	}
 	
-	public removePlayer(playerId: string) {
-		const removedPlayer = this._players[playerId] as Player | undefined;
-		if (removedPlayer) {
-			delete this._players[playerId];
-		}
-		
-		this._updated = new Date();
-		
-		return removedPlayer;
-	}
-	
 	public updateHost(updates: Partial<Player>) {
 		this._host = { ...this._host, ...updates };
 		

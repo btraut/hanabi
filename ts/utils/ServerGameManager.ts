@@ -7,7 +7,6 @@ import {
 	GameJoinedMessage,
 	PlayerAddedMessage,
 	UserUpdatedMessage,
-	PlayerRemovedMessage,
 	GameStartedMessage,
 	PlayerPictureSetMessage,
 	PhraseEnteredMessage,

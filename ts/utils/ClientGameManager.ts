@@ -145,12 +145,6 @@ export default class ClientGameManager {
 			} else if (message.data.player && message.data.gameCode) {
 				this._dispatch(gameActions.updateUser(message.data.player, message.data.gameCode));
 			}
-		} else if (message.type === 'PlayerRemovedMessage') {
-			if (message.data.error) {
-				this._dispatch(gameActions.removePlayerError(message.data.error));
-			} else if (message.data.player && message.data.gameCode) {
-				this._dispatch(gameActions.removePlayer(message.data.player, message.data.gameCode));
-			}
 		} else if (message.type === 'GameStartedMessage') {
 			if (message.data.error) {
 				this._dispatch(gameActions.startGameError(message.data.error));

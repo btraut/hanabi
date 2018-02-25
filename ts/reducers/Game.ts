@@ -46,14 +46,6 @@ export const gameActions = {
 		prefix('UPDATE_USER_ERROR'),
 		(errorText: string) => ({ type: prefix('UPDATE_USER_ERROR'), errorText })
 	),
-	removePlayer: createAction(
-		prefix('REMOVE_PLAYER'),
-		(player: Player, gameCode: string) => ({ type: prefix('REMOVE_PLAYER'), player, gameCode })
-	),
-	removePlayerError: createAction(
-		prefix('REMOVE_PLAYER_ERROR'),
-		(errorText: string) => ({ type: prefix('REMOVE_PLAYER_ERROR'), errorText })
-	),
 	gameStarted: createAction(
 		prefix('GAME_STARTED'),
 		(gameCode: string, playerOrders: string[]) => ({ type: prefix('GAME_STARTED'), gameCode, playerOrders })
@@ -149,7 +141,6 @@ export interface GameState {
 	readonly startGameError: string | null;
 	readonly addPlayerError: string | null;
 	readonly updateUserError: string | null;
-	readonly removePlayerError: string | null;
 	readonly setPlayerNameError: string | null;
 	readonly setPlayerPictureError: string | null;
 	readonly enterPhraseError: string | null;
@@ -169,7 +160,6 @@ export const initialState: GameState = {
 	startGameError: null,
 	addPlayerError: null,
 	updateUserError: null,
-	removePlayerError: null,
 	setPlayerNameError: null,
 	setPlayerPictureError: null,
 	enterPhraseError: null,
@@ -227,16 +217,6 @@ export const gameReducer = combineReducers<GameState>({
 				return { ...gameData, players: newPlayers };
 			}
 
-			case getType(gameActions.removePlayer):
-			{
-				if (!gameData || gameData.code !== action.gameCode) {
-					return gameData;
-				}
-				
-				const newPlayers = [...gameData.players.filter(p => p.id !== action.player.id)];
-				return { ...gameData, players: newPlayers };
-			}
-		
 			case getType(gameActions.gameStarted):
 			{
 				if (!gameData || gameData.code !== action.gameCode) {
@@ -424,14 +404,6 @@ export const gameReducer = combineReducers<GameState>({
 	updateUserError: (errorText: string | null = null, action) => {
 		switch (action.type) {
 			case getType(gameActions.updateUserError): return action.errorText;
-			case getType(gameActions.clearErrors): return null;
-			case getType(gameActions.connect): return null;
-			default: return errorText;
-		}
-	},
-	removePlayerError: (errorText: string | null = null, action) => {
-		switch (action.type) {
-			case getType(gameActions.removePlayerError): return action.errorText;
 			case getType(gameActions.clearErrors): return null;
 			case getType(gameActions.connect): return null;
 			default: return errorText;

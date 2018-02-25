@@ -36,11 +36,6 @@ export type PlayerAddedMessage = SocketMessageTemplate<'PlayerAddedMessage', {
 	player?: Player;
 	error?: string;
 }>;
-export type PlayerRemovedMessage = SocketMessageTemplate<'PlayerRemovedMessage', {
-	gameCode?: string;
-	player?: Player;
-	error?: string;
-}>;
 export type UserUpdatedMessage = SocketMessageTemplate<'UserUpdatedMessage', {
 	gameCode?: string;
 	player?: Player;
@@ -127,7 +122,6 @@ export type SocketMessage =
 	JoinGameMessage |
 	GameJoinedMessage |
 	PlayerAddedMessage |
-	PlayerRemovedMessage |
 	UserUpdatedMessage |
 	StartGameMessage |
 	GameStartedMessage |
