@@ -8,6 +8,9 @@ import { StoreData } from '../reducers/root';
 import { GameState, GameData } from '../models/Game';
 import { ClientGameManagerPropsAdditions } from './ClientGameManager';
 
+// Define globals from webpack.
+declare const DOMAIN_BASE: string;
+
 type ExternalHostViewProps = React.Props<HostViewPage> & ClientGameManagerPropsAdditions;
 type HostViewProps = {
 	readonly connected: boolean;
@@ -65,9 +68,14 @@ class HostViewPage extends React.PureComponent<HostViewProps> {
 	
 	private _renderWaitingForPlayers(gameData: GameData) {
 		return (
-			<div>
-				<h1>Your game has been created!</h1>
-				<p>Players can join the game using the code <strong>{ gameData.code }</strong>.</p>
+			<>
+				<h1 className="HostView-Title">Time to recruit.</h1>
+				<div className="HostView-LinkAndCodeContainer">
+					<ol className="HostView-LinkAndCodeContainerList">
+						<li className="HostView-LinkAndCodeContainerListItem">Visit <span className="HostView-Link">{ `${ DOMAIN_BASE }/join` }</span></li>
+						<li className="HostView-LinkAndCodeContainerListItem">Enter the code <span className="HostView-Code">{ gameData.code }</span></li>
+					</ol>
+				</div>
 				<ul>
 					{ gameData.players.map(player => (
 						<li key={player.id}>
@@ -75,7 +83,7 @@ class HostViewPage extends React.PureComponent<HostViewProps> {
 						</li>
 					)) }
 				</ul>
-			</div>
+			</>
 		);
 	}
 	
@@ -102,7 +110,7 @@ class HostViewPage extends React.PureComponent<HostViewProps> {
 		}
 		
 		return (
-			<div className="PlayerView">
+			<div className="HostView">
 				{ this._renderGameState(gameData) }
 				<JSONPretty json={gameData} />
 			</div>

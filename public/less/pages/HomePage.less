@@ -19,10 +19,9 @@
 .HomePage-Title {
 	position: relative;
 	margin: 0;
-	padding: 0 10px;
 	.FontSize-MainTitle();
-	color: #ff8724;
 	font-style: italic;
+	color: @wordart-orange;
 	text-shadow: 4px 5px 0 black;
 }
 
@@ -39,9 +38,7 @@
 }
 
 .HomePage-DescriptionContainer {
-	margin: 20px 0;
-	padding: 16px 20px;
-	background: rgba(255, 255, 255, 0.6);
+	.TransparentContainer();
 }
 
 .HomePage-Description {
@@ -69,23 +66,5 @@
 }
 
 .HomePage-GameAction {
-	display: block;
-	padding: 12px 20px;
-	border: 6px solid black;
-	background: rgba(255, 255, 255, 0.6);
-	text-transform: uppercase;
-	color: black;
-	cursor: pointer;
-	font-weight: bold;
-	transition: transform 50ms ease-out;
-	
-	&:hover,
-	&:focus {
-		color: black;
-		transform: scale(1.02, 1.02);
-	}
-	
-	&:active {
-		transform: scale(0.98, 0.98);
-	}
+	.Button();
 }

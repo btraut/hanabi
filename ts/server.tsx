@@ -26,6 +26,7 @@ import ServerGameManager from './utils/ServerGameManager';
 
 // Define globals from webpack.
 declare const DOMAIN_BASE: string;
+declare const PORT: string;
 declare const ENV_PATH: string;
 declare const PUBLIC_ASSETS_PATH: string;
 declare const SERVER_VIEWS_PATH: string;
@@ -57,7 +58,7 @@ const SESSION_COOKIE_NAME = 'SESSION';
 		// Express Configuration
 		app.enable('strict routing');
 		app.enable('trust proxy');
-		app.set('port', process.env.PORT || 3000);
+		app.set('port', PORT);
 		app.set('views', path.resolve(__dirname, SERVER_VIEWS_PATH));
 		app.set('view engine', 'pug');
 		app.use(compress());

@@ -1,0 +1,59 @@
+.HostView {
+	width: 100%;
+	min-height: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 20px;
+	background-image: url(../../images/grid-paper.png);
+	background-position: top center;
+}
+
+.HostView-Title {
+	margin: 0;
+	.FontSize-GameTitle();
+	font-style: italic;
+	color: @wordart-orange;
+	text-shadow: 4px 5px 0 black;
+}
+
+@media (max-width: @screen-sm-max) {
+	.HostView-Title {
+		.FontSize-GameTitleSmall();
+	}
+}
+
+@media (max-width: @screen-xs-max) {
+	.HostView-Title {
+		.FontSize-GameTitleXSmall();
+	}
+}
+
+.HostView-LinkAndCodeContainer {
+	.TransparentContainer();
+}
+
+.HostView-LinkAndCodeContainerList {
+	margin: 0;
+	padding: 0;
+	.FontSize-BodyLarge();
+	font-weight: bold;
+	list-style-position: inside;
+}
+
+.HostView-LinkAndCodeContainerListItem {
+	margin: 0 0 8px;
+	
+	&:last-child {
+		margin: 0;
+	}
+}
+
+.HostView-Link,
+.HostView-Code {
+	display: inline-block;
+	margin: 0 2px;
+	padding: 4px 8px;
+	background-color: @wordart-blue;
+	color: white;
+}

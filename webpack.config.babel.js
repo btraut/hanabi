@@ -147,8 +147,7 @@ const clientConfig = {
             to: CLIENT_BUILD_PATH + '/'
         }]),
         new webpack.DefinePlugin({
-            DOMAIN_BASE: JSON.stringify(process.env.DOMAIN_BASE),
-            NODE_ENV: JSON.stringify(process.env.NODE_ENV),
+            DOMAIN_BASE: JSON.stringify(process.env.DOMAIN_BASE)
         })
     ]
 };
@@ -179,6 +178,7 @@ const serverConfig = {
         }]),
         new webpack.DefinePlugin({
             DOMAIN_BASE: JSON.stringify(process.env.DOMAIN_BASE),
+            PORT: JSON.stringify(process.env.PORT),
             ENV_PATH: JSON.stringify('../../.env'),
             PUBLIC_ASSETS_PATH: JSON.stringify('../client'),
             SERVER_VIEWS_PATH: JSON.stringify('views'),
