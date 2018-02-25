@@ -1,4 +1,4 @@
-# Lost in Translation
+# WordArt
 
 pictionary + telephone
 best played in groups with alcohol
@@ -29,11 +29,11 @@ The way you build code for web, background-worker, and scheduler is all the same
 
 #### Environment Variables
 
-To keep login credentials and other app secrets out of the git repository, Lost in Translation uses `process.env` variables at runtime to access credentials. It’s easiest in a development environment to define these credentials ahead of time:
+To keep login credentials and other app secrets out of the git repository, WordArt uses `process.env` variables at runtime to access credentials. It’s easiest in a development environment to define these credentials ahead of time:
 
-1. In the root lost-in-translation folder, copy the `.env.sample` file and name the copy `.env`.
+1. In the root wordart folder, copy the `.env.sample` file and name the copy `.env`.
 2. Open the `.env` file and change any/all of the values to real credentials.
-3. At runtime, Lost in Translation will check if `.env` exists and will load all environment variables from it.
+3. At runtime, WordArt will check if `.env` exists and will load all environment variables from it.
 
 Note that `.env` is ignored by git, so you run no risk of committing sensetive information.
 
@@ -60,7 +60,7 @@ VS Code works great out of the box and detects everything it needs based on the 
 
 #### TypeScript Versions
 
-VS Code embeds its own version of TypeScript that is often updated on a different schedule than Lost in Translation’s updates. To sync development, VS Code allows developers to specify their own TypeScript package. To enable this, follow the [“Using Newer TypeScript Versions” instructions](https://code.visualstudio.com/docs/languages/typescript#_using-newer-typescript-versions).
+VS Code embeds its own version of TypeScript that is often updated on a different schedule than WordArt’s updates. To sync development, VS Code allows developers to specify their own TypeScript package. To enable this, follow the [“Using Newer TypeScript Versions” instructions](https://code.visualstudio.com/docs/languages/typescript#_using-newer-typescript-versions).
 
 ## Debugging
 

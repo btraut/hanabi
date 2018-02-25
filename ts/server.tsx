@@ -130,7 +130,7 @@ const SESSION_COOKIE_NAME = 'SESSION';
 			}
 			
 			// Figure out the page title.
-			let title = 'Lost in Translation';
+			let title = 'WordArt';
 			if (matchedRoute && matchedRoute.component && matchedRoute.component.title) {
 				if (typeof matchedRoute.component.title === 'string') {
 					title = matchedRoute.component.title;
@@ -188,7 +188,7 @@ const SESSION_COOKIE_NAME = 'SESSION';
 		Logger.info(
 			'' + '\n\n' +
 			'———————————————————————————————————————————————————————————————————' + '\n' +
-			' lost in translation' + '\n' +
+			' WordArt' + '\n' +
 			` http://localhost:${ app.get('port') }/` + '\n' +
 			' ' + '\n' +
 			` Listening for requests in ${ process.env.NODE_ENV } mode.` + '\n' +

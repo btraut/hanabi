@@ -7,7 +7,7 @@ export default class HomePage extends React.PureComponent<RouteProps> {
 		console.log('homepage preloaded');
 	}
 	
-	public static title = 'Lost in Translation | Home';
+	public static title = 'WordArt | Home';
 	
 	public componentDidMount() {
 		document.title = HomePage.title;

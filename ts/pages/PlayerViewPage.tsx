@@ -10,7 +10,7 @@ export default class PlayerViewPage extends React.PureComponent<RouteProps> {
 		console.log('join page preloaded');
 	}
 	
-	public static title = 'Lost in Translation | Join Game';
+	public static title = 'WordArt | Join Game';
 	
 	public componentDidMount() {
 		document.title = PlayerViewPage.title;

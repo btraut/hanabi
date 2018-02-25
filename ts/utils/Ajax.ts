@@ -48,7 +48,7 @@ export default class Ajax {
 			
 			return json;
 		} catch (error) {
-			throw new Error('The connection to Lost in Translation was… uh… lost.');
+			throw new Error('The connection to WordArt was… uh… lost.');
 		}
 	}
 }

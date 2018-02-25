@@ -1,4 +1,4 @@
-# lost in translation
+# wordart
 
 # Allow crawling of all content
 User-agent: *

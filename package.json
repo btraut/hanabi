@@ -1,5 +1,5 @@
 {
-  "name": "lost-in-translation-server",
+  "name": "wordart-server",
   "version": "1.0.0",
   "scripts": {
     "clean": "rimraf ./.build",

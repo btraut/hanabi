@@ -6,7 +6,7 @@ export default class Error404Page extends React.PureComponent<RouteProps> {
 		console.log('404 preloaded');
 	}
 	
-	public static title = 'Lost in Translation | 404';
+	public static title = 'WordArt | 404';
 	
 	public componentDidMount() {
 		document.title = Error404Page.title;
