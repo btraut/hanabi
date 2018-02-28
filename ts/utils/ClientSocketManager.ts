@@ -11,9 +11,6 @@ import { SocketMessage, AuthenticateSocketMessage } from '../models/SocketMessag
 import Ajax from './Ajax';
 import PubSub from './PubSub';
 
-// Define globals from webpack.
-declare const DOMAIN_BASE: string;
-
 export interface ClientSocketManagerSendOptions {
 	requireAuth?: boolean;
 }
@@ -51,7 +48,7 @@ class ClientSocketManager {
 				this._socket!.connect();
 			}
 		} else {
-			this._socket = socket(DOMAIN_BASE);
+			this._socket = socket(window.location.origin);
 				
 			this._socket.on('connect', this._handleConnect);
 			this._socket.on('message', this._handleMessage);
