@@ -454,6 +454,10 @@ class ServerGameManager {
 		} as GameEndedMessage);
 	}
 	
+	private static _cleanGameCode(gameCode: string) {
+		return gameCode.trim().toLowerCase();
+	}
+	
 	private _handleMessage = ({ userId, message }: { userId: string, message: SocketMessage }) => {
 		try {
 			if (message.type === 'CreateGameMessage') {
@@ -461,21 +465,39 @@ class ServerGameManager {
 			} else if (message.type === 'RequestInitialDataMessage') {
 				this._handleRequestInitialDataMessage(userId);
 			} else if (message.type === 'JoinGameMessage') {
-				this._handleJoinGameMessage(userId, message.data.gameCode, message.data.name);
+				this._handleJoinGameMessage(
+					userId,
+					ServerGameManager._cleanGameCode(message.data.gameCode),
+					message.data.name
+				);
 			} else if (message.type === 'StartGameMessage') {
-				this._handleStartGameMessage(userId, message.data.gameCode);
+				this._handleStartGameMessage(userId, ServerGameManager._cleanGameCode(message.data.gameCode));
 			} else if (message.type === 'SetPlayerPictureMessage') {
-				this._handleSetPlayerPictureMessage(userId, message.data.gameCode, message.data.pictureData);
+				this._handleSetPlayerPictureMessage(
+					userId,
+					ServerGameManager._cleanGameCode(message.data.gameCode),
+					message.data.pictureData
+				);
 			} else if (message.type === 'EnterPhraseMessage') {
-				this._handleEnterPhraseMessage(userId, message.data.gameCode, message.data.round, message.data.phrase);
+				this._handleEnterPhraseMessage(
+					userId,
+					ServerGameManager._cleanGameCode(message.data.gameCode),
+					message.data.round,
+					message.data.phrase
+				);
 			} else if (message.type === 'EnterPictureMessage') {
-				this._handleEnterPictureMessage(userId, message.data.gameCode, message.data.round, message.data.pictureData);
+				this._handleEnterPictureMessage(
+					userId,
+					ServerGameManager._cleanGameCode(message.data.gameCode),
+					message.data.round,
+					message.data.pictureData
+				);
 			} else if (message.type === 'FinishReviewingMessage') {
-				this._handleFinishReviewingMessage(userId, message.data.gameCode);
+				this._handleFinishReviewingMessage(userId, ServerGameManager._cleanGameCode(message.data.gameCode));
 			} else if (message.type === 'StartOverMessage') {
-				this._handleStartOverMessage(userId, message.data.gameCode);
+				this._handleStartOverMessage(userId, ServerGameManager._cleanGameCode(message.data.gameCode));
 			} else if (message.type === 'EndGameMessage') {
-				this._handleEndGameMessage(userId, message.data.gameCode);
+				this._handleEndGameMessage(userId, ServerGameManager._cleanGameCode(message.data.gameCode));
 			}
 		} catch (error) {
 			Logger.warn(error);

@@ -77,9 +77,23 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps, PlayerViewStat
 				{ joinGameError && <p className="PlayerView-ErrorText">{ joinGameError }</p>}
 				<div className="PlayerView-GameFormContainer">
 					<label className="PlayerView-TextEntryLabel" htmlFor="PlayerView-Code">Code:</label>
-					<input className="PlayerView-TextEntryInput" id="PlayerView-Code" type="text" ref={(input: HTMLInputElement | null) => { this._joinGameCodeInput = input; }} />
+					<input
+						className="PlayerView-TextEntryInput"
+						id="PlayerView-Code"
+						type="text"
+						ref={(input: HTMLInputElement | null) => { this._joinGameCodeInput = input; }}
+						autoCorrect="off"
+						autoCapitalize="none"
+					/>
 					<label className="PlayerView-TextEntryLabel" htmlFor="PlayerView-Name">Name:</label>
-					<input className="PlayerView-TextEntryInput" id="PlayerView-Name" type="text" ref={(input: HTMLInputElement | null) => { this._joinGameNameInput = input; }} />
+					<input
+						className="PlayerView-TextEntryInput"
+						id="PlayerView-Name"
+						type="text"
+						ref={(input: HTMLInputElement | null) => { this._joinGameNameInput = input; }}
+						autoCorrect="off"
+						autoCapitalize="none"
+					/>
 				</div>
 				<div className="PlayerView-GameFormButtons">
 					<input className="PlayerView-SubmitButton" type="submit" value="Join" />
@@ -239,7 +253,14 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps, PlayerViewStat
 				{ enterPhraseError && <p className="PlayerView-ErrorText">{ enterPhraseError }</p>}
 				<div className="PlayerView-GameFormContainer">
 					<label className="PlayerView-TextEntryLabel" htmlFor="PlayerView-Phrase">Phrase:</label>
-					<input className="PlayerView-TextEntryInput" id="PlayerView-Phrase" type="text" ref={(input: HTMLInputElement | null) => { this._enterPhraseInput = input; }} />
+					<input
+						className="PlayerView-TextEntryInput"
+						id="PlayerView-Phrase"
+						type="text"
+						ref={(input: HTMLInputElement | null) => { this._enterPhraseInput = input; }}
+						autoCorrect="off"
+						autoCapitalize="none"
+					/>
 				</div>
 				<div className="PlayerView-GameFormButtons">
 					<input className="PlayerView-SubmitButton" type="submit" value="Submit" />
