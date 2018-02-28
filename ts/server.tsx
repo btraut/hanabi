@@ -110,8 +110,6 @@ const SESSION_COOKIE_NAME = 'SESSION';
 				return;
 			}
 			
-			console.log('req.cookies[SESSION_COOKIE_NAME]: ' + req.cookies[SESSION_COOKIE_NAME]);
-			
 			const token = ServerSocketManager.addTokenForUser(req.cookies[SESSION_COOKIE_NAME]);
 			res.json({ token });
 		});
