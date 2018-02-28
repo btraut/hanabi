@@ -11,7 +11,7 @@ export default class HostViewPage extends React.PureComponent<RouteProps> {
 		console.log('host page preloaded');
 	}
 	
-	public static title = 'WordArt | Start Game';
+	public static title = 'WordArt | Host';
 	
 	public componentDidMount() {
 		document.title = HostViewPage.title;
