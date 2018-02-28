@@ -1,5 +1,7 @@
 import * as React from 'react';
 
+import CanvasUtils from '../utils/CanvasUtils';
+
 interface CanvasProps {
 	brushColor?: string;
 	lineWidth?: number;
@@ -29,9 +31,6 @@ export default class Canvas extends React.Component<CanvasProps, CanvasState> {
 	
 	private _canvas: HTMLCanvasElement | null = null;
 	private _context: CanvasRenderingContext2D | null = null;
-	
-	private _tempCanvas: HTMLCanvasElement | null = null;
-	private _tempContext: CanvasRenderingContext2D | null = null;
 	
 	constructor(props: CanvasProps) {
 		super(props);
@@ -73,26 +72,9 @@ export default class Canvas extends React.Component<CanvasProps, CanvasState> {
 			return;
 		}
 		
-		if (!this._tempCanvas) {
-			this._tempCanvas = document.createElement('canvas');
-			this._tempContext = this._tempCanvas.getContext('2d');
-		}
-		
-		// Resize the temp canvas and copy the image.
-		this._tempCanvas.width = this._canvas.width;
-		this._tempCanvas.height = this._canvas.height;
-		this._tempContext!.drawImage(this._canvas, 0, 0);
-		
-		// Resize the real canvas.
-		this._canvas.width = this._canvas.offsetWidth;
-		this._canvas.height = this._canvas.offsetHeight;
-		
-		console.log(this._canvas.offsetWidth, this._canvas.offsetHeight);
-		
-		// Restore the image to the real canvas.
-		this._context.drawImage(this._tempCanvas, 0, 0);
+		CanvasUtils.resizeCanvas(this._canvas, this._context, this._canvas.offsetWidth, this._canvas.offsetHeight);
 	}
-	
+		
 	private _handleTouchStart = (event: React.TouchEvent<HTMLCanvasElement>) => {
 		if (!this._canvas || !this._context) {
 			return;
@@ -205,6 +187,17 @@ export default class Canvas extends React.Component<CanvasProps, CanvasState> {
 		}
 		
 		return this._canvas.toDataURL();
+	}
+	
+	public getTrimmedData() {
+		if (!this._canvas) {
+			return null;
+		}
+		
+		const tempCanvas = CanvasUtils.cloneCanvas(this._canvas);
+		CanvasUtils.trimCanvas(tempCanvas);
+		
+		return tempCanvas.toDataURL();
 	}
 	
 	public setData(data: string) {

@@ -174,7 +174,7 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps, PlayerViewStat
 			return;
 		}
 		
-		const pictureData = this._drawPlayerPictureCanvas.getData();
+		const pictureData = this._drawPlayerPictureCanvas.getTrimmedData();
 		if (!pictureData) {
 			return;
 		}
@@ -358,7 +358,7 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps, PlayerViewStat
 			return;
 		}
 		
-		const pictureData = this._drawPictureCanvas.getData();
+		const pictureData = this._drawPictureCanvas.getTrimmedData();
 		if (!pictureData) {
 			return;
 		}
