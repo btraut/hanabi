@@ -83,10 +83,12 @@ class HostViewPage extends React.PureComponent<HostViewProps> {
 						<li className="HostView-LinkAndCodeContainerListItem">Enter the code <span className="HostView-Code">{ gameData.code }</span></li>
 					</ol>
 				</div>
-				<ul>
+				<ul className="HostView-LobbyPlayersContainer">
 					{ gameData.players.map(player => (
-						<li key={player.id}>
-							{ player.id }: { player.name || 'anonymous player' }, { player.connected ? 'connected' : 'disconnected' }
+						<li className="HostView-LobbyPlayer" key={player.id}>
+							{ player.pictureData && <img className="HostView-LobbyPlayerPicture" src={player.pictureData} /> }
+							{ !player.pictureData && <img className="HostView-LobbyPlayerPicture" src="/images/drawing-face.svg" /> }
+							<div className="HostView-LobbyPlayerName">{ player.name }</div>
 						</li>
 					)) }
 				</ul>
