@@ -249,7 +249,11 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps, PlayerViewStat
 		return (
 			<form className="PlayerView-GameForm" onSubmit={this._handleEnterPhraseSubmit}>
 				<h1 className="PlayerView-Title">{ header }</h1>
-				{ pictureData && <img className="PlayerView-Picture" src={pictureData} /> }
+				{ pictureData &&
+					<div className="PlayerView-PictureContainer">
+						<img className="PlayerView-Picture" src={pictureData} />
+					</div>
+				}
 				{ enterPhraseError && <p className="PlayerView-ErrorText">{ enterPhraseError }</p>}
 				<div className="PlayerView-GameFormContainer">
 					<label className="PlayerView-TextEntryLabel" htmlFor="PlayerView-Phrase">Phrase:</label>
@@ -322,8 +326,10 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps, PlayerViewStat
 		return (
 			<>
 				<h1 className="PlayerView-Title">Let’s draw.</h1>
-				<p className="PlayerView-Description">Draw a picture that represents this phrase:</p>
-				<p className="PlayerView-Description">{ previousPhrase }</p>
+				<div className="PlayerView-DescriptionContainer">
+					<p className="PlayerView-DescriptionLabel">Draw a picture that represents this phrase:</p>
+					<p className="PlayerView-Description">{ previousPhrase }</p>
+				</div>
 				<div className="PlayerView-CanvasContainer" ref={this._setDrawPictureCanvasSize}>
 					{ drawPictureCanvasSize && <Canvas
 						ref={(ele: Canvas | null) => { this._drawPictureCanvas = ele; }}

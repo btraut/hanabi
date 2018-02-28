@@ -101,7 +101,32 @@
 	margin-bottom: 20px;
 }
 
-.PlayerView-Picture {
+.PlayerView-PictureContainer {
+	max-width: 100%;
+	padding: 20px;
 	background-color: white;
 	margin-bottom: 20px;
+}
+
+.PlayerView-Picture {
+	max-width: 100%;
+}
+
+.PlayerView-DescriptionContainer {
+	.TransparentContainer();
+	margin: 0 0 20px;
+	max-width: 600px;
+}
+
+.PlayerView-DescriptionLabel {
+	.FontSize-Body();
+	font-weight: bold;
+	text-align: center;
+}
+
+.PlayerView-Description {
+	.FontSize-BodyLarge();
+	font-weight: bold;
+	margin: 0;
+	text-align: center;
 }
