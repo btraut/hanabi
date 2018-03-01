@@ -291,7 +291,7 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps, PlayerViewStat
 		return (
 			<>
 				<h1 className="PlayerView-Title">Waiting for others…</h1>
-				<p className="PlayerView-BodyText">You’ll move on when everyone has finished typing a phrase.</p>
+				<p className="PlayerView-BodyText">Looks like you have slow friends.</p>
 			</>
 		);
 	}

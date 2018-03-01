@@ -116,7 +116,7 @@ export class Game {
 			return 'Phrases can’t be blank.';
 		}
 		
-		if (phrase.length < 3) {
+		if (phrase.length === 0) {
 			return 'Try a longer phrase.';
 		}
 		

@@ -76,6 +76,8 @@ export default class Canvas extends React.Component<CanvasProps, CanvasState> {
 	}
 		
 	private _handleTouchStart = (event: React.TouchEvent<HTMLCanvasElement>) => {
+		event.preventDefault();
+		
 		if (!this._canvas || !this._context) {
 			return;
 		}
@@ -91,6 +93,8 @@ export default class Canvas extends React.Component<CanvasProps, CanvasState> {
 	}
 	
 	private _handleMouseDown = (event: React.MouseEvent<HTMLCanvasElement>) => {
+		event.preventDefault();
+		
 		if (!this._canvas || !this._context) {
 			return;
 		}
@@ -106,6 +110,8 @@ export default class Canvas extends React.Component<CanvasProps, CanvasState> {
 	}
 	
 	private _handleTouchMove = (event: React.TouchEvent<HTMLCanvasElement>) => {
+		event.preventDefault();
+		
 		const { drawing, lastX, lastY } = this.state;
 		
 		if (!this._canvas || !this._context || !drawing) {
@@ -126,6 +132,8 @@ export default class Canvas extends React.Component<CanvasProps, CanvasState> {
 	}
 	
 	private _handleMouseMove = (event: React.MouseEvent<HTMLCanvasElement>) => {
+		event.preventDefault();
+		
 		const { drawing, lastX, lastY } = this.state;
 		
 		if (!this._canvas || !this._context  || !drawing) {
@@ -143,15 +151,21 @@ export default class Canvas extends React.Component<CanvasProps, CanvasState> {
 		});
 	}
 	
-	private _handleMouseUp = () => {
+	private _handleMouseUp = (event: React.MouseEvent<HTMLCanvasElement>) => {
+		event.preventDefault();
+		
 		this.setState({ drawing: false });
 	}
 	
-	private _handleTouchEnd = () => {
+	private _handleTouchEnd = (event: React.TouchEvent<HTMLCanvasElement>) => {
+		event.preventDefault();
+		
 		this.setState({ drawing: false });
 	}
 	
-	private _handleMouseOut = () => {
+	private _handleMouseOut = (event: React.MouseEvent<HTMLCanvasElement>) => {
+		event.preventDefault();
+		
 		this.setState({ drawing: false });
 	}
 	

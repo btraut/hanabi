@@ -1,10 +1,12 @@
 .PlayerView {
+	position: fixed;
 	width: 100%;
-	min-height: 100%;
+	height: 100%;
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
 	align-items: center;
+	overflow: hidden;
 	padding: 20px;
 	background-image: url(../../images/grid-paper.png);
 	background-position: center center;
@@ -12,12 +14,15 @@
 
 .PlayerView-GameForm {
 	width: 100%;
+	height: 100%;
 	display: flex;
 	flex-direction: column;
+	justify-content: center;
 	align-items: center;
 }
 
 .PlayerView-Title {
+	flex: 0 0 auto;
 	margin: 0 0 32px;
 	.FontSize-GameTitle();
 	text-align: center;
@@ -40,6 +45,7 @@
 }
 
 .PlayerView-GameFormContainer {
+	flex: 0 0 auto;
 	display: grid;
 	grid-template-columns: auto 1fr;
 	grid-gap: 16px;
@@ -50,6 +56,7 @@
 }
 
 .PlayerView-GameFormButtons {
+	flex: 0 0 auto;
 	display: flex;
 	justify-content: center;
 }
@@ -96,20 +103,26 @@
 }
 
 .PlayerView-CanvasContainer {
-	flex: 1 1 0;
+	flex: 1 1 auto;
 	width: 100%;
 	margin-bottom: 20px;
 }
 
 .PlayerView-PictureContainer {
-	max-width: 100%;
+	flex: 1 1 0;
+	width: 100%;
 	padding: 20px;
 	background-color: white;
 	margin-bottom: 20px;
+	display: flex;
+	justify-content: center;
+	overflow: hidden;
 }
 
 .PlayerView-Picture {
+	flex: 0 1 auto;
 	max-width: 100%;
+	object-fit: contain;
 }
 
 .PlayerView-DescriptionContainer {
