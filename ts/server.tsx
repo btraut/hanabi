@@ -78,7 +78,7 @@ const SESSION_COOKIE_NAME = 'SESSION';
 		// Optionally remove www from the domain name.
 		if (process.env.REDIRECT_URL_PROTOCOL_AND_SUBDOMAIN) {
 			app.use((req, res, next) => {
-				if (req.headers.host.match(/^www\..*/i)) {
+				if (req.headers.host!.match(/^www\..*/i)) {
 					res.redirect(301, url.parse(DOMAIN_BASE + req.url).href!);
 					return;
 				} else if (req.url.substr(-1) === '/' && req.url.length > 1) {

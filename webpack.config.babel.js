@@ -52,7 +52,7 @@ const baseModuleRules = [{
         {
             loader: 'babel-loader',
             options: {
-                presets: [__dirname + '/node_modules/babel-preset-es2015']
+                presets: [__dirname + '/node_modules/babel-preset-env']
             }
         },
         'ts-loader'
@@ -63,6 +63,7 @@ const baseModuleRules = [{
 }];
 
 const baseConfig = {
+    mode: 'development',
     context: SOURCE_PATH + '/ts',
     devtool: 'source-map',
     resolve: {
