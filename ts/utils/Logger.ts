@@ -6,7 +6,9 @@ class Logger {
 	public init() {
 		this._logger = new createLogger({
 			level: 'silly',
-			format: format.simple(),
+			format: format.printf((info: any) => {
+				return `${info.level}: ${info.message}`;
+			}),
 			transports: new transports.Console({ level: 'silly' })
 		});
 	}
