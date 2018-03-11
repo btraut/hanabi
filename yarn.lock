@@ -2,6 +2,12 @@
 # yarn lockfile v1
 
 
+"@rematch/core@^0.5.2":
+  version "0.5.2"
+  resolved "https://registry.yarnpkg.com/@rematch/core/-/core-0.5.2.tgz#414438b7f8a0771c556b7b92307c20935105a155"
+  dependencies:
+    redux "^3.7.2"
+
 "@shellscape/koa-send@^4.1.0":
   version "4.1.2"
   resolved "https://registry.yarnpkg.com/@shellscape/koa-send/-/koa-send-4.1.2.tgz#d76bb15d621f6f49776a2d53b1af808fa39406e7"

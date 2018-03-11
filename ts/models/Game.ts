@@ -3,6 +3,12 @@ import Player from './Player';
 const CODE_GENERATION_ALPHABET = '23456789abdegjkmnpqrvwxyz';
 const CODE_GENERATION_LENGTH = 4;
 
+export enum ConnectionState {
+	Disconnected,
+	LoadingInitialData,
+	Connected
+}
+
 export enum GameState {
 	WaitingForPlayers,
 	WaitingForPhraseSubmissions,

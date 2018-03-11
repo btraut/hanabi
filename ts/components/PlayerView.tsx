@@ -5,7 +5,7 @@ import * as JSONPretty from 'react-json-pretty';
 import { withRouter, RouteComponentProps } from 'react-router';
 
 import { StoreData } from '../reducers/root';
-import { GameState, GameData } from '../models/Game';
+import { GameState, GameData, ConnectionState } from '../models/Game';
 import { MINIMUM_PLAYERS_IN_GAME } from '../models/Rules';
 import { ClientGameManagerPropsAdditions } from './ClientGameManager';
 import Canvas from './Canvas';
@@ -15,8 +15,7 @@ type ExternalPlayerViewProps = {
 } & React.Props<PlayerViewPage> & ClientGameManagerPropsAdditions;
 type PlayerViewProps = {
 	readonly showGameState: boolean;
-	readonly connected: boolean;
-	readonly initialDataLoaded: boolean;
+	readonly connectionState: ConnectionState;
 	readonly userId: string | null;
 	readonly gameData: GameData | null;
 	readonly joinGameError: string | null;
@@ -445,9 +444,9 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps, PlayerViewStat
 	}
 	
 	public render() {
-		const { connected, gameData, showGameState } = this.props;
+		const { connectionState, gameData, showGameState } = this.props;
 		
-		if (!connected) {
+		if (connectionState !== ConnectionState.Connected) {
 			return <div>Connecting…</div>;
 		}
 		
@@ -473,12 +472,12 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps, PlayerViewStat
 }
 
 export default (compose(
-	connect(({ game: {
-		initialDataLoaded, connected, userId, gameData, joinGameError, startGameError,
+	connect(({
+		connectionState, userId, gameData, joinGameError, startGameError,
 		setPlayerNameError, setPlayerPictureError, enterPhraseError, enterPictureError,
 		startOverError, endGameError
-	} }: StoreData) => ({
-		initialDataLoaded, connected, userId, gameData, joinGameError, startGameError,
+	}: StoreData) => ({
+		connectionState, userId, gameData, joinGameError, startGameError,
 		setPlayerNameError, setPlayerPictureError, enterPhraseError, enterPictureError,
 		startOverError, endGameError
 	})) as any,

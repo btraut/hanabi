@@ -14,7 +14,7 @@ export type AuthenticateResponseSocketMessage = SocketMessageTemplate<'Authentic
 export type RequestInitialDataMessage = SocketMessageTemplateBase<'RequestInitialDataMessage'>;
 export type InitialDataResponseMessage = SocketMessageTemplate<'InitialDataResponseMessage', {
 	error?: string;
-	game?: GameData;
+	gameData?: GameData;
 	userId?: string;
 }>;
 
@@ -53,7 +53,7 @@ export type GameStartedMessage = SocketMessageTemplate<'GameStartedMessage', {
 
 export type GameStateSetMessage = SocketMessageTemplate<'GameStateSetMessage', {
 	error?: string;
-	gameState?: GameState;
+	state?: GameState;
 	currentRound?: number;
 	gameCode?: string;
 }>;

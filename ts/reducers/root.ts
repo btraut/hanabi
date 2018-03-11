@@ -1,22 +1,10 @@
-import { combineReducers } from 'redux';
-
-import {
-	initialState as gameInitialState,
-	GameState,
-	gameReducer
-} from './Game';
+import { models as wordArtModels, WordArtState } from './WordArt';
+import { TypedModel } from './types';
 
 // Combine all state types.
-export interface StoreData {
-	game: GameState;
-}
-
-// Combine all initial state data.
-export const initialState: StoreData = {
-	game: gameInitialState
-};
+export type StoreData = WordArtState;
 
 // Combine all reducers.
-export const reducer = combineReducers<StoreData>({
-	game: gameReducer
-});
+export const models: { [key: string]: TypedModel<any> } = {
+	...wordArtModels
+};

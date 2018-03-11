@@ -141,7 +141,7 @@ class ServerGameManager {
 		
 		const message: InitialDataResponseMessage = {
 			type: 'InitialDataResponseMessage',
-			data: { game: game ? game.toObject() : undefined, userId }
+			data: { gameData: game ? game.toObject() : undefined, userId }
 		};
 		ServerSocketManager.send(userId, message);
 	}
@@ -335,7 +335,7 @@ class ServerGameManager {
 			
 			const message: GameStateSetMessage = {
 				type: 'GameStateSetMessage',
-				data: { gameCode: game.code, gameState: nextState, currentRound: nextRound }
+				data: { gameCode: game.code, state: nextState, currentRound: nextRound }
 			};
 			ServerSocketManager.send(game.allUsers, message);
 		}

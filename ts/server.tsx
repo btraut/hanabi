@@ -13,12 +13,12 @@ import * as ReactDOMServer from 'react-dom/server';
 import * as uuid from 'uuid';
 import { StaticRouter, matchPath } from 'react-router';
 import * as url from 'url';
-import { createStore } from 'redux';
-import { Provider as StoreProvider } from 'react-redux';
 import 'cross-fetch/polyfill';
+import { Provider as StoreProvider } from 'react-redux';
+import { init as createStore } from '@rematch/core';
 
 import routes from './routes';
-import { StoreData, reducer, initialState } from './reducers/root';
+import { models } from './reducers/root';
 import App from './components/App';
 import Logger from './utils/Logger';
 import ServerSocketManager from './utils/ServerSocketManager';
@@ -116,8 +116,8 @@ const SESSION_COOKIE_NAME = 'SESSION';
 		
 		// Render the client.
 		app.get('*', async (req: express.Request, res: express.Response) => {
-			// Create the redux store.
-			const store = createStore<StoreData>(reducer, initialState);
+			// Create the store.
+			const store = createStore({ models });
 			
 			// Match url to path.
 			const matchedRoute = routes.find(route => !!matchPath(req.url, { path: route.path, exact: true }));

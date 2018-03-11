@@ -5,7 +5,7 @@ import * as JSONPretty from 'react-json-pretty';
 import { withRouter, RouteComponentProps } from 'react-router';
 
 import { StoreData } from '../reducers/root';
-import { GameState, GameData } from '../models/Game';
+import { GameState, GameData, ConnectionState } from '../models/Game';
 import { ClientGameManagerPropsAdditions } from './ClientGameManager';
 
 // Define globals from webpack.
@@ -16,8 +16,7 @@ type ExternalHostViewProps = {
 } & React.Props<HostViewPage> & ClientGameManagerPropsAdditions;
 type HostViewProps = {
 	readonly showGameState: boolean;
-	readonly connected: boolean;
-	readonly initialDataLoaded: boolean;
+	readonly connectionState: ConnectionState;
 	readonly gameData: GameData | null;
 } & ExternalHostViewProps & RouteComponentProps<any>;
 
@@ -35,13 +34,13 @@ class HostViewPage extends React.PureComponent<HostViewProps> {
 	}
 	
 	private _connect() {
-		const { clientGameManager, initialDataLoaded, connected, gameData } = this.props;
+		const { clientGameManager, connectionState, gameData } = this.props;
 		
-		if (connected) {
-			if (initialDataLoaded && !gameData) {
+		if (connectionState === ConnectionState.Connected) {
+			if (!gameData) {
 				clientGameManager.createGame();
 			}
-		} else {
+		} else if (connectionState === ConnectionState.Disconnected) {
 			clientGameManager.connect();
 		}
 	}
@@ -107,13 +106,13 @@ class HostViewPage extends React.PureComponent<HostViewProps> {
 	}
 	
 	public render() {
-		const { connected, gameData, initialDataLoaded, showGameState } = this.props;
+		const { connectionState, gameData, showGameState } = this.props;
 		
-		if (!connected) {
+		if (connectionState !== ConnectionState.Connected) {
 			return <div>Connecting…</div>;
 		}
 		
-		if (!initialDataLoaded || !gameData) {
+		if (!gameData) {
 			return <div>Loading…</div>;
 		}
 		
@@ -127,8 +126,8 @@ class HostViewPage extends React.PureComponent<HostViewProps> {
 }
 
 export default (compose(
-	connect(({ game: { initialDataLoaded, connected, gameData } }: StoreData) => ({
-		initialDataLoaded, connected, gameData
+	connect(({ connectionState, gameData }: StoreData) => ({
+		connectionState, gameData
 	})) as any,
 	withRouter as any
 ) as any)(HostViewPage) as any as React.ComponentClass<ExternalHostViewProps>;

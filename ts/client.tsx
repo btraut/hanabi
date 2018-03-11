@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { hydrate } from 'react-dom';
 import { BrowserRouter } from 'react-router-dom';
-import { createStore } from 'redux';
 import { Provider as StoreProvider } from 'react-redux';
+import { init as createStore } from '@rematch/core';
 import 'cross-fetch/polyfill';
 
-import { StoreData, reducer } from './reducers/root';
+import { models, StoreData } from './reducers/root';
 import routes from './routes';
 import App from './components/App';
 import ScrollRestoration from './components/ScrollRestoration';
@@ -20,8 +20,20 @@ import './../public/less/main.less';
 const preloadedState = (window as any).__PRELOADED_STATE__ as StoreData;
 delete (window as any).__PRELOADED_STATE__;
 
-// Create Redux store with initial state.
-const store = createStore<StoreData>(reducer, preloadedState);
+// Create Redux store.
+const store = createStore({
+	models,
+	redux: {
+		reducers: {
+			hydrate: (state = null, action) => action.state ? action.state : state
+		}
+	}
+});
+
+// Re-hydrate SSR data.
+if (preloadedState) {
+	store.dispatch({ type: 'hydrate', state: preloadedState });
+}
 
 // Start the app.
 hydrate(
