@@ -3,7 +3,7 @@ import { Route, Switch, RouteProps } from 'react-router-dom';
 
 interface AppProps {
 	readonly routes: RouteProps[];
-};
+}
 
 const App: React.StatelessComponent<AppProps> = ({ routes }) => (
 	<Switch>

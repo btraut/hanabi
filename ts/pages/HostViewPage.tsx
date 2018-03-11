@@ -30,4 +30,4 @@ export default class HostViewPage extends React.PureComponent<RouteProps> {
 			</ClientGameManagerProvider>
 		);
 	}
-};
+}

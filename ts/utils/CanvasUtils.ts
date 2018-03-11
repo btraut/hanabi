@@ -71,26 +71,6 @@ class CanvasUtils {
 	}
 	
 	public trimCanvas(canvas: HTMLCanvasElement) {
-		const rowBlank = (imageData: ImageData, width: number, y: number) => {
-			for (let x = 0; x < width; ++x) {
-				if (imageData.data[y * width * 4 + x * 4 + 3] !== 0) {
-					return false;
-				}
-			}
-			
-			return true;
-		};
-	
-		const columnBlank = (imageData: ImageData, width: number, x: number, top: number, bottom: number) => {
-			for (let y = top; y < bottom; ++y) {
-				if (imageData.data[y * width * 4 + x * 4 + 3] !== 0) {
-					return false;
-				}
-			}
-			
-			return true;
-		};
-		
 		const context = canvas.getContext('2d');
 		const width = canvas.width;
 		const imageData = context!.getImageData(0, 0, canvas.width, canvas.height);
@@ -100,10 +80,30 @@ class CanvasUtils {
 		let left = 0;
 		let right = imageData.width;
 
-		while (top < bottom && rowBlank(imageData, width, top)) { ++top; }
-		while (bottom - 1 > top && rowBlank(imageData, width, bottom - 1)) { --bottom; };
-		while (left < right && columnBlank(imageData, width, left, top, bottom)) { ++left; }
-		while (right - 1 > left && columnBlank(imageData, width, right - 1, top, bottom)) { --right; }
+		const rowBlank = (y: number) => {
+			for (let x = 0; x < width; ++x) {
+				if (imageData.data[y * width * 4 + x * 4 + 3] !== 0) {
+					return false;
+				}
+			}
+			
+			return true;
+		};
+	
+		const columnBlank = (x: number) => {
+			for (let y = top; y < bottom; ++y) {
+				if (imageData.data[y * width * 4 + x * 4 + 3] !== 0) {
+					return false;
+				}
+			}
+			
+			return true;
+		};
+
+		while (top < bottom && rowBlank(top)) { ++top; }
+		while (bottom - 1 > top && rowBlank(bottom - 1)) { --bottom; }
+		while (left < right && columnBlank(left)) { ++left; }
+		while (right - 1 > left && columnBlank(right - 1)) { --right; }
 
 		const trimmed = context!.getImageData(left, top, right - left, bottom - top);
 		canvas.width = trimmed.width;

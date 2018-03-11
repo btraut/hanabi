@@ -44,55 +44,64 @@ export default class ClientGameManager {
 	
 	public async createGame() {
 		// Call to create a game. Expect a response for the sake of error handling.
-		ClientSocketManager.send({ type: 'CreateGameMessage' } as CreateGameMessage);
+		const message: CreateGameMessage = { type: 'CreateGameMessage' };
+		ClientSocketManager.send(message);
 		await ClientSocketManager.expectMessageOfType('GameCreatedMessage');
 	}
 	
 	public async joinGame(gameCode: string, name: string) {
 		// Call to join a game. Expect a response for the sake of error handling.
-		ClientSocketManager.send({ type: 'JoinGameMessage', data: { gameCode, name } } as JoinGameMessage);
+		const message: JoinGameMessage = { type: 'JoinGameMessage', data: { gameCode, name } };
+		ClientSocketManager.send(message);
 		await ClientSocketManager.expectMessageOfType('GameJoinedMessage');
 	}
 	
 	public async startGame(gameCode: string) {
 		// Call to start the game. Expect a response for the sake of error handling.
-		ClientSocketManager.send({ type: 'StartGameMessage', data: { gameCode } } as StartGameMessage);
+		const message: StartGameMessage = { type: 'StartGameMessage', data: { gameCode } };
+		ClientSocketManager.send(message);
 		await ClientSocketManager.expectMessageOfType('GameStartedMessage');
 	}
 	
 	public async setPlayerPicture(gameCode: string, pictureData: string) {
 		// Send the player's picture data. Expect a response for the sake of error handling.
-		ClientSocketManager.send({ type: 'SetPlayerPictureMessage', data: { gameCode, pictureData } } as SetPlayerPictureMessage);
+		const message: SetPlayerPictureMessage = { type: 'SetPlayerPictureMessage', data: { gameCode, pictureData } };
+		ClientSocketManager.send(message);
 		await ClientSocketManager.expectMessageOfType('PlayerPictureSetMessage');
 	}
 	
 	public async enterPhrase(gameCode: string, round: number, phrase: string) {
 		// Send the player's phrase. Expect a response for the sake of error handling.
-		ClientSocketManager.send({ type: 'EnterPhraseMessage', data: { gameCode, phrase, round } } as EnterPhraseMessage);
+		const message: EnterPhraseMessage = { type: 'EnterPhraseMessage', data: { gameCode, phrase, round } };
+		ClientSocketManager.send(message);
 		await ClientSocketManager.expectMessageOfType('PhraseEnteredMessage');
 	}
 	
 	public async enterPicture(gameCode: string, round: number, pictureData: string) {
 		// Send the player's picture. Expect a response for the sake of error handling.
-		ClientSocketManager.send({ type: 'EnterPictureMessage', data: { gameCode, pictureData, round } } as EnterPictureMessage);
+		const message: EnterPictureMessage = { type: 'EnterPictureMessage', data: { gameCode, pictureData, round } };
+		ClientSocketManager.send(message);
 		await ClientSocketManager.expectMessageOfType('PictureEnteredMessage');
 	}
 	
 	public async finishReviewing(gameCode: string) {
 		// Set the game state. Expect a response for the sake of error handling.
-		ClientSocketManager.send({ type: 'FinishReviewingMessage', data: { gameCode } } as FinishReviewingMessage);
+		const message: FinishReviewingMessage = { type: 'FinishReviewingMessage', data: { gameCode } };
+		ClientSocketManager.send(message);
 		await ClientSocketManager.expectMessageOfType('ReviewingFinishedMessage');
 	}
 	
 	public async startOver(gameCode: string) {
 		// Send the start over message. Expect a response for the sake of error handling.
-		ClientSocketManager.send({ type: 'StartOverMessage', data: { gameCode } } as StartOverMessage);
+		const message: StartOverMessage = { type: 'StartOverMessage', data: { gameCode } };
+		ClientSocketManager.send(message);
 		await ClientSocketManager.expectMessageOfType('StartedOverMessage');
 	}
 	
 	public async endGame(gameCode: string) {
 		// Send the end game message. Expect a response for the sake of error handling.
-		ClientSocketManager.send({ type: 'EndGameMessage', data: { gameCode } } as EndGameMessage);
+		const message: EndGameMessage = { type: 'EndGameMessage', data: { gameCode } };
+		ClientSocketManager.send(message);
 		await ClientSocketManager.expectMessageOfType('GameEndedMessage');
 	}
 	
@@ -103,7 +112,8 @@ export default class ClientGameManager {
 			
 			// Send initial data fetch request. _handleMessage will get the rest.
 			// Expect a response for the sake of timeout error handling.
-			ClientSocketManager.send({ type: 'RequestInitialDataMessage' } as RequestInitialDataMessage);
+			const message: RequestInitialDataMessage = { type: 'RequestInitialDataMessage' };
+			ClientSocketManager.send(message);
 			await ClientSocketManager.expectMessageOfType('InitialDataResponseMessage');
 		})();
 	}

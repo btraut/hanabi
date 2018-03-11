@@ -1,22 +1,24 @@
 import { GameData, GameState } from './Game';
 import Player from './Player';
 
-interface SocketMessageTemplate<T, D> {
+export interface SocketMessageTemplateBase<T> {
 	type: T;
+}
+export interface SocketMessageTemplate<T, D> extends SocketMessageTemplateBase<T> {
 	data: D;
 }
 
 export type AuthenticateSocketMessage = SocketMessageTemplate<'AuthenticateSocketMessage', string>;
 export type AuthenticateResponseSocketMessage = SocketMessageTemplate<'AuthenticateResponseSocketMessage', { error?: string; }>;
 
-export type RequestInitialDataMessage = SocketMessageTemplate<'RequestInitialDataMessage', void>;
+export type RequestInitialDataMessage = SocketMessageTemplateBase<'RequestInitialDataMessage'>;
 export type InitialDataResponseMessage = SocketMessageTemplate<'InitialDataResponseMessage', {
 	error?: string;
 	game?: GameData;
 	userId?: string;
 }>;
 
-export type CreateGameMessage = SocketMessageTemplate<'CreateGameMessage', void>;
+export type CreateGameMessage = SocketMessageTemplateBase<'CreateGameMessage'>;
 export type GameCreatedMessage = SocketMessageTemplate<'GameCreatedMessage', {
 	error?: string;
 	gameData?: GameData;

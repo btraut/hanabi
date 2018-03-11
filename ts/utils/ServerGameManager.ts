@@ -1,6 +1,7 @@
 import { Game, GameState } from '../models/Game';
 import Player from '../models/Player';
 import {
+	SocketMessageTemplate,
 	SocketMessage,
 	GameCreatedMessage,
 	InitialDataResponseMessage,
@@ -21,6 +22,10 @@ import Logger from '../utils/Logger';
 import { MINIMUM_PLAYERS_IN_GAME, MAXIMUM_PLAYERS_IN_GAME } from '../models/Rules';
 
 const GAME_EXPIRATION_MINUTES = 30;
+
+type ErrorSocketMessage = SocketMessageTemplate<string, {
+	error?: string;
+}>;
 
 class ServerGameManager {
 	private _games: { [code: string]: Game } = {};
@@ -94,10 +99,11 @@ class ServerGameManager {
 			const updatedUser = game.updatePlayer(userId, updates);
 			if (updatedUser) {
 				// Notify the game host.
-				ServerSocketManager.send(game.allUsers.filter(id => id !== userId), {
+				const message: UserUpdatedMessage = {
 					type: 'UserUpdatedMessage',
 					data: { player: updatedUser }
-				} as UserUpdatedMessage);
+				};
+				ServerSocketManager.send(game.allUsers.filter(id => id !== userId), message);
 			}
 		}
 		
@@ -109,10 +115,11 @@ class ServerGameManager {
 			const updatedUser = game.updateHost(updates);
 			if (updatedUser) {
 				// Notify the game players.
-				ServerSocketManager.send(Object.values(game.players).map(p => p.id), {
+				const message: UserUpdatedMessage = {
 					type: 'UserUpdatedMessage',
 					data: { player: updatedUser }
-				} as UserUpdatedMessage);
+				};
+				ServerSocketManager.send(Object.values(game.players).map(p => p.id), message);
 			}
 		}
 	}
@@ -120,59 +127,65 @@ class ServerGameManager {
 	private _handleCreateGameMessage(userId: string) {
 		const game = this._startNewGame(userId);
 		
-		ServerSocketManager.send(userId, {
+		const message: GameCreatedMessage = {
 			type: 'GameCreatedMessage',
 			data: { gameData: game.toObject() }
-		} as GameCreatedMessage);
+		};
+		ServerSocketManager.send(userId, message);
 	}
 	
 	private _handleRequestInitialDataMessage(userId: string) {
-		const playerGame = Object.values(this._games).find(game => !!game.players[userId]);
-		const hostGame = Object.values(this._games).find(game => game.host.id === userId);
+		const playerGame = Object.values(this._games).find(g => !!g.players[userId]);
+		const hostGame = Object.values(this._games).find(g => g.host.id === userId);
 		const game = playerGame || hostGame;
 		
-		ServerSocketManager.send(userId, {
+		const message: InitialDataResponseMessage = {
 			type: 'InitialDataResponseMessage',
 			data: { game: game ? game.toObject() : undefined, userId }
-		} as InitialDataResponseMessage);
+		};
+		ServerSocketManager.send(userId, message);
 	}
 	
 	private _handleJoinGameMessage(playerId: string, gameCode: string, name: string) {
 		// Check to see if we can find the new game.
 		const gameToJoin = this._games[gameCode];
 		if (!gameToJoin) {
-			ServerSocketManager.send(playerId, {
+			const message: GameJoinedMessage = {
 				type: 'GameJoinedMessage',
 				data: { error: 'Invalid game code' }
-			} as GameJoinedMessage);
+			};
+			ServerSocketManager.send(playerId, message);
 			return;
 		}
 		
 		// Check if the user is already in the game. If he is, send a
 		// success message to him.
 		if (gameToJoin.players[playerId]) {
-			ServerSocketManager.send(playerId, {
+			const message: GameJoinedMessage = {
 				type: 'GameJoinedMessage',
 				data: { gameData: gameToJoin.toObject() }
-			} as GameJoinedMessage);
+			};
+			ServerSocketManager.send(playerId, message);
 			return;
 		}
 		
 		// Make sure the game to join has room.
 		if (Object.keys(gameToJoin.players).length === MAXIMUM_PLAYERS_IN_GAME) {
-			ServerSocketManager.send(playerId, {
+			const message: GameJoinedMessage = {
 				type: 'GameJoinedMessage',
 				data: { error: 'Game is full.' }
-			} as GameJoinedMessage);
+			};
+			ServerSocketManager.send(playerId, message);
 			return;
 		}
 		
 		// Ensure the game is in the right state.
 		if (gameToJoin.state !== GameState.WaitingForPlayers) {
-			ServerSocketManager.send(playerId, {
+			const message: GameJoinedMessage = {
 				type: 'GameJoinedMessage',
 				data: { error: 'Game isn’t accepting players right now.' }
-			} as GameJoinedMessage);
+			};
+			ServerSocketManager.send(playerId, message);
 			return;
 		}
 		
@@ -181,10 +194,11 @@ class ServerGameManager {
 		const error = gameToJoin.validateName(cleanName);
 		
 		if (error) {
-			ServerSocketManager.send(playerId, {
+			const message: GameJoinedMessage = {
 				type: 'GameJoinedMessage',
 				data: { error }
-			} as GameJoinedMessage);
+			};
+			ServerSocketManager.send(playerId, message);
 			return;
 		}
 		
@@ -192,43 +206,48 @@ class ServerGameManager {
 		const joinedPlayer = gameToJoin.addPlayer(playerId, cleanName);
 		
 		// Respond to the user who joined.
-		ServerSocketManager.send(playerId, {
+		const gameJoinedMessage: GameJoinedMessage = {
 			type: 'GameJoinedMessage',
 			data: { gameData: gameToJoin.toObject() }
-		} as GameJoinedMessage);
+		};
+		ServerSocketManager.send(playerId, gameJoinedMessage);
 		
 		// Notify all clients that the user has been added.
-		ServerSocketManager.send(gameToJoin.allUsers, {
+		const playerAddedMessage: PlayerAddedMessage = {
 			type: 'PlayerAddedMessage',
 			data: { player: joinedPlayer, gameCode: gameToJoin.code }
-		} as PlayerAddedMessage);
+		};
+		ServerSocketManager.send(gameToJoin.allUsers, playerAddedMessage);
 	}
 	
 	private _ensureUserIsInGame(errorMessageType: string, userId: string, gameCode: string, gameState?: GameState) {
 		// Validate game.
 		const game = this._games[gameCode];
 		if (!game) {
-			ServerSocketManager.send(userId, {
+			const message: ErrorSocketMessage = {
 				type: errorMessageType,
 				data: { error: 'Invalid game.' }
-			} as SocketMessage);
+			};
+			ServerSocketManager.send(userId, message as SocketMessage);
 			return false;
 		}
 		
 		// Ensure the user is in the game.
 		if (!game.players[userId] && game.host.id !== userId) {
-			ServerSocketManager.send(userId, {
+			const message: ErrorSocketMessage = {
 				type: errorMessageType,
 				data: { error: 'User isn’t a player in or host of this game.' }
-			} as SocketMessage);
+			};
+			ServerSocketManager.send(userId, message as SocketMessage);
 			return false;
 		}
 		
 		if (gameState && game.state !== gameState) {
-			ServerSocketManager.send(userId, {
+			const message: ErrorSocketMessage = {
 				type: errorMessageType,
 				data: { error: 'Game isn’t in the right state.' }
-			} as SocketMessage);
+			};
+			ServerSocketManager.send(userId, message as SocketMessage);
 			return;
 		}
 		
@@ -245,19 +264,21 @@ class ServerGameManager {
 		
 		// Ensure there are enough players.
 		if (Object.keys(game.players).length < MINIMUM_PLAYERS_IN_GAME) {
-			ServerSocketManager.send(userId, {
+			const message: GameStartedMessage = {
 				type: 'GameStartedMessage',
 				data: { error: 'Not enough players to start game.' }
-			} as GameStartedMessage);
+			};
+			ServerSocketManager.send(userId, message);
 			return;
 		}
 		
 		// Ensure all players have drawn pictures.
 		if (Object.values(game.players).find(p => !p.pictureData)) {
-			ServerSocketManager.send(userId, {
+			const message: GameStartedMessage = {
 				type: 'GameStartedMessage',
 				data: { error: 'Not everyone has drawn their own picture yet.' }
-			} as GameStartedMessage);
+			};
+			ServerSocketManager.send(userId, message);
 			return;
 		}
 		
@@ -269,10 +290,11 @@ class ServerGameManager {
 		const playerOrders = Object.values(game.players).sort((a, b) => a.order! < b.order! ? -1 : 1).map(p => p.id);
 		
 		// Notify all players and host.
-		ServerSocketManager.send(game.allUsers, {
+		const gameStartedMessage: GameStartedMessage = {
 			type: 'GameStartedMessage',
 			data: { gameCode, playerOrders }
-		} as GameStartedMessage);
+		};
+		ServerSocketManager.send(game.allUsers, gameStartedMessage);
 	}
 	
 	private _checkForNextState(game: Game) {
@@ -311,10 +333,11 @@ class ServerGameManager {
 		if (allPlayersSubmitted) {
 			game.moveToState(nextState, nextRound);
 			
-			ServerSocketManager.send(game.allUsers, {
+			const message: GameStateSetMessage = {
 				type: 'GameStateSetMessage',
 				data: { gameCode: game.code, gameState: nextState, currentRound: nextRound }
-			} as GameStateSetMessage);
+			};
+			ServerSocketManager.send(game.allUsers, message);
 		}
 	}
 	
@@ -330,10 +353,11 @@ class ServerGameManager {
 		game.updatePlayer(playerId, { pictureData });
 		
 		// Notify all players and host.
-		ServerSocketManager.send(game.allUsers, {
+		const message: PlayerPictureSetMessage = {
 			type: 'PlayerPictureSetMessage',
 			data: { gameCode, pictureData, playerId }
-		} as PlayerPictureSetMessage);
+		};
+		ServerSocketManager.send(game.allUsers, message);
 	}
 	
 	private _handleEnterPhraseMessage(playerId: string, gameCode: string, round: number, phrase: string) {
@@ -349,10 +373,11 @@ class ServerGameManager {
 		const error = game.validatePhrase(cleanPhrase);
 		
 		if (error) {
-			ServerSocketManager.send(playerId, {
+			const message: PhraseEnteredMessage = {
 				type: 'PhraseEnteredMessage',
 				data: { error }
-			} as PhraseEnteredMessage);
+			};
+			ServerSocketManager.send(playerId, message);
 			return;
 		}
 		
@@ -360,10 +385,11 @@ class ServerGameManager {
 		game.enterPhrase(playerId, round, cleanPhrase);
 		
 		// Notify all players and host.
-		ServerSocketManager.send(game.allUsers, {
+		const phraseEnteredMessage: PhraseEnteredMessage = {
 			type: 'PhraseEnteredMessage',
 			data: { gameCode, phrase: cleanPhrase, round: game.currentRound, playerId }
-		} as PhraseEnteredMessage);
+		};
+		ServerSocketManager.send(game.allUsers, phraseEnteredMessage);
 		
 		// Conditionally move to next state.
 		this._checkForNextState(game);
@@ -381,10 +407,11 @@ class ServerGameManager {
 		game.enterPicture(playerId, round, pictureData);
 		
 		// Notify all players and host.
-		ServerSocketManager.send(game.allUsers, {
+		const message: PictureEnteredMessage = {
 			type: 'PictureEnteredMessage',
 			data: { gameCode, pictureData, round: game.currentRound, playerId }
-		} as PictureEnteredMessage);
+		};
+		ServerSocketManager.send(game.allUsers, message);
 		
 		// Conditionally move to next state.
 		this._checkForNextState(game);
@@ -400,10 +427,11 @@ class ServerGameManager {
 		game.finishReviewing();
 		
 		// Notify all players and host.
-		ServerSocketManager.send(game.allUsers, {
+		const message: ReviewingFinishedMessage = {
 			type: 'ReviewingFinishedMessage',
 			data: { gameCode }
-		} as ReviewingFinishedMessage);
+		};
+		ServerSocketManager.send(game.allUsers, message);
 	}
 	
 	private _handleStartOverMessage(playerId: string, gameCode: string) {
@@ -430,10 +458,11 @@ class ServerGameManager {
 		delete this._games[gameCode];
 		
 		// Notify all players and host that the game has restarted.
-		ServerSocketManager.send(game.allUsers, {
+		const message: StartedOverMessage = {
 			type: 'StartedOverMessage',
 			data: { gameCode, gameData: newGame.toObject() }
-		} as StartedOverMessage);
+		};
+		ServerSocketManager.send(game.allUsers, message);
 	}
 	
 	private _handleEndGameMessage(playerId: string, gameCode: string) {
@@ -448,10 +477,11 @@ class ServerGameManager {
 		delete this._games[gameCode];
 		
 		// Notify all players and host.
-		ServerSocketManager.send(game.allUsers, {
+		const message: GameEndedMessage = {
 			type: 'GameEndedMessage',
-			data: { gameCode, gameData: game.toObject() }
-		} as GameEndedMessage);
+			data: { gameCode }
+		};
+		ServerSocketManager.send(game.allUsers, message);
 	}
 	
 	private static _cleanGameCode(gameCode: string) {

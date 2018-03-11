@@ -27,6 +27,6 @@ class ClientGameManagerProvider extends React.PureComponent<ClientGameManagerPro
 	public render() {
 		return this.props.children;
 	}
-};
+}
 
 export default connect()(ClientGameManagerProvider);

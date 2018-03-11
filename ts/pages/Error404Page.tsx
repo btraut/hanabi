@@ -20,4 +20,4 @@ export default class Error404Page extends React.PureComponent<RouteProps> {
 			</div>
 		);
 	}
-};
+}

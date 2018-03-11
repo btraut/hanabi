@@ -12,7 +12,7 @@ import ScrollRestoration from './components/ScrollRestoration';
 
 // Import styles. This forces webpack to include them in the build, but
 // ExtractTextPlugin will strip them from the JS output.
-import 'normalize.css'
+import 'normalize.css';
 import './../public/less/main.less';
 
 // Grab the state from a global variable injected into the server-generated

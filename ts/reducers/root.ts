@@ -9,7 +9,7 @@ import {
 // Combine all state types.
 export interface StoreData {
 	game: GameState;
-};
+}
 
 // Combine all initial state data.
 export const initialState: StoreData = {

@@ -130,11 +130,9 @@ const SESSION_COOKIE_NAME = 'SESSION';
 			// Figure out the page title.
 			let title = 'WordArt';
 			if (matchedRoute && matchedRoute.component && matchedRoute.component.title) {
-				if (typeof matchedRoute.component.title === 'string') {
-					title = matchedRoute.component.title;
-				} else {
-					title = await matchedRoute.component.title();
-				}
+				title = typeof matchedRoute.component.title === 'string' ?
+					matchedRoute.component.title :
+					await matchedRoute.component.title();
 			}
 			
 			// Initialize a context obj to pass-by-ref into StaticRouter. Unfortunately

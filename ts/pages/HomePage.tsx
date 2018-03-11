@@ -30,4 +30,4 @@ export default class HomePage extends React.PureComponent<RouteProps> {
 			</div>
 		);
 	}
-};
+}

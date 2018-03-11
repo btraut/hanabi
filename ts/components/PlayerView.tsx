@@ -470,7 +470,7 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps, PlayerViewStat
 			</div>
 		);
 	}
-};
+}
 
 export default (compose(
 	connect(({ game: {

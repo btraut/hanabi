@@ -124,7 +124,7 @@ class HostViewPage extends React.PureComponent<HostViewProps> {
 			</div>
 		);
 	}
-};
+}
 
 export default (compose(
 	connect(({ game: { initialDataLoaded, connected, gameData } }: StoreData) => ({

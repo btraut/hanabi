@@ -107,7 +107,8 @@ class ClientSocketManager {
 		const { token } = await Ajax.get('/api/auth-socket');
 		
 		// Authenticate the socket connection by sending the token.
-		this.send({ type: 'AuthenticateSocketMessage', data: token } as AuthenticateSocketMessage, { requireAuth: false });
+		const authenticateSocketMessage: AuthenticateSocketMessage = { type: 'AuthenticateSocketMessage', data: token };
+		this.send(authenticateSocketMessage, { requireAuth: false });
 		
 		// Wait for a socket response to authentication.
 		const message = await this.expect(response => response.type === 'AuthenticateResponseSocketMessage');

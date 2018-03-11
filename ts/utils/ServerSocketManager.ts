@@ -36,15 +36,15 @@ class ServerSocketManager {
 	public connect(server: Server) {
 		this._server = socket(server);
 		
-		this._server.on('connection', (socket) => {
-			this._handleConnect(socket.id);
+		this._server.on('connection', (connection) => {
+			this._handleConnect(connection.id);
 			
-			socket.on('message', (data: SocketMessage) => {
-				this._handleMessage(socket.id, data);
+			connection.on('message', (data: SocketMessage) => {
+				this._handleMessage(connection.id, data);
 			});
 
-			socket.on('disconnect', () => {
-				this._handleDisconnect(socket.id);
+			connection.on('disconnect', () => {
+				this._handleDisconnect(connection.id);
 			});
 		});
 	}
@@ -101,16 +101,19 @@ class ServerSocketManager {
 			this._authenticatedUsers[socketId] = userId;
 			this._onConnect.emit({ userId });
 			
-			this._send(socketId, {
-				type: 'AuthenticateResponseSocketMessage'
-			} as AuthenticateResponseSocketMessage);
+			const authenticateResponseSocketMessage: AuthenticateResponseSocketMessage = {
+				type: 'AuthenticateResponseSocketMessage',
+				data: {}
+			};
+			this._send(socketId, authenticateResponseSocketMessage);
 		} else {
-			this._send(socketId, {
+			const authenticateResponseSocketMessage: AuthenticateResponseSocketMessage = {
 				type: 'AuthenticateResponseSocketMessage',
 				data: {
 					error: 'Invalid auth token'
 				}
-			} as AuthenticateResponseSocketMessage);
+			};
+			this._send(socketId, authenticateResponseSocketMessage);
 		}
 	}
 	
