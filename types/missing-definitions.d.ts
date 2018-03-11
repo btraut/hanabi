@@ -1,4 +1,2 @@
-declare module '*.svg' {
-	const x: any;
-	export = x;
-}
+declare module 'winston';
+declare module '*.svg';

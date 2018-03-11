@@ -1,13 +1,13 @@
-import * as winston from 'winston';
+import { createLogger, format, transports } from 'winston';
 
 class Logger {
-	private _logger: winston.LoggerInstance;
+	private _logger: any;
 	
 	public init() {
-		this._logger = new winston.Logger();
-		
-		this._logger.add(winston.transports.Console, {
-			level: 'silly'
+		this._logger = new createLogger({
+			level: 'silly',
+			format: format.simple(),
+			transports: new transports.Console({ level: 'silly' })
 		});
 	}
 	

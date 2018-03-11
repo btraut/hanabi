@@ -47,7 +47,7 @@ const SESSION_COOKIE_NAME = 'SESSION';
 		
 		// Enable logs.
 		Logger.init();
-			
+		
 		// Load the webpack-assets manifest.
 		const webpackAssets = fs.readFileSync(path.resolve(__dirname, '../../webpack-assets.json'), 'utf8');
 		const webpackAssetsData = JSON.parse(webpackAssets);

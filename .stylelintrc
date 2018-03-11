@@ -8,13 +8,6 @@
             "except": ["first-nested"],
             "ignore": ["after-comment", "inside-block"]
         }],
-        "at-rule-empty-line-before": ["always", {
-            "except": [
-                "inside-block",
-                "blockless-after-same-name-blockless",
-                "first-nested"
-            ],
-            "ignore": ["after-comment"]
-        }]
+        "at-rule-empty-line-before": null
     }
 }
