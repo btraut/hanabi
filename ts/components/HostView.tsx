@@ -82,12 +82,12 @@ class HostViewPage extends React.PureComponent<HostViewProps> {
 						<li className="HostView-LinkAndCodeContainerListItem">Enter the code <span className="HostView-Code">{ gameData.code }</span></li>
 					</ol>
 				</div>
-				<ul className="HostView-LobbyPlayersContainer">
+				<ul className="HostView-PlayersContainer">
 					{ gameData.players.map(player => (
-						<li className="HostView-LobbyPlayer" key={player.id}>
-							{ player.pictureData && <img className="HostView-LobbyPlayerPicture" src={player.pictureData} /> }
-							{ !player.pictureData && <img className="HostView-LobbyPlayerPicture" src="/images/drawing-face.svg" /> }
-							<div className="HostView-LobbyPlayerName">{ player.name }</div>
+						<li className="HostView-Player" key={player.id}>
+							{ player.pictureData && <img className="HostView-PlayerPicture" src={player.pictureData} /> }
+							{ !player.pictureData && <img className="HostView-PlayerPicture" src="/images/drawing-face.svg" /> }
+							<div className="HostView-PlayerName">{ player.name }</div>
 						</li>
 					)) }
 				</ul>
@@ -95,13 +95,71 @@ class HostViewPage extends React.PureComponent<HostViewProps> {
 		);
 	}
 	
+	private _renderWaitingForPhraseSubmissions(gameData: GameData) {
+		const currentRoundIndex = gameData.currentRound / 2;
+		
+		return (
+			<>
+				<h1 className="HostView-Title">It’s time for words.</h1>
+				<p className="HostView-BodyText">Players are entering phrases.</p>
+				<ul className="HostView-PlayersContainer">
+					{ gameData.players.map(player => {
+						const playerSubmitPhrase = gameData.phrases[currentRoundIndex] && player.id in gameData.phrases[currentRoundIndex];
+						
+						return (
+							<li className="HostView-Player" key={player.id}>
+								{ playerSubmitPhrase && <img className="HostView-PlayerPicture" src="/images/person-done.svg" /> }
+								{ !playerSubmitPhrase && <img className="HostView-PlayerPicture" src="/images/typewriter.svg" /> }
+								<div className="HostView-PlayerName">{ player.name }</div>
+							</li>
+						);
+					}) }
+				</ul>
+			</>
+		);
+	}
+	
+	private _renderWaitingForPictureSubmissions(gameData: GameData) {
+		const currentRoundIndex = (gameData.currentRound - 1) / 2;
+		
+		return (
+			<>
+				<h1 className="HostView-Title">It’s time for art.</h1>
+				<p className="HostView-BodyText">Players are drawing pictures.</p>
+				<ul className="HostView-PlayersContainer">
+					{ gameData.players.map(player => {
+						console.log(gameData.pictures[currentRoundIndex]);
+						const playerSubmitPicture = gameData.pictures[currentRoundIndex] && player.id in gameData.pictures[currentRoundIndex];
+						
+						return (
+							<li className="HostView-Player" key={player.id}>
+								{ playerSubmitPicture && <img className="HostView-PlayerPicture" src="/images/person-done.svg" /> }
+								{ !playerSubmitPicture && <img className="HostView-PlayerPicture" src="/images/painting.svg" /> }
+								<div className="HostView-PlayerName">{ player.name }</div>
+							</li>
+						);
+					}) }
+				</ul>
+			</>
+		);
+	}
+	
+	private _renderPlayAgainOptions() {
+		return (
+			<>
+				<h1 className="HostView-Title">Choose your destiny.</h1>
+				<p className="HostView-BodyText">Want to play again? Choose an option on your phone.</p>
+			</>
+		);
+	}
+	
 	private _renderGameState(gameData: GameData) {
 		switch (gameData.state) {
 		case GameState.WaitingForPlayers: return this._renderWaitingForPlayers(gameData);
-		case GameState.WaitingForPhraseSubmissions: return <div>Players are submitting phrases…</div>;
-		case GameState.WaitingForPictureSubmissions: return <div>Players are submitting drawings…</div>;
+		case GameState.WaitingForPhraseSubmissions: return this._renderWaitingForPhraseSubmissions(gameData);
+		case GameState.WaitingForPictureSubmissions: return this._renderWaitingForPictureSubmissions(gameData);
 		case GameState.ReviewingStories: return <div>Reviewing sequences…</div>;
-		case GameState.PlayAgainOptions: return <div>Play again?</div>;
+		case GameState.PlayAgainOptions: return this._renderPlayAgainOptions();
 		}
 	}
 	

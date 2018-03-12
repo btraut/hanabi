@@ -34,6 +34,12 @@
 	}
 }
 
+.HostView-BodyText {
+	.TransparentContainer();
+	.FontSize-BodyLarge();
+	font-weight: bold;
+}
+
 .HostView-LinkAndCodeContainer {
 	.TransparentContainer();
 }
@@ -69,7 +75,7 @@
 	color: white;
 }
 
-.HostView-LobbyPlayersContainer {
+.HostView-PlayersContainer {
 	margin: 0;
 	padding: 0;
 	display: flex;
@@ -77,19 +83,19 @@
 	list-style: none;
 }
 
-.HostView-LobbyPlayer {
+.HostView-Player {
 	flex: 0 0 auto;
 	margin: 20px;
 	max-width: 120px;
 }
 
-.HostView-LobbyPlayerPicture {
+.HostView-PlayerPicture {
 	max-width: 100%;
 	max-height: 120px;
 	display: block;
 }
 
-.HostView-LobbyPlayerName {
+.HostView-PlayerName {
 	.FontSize-BodyLarge();
 	font-weight: bold;
 	overflow: hidden;
