@@ -95,10 +95,13 @@ export type PictureEnteredMessage = SocketMessageTemplate<'PictureEnteredMessage
 	pictureData?: string;
 }>;
 
-export type FinishReviewingMessage = SocketMessageTemplate<'FinishReviewingMessage', { gameCode: string; }>;
-export type ReviewingFinishedMessage = SocketMessageTemplate<'ReviewingFinishedMessage', {
+export type AdvanceStoryReviewMessage = SocketMessageTemplate<'AdvanceStoryReviewMessage', { gameCode: string; }>;
+export type AdvancedStoryReviewMessage = SocketMessageTemplate<'AdvancedStoryReviewMessage', {
 	error?: string;
 	gameCode?: string;
+	state?: GameState;
+	presentingPlayer?: number;
+	presentingRound?: number;
 }>;
 
 export type StartOverMessage = SocketMessageTemplate<'StartOverMessage', { gameCode: string; }>;
@@ -134,8 +137,8 @@ export type SocketMessage =
 	PhraseEnteredMessage |
 	EnterPictureMessage |
 	PictureEnteredMessage |
-	FinishReviewingMessage |
-	ReviewingFinishedMessage |
+	AdvanceStoryReviewMessage |
+	AdvancedStoryReviewMessage |
 	StartOverMessage |
 	StartedOverMessage |
 	EndGameMessage |

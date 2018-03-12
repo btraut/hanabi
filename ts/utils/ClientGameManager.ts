@@ -17,7 +17,7 @@ import {
 	SetPlayerPictureMessage,
 	EnterPhraseMessage,
 	EnterPictureMessage,
-	FinishReviewingMessage,
+	AdvanceStoryReviewMessage,
 	StartOverMessage,
 	EndGameMessage
 } from '../models/SocketMessage';
@@ -83,11 +83,11 @@ export default class ClientGameManager {
 		await ClientSocketManager.expectMessageOfType('PictureEnteredMessage');
 	}
 	
-	public async finishReviewing(gameCode: string) {
-		// Set the game state. Expect a response for the sake of error handling.
-		const message: FinishReviewingMessage = { type: 'FinishReviewingMessage', data: { gameCode } };
+	public async advanceStoryReview(gameCode: string) {
+		// Move to the next round of story review. Expect a response for the sake of error handling.
+		const message: AdvanceStoryReviewMessage = { type: 'AdvanceStoryReviewMessage', data: { gameCode } };
 		ClientSocketManager.send(message);
-		await ClientSocketManager.expectMessageOfType('ReviewingFinishedMessage');
+		await ClientSocketManager.expectMessageOfType('AdvancedStoryReviewMessage');
 	}
 	
 	public async startOver(gameCode: string) {
@@ -104,17 +104,15 @@ export default class ClientGameManager {
 		await ClientSocketManager.expectMessageOfType('GameEndedMessage');
 	}
 	
-	private _handleConnect = () => {
-		(async () => {
-			// Note that we've connected, but haven't yet gotten initial data.
-			this._dispatch({ type: 'connectionState/connect' });
-			
-			// Send initial data fetch request. _handleMessage will get the rest.
-			// Expect a response for the sake of timeout error handling.
-			const message: RequestInitialDataMessage = { type: 'RequestInitialDataMessage' };
-			ClientSocketManager.send(message);
-			await ClientSocketManager.expectMessageOfType('InitialDataResponseMessage');
-		})();
+	private _handleConnect = async () => {
+		// Note that we've connected, but haven't yet gotten initial data.
+		this._dispatch({ type: 'connectionState/connect' });
+		
+		// Send initial data fetch request. _handleMessage will get the rest.
+		// Expect a response for the sake of timeout error handling.
+		const message: RequestInitialDataMessage = { type: 'RequestInitialDataMessage' };
+		ClientSocketManager.send(message);
+		await ClientSocketManager.expectMessageOfType('InitialDataResponseMessage');
 	}
 	
 	private _handleDisconnect = () => {
@@ -189,11 +187,11 @@ export default class ClientGameManager {
 			} else if (message.data.pictureData && message.data.gameCode && message.data.playerId) {
 				this._dispatch({ type: 'gameData/enterPicture', payload: message.data });
 			}
-		} else if (message.type === 'ReviewingFinishedMessage') {
+		} else if (message.type === 'AdvancedStoryReviewMessage') {
 			if (message.data.error) {
-				this._dispatch({ type: 'reviewingFinishedError/set', payload: message.data.error });
+				this._dispatch({ type: 'advanceStoryReviewError/set', payload: message.data.error });
 			} else if (message.data.gameCode) {
-				this._dispatch({ type: 'gameData/reviewingFinished', payload: message.data });
+				this._dispatch({ type: 'gameData/advanceStoryReview', payload: message.data });
 			}
 		} else if (message.type === 'StartedOverMessage') {
 			if (message.data.error) {

@@ -14,6 +14,7 @@ export enum GameState {
 	WaitingForPhraseSubmissions,
 	WaitingForPictureSubmissions,
 	AllSubmissionsRecieved,
+	WaitingToReviewStories,
 	ReviewingStories,
 	PlayAgainOptions
 }
@@ -208,9 +209,25 @@ export class Game {
 		this._updated = new Date();
 	}
 	
-	public finishReviewing() {
-		if (this._state === GameState.ReviewingStories) {
-			this._state = GameState.PlayAgainOptions;
+	public advanceStoryReview() {
+		if (this._state === GameState.WaitingToReviewStories) {
+			this._state = GameState.ReviewingStories;
+		} else if (this._state === GameState.ReviewingStories) {
+			if (this._presentingRound === this._rounds - 1) {
+				if (this._presentingPlayer === Object.keys(this._players).length - 1) {
+					this._presentingPlayer = 0;
+					this._presentingRound = 0;
+					this._state = GameState.PlayAgainOptions;
+				} else {
+					this._presentingPlayer += 1;
+					this._presentingRound = 0;
+					this._state = GameState.WaitingToReviewStories;
+				}
+			} else {
+				this._presentingRound += 1;
+			}
+		} else {
+			return;
 		}
 		
 		this._updated = new Date();
@@ -223,6 +240,8 @@ export class Game {
 		newGame._players = this._players;
 		newGame._state = GameState.WaitingForPhraseSubmissions;
 		newGame._currentRound = 0;
+		newGame._presentingPlayer = 0;
+		newGame._presentingRound = 0;
 		newGame._rounds = this._rounds;
 		
 		return newGame;

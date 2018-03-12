@@ -380,11 +380,68 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps, PlayerViewStat
 		);
 	}
 	
-	private _renderReviewingStories() {
+	private _renderWaitingToReviewStories() {
+		const { gameData } = this.props;
+		
+		if (!gameData) {
+			return null;
+		}
+		
+		const nextPlayerOrder = gameData.presentingPlayer;
+		const nextPlayer = gameData.players.find(p => p.order === nextPlayerOrder);
+		
+		if (!nextPlayer) {
+			return null;
+		}
+		
+		const actionText = nextPlayerOrder === 0 ?
+			`First up is ${ nextPlayer.name }. Ready to start?` :
+			`Next up is ${ nextPlayer.name }. Ready to start?`;
+		
 		return (
 			<>
 				<h1 className="PlayerView-Title">Let's review.</h1>
-				<p className="PlayerView-BodyText">Watch all the words and art on the main screen.</p>
+				<p className="PlayerView-BodyText">{ actionText }</p>
+				<div className="PlayerView-GameActions">
+					<button className="PlayerView-SubmitButton" onClick={this._handleAdvanceStoryReviewClick}>View WordArt</button>
+				</div>
+			</>
+		);
+	}
+	
+	private _handleAdvanceStoryReviewClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+		const { clientGameManager, gameData } = this.props;
+		
+		if (!gameData) {
+			return;
+		}
+		
+		event.preventDefault();
+		
+		// Tell clientGameManager to move to the next player's deck.
+		clientGameManager.advanceStoryReview(gameData.code);
+	}
+	
+	private _renderReviewingStories() {
+		const { gameData } = this.props;
+		
+		if (!gameData) {
+			return null;
+		}
+		
+		const presentingPlayer = gameData.players.find(p => p.order === gameData.presentingPlayer);
+		
+		if (!presentingPlayer) {
+			return null;
+		}
+		
+		return (
+			<>
+				<h1 className="PlayerView-Title">Let's review.</h1>
+				<p className="PlayerView-BodyText">Viewing { presentingPlayer.name }: Round { gameData.presentingRound + 1 }</p>
+				<div className="PlayerView-GameActions">
+					<button className="PlayerView-SubmitButton" onClick={this._handleAdvanceStoryReviewClick}>Next</button>
+				</div>
 			</>
 		);
 	}
@@ -436,6 +493,7 @@ class PlayerViewPage extends React.PureComponent<PlayerViewProps, PlayerViewStat
 		case GameState.WaitingForPlayers: return this._renderInGameLobby();
 		case GameState.WaitingForPhraseSubmissions: return this._renderWaitingForPhraseSubmissions();
 		case GameState.WaitingForPictureSubmissions: return this._renderWaitingForPictureSubmissions();
+		case GameState.WaitingToReviewStories: return this._renderWaitingToReviewStories();
 		case GameState.ReviewingStories: return this._renderReviewingStories();
 		case GameState.PlayAgainOptions: return this._renderPlayAgainOptions();
 		}

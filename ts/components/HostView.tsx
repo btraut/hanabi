@@ -51,24 +51,12 @@ class HostViewPage extends React.PureComponent<HostViewProps> {
 	}
 	
 	public componentWillReceiveProps(newProps: HostViewProps) {
-		const { gameData, clientGameManager, history } = this.props;
+		const { gameData, history } = this.props;
 		
 		// If the user has switched to reviewing stories, set a timer to
 		// finish the game.
 		if (gameData && !newProps.gameData) {
 			history.push('/');
-		}
-		
-		// If the user has switched to reviewing stories, set a timer to
-		// finish the game.
-		if (
-			newProps.gameData && newProps.gameData.state === GameState.ReviewingStories &&
-			gameData && gameData.state !== GameState.ReviewingStories
-		) {
-			setTimeout(() => {
-				clientGameManager.finishReviewing(gameData.code);
-			}, 5000);
-			return;
 		}
 	}
 	
@@ -158,7 +146,8 @@ class HostViewPage extends React.PureComponent<HostViewProps> {
 		case GameState.WaitingForPlayers: return this._renderWaitingForPlayers(gameData);
 		case GameState.WaitingForPhraseSubmissions: return this._renderWaitingForPhraseSubmissions(gameData);
 		case GameState.WaitingForPictureSubmissions: return this._renderWaitingForPictureSubmissions(gameData);
-		case GameState.ReviewingStories: return <div>Reviewing sequences…</div>;
+		case GameState.WaitingToReviewStories: return <div>Waiting to review stories…</div>;
+		case GameState.ReviewingStories: return <div>Reviewing stories…</div>;
 		case GameState.PlayAgainOptions: return this._renderPlayAgainOptions();
 		}
 	}

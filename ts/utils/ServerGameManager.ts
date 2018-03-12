@@ -13,7 +13,7 @@ import {
 	PhraseEnteredMessage,
 	GameStateSetMessage,
 	PictureEnteredMessage,
-	ReviewingFinishedMessage,
+	AdvancedStoryReviewMessage,
 	StartedOverMessage,
 	GameEndedMessage
 } from '../models/SocketMessage';
@@ -417,23 +417,28 @@ class ServerGameManager {
 		this._checkForNextState(game);
 	}
 	
-	private _handleFinishReviewingMessage(playerId: string, gameCode: string) {
+	private _handleAdvanceStoryReviewMessage(playerId: string, gameCode: string) {
 		// Validate game, membership, and state.
-		if (!this._ensureUserIsInGame('ReviewingFinishedMessage', playerId, gameCode, GameState.ReviewingStories)) {
+		if (!this._ensureUserIsInGame('AdvancedStoryReviewMessage', playerId, gameCode, GameState.ReviewingStories)) {
 			return;
 		}
 		
 		const game = this._games[gameCode];
-		game.finishReviewing();
+		game.advanceStoryReview();
 		
 		// Notify all players and host.
-		const message: ReviewingFinishedMessage = {
-			type: 'ReviewingFinishedMessage',
-			data: { gameCode }
+		const message: AdvancedStoryReviewMessage = {
+			type: 'AdvancedStoryReviewMessage',
+			data: {
+				gameCode,
+				state: game.state,
+				presentingPlayer: game.presentingPlayer,
+				presentingRound: game.presentingRound
+			}
 		};
 		ServerSocketManager.send(game.allUsers, message);
 	}
-	
+
 	private _handleStartOverMessage(playerId: string, gameCode: string) {
 		// Validate game, membership, and state.
 		if (!this._ensureUserIsInGame('StartedOverMessage', playerId, gameCode, GameState.PlayAgainOptions)) {
@@ -522,8 +527,8 @@ class ServerGameManager {
 					message.data.round,
 					message.data.pictureData
 				);
-			} else if (message.type === 'FinishReviewingMessage') {
-				this._handleFinishReviewingMessage(userId, ServerGameManager._cleanGameCode(message.data.gameCode));
+			} else if (message.type === 'AdvanceStoryReviewMessage') {
+				this._handleAdvanceStoryReviewMessage(userId, ServerGameManager._cleanGameCode(message.data.gameCode));
 			} else if (message.type === 'StartOverMessage') {
 				this._handleStartOverMessage(userId, ServerGameManager._cleanGameCode(message.data.gameCode));
 			} else if (message.type === 'EndGameMessage') {

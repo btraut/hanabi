@@ -21,7 +21,7 @@ export interface WordArtState {
 	readonly enterPhraseError: string | null;
 	readonly enterPictureError: string | null;
 	readonly setGameStateError: string | null;
-	readonly reviewingFinishedError: string | null;
+	readonly advanceStoryReviewError: string | null;
 	readonly startOverError: string | null;
 	readonly endGameError: string | null;
 }
@@ -163,14 +163,19 @@ const gameDataModel: TypedModel<GameData | null> = {
 			
 			return { ...state, pictures };
 		},
-		reviewingFinished: (state, payload) => {
+		advanceStoryReview: (state, payload) => {
 			// Verify we're updating this game.
 			if (!state || state.code !== payload.gameCode) {
 				return state;
 			}
 			
 			// Update game state.
-			return { ...state, state: GameDataState.PlayAgainOptions };
+			return {
+				...state,
+				state: payload.state,
+				presentingPlayer: payload.presentingPlayer,
+				presentingRound: payload.presentingRound
+			};
 		},
 		startOver: (state, payload) => {
 			// Verify we're updating this game.
@@ -222,7 +227,7 @@ export const models = {
 	enterPhraseError: { ...errorModel },
 	enterPictureError: { ...errorModel },
 	setGameStateError: { ...errorModel },
-	reviewingFinishedError: { ...errorModel },
+	advanceStoryReviewError: { ...errorModel },
 	startOverError: { ...errorModel },
 	endGameError: { ...errorModel }
 };
