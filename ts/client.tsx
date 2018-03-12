@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { hydrate } from 'react-dom';
 import { BrowserRouter } from 'react-router-dom';
+import { Store } from 'redux';
 import { Provider as StoreProvider } from 'react-redux';
 import { init as createStore } from '@rematch/core';
 import 'cross-fetch/polyfill';
@@ -21,7 +22,7 @@ const preloadedState = (window as any).__PRELOADED_STATE__ as StoreData;
 delete (window as any).__PRELOADED_STATE__;
 
 // Create Redux store.
-const store = createStore({
+const store: Store<StoreData> = createStore({
 	models,
 	redux: {
 		reducers: {

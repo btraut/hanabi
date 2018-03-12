@@ -5,8 +5,8 @@
 // game and keeps it in sync with the server.
 
 import { Dispatch } from 'redux';
-import { dispatch as rematchDispatch } from '@rematch/core';
 
+import { StoreData } from '../reducers/root';
 import ClientSocketManager from './ClientSocketManager';
 import {
 	SocketMessage,
@@ -22,14 +22,12 @@ import {
 	EndGameMessage
 } from '../models/SocketMessage';
 
-const dispatch = rematchDispatch as any as {
-	[key: string]: {
-		[key: string]: (...data: any[]) => Promise<Dispatch<any>>;
-	}
-};
-
 export default class ClientGameManager {
-	constructor() {
+	private _dispatch: Dispatch<StoreData>;
+	
+	constructor(dispatch: Dispatch<StoreData>) {
+		this._dispatch = dispatch;
+		
 		ClientSocketManager.onConnect.subscribe(this._handleConnect);
 		ClientSocketManager.onDisconnect.subscribe(this._handleDisconnect);
 		ClientSocketManager.onMessage.subscribe(this._handleMessage);
@@ -109,7 +107,7 @@ export default class ClientGameManager {
 	private _handleConnect = () => {
 		(async () => {
 			// Note that we've connected, but haven't yet gotten initial data.
-			dispatch.connectionState.connect();
+			this._dispatch({ type: 'connectionState/connect' });
 			
 			// Send initial data fetch request. _handleMessage will get the rest.
 			// Expect a response for the sake of timeout error handling.
@@ -120,8 +118,8 @@ export default class ClientGameManager {
 	}
 	
 	private _handleDisconnect = () => {
-		dispatch.connectionState.disconnect();
-		dispatch.userId.clear();
+		this._dispatch({ type: 'connectionState/disconnect' });
+		this._dispatch({ type: 'userId/clear' });
 	}
 	
 	private _handleMessage = (message: SocketMessage) => {
@@ -129,85 +127,85 @@ export default class ClientGameManager {
 			if (message.data.error) {
 				// TODO: Handle error.
 			} else {
-				dispatch.userId.set(message.data.userId || null);
-				dispatch.gameData.load(message.data.gameData || null);
-				dispatch.connectionState.loadedInitialData();
+				this._dispatch({ type: 'userId/set', payload: message.data.userId || null });
+				this._dispatch({ type: 'gameData/set', payload: message.data.gameData || null });
+				this._dispatch({ type: 'connectionState/loadedInitialData' });
 			}
 		} else if (message.type === 'GameCreatedMessage') {
 			if (message.data.error) {
 				// TODO: Handle error.
 			} else {
-				dispatch.gameData.load(message.data.gameData || null);
+				this._dispatch({ type: 'gameData/set', payload: message.data.gameData || null });
 			}
 		} else if (message.type === 'GameJoinedMessage') {
 			if (message.data.error) {
-				dispatch.joinGameError.set(message.data.error);
+				this._dispatch({ type: 'joinGameError/set', payload: message.data.error });
 			} else if (message.data.gameData) {
 				// TODO: Fix
 				// this._dispatch(gameActions.clearErrors());
-				dispatch.gameData.load(message.data.gameData || null);
+				this._dispatch({ type: 'gameData/set', payload: message.data.gameData || null });
 			}
 		} else if (message.type === 'PlayerAddedMessage') {
 			if (message.data.error) {
-				dispatch.addPlayerError.set(message.data.error);
+				this._dispatch({ type: 'addPlayerError/set', payload: message.data.error });
 			} else if (message.data.player && message.data.gameCode) {
-				dispatch.gameData.addPlayer(message.data);
+				this._dispatch({ type: 'gameData/addPlayer', payload: message.data });
 			}
 		} else if (message.type === 'UserUpdatedMessage') {
 			if (message.data.error) {
-				dispatch.updateUserError.set(message.data.error);
+				this._dispatch({ type: 'updateUserError/set', payload: message.data.error });
 			} else if (message.data.player && message.data.gameCode) {
-				dispatch.gameData.updateUser(message.data);
+				this._dispatch({ type: 'gameData/updateUser', payload: message.data });
 			}
 		} else if (message.type === 'GameStartedMessage') {
 			if (message.data.error) {
-				dispatch.startGameError.set(message.data.error);
+				this._dispatch({ type: 'startGameError/set', payload: message.data.error });
 			} else if (message.data.gameCode && message.data.playerOrders) {
 				// TODO: Fix
 				// this._dispatch(gameActions.clearErrors());
-				dispatch.gameData.gameStarted(message.data);
+				this._dispatch({ type: 'gameData/gameStarted', payload: message.data });
 			}
 		} else if (message.type === 'PlayerPictureSetMessage') {
 			if (message.data.error) {
-				dispatch.setPlayerPictureError.set(message.data.error);
+				this._dispatch({ type: 'setPlayerPictureError/set', payload: message.data.error });
 			} else if (message.data.pictureData && message.data.gameCode && message.data.playerId) {
-				dispatch.gameData.setPlayerPicture(message.data);
+				this._dispatch({ type: 'gameData/setPlayerPicture', payload: message.data });
 			}
 		} else if (message.type === 'GameStateSetMessage') {
 			if (message.data.error) {
-				dispatch.setGameStateError.set(message.data.error);
+				this._dispatch({ type: 'setGameStateError/set', payload: message.data.error });
 			} else if (message.data.gameCode) {
-				dispatch.gameData.setGameState(message.data);
+				this._dispatch({ type: 'gameData/setGameState', payload: message.data });
 			}
 		} else if (message.type === 'PhraseEnteredMessage') {
 			if (message.data.error) {
-				dispatch.enterPhraseError.set(message.data.error);
+				this._dispatch({ type: 'enterPhraseError/set', payload: message.data.error });
 			} else if (message.data.phrase && message.data.gameCode && message.data.playerId) {
-				dispatch.gameData.enterPhrase(message.data);
+				this._dispatch({ type: 'gameData/enterPhrase', payload: message.data });
 			}
 		} else if (message.type === 'PictureEnteredMessage') {
 			if (message.data.error) {
-				dispatch.enterPictureError.set(message.data.error);
+				this._dispatch({ type: 'enterPictureError/set', payload: message.data.error });
 			} else if (message.data.pictureData && message.data.gameCode && message.data.playerId) {
-				dispatch.gameData.enterPicture(message.data);
+				this._dispatch({ type: 'gameData/enterPicture', payload: message.data });
 			}
 		} else if (message.type === 'ReviewingFinishedMessage') {
 			if (message.data.error) {
-				dispatch.reviewingFinishedError.set(message.data.error);
+				this._dispatch({ type: 'reviewingFinishedError/set', payload: message.data.error });
 			} else if (message.data.gameCode) {
-				dispatch.gameData.reviewingFinished(message.data);
+				this._dispatch({ type: 'gameData/reviewingFinished', payload: message.data });
 			}
 		} else if (message.type === 'StartedOverMessage') {
 			if (message.data.error) {
-				dispatch.startOverError.set(message.data.error);
+				this._dispatch({ type: 'startOverError/set', payload: message.data.error });
 			} else if (message.data.gameCode && message.data.gameData) {
-				dispatch.gameData.startOver(message.data);
+				this._dispatch({ type: 'gameData/startOver', payload: message.data });
 			}
 		} else if (message.type === 'GameEndedMessage') {
 			if (message.data.error) {
-				dispatch.endGameError.set(message.data.error);
+				this._dispatch({ type: 'endGameError/set', payload: message.data.error });
 			} else if (message.data.gameCode) {
-				dispatch.gameData.endGame(message.data);
+				this._dispatch({ type: 'gameData/endGame', payload: message.data });
 			}
 		}
 	}

@@ -38,7 +38,7 @@ const connectionStateModel: TypedModel<ConnectionState> = {
 const gameDataModel: TypedModel<GameData | null> = {
 	state: null,
 	reducers: {
-		load: (_, gameData) => gameData || null,
+		set: (_, gameData) => gameData || null,
 		addPlayer: (state, payload) => {
 			if (!state || state.code !== payload.gameCode) {
 				return state;

@@ -13,7 +13,7 @@ class ClientGameManagerProvider extends React.PureComponent<ClientGameManagerPro
 	constructor(props: ClientGameManagerProviderProps) {
 		super(props);
 		
-		this._clientGameManager = new ClientGameManager();
+		this._clientGameManager = new ClientGameManager(props.dispatch!);
 	}
 	
 	public getChildContext() {
