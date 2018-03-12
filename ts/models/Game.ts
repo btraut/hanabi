@@ -24,6 +24,8 @@ export interface GameData {
 	readonly host: Player;
 	readonly players: Player[];
 	readonly currentRound: number;
+	readonly presentingPlayer: number;
+	readonly presentingRound: number;
 	readonly rounds: number;
 	readonly phrases: Array<{ [playerId: string]: string }>;
 	readonly pictures: Array<{ [playerId: string]: string }>;
@@ -38,6 +40,8 @@ export class Game {
 	public get pictures() { return this._pictures; }
 	public get code() { return this._code; }
 	public get currentRound() { return this._currentRound; }
+	public get presentingPlayer() { return this._presentingPlayer; }
+	public get presentingRound() { return this._presentingRound; }
 	public get rounds() { return this._rounds; }
 	public get state() { return this._state; }
 	public get allUsers() { return [...Object.values(this._players).map(p => p.id), this._host.id]; }
@@ -49,6 +53,8 @@ export class Game {
 	private _pictures: Array<{ [playerId: string]: string }> = [];
 	private _host: Player;
 	private _currentRound: number = 0;
+	private _presentingPlayer: number = 0;
+	private _presentingRound: number = 0;
 	private _rounds: number = 3;
 	private _code: string = this.regenerateCode();
 	private _state = GameState.WaitingForPlayers;
@@ -68,6 +74,8 @@ export class Game {
 			host: this._host,
 			players: Object.values(this._players),
 			currentRound: this._currentRound,
+			presentingPlayer: this._presentingPlayer,
+			presentingRound: this._presentingRound,
 			rounds: this._rounds,
 			phrases: this._phrases,
 			pictures: this._pictures
