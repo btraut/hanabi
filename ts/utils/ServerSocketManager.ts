@@ -129,13 +129,13 @@ class ServerSocketManager {
 			const authenticatedSockets = invert(this._authenticatedUsers) as { [userId: string]: string };
 			const socketId = authenticatedSockets[userId];
 			
-			if (!socketId) {
-				throw new Error('Invalid userid.');
+			if (socketId) {
+				console.log(`Sending message to ${ userId }:`, message);
+			
+				this._send(socketId, message);
+			} else {
+				console.log(`Can’t send message to offline or non-existant user ${ userId }.`);
 			}
-			
-			console.log(`sending message to ${ userId }:`, message);
-			
-			this._send(socketId, message);
 		}
 	}
 }
