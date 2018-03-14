@@ -184,7 +184,7 @@ const gameDataModel: TypedModel<GameData | null> = {
 			}
 			
 			// Replace the game data with that of the action's.
-			return payload.state;
+			return payload.gameData;
 		},
 		endGame: (state, payload) => {
 			// Verify we're updating this game.
