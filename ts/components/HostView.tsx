@@ -60,7 +60,13 @@ class HostViewPage extends React.PureComponent<HostViewProps> {
 		}
 	}
 	
-	private _renderWaitingForPlayers(gameData: GameData) {
+	private _renderWaitingForPlayers() {
+		const { gameData } = this.props;
+		
+		if (!gameData) {
+			return null;
+		}
+		
 		return (
 			<>
 				<h1 className="HostView-Title">Time to recruit.</h1>
@@ -83,7 +89,13 @@ class HostViewPage extends React.PureComponent<HostViewProps> {
 		);
 	}
 	
-	private _renderWaitingForPhraseSubmissions(gameData: GameData) {
+	private _renderWaitingForPhraseSubmissions() {
+		const { gameData } = this.props;
+		
+		if (!gameData) {
+			return null;
+		}
+		
 		const currentRoundIndex = gameData.currentRound / 2;
 		
 		return (
@@ -107,7 +119,13 @@ class HostViewPage extends React.PureComponent<HostViewProps> {
 		);
 	}
 	
-	private _renderWaitingForPictureSubmissions(gameData: GameData) {
+	private _renderWaitingForPictureSubmissions() {
+		const { gameData } = this.props;
+		
+		if (!gameData) {
+			return null;
+		}
+		
 		const currentRoundIndex = (gameData.currentRound - 1) / 2;
 		
 		return (
@@ -132,6 +150,76 @@ class HostViewPage extends React.PureComponent<HostViewProps> {
 		);
 	}
 	
+	private _renderWaitingToReviewStories() {
+		return (
+			<>
+				<h1 className="HostView-Title">Ready to watch?</h1>
+				<p className="HostView-BodyText">Control the stories on your phone.</p>
+			</>
+		);
+	}
+	
+	private _renderReviewingStories() {
+		const { gameData } = this.props;
+		
+		if (!gameData) {
+			return null;
+		}
+		
+		const owningPlayerOrder = gameData.presentingPlayer;
+		const owningPlayer = gameData.players.find(p => p.order === owningPlayerOrder);
+		
+		const contributingPlayerOrder = (owningPlayerOrder + gameData.presentingRound) % Object.keys(gameData.players).length;
+		const contributingPlayer = gameData.players.find(p => p.order === contributingPlayerOrder);
+		
+		if (!owningPlayer || !contributingPlayer) {
+			return null;
+		}
+		
+		const buildFrame = (round: number, classNameAddition: string) => {
+			if (round < 0 || round >= gameData.rounds) {
+				return null;
+			}
+			
+			if (round % 2 === 0) {
+				const phraseIndex = round / 2;
+				const phrase = gameData.phrases[phraseIndex][contributingPlayer.id];
+				const className = 'HostView-ReviewFrame HostView-ReviewFrame-Phrase ' + classNameAddition;
+				return (
+					<div className={className} key={`ReviewFrame-${round}`}>
+						<p className="HostView-BodyText">{ phrase }</p>
+					</div>
+				);
+			} else {
+				const pictureIndex = (round - 1) / 2;
+				const pictureData = gameData.pictures[pictureIndex][contributingPlayer.id];
+				const className = 'HostView-ReviewFrame HostView-ReviewFrame-Picture ' + classNameAddition;
+				return (
+					<div className={className} key={`ReviewFrame-${round}`}>
+						<div className="HostView-PictureContainer">
+							<img className="HostView-Picture" src={pictureData} />
+						</div>
+					</div>
+				);
+			}
+		};
+
+		const previousFrame = buildFrame(gameData.presentingRound - 1, 'HostView-ReviewFrame-Previous');
+		const currentFrame = buildFrame(gameData.presentingRound, 'HostView-ReviewFrame-Current');
+		const nextFrame = buildFrame(gameData.presentingRound + 1, 'HostView-ReviewFrame-Next');
+		
+		return (
+			<>
+				<h1 className="HostView-Title">Story by { owningPlayer.name }:</h1>
+				<div className="HostView-ReviewFrames">
+					{ previousFrame }
+					{ currentFrame }
+					{ nextFrame }
+				</div>
+			</>
+		);
+	}
+	
 	private _renderPlayAgainOptions() {
 		return (
 			<>
@@ -143,11 +231,11 @@ class HostViewPage extends React.PureComponent<HostViewProps> {
 	
 	private _renderGameState(gameData: GameData) {
 		switch (gameData.state) {
-		case GameState.WaitingForPlayers: return this._renderWaitingForPlayers(gameData);
-		case GameState.WaitingForPhraseSubmissions: return this._renderWaitingForPhraseSubmissions(gameData);
-		case GameState.WaitingForPictureSubmissions: return this._renderWaitingForPictureSubmissions(gameData);
-		case GameState.WaitingToReviewStories: return <div>Waiting to review stories…</div>;
-		case GameState.ReviewingStories: return <div>Reviewing stories…</div>;
+		case GameState.WaitingForPlayers: return this._renderWaitingForPlayers();
+		case GameState.WaitingForPhraseSubmissions: return this._renderWaitingForPhraseSubmissions();
+		case GameState.WaitingForPictureSubmissions: return this._renderWaitingForPictureSubmissions();
+		case GameState.WaitingToReviewStories: return this._renderWaitingToReviewStories();
+		case GameState.ReviewingStories: return this._renderReviewingStories();
 		case GameState.PlayAgainOptions: return this._renderPlayAgainOptions();
 		}
 	}

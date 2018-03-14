@@ -104,3 +104,45 @@
 	text-align: center;
 	margin-top: 8px;
 }
+
+.HostView-PictureContainer {
+	flex: 1 1 0;
+	width: 100%;
+	padding: 20px;
+	background-color: white;
+	margin-bottom: 20px;
+	display: flex;
+	justify-content: center;
+	overflow: hidden;
+}
+
+.HostView-Picture {
+	flex: 0 1 auto;
+	max-width: 100%;
+	object-fit: contain;
+}
+
+.HostView-ReviewFrames {
+	position: relative;
+	flex: 1 1 0;
+	align-self: stretch;
+}
+
+.HostView-ReviewFrame {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	width: 100%;
+	height: 100%;
+	transition: transform 300ms ease-in-out;
+}
+
+.HostView-ReviewFrame-Previous {
+	transform: translateX(-100vw);
+}
+
+.HostView-ReviewFrame-Next {
+	transform: translateX(100vw);
+}
