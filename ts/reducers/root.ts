@@ -1,10 +1,10 @@
-import { models as wordArtModels, WordArtState } from './WordArt';
+import { models as escapeModels, EscapeState } from './Escape';
 import { TypedModel } from './types';
 
 // Combine all state types.
-export type StoreData = WordArtState;
+export type StoreData = EscapeState;
 
 // Combine all reducers.
 export const models: { [key: string]: TypedModel<any> } = {
-	...wordArtModels
+	...escapeModels,
 };

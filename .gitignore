@@ -1,14 +1,8 @@
 
 # Created by https://www.gitignore.io/api/node
 
-### Environment Configuration ###
-.env
-
-
-### Build ###
-.build
-webpack-assets.json
-
+### App ###
+.build/*
 
 ### Node ###
 # Logs
@@ -57,6 +51,11 @@ jspm_packages
 *.tgz
 
 
+### Typings ###
+## Ignore downloaded typings
+typings
+
+
 ### macOS ###
 *.DS_Store
 .AppleDouble
@@ -86,8 +85,7 @@ Temporary Items
 
 
 ### VisualStudioCode ###
-.vscode/*
+.vscode
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
-

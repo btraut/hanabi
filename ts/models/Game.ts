@@ -56,7 +56,7 @@ export class Game {
 	private _currentRound: number = 0;
 	private _presentingPlayer: number = 0;
 	private _presentingRound: number = 0;
-	private _rounds: number = 3;
+	private _rounds: number = 5;
 	private _code: string = this.regenerateCode();
 	private _state = GameState.WaitingForPlayers;
 	

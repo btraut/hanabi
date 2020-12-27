@@ -10,22 +10,24 @@ export default class PlayerViewPage extends React.PureComponent<RouteProps> {
 	public static async preload() {
 		console.log('join page preloaded');
 	}
-	
-	public static title = 'WordArt | Play';
-	
+
+	public static title = 'Escape | Play';
+
 	public componentDidMount() {
 		document.title = PlayerViewPage.title;
 	}
-	
+
 	public render() {
 		const { location } = this.props;
 		const queryParts = parseQueryString(location ? location.search || '' : '') || {};
 		const showGameState = typeof queryParts.showGameState !== 'undefined';
-		
+
 		return (
 			<ClientGameManagerProvider>
 				<ClientGameManager>
-					{clientGameManager => <PlayerView clientGameManager={clientGameManager} showGameState={showGameState} />}
+					{(clientGameManager) => (
+						<PlayerView clientGameManager={clientGameManager} showGameState={showGameState} />
+					)}
 				</ClientGameManager>
 			</ClientGameManagerProvider>
 		);
