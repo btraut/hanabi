@@ -1,14 +1,14 @@
 import { Server as HTTPServer } from 'http';
+import { invert } from 'lodash';
 import { Server as SocketServer } from 'socket.io';
 import { v1 as uuidv1 } from 'uuid';
-import { invert } from 'lodash';
 
-import Logger from '../utils/Logger';
 import {
-	SocketMessage,
-	AuthenticateSocketMessage,
 	AuthenticateResponseSocketMessage,
+	AuthenticateSocketMessage,
+	SocketMessage,
 } from '../models/SocketMessage';
+import Logger from '../utils/Logger';
 import PubSub from './PubSub';
 
 interface AuthToken {

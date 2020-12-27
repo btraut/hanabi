@@ -28,8 +28,8 @@ export interface GameData {
 	readonly presentingPlayer: number;
 	readonly presentingRound: number;
 	readonly rounds: number;
-	readonly phrases: Array<{ [playerId: string]: string }>;
-	readonly pictures: Array<{ [playerId: string]: string }>;
+	readonly phrases: { [playerId: string]: string }[];
+	readonly pictures: { [playerId: string]: string }[];
 }
 
 export class Game {
@@ -50,13 +50,13 @@ export class Game {
 	private _created = new Date();
 	private _updated = new Date();
 	private _players: { [playerId: string]: Player } = {};
-	private _phrases: Array<{ [playerId: string]: string }> = [];
-	private _pictures: Array<{ [playerId: string]: string }> = [];
+	private _phrases: { [playerId: string]: string }[] = [];
+	private _pictures: { [playerId: string]: string }[] = [];
 	private _host: Player;
-	private _currentRound: number = 0;
-	private _presentingPlayer: number = 0;
-	private _presentingRound: number = 0;
-	private _rounds: number = 5;
+	private _currentRound = 0;
+	private _presentingPlayer = 0;
+	private _presentingRound = 0;
+	private _rounds = 5;
 	private _code: string = this.regenerateCode();
 	private _state = GameState.WaitingForPlayers;
 	

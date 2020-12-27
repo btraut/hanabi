@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Route, Switch, RouteProps } from 'react-router-dom';
+import { Route, RouteProps,Switch } from 'react-router-dom';
 
 interface AppProps {
 	readonly routes: RouteProps[];

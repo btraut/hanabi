@@ -1,25 +1,26 @@
-import * as React from 'react';
+import 'cross-fetch/polyfill';
+
 import * as bodyParser from 'body-parser';
-import * as cookieParser from 'cookie-parser';
 import * as compress from 'compression';
+import * as cookieParser from 'cookie-parser';
 import * as dotenv from 'dotenv';
 import * as express from 'express';
 import * as fs from 'fs';
 import * as http from 'http';
-import * as logger from 'morgan';
 import * as methodOverride from 'method-override';
+import * as logger from 'morgan';
 import * as path from 'path';
+import * as React from 'react';
 import * as ReactDOMServer from 'react-dom/server';
-import { v1 as uuidv1 } from 'uuid';
-import { StaticRouter, matchPath } from 'react-router';
+import { matchPath,StaticRouter } from 'react-router';
 import * as url from 'url';
-import 'cross-fetch/polyfill';
+import { v1 as uuidv1 } from 'uuid';
 
-import routes from './routes';
 import App from './components/App';
+import routes from './routes';
 import Logger from './utils/Logger';
-import ServerSocketManager from './utils/ServerSocketManager';
 import ServerGameManager from './utils/ServerGameManager';
+import ServerSocketManager from './utils/ServerSocketManager';
 
 // Define globals from webpack.
 declare const DOMAIN_BASE: string;

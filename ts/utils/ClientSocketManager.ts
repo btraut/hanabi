@@ -7,7 +7,7 @@
 
 import { io, Socket } from 'socket.io-client';
 
-import { SocketMessage, AuthenticateSocketMessage } from '../models/SocketMessage';
+import { AuthenticateSocketMessage,SocketMessage } from '../models/SocketMessage';
 import Ajax from './Ajax';
 import PubSub from './PubSub';
 

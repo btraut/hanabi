@@ -6,21 +6,20 @@
 
 import { Dispatch } from 'redux';
 
-import { StoreData } from '../reducers/root';
-import ClientSocketManager from './ClientSocketManager';
 import {
-	SocketMessage,
-	RequestInitialDataMessage,
+	AdvanceStoryReviewMessage,
 	CreateGameMessage,
-	JoinGameMessage,
-	StartGameMessage,
-	SetPlayerPictureMessage,
+	EndGameMessage,
 	EnterPhraseMessage,
 	EnterPictureMessage,
-	AdvanceStoryReviewMessage,
-	StartOverMessage,
-	EndGameMessage
-} from '../models/SocketMessage';
+	JoinGameMessage,
+	RequestInitialDataMessage,
+	SetPlayerPictureMessage,
+	SocketMessage,
+	StartGameMessage,
+	StartOverMessage} from '../models/SocketMessage';
+import { StoreData } from '../reducers/root';
+import ClientSocketManager from './ClientSocketManager';
 
 export default class ClientGameManager {
 	private _dispatch: Dispatch<StoreData>;

@@ -1,4 +1,4 @@
-import { GameData, GameState as GameDataState, ConnectionState } from '../models/Game';
+import { ConnectionState,GameData, GameState as GameDataState } from '../models/Game';
 import { TypedModel } from './types';
 
 export interface EscapeState {

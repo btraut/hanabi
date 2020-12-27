@@ -1,10 +1,10 @@
+import { parse as parseQueryString } from 'query-string';
 import * as React from 'react';
 import { RouteProps } from 'react-router';
-import { parse as parseQueryString } from 'query-string';
 
-import PlayerView from '../components/PlayerView';
-import ClientGameManagerProvider from '../components/ClientGameManagerProvider';
 import ClientGameManager from '../components/ClientGameManager';
+import ClientGameManagerProvider from '../components/ClientGameManagerProvider';
+import PlayerView from '../components/PlayerView';
 
 export default class PlayerViewPage extends React.PureComponent<RouteProps> {
 	public static async preload() {

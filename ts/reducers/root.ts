@@ -1,4 +1,4 @@
-import { models as escapeModels, EscapeState } from './Escape';
+import { EscapeState,models as escapeModels } from './Escape';
 import { TypedModel } from './types';
 
 // Combine all state types.

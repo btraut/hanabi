@@ -7,6 +7,7 @@
 		"watch": "nodemon --watch webpack.config.babel.js --exec \"webpack -w\"",
 		"lint": "yarn run eslint && yarn run stylelint",
 		"eslint": "eslint . --ext .js,.jsx,.ts,.tsx",
+		"eslint-fix": "eslint . --fix --ext .js,.jsx,.ts,.tsx",
 		"stylelint": "stylelint --config ./.stylelintrc **/*.less",
 		"start": "nodemon --watch .build .build/server/server.js"
 	},

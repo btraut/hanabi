@@ -1,11 +1,11 @@
 import * as React from 'react';
-import { compose } from 'redux';
-import { connect } from 'react-redux';
 import JSONPretty from 'react-json-pretty';
-import { withRouter, RouteComponentProps } from 'react-router';
+import { connect } from 'react-redux';
+import { RouteComponentProps,withRouter } from 'react-router';
+import { compose } from 'redux';
 
+import { ConnectionState,GameData, GameState } from '../models/Game';
 import { StoreData } from '../reducers/root';
-import { GameState, GameData, ConnectionState } from '../models/Game';
 import { ClientGameManagerPropsAdditions } from './ClientGameManager';
 
 // Define globals from webpack.

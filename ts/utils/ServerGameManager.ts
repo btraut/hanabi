@@ -1,25 +1,25 @@
 import { Game, GameState } from '../models/Game';
 import Player from '../models/Player';
+import { MAXIMUM_PLAYERS_IN_GAME,MINIMUM_PLAYERS_IN_GAME } from '../models/Rules';
 import {
-	SocketMessageTemplate,
-	SocketMessage,
-	GameCreatedMessage,
-	InitialDataResponseMessage,
-	GameJoinedMessage,
-	PlayerAddedMessage,
-	UserUpdatedMessage,
-	GameStartedMessage,
-	PlayerPictureSetMessage,
-	PhraseEnteredMessage,
-	GameStateSetMessage,
-	PictureEnteredMessage,
 	AdvancedStoryReviewMessage,
-	StartedOverMessage,
+	GameCreatedMessage,
 	GameEndedMessage,
+	GameJoinedMessage,
+	GameStartedMessage,
+	GameStateSetMessage,
+	InitialDataResponseMessage,
+	PhraseEnteredMessage,
+	PictureEnteredMessage,
+	PlayerAddedMessage,
+	PlayerPictureSetMessage,
+	SocketMessage,
+	SocketMessageTemplate,
+	StartedOverMessage,
+	UserUpdatedMessage,
 } from '../models/SocketMessage';
-import ServerSocketManager from './ServerSocketManager';
 import Logger from '../utils/Logger';
-import { MINIMUM_PLAYERS_IN_GAME, MAXIMUM_PLAYERS_IN_GAME } from '../models/Rules';
+import ServerSocketManager from './ServerSocketManager';
 
 const GAME_EXPIRATION_MINUTES = 30;
 
