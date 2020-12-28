@@ -20,11 +20,10 @@ These instructions assume you’ve already cloned the master branch.
 
 #### Building Code
 
-The way you build code for web, background-worker, and scheduler is all the same:
+Webpack builds all the targets simultaneously:
 
-1. Navigate to the appropriate folder, `<root>/web` for example, in a command prompt.
-2. Run `yarn` to install dependencies.
-3. Run `yarn run watch` to launch a daemon that builds code any time changes are made.
+1. Run `yarn` to install dependencies.
+2. Run `yarn run watch` to launch a daemon that builds code any time changes are made.
 
 #### Environment Variables
 

@@ -85,7 +85,6 @@ module.exports = {
 		'no-bitwise': 'error',
 		'no-caller': 'error',
 		'no-cond-assign': 'error',
-		'no-console': 'error',
 		'no-debugger': 'error',
 		'no-duplicate-case': 'error',
 		'no-duplicate-imports': 'error',
@@ -99,12 +98,6 @@ module.exports = {
 		'no-redeclare': 'error',
 		'no-return-await': 'error',
 		'no-sequences': 'error',
-		'no-shadow': [
-			'error',
-			{
-				hoist: 'all',
-			},
-		],
 		'no-sparse-arrays': 'error',
 		'no-template-curly-in-string': 'error',
 		'no-throw-literal': 'error',
@@ -125,13 +118,9 @@ module.exports = {
 		'spaced-comment': 'error',
 		'use-isnan': 'error',
 		'valid-typeof': 'off',
+		'react/jsx-uses-react': 'off',
+		'react/react-in-jsx-scope': 'off',
+		'no-shadow': 'off',
+		'@typescript-eslint/no-shadow': ['error'],
 	},
-	overrides: [
-		{
-			files: ['*.ts', '*.tsx'],
-			rules: {
-				'@typescript-eslint/explicit-function-return-type': ['error'],
-			},
-		},
-	],
 };

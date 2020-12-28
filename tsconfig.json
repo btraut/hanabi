@@ -6,7 +6,7 @@
 		"module": "commonjs",
 		"target": "es6",
 		"lib": ["es6", "dom", "es2017"],
-		"jsx": "react",
+		"jsx": "react-jsx",
 		"sourceMap": true,
 		"experimentalDecorators": true,
 		"esModuleInterop": true,

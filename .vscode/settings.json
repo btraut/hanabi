@@ -11,4 +11,14 @@
   
   // Remove trailing auto inserted whitespace
   "editor.trimAutoWhitespace": false,
+  "spellright.language": [
+    "en"
+  ],
+  "spellright.documentTypes": [
+    "latex",
+    "plaintext"
+  ],
+  "files.exclude": {
+    "**/.build": true
+  },
 }

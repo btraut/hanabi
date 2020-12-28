@@ -1,4 +1,25 @@
 {
-	"presets": ["env"],
-	"plugins": ["transform-object-rest-spread"]
+	"presets": [
+		[
+			"@babel/preset-env",
+			{
+				"targets": [
+					"last 2 Chrome versions",
+					"last 2 Firefox versions",
+					"last 2 Edge versions",
+					"last 2 Opera versions",
+					"last 2 Safari versions",
+					"last 2 iOS versions"
+				]
+			}
+		]
+	],
+	"plugins": [
+		"@babel/plugin-syntax-jsx",
+		"@babel/plugin-transform-react-jsx",
+		"@babel/plugin-transform-react-display-name",
+		"@babel/plugin-transform-typescript",
+		"@babel/plugin-proposal-class-properties",
+		"@babel/plugin-proposal-object-rest-spread"
+	]
 }
