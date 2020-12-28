@@ -110,7 +110,7 @@ try {
 			}
 
 			// Figure out the page title.
-			let title = 'Escape';
+			let title = 'Ten Four Games';
 			if (matchedRoute && matchedRoute.component && matchedRoute.component.title) {
 				title =
 					typeof matchedRoute.component.title === 'string'
@@ -161,7 +161,7 @@ try {
 				'\n\n' +
 				'———————————————————————————————————————————————————————————————————' +
 				'\n' +
-				' Escape' +
+				' Ten Four Games' +
 				'\n' +
 				` http://localhost:${app.get('port')}/` +
 				'\n' +

@@ -53,7 +53,7 @@ export default class Ajax {
 
 			return json;
 		} catch (error) {
-			throw new Error('The connection to Escape was… uh… lost.');
+			throw new Error('The connection to Ten Four Games was lost.');
 		}
 	}
 }

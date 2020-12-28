@@ -15,6 +15,6 @@ Error404Page.preload = async function () {
 	console.log('404 preloaded');
 };
 
-Error404Page.title = 'Escape | 404';
+Error404Page.title = 'Ten Four Games | 404';
 
 export default Error404Page;

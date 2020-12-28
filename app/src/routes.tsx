@@ -1,7 +1,7 @@
 import { RouteProps } from 'react-router';
 
 import Error404Page from './pages/Error404Page';
-import GamePage from './pages/GamePage';
+import EscapePage from './pages/EscapePage';
 import HomePage from './pages/HomePage';
 import Page from './pages/Page';
 
@@ -16,8 +16,8 @@ const routes: AsyncRouteProps[] = [
 		exact: true,
 	},
 	{
-		path: '/play',
-		component: GamePage,
+		path: '/escape',
+		component: EscapePage,
 		exact: true,
 	},
 	{

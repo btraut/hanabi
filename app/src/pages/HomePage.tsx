@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 import Page from './Page';
 
-const title = 'Escape | Home';
+const title = 'Ten Four Games | Home';
 
 const HomePage: Page = () => {
 	useEffect(() => {
@@ -13,18 +13,14 @@ const HomePage: Page = () => {
 	return (
 		<div className="HomePage">
 			<div className="HomePage-Container">
-				<h1 className="HomePage-Title">Escape</h1>
-				<div className="HomePage-DescriptionContainer">
-					<p className="HomePage-Description">Escape is a virtual escape room.</p>
-				</div>
-				<div className="HomePage-GameActions">
-					<Link to="/host" className="HomePage-GameAction">
-						Host
-					</Link>
-					<Link to="/join" className="HomePage-GameAction">
-						Join
-					</Link>
-				</div>
+				<h1 className="HomePage-Title">Ten Four Games</h1>
+				<ul className="HomePage-Games">
+					<li className="HomePage-Game">
+						<Link to="/escape" className="HomePage-GameLink">
+							Escape – virtual escape room
+						</Link>
+					</li>
+				</ul>
 			</div>
 		</div>
 	);

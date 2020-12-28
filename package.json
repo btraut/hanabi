@@ -1,5 +1,5 @@
 {
-	"name": "escape-server",
+	"name": "ten-four-games-server",
 	"version": "1.0.0",
 	"scripts": {
 		"clean": "rimraf ./.build",
