@@ -1,6 +1,0 @@
-{
-  "client": {
-    "js": "/js/client.js",
-    "css": "/./css/main.css"
-  }
-}

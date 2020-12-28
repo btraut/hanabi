@@ -2,8 +2,6 @@
 
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 
-import autoprefixer from 'autoprefixer';
-// import CopyWebpackPlugin from 'copy-webpack-plugin';
 import dotenv from 'dotenv';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
@@ -113,18 +111,6 @@ const clientConfig = {
 			DOMAIN_BASE: JSON.stringify(process.env.DOMAIN_BASE),
 			NODE_ENV: JSON.stringify(process.env.NODE_ENV),
 		}),
-		// new CopyWebpackPlugin([
-		// 	{
-		// 		context: SOURCE_PATH + '/images/',
-		// 		from: '**/*',
-		// 		to: CLIENT_BUILD_PATH + '/images/',
-		// 	},
-		// 	{
-		// 		context: SOURCE_PATH,
-		// 		from: '*.txt',
-		// 		to: CLIENT_BUILD_PATH,
-		// 	},
-		// ]),
 	],
 };
 

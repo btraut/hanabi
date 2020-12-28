@@ -19,13 +19,7 @@ module.exports = {
 			version: 'detect',
 		},
 	},
-	plugins: [
-		'@typescript-eslint',
-		'react',
-		'react-hooks',
-		// '@typescript-eslint/tslint',
-		'simple-import-sort',
-	],
+	plugins: ['@typescript-eslint', 'react', 'react-hooks', 'simple-import-sort'],
 	extends: [
 		'eslint:recommended',
 		'plugin:@typescript-eslint/recommended',
@@ -33,7 +27,7 @@ module.exports = {
 		'prettier/@typescript-eslint',
 		'prettier',
 	],
-	ignorePatterns: ['.eslintrc.js'],
+	ignorePatterns: ['.eslintrc.js', 'postcss.config.js'],
 	rules: {
 		'react-hooks/rules-of-hooks': 'error',
 		'react-hooks/exhaustive-deps': 'warn',
