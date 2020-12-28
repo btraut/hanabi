@@ -14,6 +14,8 @@ import routes from './routes';
 // const preloadedState = (window as any).__PRELOADED_STATE__ as StoreData;
 delete (window as any).__PRELOADED_STATE__;
 
+console.log(document.getElementById('app'));
+
 // Start the app.
 render(
 	<BrowserRouter>
@@ -21,5 +23,5 @@ render(
 			<App routes={routes} />
 		</ClientSocketManagerController>
 	</BrowserRouter>,
-	document.getElementById('AppContainer'),
+	document.getElementById('app'),
 );

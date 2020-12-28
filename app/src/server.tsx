@@ -137,7 +137,7 @@ try {
 			}
 
 			// Create the response via pug view.
-			return res.render('app', {
+			return res.render('index.html', {
 				title,
 				content: '', // markup,
 				preloadedState: {}, // store.getState(),
@@ -146,23 +146,14 @@ try {
 
 		// Create an http server for use in Express and socket.io.
 		const server = http.createServer(app);
+		server.on('error', (error) => {
+			Logger.error('HTTP server error:', error);
+		});
+		server.listen(app.get('port'));
 
 		// Start a socket manager.
 		const socketManager = new ServerSocketManager(server);
 		socketManager.start();
-
-		// Start the HTTP server. The HTTP server is an
-		await new Promise<void>((resolve, reject) => {
-			server.on('error', reject);
-			server.on('connection', resolve);
-
-			server.listen(app.get('port'));
-		});
-
-		// Now that we're connected, set up a normal error logger.
-		server.on('error', (error) => {
-			Logger.error('HTTP server error:', error);
-		});
 
 		// Notify!
 		Logger.info(

@@ -78,7 +78,7 @@ const clientConfig = {
 	},
 	output: {
 		path: CLIENT_BUILD_PATH,
-		filename: 'js/[name].js',
+		filename: process.env.NODE_ENV === 'development' ? 'js/[name]-[fullhash].js' : 'js/[name].js',
 		publicPath: '/',
 	},
 	module: {
@@ -86,28 +86,17 @@ const clientConfig = {
 			...baseModuleRules,
 			{
 				test: /\.(le|c)ss$/,
-				use: [
-					MiniCssExtractPlugin.loader,
-					'css-loader',
-					{
-						loader: 'postcss-loader',
-						options: {
-							postcssOptions: {
-								plugins: () => [autoprefixer],
-							},
-						},
-					},
-					'less-loader',
-				],
+				use: [MiniCssExtractPlugin.loader, 'css-loader', 'postcss-loader', 'less-loader'],
 			},
 		],
 	},
 	plugins: [
 		new MiniCssExtractPlugin({
-			filename: './css/main.css',
+			filename:
+				process.env.NODE_ENV === 'development' ? './css/main-[fullhash].css' : './css/main.css',
 		}),
 		new StyleLintPlugin({
-			context: SOURCE_PATH + '/public/less/',
+			context: SOURCE_PATH + '/less/',
 			files: '**/*.less',
 			failOnError: false,
 			syntax: 'less',
@@ -161,6 +150,7 @@ const serverConfig = {
 			PORT: JSON.stringify(process.env.PORT),
 			ENV_PATH: JSON.stringify('../../.env'),
 			PUBLIC_ASSETS_PATH: JSON.stringify('../client'),
+			VIEWS_PATH: JSON.stringify('./views'),
 		}),
 	],
 	node: {
