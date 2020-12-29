@@ -1,3 +1,5 @@
+import GameMessenger from 'app/src/games/GameMessenger';
+
 import Game from '../Game';
 import {
 	EscapeGameMessage,
@@ -11,23 +13,36 @@ import Player from './Player';
 
 const MAP_SIZE: Size = { width: 10, height: 6 };
 
-export default class EscapeGame extends Game<EscapeGameMessage> {
+export default class EscapeGame extends Game {
 	private _map: string[][][] = new Array(MAP_SIZE.width).map(() =>
 		new Array(MAP_SIZE.height).map(() => []),
 	);
 	private _players: { [id: string]: Player } = {};
 
+	private _messenger: GameMessenger<EscapeGameMessage>;
+
 	get map(): readonly (readonly (readonly string[])[])[] {
 		return this._map;
 	}
 
-	public handleMessage(message: EscapeGameMessage, senderId: string): void {
+	constructor() {
+		super();
+		this._messenger = new GameMessenger(this.gameId, this._handleMessage);
+	}
+
+	private _handleMessage({
+		userId,
+		message,
+	}: {
+		userId: string;
+		message: EscapeGameMessage;
+	}): void {
 		switch (message.type) {
 			case 'getState':
-				this._sendState(senderId);
+				this._sendState(userId);
 				break;
 			case 'addPlayer':
-				this._addPlayer(senderId, message.data.name);
+				this._addPlayer(userId, message.data.name);
 				break;
 			case 'removePlayer':
 				this._removePlayer(message.data.playerId);
@@ -40,13 +55,14 @@ export default class EscapeGame extends Game<EscapeGameMessage> {
 
 	private _sendState(playerId: string): void {
 		const resetStateMessage: ResetStateMessage = {
+			scope: this.gameId,
 			type: 'resetState',
 			data: {
 				map: this._map,
 				players: this._players,
 			},
 		};
-		this._sendMessage(resetStateMessage, playerId);
+		this._messenger.send(playerId, resetStateMessage);
 	}
 
 	private _addPlayer(playerId: string, name: string): void {
@@ -64,13 +80,14 @@ export default class EscapeGame extends Game<EscapeGameMessage> {
 
 		// Send the update to players.
 		const playerAddedMessage: PlayerAddedMessage = {
+			scope: this.gameId,
 			type: 'playerAdded',
 			data: {
 				playerId,
 				player,
 			},
 		};
-		this._sendMessageToOtherPlayers(playerAddedMessage, playerId);
+		this._messenger.send(this.playerIds, playerAddedMessage);
 	}
 
 	private _removePlayer(playerId: string): void {
@@ -85,12 +102,13 @@ export default class EscapeGame extends Game<EscapeGameMessage> {
 
 		// Send the update to players.
 		const playerRemovedMessage: PlayerRemovedMessage = {
+			scope: this.gameId,
 			type: 'playerRemoved',
 			data: {
 				playerId,
 			},
 		};
-		this._sendMessageToOtherPlayers(playerRemovedMessage, playerId);
+		this._messenger.send(this.playerIds, playerRemovedMessage);
 	}
 
 	private _getPlayerCoordinates(playerId: string): Location | null {
@@ -123,9 +141,10 @@ export default class EscapeGame extends Game<EscapeGameMessage> {
 		this._map[newX][newY].push(playerId);
 
 		const playerMovedMessage: PlayerMovedMessage = {
+			scope: this.gameId,
 			type: 'playerMoved',
 			data: { playerId, to: newCoordinates },
 		};
-		this._sendMessageToAllPlayers(playerMovedMessage);
+		this._messenger.send(this.playerIds, playerMovedMessage);
 	}
 }

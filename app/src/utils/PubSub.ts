@@ -1,4 +1,4 @@
-export type PubSubHandler<T> = (data?: T) => void;
+export type PubSubHandler<T> = (data: T) => void;
 export type PubSubToken = number;
 
 export default class PubSub<T> {

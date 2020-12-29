@@ -1,4 +1,4 @@
-import SocketMessage from '../../models/SocketMessage';
+import { SocketMessage } from '../../models/SocketMessage';
 import { Direction, Location } from './Movement';
 import Player from './Player';
 

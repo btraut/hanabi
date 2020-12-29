@@ -2,7 +2,7 @@ import { Server as HTTPServer } from 'http';
 import { Server as SocketServer } from 'socket.io';
 import { v1 as uuidv1 } from 'uuid';
 
-import SocketMessage from '../models/SocketMessage';
+import { SocketMessageBase } from '../models/SocketMessage';
 import Logger from '../utils/Logger';
 import PubSub from './PubSub';
 
@@ -18,7 +18,7 @@ type AuthenticateResponseSocketMessage = any;
 
 const TOKEN_EXPIRATION_MINUTES = 5;
 
-export default class ServerSocketManager<SocketMessageType extends SocketMessage<any, any>> {
+export default class ServerSocketManager<SocketMessageType extends SocketMessageBase> {
 	private _server: SocketServer;
 
 	private _authenticatedUsers: { [socketId: string]: string } = {};
@@ -131,7 +131,7 @@ export default class ServerSocketManager<SocketMessageType extends SocketMessage
 		this._server!.to(socketId).emit('message', { ...blankMessage, ...message });
 	}
 
-	public send(idOrIds: string | string[], message: SocketMessageType): void {
+	public send(idOrIds: string | readonly string[], message: SocketMessageType): void {
 		const userIds = typeof idOrIds === 'string' ? [idOrIds] : idOrIds;
 
 		const authenticatedSockets = Object.keys(this._authenticatedUsers).reduce<{

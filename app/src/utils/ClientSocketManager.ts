@@ -1,13 +1,11 @@
-// ClientSocketManager.ts
-//
 // ClientSocketManager is a singleton utility that handles connections to
-// socket.io. In addition to connection/disconnection, ClientSocketManager
-// will do an authentication handshake with the server to associate this
-// socket.io connection to a user cookie and ultimately his session.
+// socket.io. In addition to connection/disconnection, ClientSocketManager will
+// do an authentication handshake with the server to associate this socket.io
+// connection to a user cookie and ultimately his session.
 
 import { io, Socket } from 'socket.io-client';
 
-import SocketMessage from '../models/SocketMessage';
+import { SocketMessageBase } from '../models/SocketMessage';
 import PubSub from './PubSub';
 
 export interface ClientSocketManagerSendOptions {
@@ -21,7 +19,7 @@ interface ClientSocketManagerExpectation<SocketMessageType> {
 	timeoutToken: any;
 }
 
-export default class ClientSocketManager<SocketMessageType extends SocketMessage<any, any>> {
+export default class ClientSocketManager<SocketMessageType extends SocketMessageBase> {
 	// socket.io Client
 	private _socket?: Socket;
 
@@ -30,9 +28,9 @@ export default class ClientSocketManager<SocketMessageType extends SocketMessage
 	public _onDisconnect = new PubSub<void>();
 	public _onMessage = new PubSub<SocketMessageType>();
 
-	// When we're expecting a message from the server of a specific type,
-	// we tracking using an "expectation". This way we can use promises to
-	// halt until we receive our expected messages from the server.
+	// When we're expecting a message from the server of a specific type, we
+	// tracking using an "expectation". This way we can use promises to halt
+	// until we receive our expected messages from the server.
 	private _expectations: ClientSocketManagerExpectation<SocketMessageType>[] = [];
 
 	public get onConnect(): PubSub<void> {
