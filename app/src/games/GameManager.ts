@@ -11,6 +11,23 @@ export default class GameManager {
 	}
 
 	public removeGame(id: string): void {
+		this._games[id].cleanUp();
 		delete this._games[id];
+	}
+
+	public prune(olderThan = 60 * 60 * 1000): Game[] {
+		const oldestGameTime = new Date(new Date().getTime() - olderThan);
+
+		// Iterate over all games and collect pruned entries.
+		const prunedEntries = [];
+		for (const game of Object.values(this._games)) {
+			if (game.updated < oldestGameTime) {
+				prunedEntries.push(game);
+				this.removeGame(game.id);
+			}
+		}
+
+		// Send back a list of all we've pruned.
+		return prunedEntries;
 	}
 }

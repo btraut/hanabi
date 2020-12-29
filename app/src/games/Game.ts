@@ -11,6 +11,14 @@ export default class Game {
 		return this._created;
 	}
 
+	private _updated = new Date();
+	get updated(): Date {
+		return this._updated;
+	}
+	protected _update(): void {
+		this._updated = new Date();
+	}
+
 	// This game is being deleted and it should clean up all subscriptions and
 	// assets. Children should override.
 	public cleanUp(): void {

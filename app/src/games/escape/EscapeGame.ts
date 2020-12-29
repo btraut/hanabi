@@ -71,6 +71,9 @@ export default class EscapeGame extends Game {
 			},
 		};
 		this._messenger.send(playerId, resetStateMessage);
+
+		// Touch the games last updated time.
+		this._update();
 	}
 
 	private _addPlayer(playerId: string, name: string): void {
@@ -94,6 +97,9 @@ export default class EscapeGame extends Game {
 			},
 		};
 		this._messenger.send(Object.keys(this._players), playerAddedMessage);
+
+		// Touch the games last updated time.
+		this._update();
 	}
 
 	private _removePlayer(playerId: string): void {
@@ -113,6 +119,9 @@ export default class EscapeGame extends Game {
 			},
 		};
 		this._messenger.send(Object.keys(this._players), playerRemovedMessage);
+
+		// Touch the games last updated time.
+		this._update();
 	}
 
 	private _getPlayerCoordinates(playerId: string): Location | null {
@@ -150,5 +159,8 @@ export default class EscapeGame extends Game {
 			data: { playerId, to: newCoordinates },
 		};
 		this._messenger.send(Object.keys(this._players), playerMovedMessage);
+
+		// Touch the games last updated time.
+		this._update();
 	}
 }
