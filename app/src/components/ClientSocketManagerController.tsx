@@ -8,7 +8,7 @@ interface Props {
 }
 
 export default function ClientSocketManagerController({ children }: Props): JSX.Element {
-	const managerRef = useRef<ClientSocketManager<any>>();
+	const managerRef = useRef<ClientSocketManager>();
 
 	if (!managerRef.current) {
 		managerRef.current = new ClientSocketManager();

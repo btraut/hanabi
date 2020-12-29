@@ -2,9 +2,9 @@ import { createContext, useContext } from 'react';
 
 import ClientSocketManager from '../utils/ClientSocketManager';
 
-const context = createContext<ClientSocketManager<any> | null>(null);
+const context = createContext<ClientSocketManager | null>(null);
 
-export function useClientSocketManagerContext(): ClientSocketManager<any> {
+export function useClientSocketManagerContext(): ClientSocketManager {
 	const contextValue = useContext(context);
 
 	if (contextValue === null) {

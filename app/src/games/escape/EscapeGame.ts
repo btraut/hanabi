@@ -50,13 +50,13 @@ export default class EscapeGame extends Game {
 		message: EscapeGameMessage;
 	}): void {
 		switch (message.type) {
-			case 'getState':
+			case 'GetStateMessage':
 				this._sendState(userId);
 				break;
-			case 'addPlayer':
+			case 'AddPlayerMessage':
 				this._addPlayer(userId, message.data.name);
 				break;
-			case 'removePlayer':
+			case 'RemovePlayerMessage':
 				this._removePlayer(message.data.playerId);
 				break;
 			case 'movePlayer':
@@ -68,7 +68,7 @@ export default class EscapeGame extends Game {
 	private _sendState(playerId: string): void {
 		const resetStateMessage: ResetStateMessage = {
 			scope: this.id,
-			type: 'resetState',
+			type: 'ResetStateMessage',
 			data: {
 				map: this._map,
 				players: this._players,
@@ -94,7 +94,7 @@ export default class EscapeGame extends Game {
 		// Send the update to players.
 		const playerAddedMessage: PlayerAddedMessage = {
 			scope: this.id,
-			type: 'playerAdded',
+			type: 'PlayerAddedMessage',
 			data: {
 				playerId,
 				player,
@@ -117,7 +117,7 @@ export default class EscapeGame extends Game {
 		// Send the update to players.
 		const playerRemovedMessage: PlayerRemovedMessage = {
 			scope: this.id,
-			type: 'playerRemoved',
+			type: 'PlayerRemovedMessage',
 			data: {
 				playerId,
 			},
@@ -159,7 +159,7 @@ export default class EscapeGame extends Game {
 
 		const playerMovedMessage: PlayerMovedMessage = {
 			scope: this.id,
-			type: 'playerMoved',
+			type: 'PlayerMovedMessage',
 			data: { playerId, to: newCoordinates },
 		};
 		this._messenger.send(Object.keys(this._players), playerMovedMessage);

@@ -2,23 +2,29 @@ import { SocketMessage } from '../../models/SocketMessage';
 import { Direction, Location } from './Movement';
 import Player from './Player';
 
-export type GetStateMessage = SocketMessage<'getState', void>;
+export type GetStateMessage = SocketMessage<'GetStateMessage', void>;
 export type ResetStateMessage = SocketMessage<
-	'resetState',
+	'ResetStateMessage',
 	{ map: string[][][]; players: { [id: string]: Player } }
 >;
 
-export type AddPlayerMessage = SocketMessage<'addPlayer', { name: string }>;
-export type PlayerAddedMessage = SocketMessage<'playerAdded', { playerId: string; player: Player }>;
+export type AddPlayerMessage = SocketMessage<'AddPlayerMessage', { name: string }>;
+export type PlayerAddedMessage = SocketMessage<
+	'PlayerAddedMessage',
+	{ playerId: string; player: Player }
+>;
 
-export type RemovePlayerMessage = SocketMessage<'removePlayer', { playerId: string }>;
-export type PlayerRemovedMessage = SocketMessage<'playerRemoved', { playerId: string }>;
+export type RemovePlayerMessage = SocketMessage<'RemovePlayerMessage', { playerId: string }>;
+export type PlayerRemovedMessage = SocketMessage<'PlayerRemovedMessage', { playerId: string }>;
 
 export type MovePlayerMessage = SocketMessage<
 	'movePlayer',
 	{ playerId: string; direction: Direction }
 >;
-export type PlayerMovedMessage = SocketMessage<'playerMoved', { playerId: string; to: Location }>;
+export type PlayerMovedMessage = SocketMessage<
+	'PlayerMovedMessage',
+	{ playerId: string; to: Location }
+>;
 
 export type EscapeGameMessage =
 	| GetStateMessage

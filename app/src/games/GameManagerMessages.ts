@@ -1,14 +1,14 @@
 import { SocketMessage } from '../models/SocketMessage';
 
 export type HostGameMessage = SocketMessage<
-	'hostGame',
+	'HostGameMessage',
 	{
 		title: string;
 	}
 >;
 
 export type HostGameErrorInvalidTitleMessage = SocketMessage<
-	'hostGameErrorInvalidTypeMessage',
+	'HostGameErrorInvalidTitleMessage',
 	{
 		title: string;
 	}

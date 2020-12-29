@@ -35,7 +35,7 @@ export default class GameManager {
 		if (!this._gameFactories[title]) {
 			const errorMessage: HostGameErrorInvalidTitleMessage = {
 				scope: GAME_MANAGER_SOCKET_MESSAGE_SCOPE,
-				type: 'hostGameErrorInvalidTypeMessage',
+				type: 'HostGameErrorInvalidTitleMessage',
 				data: { title },
 			};
 			this._socketManager.send(userId, errorMessage);
@@ -70,7 +70,7 @@ export default class GameManager {
 
 	private _handleMessage({ userId, message }: { userId: string; message: GameManagerMessage }) {
 		switch (message.type) {
-			case 'hostGame':
+			case 'HostGameMessage':
 				this._createGame(message.data.title, userId);
 				break;
 		}

@@ -6,32 +6,40 @@
 import { io, Socket } from 'socket.io-client';
 
 import { SocketMessageBase } from '../models/SocketMessage';
+import Ajax from './Ajax';
 import PubSub from './PubSub';
+import {
+	AuthenticateSocketMessage,
+	AuthenticateSocketResponseMessage,
+	SERVER_SOCKET_MANAGER_MESSAGE_SCOPE,
+} from './ServerSocketManagerMessages';
 
 export interface ClientSocketManagerSendOptions {
 	requireAuth?: boolean;
 }
 
-interface ClientSocketManagerExpectation<SocketMessageType> {
-	resolve: (message: SocketMessageType) => void;
+interface ClientSocketManagerExpectation {
+	resolve: (message: SocketMessageBase) => void;
 	reject: (error: string) => void;
-	isCorrectMessage: (message: SocketMessageType) => boolean;
+	isCorrectMessage: (message: SocketMessageBase) => boolean;
 	timeoutToken: any;
 }
 
-export default class ClientSocketManager<SocketMessageType extends SocketMessageBase> {
+export default class ClientSocketManager {
 	// socket.io Client
 	private _socket?: Socket;
 
-	// Event Emitters
+	// Connections need authentication after connecting before sending data.
+	private _authenticated = false;
+
+	// When we're expecting a message from the server of a specific type,
+	// we tracking using an "expectation". This way we can use promises to
+	// halt until we receive our expected messages from the server.
+	private _expectations: ClientSocketManagerExpectation[] = [];
+
 	public _onConnect = new PubSub<void>();
 	public _onDisconnect = new PubSub<void>();
-	public _onMessage = new PubSub<SocketMessageType>();
-
-	// When we're expecting a message from the server of a specific type, we
-	// tracking using an "expectation". This way we can use promises to halt
-	// until we receive our expected messages from the server.
-	private _expectations: ClientSocketManagerExpectation<SocketMessageType>[] = [];
+	public _onMessage = new PubSub<SocketMessageBase>();
 
 	public get onConnect(): PubSub<void> {
 		return this._onConnect;
@@ -39,23 +47,21 @@ export default class ClientSocketManager<SocketMessageType extends SocketMessage
 	public get onDisconnect(): PubSub<void> {
 		return this._onDisconnect;
 	}
-	public get onMessage(): PubSub<SocketMessageType> {
+	public get onMessage(): PubSub<SocketMessageBase> {
 		return this._onMessage;
 	}
 
 	public connect(): void {
-		// If we haven't created a socket, create one.
-		if (!this._socket) {
+		if (this._socket) {
+			if (!this._socket.connected) {
+				this._socket!.connect();
+			}
+		} else {
 			this._socket = io(window.location.origin);
 
 			this._socket.on('connect', this._handleConnect);
 			this._socket.on('message', this._handleMessage);
 			this._socket.on('disconnect', this._handleDisconnect);
-		}
-
-		// If the socket is disconnected, connect.
-		if (!this._socket.connected) {
-			this._socket.connect();
 		}
 	}
 
@@ -65,25 +71,31 @@ export default class ClientSocketManager<SocketMessageType extends SocketMessage
 		}
 	}
 
-	public send(message: SocketMessageType): void {
+	public send(
+		message: SocketMessageBase,
+		{ requireAuth }: ClientSocketManagerSendOptions = { requireAuth: true },
+	): void {
 		if (!this._socket || !this._socket.connected) {
 			throw new Error('Can’t send a message on a closed socket.io connection.');
+		}
+
+		if (requireAuth && !this._authenticated) {
+			throw new Error('Can’t send a message on unauthenticated socket.io connections.');
 		}
 
 		this._socket.emit('message', message);
 	}
 
 	public async expect(
-		isCorrectMessage: (message: SocketMessageType) => boolean,
-		timeout = 2000,
-	): Promise<SocketMessageType> {
-		return new Promise<SocketMessageType>((resolve, reject) => {
+		isCorrectMessage: (message: SocketMessageBase) => boolean,
+	): Promise<SocketMessageBase> {
+		return new Promise<SocketMessageBase>((resolve, reject) => {
 			const timeoutToken = setTimeout(() => {
 				this._expectations = this._expectations.filter(
 					(expectation) => expectation.resolve !== resolve,
 				);
 				reject('Socket message timed out.');
-			}, timeout);
+			}, 2000);
 
 			this._expectations.push({
 				resolve,
@@ -94,15 +106,62 @@ export default class ClientSocketManager<SocketMessageType extends SocketMessage
 		});
 	}
 
+	public async expectMessageOfType<T extends SocketMessageBase>(type: string): Promise<T> {
+		return this.expect((response) => response.type === type) as Promise<T>;
+	}
+
+	private async _authenticate() {
+		if (this._authenticated) {
+			return;
+		}
+
+		if (!this._socket || !this._socket.connected) {
+			throw new Error('Can’t send a message on a closed socket.io connection.');
+		}
+
+		// Get a token via AJAX (with session cookie).
+		const { token } = await Ajax.get('/api/auth-socket');
+
+		// Authenticate the socket connection by sending the token.
+		const authenticateSocketMessage: AuthenticateSocketMessage = {
+			scope: SERVER_SOCKET_MANAGER_MESSAGE_SCOPE,
+			type: 'AuthenticateSocketMessage',
+			data: token,
+		};
+		this.send(authenticateSocketMessage, { requireAuth: false });
+
+		// Wait for a socket response to authentication.
+		const message = await this.expectMessageOfType<AuthenticateSocketResponseMessage>(
+			'AuthenticateSocketResponseMessage',
+		);
+
+		if (message.type === 'AuthenticateSocketResponseMessage') {
+			if (!message.data.error) {
+				this._authenticated = true;
+
+				console.log('socket.io authenticated');
+
+				// Notify others of the connect. Note that we've already
+				// been connected for a while, but we don't want to notify
+				// externally until our connection has been authenticated.
+				this._onConnect.emit();
+			} else {
+				throw new Error(message.data.error);
+			}
+		}
+	}
+
 	private _handleConnect = () => {
 		console.log('socket.io connected');
 
-		// Notify others of the connect.
-		this._onConnect.emit();
+		this._authenticate();
 	};
 
 	private _handleDisconnect = () => {
 		console.log('socket.io disconnected');
+
+		// Reset authentication.
+		this._authenticated = false;
 
 		// Handle expectations.
 		for (const expectation of this._expectations) {
@@ -116,7 +175,7 @@ export default class ClientSocketManager<SocketMessageType extends SocketMessage
 		this._onDisconnect.emit();
 	};
 
-	private _handleMessage = (message: SocketMessageType) => {
+	private _handleMessage = (message: SocketMessageBase) => {
 		console.log('socket.io data recieved:', message);
 
 		// Start tracking the expected messages we've resolved.

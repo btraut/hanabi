@@ -1,3 +1,8 @@
+import {
+	AuthenticateSocketMessage,
+	AuthenticateSocketResponseMessage,
+	SERVER_SOCKET_MANAGER_MESSAGE_SCOPE,
+} from 'app/src/utils/ServerSocketManagerMessages';
 import { Server as HTTPServer } from 'http';
 import { Server as SocketServer } from 'socket.io';
 import { v1 as uuidv1 } from 'uuid';
@@ -12,21 +17,16 @@ interface AuthToken {
 	token: string;
 }
 
-// TODO
-type AuthenticateSocketMessage = any;
-type AuthenticateResponseSocketMessage = any;
-
-const TOKEN_EXPIRATION_MINUTES = 5;
-
 export default class ServerSocketManager {
 	private _server: SocketServer;
 
 	private _authenticatedUsers: { [socketId: string]: string } = {};
-	private _tokens: { [token: string]: AuthToken } = {};
 
 	public _onConnect = new PubSub<{ userId: string }>();
 	public _onDisconnect = new PubSub<{ userId: string }>();
 	public _onMessage = new PubSub<{ userId: string; message: SocketMessageBase }>();
+
+	private _tokens: { [token: string]: AuthToken } = {};
 
 	public get onConnect(): PubSub<{ userId: string }> {
 		return this._onConnect;
@@ -34,28 +34,12 @@ export default class ServerSocketManager {
 	public get onDisconnect(): PubSub<{ userId: string }> {
 		return this._onDisconnect;
 	}
-	public get onMessage(): PubSub<{ userId: string; message: SocketMessageBase }> {
+	public get onMessage(): PubSub<{ userId: string | undefined; message: SocketMessageBase }> {
 		return this._onMessage;
 	}
 
 	constructor(httpServer: HTTPServer) {
 		this._server = new SocketServer(httpServer);
-
-		setInterval(this._purgeTokens, TOKEN_EXPIRATION_MINUTES * 60 * 1000);
-	}
-
-	public start(): void {
-		this._server.on('connection', (connection) => {
-			this._handleConnect(connection.id);
-
-			connection.on('message', (data: SocketMessageBase) => {
-				this._handleMessage(connection.id, data);
-			});
-
-			connection.on('disconnect', () => {
-				this._handleDisconnect(connection.id);
-			});
-		});
 	}
 
 	public addTokenForUser(userId: string): string {
@@ -64,16 +48,19 @@ export default class ServerSocketManager {
 		return token;
 	}
 
-	private _purgeTokens = () => {
-		const oldestTime = new Date(new Date().getTime() - TOKEN_EXPIRATION_MINUTES * 60 * 1000);
+	public start(): void {
+		this._server.on('connection', (connection) => {
+			this._handleConnect(connection.id);
 
-		for (const token of Object.keys(this._tokens)) {
-			if (this._tokens[token].created < oldestTime) {
-				delete this._tokens[token];
-				Logger.debug(`Purged token "${token}" from ServerSocketManager.`);
-			}
-		}
-	};
+			connection.on('disconnect', () => {
+				this._handleDisconnect(connection.id);
+			});
+
+			connection.on('message', (data: SocketMessageBase) => {
+				this._handleMessage(connection.id, data);
+			});
+		});
+	}
 
 	private _handleConnect = (socketId: string) => {
 		Logger.debug(`socket.io connected: ${socketId}`);
@@ -93,38 +80,13 @@ export default class ServerSocketManager {
 		Logger.debug('socket.io data recieved:', message);
 
 		if (message.type === 'AuthenticateSocketMessage') {
-			this._handleAuthenticateMessage(socketId, message);
+			this._handleAuthenticateMessage(socketId, message as AuthenticateSocketMessage);
 		} else {
 			if (this._authenticatedUsers[socketId]) {
 				this._onMessage.emit({ userId: this._authenticatedUsers[socketId], message });
 			}
 		}
 	};
-
-	private _handleAuthenticateMessage(socketId: string, message: AuthenticateSocketMessage) {
-		const token = message.data;
-
-		if (this._tokens[token]) {
-			const userId = this._tokens[token].userId;
-			delete this._tokens[token];
-			this._authenticatedUsers[socketId] = userId;
-			this._onConnect.emit({ userId });
-
-			const authenticateResponseSocketMessage: AuthenticateResponseSocketMessage = {
-				type: 'AuthenticateResponseSocketMessage',
-				data: {},
-			};
-			this._send(socketId, authenticateResponseSocketMessage);
-		} else {
-			const authenticateResponseSocketMessage: AuthenticateResponseSocketMessage = {
-				type: 'AuthenticateResponseSocketMessage',
-				data: {
-					error: 'Invalid auth token',
-				},
-			};
-			this._send(socketId, authenticateResponseSocketMessage);
-		}
-	}
 
 	private _send(socketId: string, message: Partial<SocketMessageBase>) {
 		const blankMessage = { type: '', data: {} };
@@ -170,5 +132,47 @@ export default class ServerSocketManager {
 			// specific scope to its associated types.
 			handler(d as any);
 		});
+	}
+
+	private _handleAuthenticateMessage(socketId: string, message: AuthenticateSocketMessage) {
+		const token = message.data;
+
+		if (this._tokens[token]) {
+			const userId = this._tokens[token].userId;
+			delete this._tokens[token];
+			this._authenticatedUsers[socketId] = userId;
+
+			// Only when a user is authenticated do we truly consider it a
+			// connection. Until then, we don't know how to associate a socketId
+			// with a userId.
+			this._onConnect.emit({ userId });
+
+			const authenticateResponseSocketMessage: AuthenticateSocketResponseMessage = {
+				scope: SERVER_SOCKET_MANAGER_MESSAGE_SCOPE,
+				type: 'AuthenticateSocketResponseMessage',
+				data: {},
+			};
+			this._send(socketId, authenticateResponseSocketMessage);
+		} else {
+			const authenticateResponseSocketMessage: AuthenticateSocketResponseMessage = {
+				scope: SERVER_SOCKET_MANAGER_MESSAGE_SCOPE,
+				type: 'AuthenticateSocketResponseMessage',
+				data: {
+					error: 'Invalid auth token',
+				},
+			};
+			this._send(socketId, authenticateResponseSocketMessage);
+		}
+	}
+
+	public prune(olderThan = 5 * 60 * 1000): void {
+		const oldestTime = new Date(new Date().getTime() - olderThan);
+
+		for (const token of Object.keys(this._tokens)) {
+			if (this._tokens[token].created < oldestTime) {
+				delete this._tokens[token];
+				Logger.debug(`Purged token "${token}" from ServerSocketManager.`);
+			}
+		}
 	}
 }

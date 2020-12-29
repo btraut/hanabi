@@ -155,6 +155,7 @@ try {
 
 		// Start a socket manager.
 		const socketManager = new ServerSocketManager(server);
+		setInterval(() => socketManager.prune(), 1000 * 60);
 		socketManager.start();
 
 		// Start a game manager.
