@@ -54,11 +54,11 @@ export default class GameMessenger<MessageType extends SocketMessageBase> {
 		}
 	}
 
-	public send(idOrIds: string | readonly string[], message: MessageType): void {
+	public send(userIdOrIds: string | readonly string[], message: MessageType): void {
 		if (!this._socketManager) {
 			throw new Error('No socket manager specified.');
 		}
 
-		this._socketManager.send(idOrIds, message);
+		this._socketManager.send(userIdOrIds, message);
 	}
 }

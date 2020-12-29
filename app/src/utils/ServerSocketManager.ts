@@ -93,24 +93,29 @@ export default class ServerSocketManager {
 		this._server!.to(socketId).emit('message', { ...blankMessage, ...message });
 	}
 
-	public send(idOrIds: string | readonly string[], message: SocketMessageBase): void {
-		const userIds = typeof idOrIds === 'string' ? [idOrIds] : idOrIds;
+	public send(userIdOrIds: string | readonly string[], message: SocketMessageBase): void {
+		const userIds = typeof userIdOrIds === 'string' ? [userIdOrIds] : userIdOrIds;
 
 		const authenticatedSockets = Object.keys(this._authenticatedUsers).reduce<{
-			[userId: string]: string;
+			[userId: string]: string[];
 		}>((sockets, socketId) => {
 			const userId = this._authenticatedUsers[socketId];
-			sockets[userId] = socketId;
+			if (!sockets[userId]) {
+				sockets[userId] = [];
+			}
+			sockets[userId].push(socketId);
 			return sockets;
 		}, {});
 
 		for (const userId of userIds) {
-			const socketId = authenticatedSockets[userId];
+			const socketIds = authenticatedSockets[userId];
 
-			if (socketId) {
-				console.log(`Sending message to ${userId}:`, message);
+			if (socketIds) {
+				console.log(`Sending message(s) to ${userId}:`, message);
 
-				this._send(socketId, message);
+				for (const socketId of socketIds) {
+					this._send(socketId, message);
+				}
 			} else {
 				console.log(`Can’t send message to offline or non-existant user ${userId}.`);
 			}
