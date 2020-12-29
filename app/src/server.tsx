@@ -122,7 +122,7 @@ try {
 
 			// Initialize a context obj to pass-by-ref into StaticRouter. Unfortunately
 			// there are no types for this.
-			const context: any = {};
+			// const context: any = {};
 
 			// Render markup. Collect the list of modules we've used to render.
 			// const markup = ReactDOMServer.renderToString(
@@ -132,11 +132,11 @@ try {
 			// );
 
 			// context.url will contain the URL to redirect to if a <Redirect> was used
-			if (context.url) {
-				res.writeHead(302, { Location: context.url });
-				res.end();
-				return;
-			}
+			// if (context.url) {
+			// 	res.writeHead(302, { Location: context.url });
+			// 	res.end();
+			// 	return;
+			// }
 
 			// Create the response via pug view.
 			return res.render('index.html', {
