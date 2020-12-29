@@ -1,4 +1,6 @@
 import GameMessenger from 'app/src/games/GameMessenger';
+import { SocketMessageBase } from 'app/src/models/SocketMessage';
+import ServerSocketManager from 'app/src/utils/ServerSocketManager';
 
 import Game from '../Game';
 import {
@@ -17,6 +19,7 @@ export default class EscapeGame extends Game {
 	private _map: string[][][] = new Array(MAP_SIZE.width).map(() =>
 		new Array(MAP_SIZE.height).map(() => []),
 	);
+
 	private _players: { [id: string]: Player } = {};
 
 	private _messenger: GameMessenger<EscapeGameMessage>;
@@ -25,9 +28,14 @@ export default class EscapeGame extends Game {
 		return this._map;
 	}
 
-	constructor() {
+	constructor(socketManager: ServerSocketManager<SocketMessageBase>) {
 		super();
-		this._messenger = new GameMessenger(this.gameId, this._handleMessage);
+
+		this._messenger = new GameMessenger(this.id, socketManager, this._handleMessage);
+	}
+
+	public cleanUp(): void {
+		this._messenger.cleanUp();
 	}
 
 	private _handleMessage({
@@ -55,7 +63,7 @@ export default class EscapeGame extends Game {
 
 	private _sendState(playerId: string): void {
 		const resetStateMessage: ResetStateMessage = {
-			scope: this.gameId,
+			scope: this.id,
 			type: 'resetState',
 			data: {
 				map: this._map,
@@ -66,8 +74,6 @@ export default class EscapeGame extends Game {
 	}
 
 	private _addPlayer(playerId: string, name: string): void {
-		super.addPlayer(playerId);
-
 		// Add the player to the map.
 		this._map[0][0].push(playerId);
 
@@ -80,19 +86,17 @@ export default class EscapeGame extends Game {
 
 		// Send the update to players.
 		const playerAddedMessage: PlayerAddedMessage = {
-			scope: this.gameId,
+			scope: this.id,
 			type: 'playerAdded',
 			data: {
 				playerId,
 				player,
 			},
 		};
-		this._messenger.send(this.playerIds, playerAddedMessage);
+		this._messenger.send(Object.keys(this._players), playerAddedMessage);
 	}
 
 	private _removePlayer(playerId: string): void {
-		super.removePlayer(playerId);
-
 		// Remove the player from the map.
 		const playerCoordinates = this._getPlayerCoordinates(playerId);
 		if (playerCoordinates) {
@@ -102,13 +106,13 @@ export default class EscapeGame extends Game {
 
 		// Send the update to players.
 		const playerRemovedMessage: PlayerRemovedMessage = {
-			scope: this.gameId,
+			scope: this.id,
 			type: 'playerRemoved',
 			data: {
 				playerId,
 			},
 		};
-		this._messenger.send(this.playerIds, playerRemovedMessage);
+		this._messenger.send(Object.keys(this._players), playerRemovedMessage);
 	}
 
 	private _getPlayerCoordinates(playerId: string): Location | null {
@@ -141,10 +145,10 @@ export default class EscapeGame extends Game {
 		this._map[newX][newY].push(playerId);
 
 		const playerMovedMessage: PlayerMovedMessage = {
-			scope: this.gameId,
+			scope: this.id,
 			type: 'playerMoved',
 			data: { playerId, to: newCoordinates },
 		};
-		this._messenger.send(this.playerIds, playerMovedMessage);
+		this._messenger.send(Object.keys(this._players), playerMovedMessage);
 	}
 }

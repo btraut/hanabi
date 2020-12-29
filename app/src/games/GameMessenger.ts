@@ -8,45 +8,49 @@ import ServerSocketManager from 'app/src/utils/ServerSocketManager';
 
 export default class GameMessenger<MessageType extends SocketMessageBase> {
 	private _scope: string;
-	private _messageHandler: (d: { userId: string; message: SocketMessageBase }) => void;
+	private _messageHandler: ((data: { userId: string; message: MessageType }) => void) | null = null;
 
-	private _socketManager: ServerSocketManager<MessageType> | null = null;
+	private _socketManager: ServerSocketManager<SocketMessageBase> | null = null;
 	private _socketManagerOnMessageSubscriptionId: number | null = null;
 
 	constructor(
 		scope: string,
-		messageHandler: (d: { userId: string; message: SocketMessageBase }) => void,
+		socketManager: ServerSocketManager<SocketMessageBase>,
+		messageHandler: (data: { userId: string; message: SocketMessageBase }) => void,
 	) {
 		this._scope = scope;
-		this._messageHandler = messageHandler;
-	}
-
-	public bindSocketManager(socketManager: ServerSocketManager<MessageType>): void {
 		this._socketManager = socketManager;
+		this._messageHandler = messageHandler;
+
 		this._socketManagerOnMessageSubscriptionId = this._socketManager.onMessage.subscribe(
 			this._filterMessage,
 		);
 	}
 
-	public unbindSocketManager(): void {
-		if (!this._socketManager) {
-			throw new Error('No socket manager specified.');
-		}
+	public cleanUp(): void {
+		this._messageHandler = null;
 
-		if (this._socketManagerOnMessageSubscriptionId !== null) {
-			this._socketManager.onMessage.unsubscribe(this._socketManagerOnMessageSubscriptionId);
-			this._socketManagerOnMessageSubscriptionId = null;
-		}
-
-		this._socketManager = null;
-	}
-
-	private _filterMessage(data: { userId: string; message: SocketMessageBase }): void {
-		if (data.message.scope !== this._scope) {
+		if (this._socketManager === null || this._socketManagerOnMessageSubscriptionId === null) {
 			return;
 		}
 
-		this._messageHandler(data);
+		this._socketManager.onMessage.unsubscribe(this._socketManagerOnMessageSubscriptionId);
+		this._socketManagerOnMessageSubscriptionId = null;
+
+		this._socketManager = null;
+	}
+	private _filterMessage(data: { userId: string; message: SocketMessageBase }): void {
+		if (this._messageHandler) {
+			if (data.message.scope !== this._scope) {
+				return;
+			}
+
+			// At this point, we presume that the scope check has limited the
+			// message type to only those used in this game. It's possible that
+			// this is not true in practice, but we should never be sending
+			// messages cross- game type or even cross-game.
+			this._messageHandler(data as any);
+		}
 	}
 
 	public send(idOrIds: string | readonly string[], message: MessageType): void {
