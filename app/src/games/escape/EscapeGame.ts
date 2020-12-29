@@ -1,5 +1,4 @@
 import GameMessenger from 'app/src/games/GameMessenger';
-import { SocketMessageBase } from 'app/src/models/SocketMessage';
 import ServerSocketManager from 'app/src/utils/ServerSocketManager';
 
 import Game from '../Game';
@@ -16,6 +15,11 @@ import Player from './Player';
 const MAP_SIZE: Size = { width: 10, height: 6 };
 
 export default class EscapeGame extends Game {
+	public static readonly title = 'escape';
+	public static factory(userId: string, socketManager: ServerSocketManager): EscapeGame {
+		return new EscapeGame(userId, socketManager);
+	}
+
 	private _map: string[][][] = new Array(MAP_SIZE.width).map(() =>
 		new Array(MAP_SIZE.height).map(() => []),
 	);
@@ -28,8 +32,8 @@ export default class EscapeGame extends Game {
 		return this._map;
 	}
 
-	constructor(socketManager: ServerSocketManager<SocketMessageBase>) {
-		super();
+	constructor(userId: string, socketManager: ServerSocketManager) {
+		super(userId);
 
 		this._messenger = new GameMessenger(this.id, socketManager, this._handleMessage);
 	}

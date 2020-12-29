@@ -18,7 +18,7 @@ type AuthenticateResponseSocketMessage = any;
 
 const TOKEN_EXPIRATION_MINUTES = 5;
 
-export default class ServerSocketManager<SocketMessageType extends SocketMessageBase> {
+export default class ServerSocketManager {
 	private _server: SocketServer;
 
 	private _authenticatedUsers: { [socketId: string]: string } = {};
@@ -26,7 +26,7 @@ export default class ServerSocketManager<SocketMessageType extends SocketMessage
 
 	public _onConnect = new PubSub<{ userId: string }>();
 	public _onDisconnect = new PubSub<{ userId: string }>();
-	public _onMessage = new PubSub<{ userId: string; message: SocketMessageType }>();
+	public _onMessage = new PubSub<{ userId: string; message: SocketMessageBase }>();
 
 	public get onConnect(): PubSub<{ userId: string }> {
 		return this._onConnect;
@@ -34,7 +34,7 @@ export default class ServerSocketManager<SocketMessageType extends SocketMessage
 	public get onDisconnect(): PubSub<{ userId: string }> {
 		return this._onDisconnect;
 	}
-	public get onMessage(): PubSub<{ userId: string; message: SocketMessageType }> {
+	public get onMessage(): PubSub<{ userId: string; message: SocketMessageBase }> {
 		return this._onMessage;
 	}
 
@@ -48,7 +48,7 @@ export default class ServerSocketManager<SocketMessageType extends SocketMessage
 		this._server.on('connection', (connection) => {
 			this._handleConnect(connection.id);
 
-			connection.on('message', (data: SocketMessageType) => {
+			connection.on('message', (data: SocketMessageBase) => {
 				this._handleMessage(connection.id, data);
 			});
 
@@ -89,7 +89,7 @@ export default class ServerSocketManager<SocketMessageType extends SocketMessage
 		this._onDisconnect.emit({ userId });
 	};
 
-	private _handleMessage = (socketId: string, message: SocketMessageType) => {
+	private _handleMessage = (socketId: string, message: SocketMessageBase) => {
 		Logger.debug('socket.io data recieved:', message);
 
 		if (message.type === 'AuthenticateSocketMessage') {
@@ -126,12 +126,12 @@ export default class ServerSocketManager<SocketMessageType extends SocketMessage
 		}
 	}
 
-	private _send(socketId: string, message: Partial<SocketMessageType>) {
+	private _send(socketId: string, message: Partial<SocketMessageBase>) {
 		const blankMessage = { type: '', data: {} };
 		this._server!.to(socketId).emit('message', { ...blankMessage, ...message });
 	}
 
-	public send(idOrIds: string | readonly string[], message: SocketMessageType): void {
+	public send(idOrIds: string | readonly string[], message: SocketMessageBase): void {
 		const userIds = typeof idOrIds === 'string' ? [idOrIds] : idOrIds;
 
 		const authenticatedSockets = Object.keys(this._authenticatedUsers).reduce<{
@@ -153,5 +153,22 @@ export default class ServerSocketManager<SocketMessageType extends SocketMessage
 				console.log(`Can’t send message to offline or non-existant user ${userId}.`);
 			}
 		}
+	}
+
+	public addScopedMessageHandler<MessageType extends SocketMessageBase>(
+		handler: (data: { userId: string; message: MessageType }) => void,
+		scope: string,
+	): void {
+		this.onMessage.subscribe((d) => {
+			if (d.message.scope !== scope) {
+				return;
+			}
+
+			// At this point, we presume that the scope check has limited the
+			// message type to only those used in this handler. It's possible
+			// that this is not true, but in practice, we should always limit a
+			// specific scope to its associated types.
+			handler(d as any);
+		});
 	}
 }

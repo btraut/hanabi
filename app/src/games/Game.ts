@@ -6,6 +6,11 @@ export default class Game {
 		return this._id;
 	}
 
+	private _creatorId: string;
+	get creatorId(): string {
+		return this._creatorId;
+	}
+
 	private _created = new Date();
 	get created(): Date {
 		return this._created;
@@ -17,6 +22,10 @@ export default class Game {
 	}
 	protected _update(): void {
 		this._updated = new Date();
+	}
+
+	constructor(creatorId: string) {
+		this._creatorId = creatorId;
 	}
 
 	// This game is being deleted and it should clean up all subscriptions and

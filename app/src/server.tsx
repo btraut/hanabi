@@ -1,5 +1,7 @@
 import 'cross-fetch/polyfill';
 
+import EscapeGame from 'app/src/games/escape/EscapeGame';
+import GameManager from 'app/src/games/GameManager';
 import * as bodyParser from 'body-parser';
 import compress from 'compression';
 import cookieParser from 'cookie-parser';
@@ -154,6 +156,13 @@ try {
 		// Start a socket manager.
 		const socketManager = new ServerSocketManager(server);
 		socketManager.start();
+
+		// Start a game manager.
+		const gameManager = new GameManager(socketManager);
+		setInterval(() => gameManager.prune(), 1000 * 60 * 10);
+
+		// Add games.
+		gameManager.addGameFactory(EscapeGame.title, EscapeGame.factory);
 
 		// Notify!
 		Logger.info(
