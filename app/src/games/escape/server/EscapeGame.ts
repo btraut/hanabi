@@ -1,21 +1,22 @@
-import GameMessenger from 'app/src/games/GameMessenger';
-import ServerSocketManager from 'app/src/utils/ServerSocketManager';
+import GameMessenger from 'app/src/games/server/GameMessenger';
+import ServerSocketManager from 'app/src/utils/server/SocketManager';
 
-import Game from '../Game';
+import Game from '../../Game';
 import {
 	EscapeGameMessage,
 	PlayerAddedMessage,
 	PlayerMovedMessage,
 	PlayerRemovedMessage,
 	ResetStateMessage,
-} from './EscapeGameMessages';
-import { checkBounds, Direction, Location, move, Size } from './Movement';
-import Player from './Player';
+} from '../EscapeGameMessages';
+import { checkBounds, Direction, Location, move, Size } from '../Movement';
+import Player from '../Player';
 
 const MAP_SIZE: Size = { width: 10, height: 6 };
 
+export const ESCAPE_GAME_TITLE = 'escape';
+
 export default class EscapeGame extends Game {
-	public static readonly title = 'escape';
 	public static factory(userId: string, socketManager: ServerSocketManager): EscapeGame {
 		return new EscapeGame(userId, socketManager);
 	}

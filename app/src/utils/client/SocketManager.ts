@@ -5,44 +5,58 @@
 
 import { io, Socket } from 'socket.io-client';
 
-import { SocketMessageBase } from '../models/SocketMessage';
-import Ajax from './Ajax';
-import PubSub from './PubSub';
+import { SocketMessageBase } from '../../models/SocketMessage';
+import PubSub from '../PubSub';
 import {
 	AuthenticateSocketMessage,
 	AuthenticateSocketResponseMessage,
-	SERVER_SOCKET_MANAGER_MESSAGE_SCOPE,
-} from './ServerSocketManagerMessages';
+	SOCKET_MANAGER_MESSAGE_SCOPE,
+} from '../SocketManagerMessages';
+import Ajax from './Ajax';
 
 export interface ClientSocketManagerSendOptions {
 	requireAuth?: boolean;
 }
 
-interface ClientSocketManagerExpectation {
+interface SocketManagerExpectation {
 	resolve: (message: SocketMessageBase) => void;
 	reject: (error: string) => void;
 	isCorrectMessage: (message: SocketMessageBase) => boolean;
 	timeoutToken: any;
 }
 
-export default class ClientSocketManager {
+export default class SocketManager {
 	// socket.io Client
 	private _socket?: Socket;
 
+	// Have we connected to the server? You probably want to check for
+	// authenticated instead of this.
+	private _connected = false;
+	public get connected(): boolean {
+		return this._connected;
+	}
+
 	// Connections need authentication after connecting before sending data.
 	private _authenticated = false;
+	public get authenticated(): boolean {
+		return this._authenticated;
+	}
 
 	// When we're expecting a message from the server of a specific type,
 	// we tracking using an "expectation". This way we can use promises to
 	// halt until we receive our expected messages from the server.
-	private _expectations: ClientSocketManagerExpectation[] = [];
+	private _expectations: SocketManagerExpectation[] = [];
 
 	public _onConnect = new PubSub<void>();
+	public _onAuthenticated = new PubSub<void>();
 	public _onDisconnect = new PubSub<void>();
 	public _onMessage = new PubSub<SocketMessageBase>();
 
 	public get onConnect(): PubSub<void> {
 		return this._onConnect;
+	}
+	public get onAuthenticated(): PubSub<void> {
+		return this._onAuthenticated;
 	}
 	public get onDisconnect(): PubSub<void> {
 		return this._onDisconnect;
@@ -54,7 +68,7 @@ export default class ClientSocketManager {
 	public connect(): void {
 		if (this._socket) {
 			if (!this._socket.connected) {
-				this._socket!.connect();
+				this._socket.connect();
 			}
 		} else {
 			this._socket = io(window.location.origin);
@@ -124,7 +138,7 @@ export default class ClientSocketManager {
 
 		// Authenticate the socket connection by sending the token.
 		const authenticateSocketMessage: AuthenticateSocketMessage = {
-			scope: SERVER_SOCKET_MANAGER_MESSAGE_SCOPE,
+			scope: SOCKET_MANAGER_MESSAGE_SCOPE,
 			type: 'AuthenticateSocketMessage',
 			data: token,
 		};
@@ -144,7 +158,7 @@ export default class ClientSocketManager {
 				// Notify others of the connect. Note that we've already
 				// been connected for a while, but we don't want to notify
 				// externally until our connection has been authenticated.
-				this._onConnect.emit();
+				this._onAuthenticated.emit();
 			} else {
 				throw new Error(message.data.error);
 			}
@@ -154,11 +168,17 @@ export default class ClientSocketManager {
 	private _handleConnect = () => {
 		console.log('socket.io connected');
 
+		this._connected = true;
+		this._onConnect.emit();
+
 		this._authenticate();
 	};
 
 	private _handleDisconnect = () => {
 		console.log('socket.io disconnected');
+
+		// Reset connection.
+		this._connected = false;
 
 		// Reset authentication.
 		this._authenticated = false;

@@ -1,15 +1,15 @@
 import {
 	AuthenticateSocketMessage,
 	AuthenticateSocketResponseMessage,
-	SERVER_SOCKET_MANAGER_MESSAGE_SCOPE,
-} from 'app/src/utils/ServerSocketManagerMessages';
+	SOCKET_MANAGER_MESSAGE_SCOPE,
+} from 'app/src/utils/SocketManagerMessages';
 import { Server as HTTPServer } from 'http';
 import { Server as SocketServer } from 'socket.io';
 import { v1 as uuidv1 } from 'uuid';
 
-import { SocketMessageBase } from '../models/SocketMessage';
-import Logger from '../utils/Logger';
-import PubSub from './PubSub';
+import { SocketMessageBase } from '../../models/SocketMessage';
+import PubSub from '../PubSub';
+import Logger from './Logger';
 
 interface AuthToken {
 	created: Date;
@@ -153,14 +153,14 @@ export default class ServerSocketManager {
 			this._onConnect.emit({ userId });
 
 			const authenticateResponseSocketMessage: AuthenticateSocketResponseMessage = {
-				scope: SERVER_SOCKET_MANAGER_MESSAGE_SCOPE,
+				scope: SOCKET_MANAGER_MESSAGE_SCOPE,
 				type: 'AuthenticateSocketResponseMessage',
 				data: {},
 			};
 			this._send(socketId, authenticateResponseSocketMessage);
 		} else {
 			const authenticateResponseSocketMessage: AuthenticateSocketResponseMessage = {
-				scope: SERVER_SOCKET_MANAGER_MESSAGE_SCOPE,
+				scope: SOCKET_MANAGER_MESSAGE_SCOPE,
 				type: 'AuthenticateSocketResponseMessage',
 				data: {
 					error: 'Invalid auth token',

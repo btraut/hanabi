@@ -19,7 +19,7 @@
 	padding: 20px;
 }
 
-.EscapePage-Title {
+.EscapeGameView-Title {
 	position: relative;
 	margin: 0;
 	.FontSize-MainTitle();
@@ -29,22 +29,22 @@
 }
 
 @media (max-width: @screen-sm-max) {
-	.EscapePage-Title {
+	.EscapeGameView-Title {
 		.FontSize-MainTitleSmall();
 	}
 }
 
 @media (max-width: @screen-xs-max) {
-	.EscapePage-Title {
+	.EscapeGameView-Title {
 		.FontSize-MainTitleXSmall();
 	}
 }
 
-.EscapePage-DescriptionContainer {
+.EscapeGameLobby-DescriptionContainer {
 	.TransparentContainer();
 }
 
-.EscapePage-Description {
+.EscapeGameLobby-Description {
 	margin: 0 0 12px;
 	.FontSize-Body();
 	font-weight: bold;
@@ -54,16 +54,21 @@
 	}
 }
 
-.EscapePage-GameActions {
+.EscapeGameLobby-GameActions {
 	display: flex;
 }
 
-.EscapePage-GameAction {
+.EscapeGameLobby-GameAction {
 	.Button();
 
 	margin-right: 16px;
 
 	&:last-child {
 		margin: 0;
+	}
+
+	&:disabled {
+		color: #999;
+		border-color: #999;
 	}
 }

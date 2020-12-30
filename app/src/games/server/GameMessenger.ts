@@ -1,21 +1,21 @@
 // GameMessenger is a utility that Games may use to make sending and recieving
 // socket messages easier. It binds a message handler function to a
-// ServerSocketManager's onMessage event and also exposes the socket manager's
-// send() method, both of which are strongly-typed to the specified MessageType.
+// SocketManager's onMessage event and also exposes the socket manager's send()
+// method, both of which are strongly-typed to the specified MessageType.
 
 import { SocketMessageBase } from 'app/src/models/SocketMessage';
-import ServerSocketManager from 'app/src/utils/ServerSocketManager';
+import SocketManager from 'app/src/utils/server/SocketManager';
 
 export default class GameMessenger<MessageType extends SocketMessageBase> {
 	private _scope: string;
 	private _messageHandler: ((data: { userId: string; message: MessageType }) => void) | null = null;
 
-	private _socketManager: ServerSocketManager | null = null;
+	private _socketManager: SocketManager | null = null;
 	private _socketManagerOnMessageSubscriptionId: number | null = null;
 
 	constructor(
 		scope: string,
-		socketManager: ServerSocketManager,
+		socketManager: SocketManager,
 		messageHandler: (data: { userId: string; message: SocketMessageBase }) => void,
 	) {
 		this._scope = scope;

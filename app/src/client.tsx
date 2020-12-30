@@ -6,7 +6,6 @@ import { render } from 'react-dom';
 import { BrowserRouter } from 'react-router-dom';
 
 import App from './components/App';
-import ClientSocketManagerController from './components/ClientSocketManagerController';
 import routes from './routes';
 
 // Grab the state from a global variable injected into the server-generated
@@ -19,9 +18,7 @@ console.log(document.getElementById('app'));
 // Start the app.
 render(
 	<BrowserRouter>
-		<ClientSocketManagerController>
-			<App routes={routes} />
-		</ClientSocketManagerController>
+		<App routes={routes} />
 	</BrowserRouter>,
 	document.getElementById('app'),
 );

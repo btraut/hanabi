@@ -1,21 +1,19 @@
+import Game from 'app/src/games/Game';
 import {
+	GAME_MANAGER_SOCKET_MESSAGE_SCOPE,
 	GameManagerMessage,
-	HostGameErrorInvalidTitleMessage,
+	HostGameResponseMessage,
 } from 'app/src/games/GameManagerMessages';
-import ServerSocketManager from 'app/src/utils/ServerSocketManager';
+import SocketManager from 'app/src/utils/server/SocketManager';
 
-import Game from './Game';
-
-const GAME_MANAGER_SOCKET_MESSAGE_SCOPE = '__GAME_MANAGER_SOCKET_MESSAGE_SCOPE__';
-
-type GameFactory = (creatorId: string, socketManager: ServerSocketManager) => Game;
+type GameFactory = (creatorId: string, socketManager: SocketManager) => Game;
 
 export default class GameManager {
-	private _gameFactories: { [title: string]: GameFactory };
+	private _gameFactories: { [title: string]: GameFactory } = {};
 	private _games: { [id: string]: Game } = {};
-	private _socketManager: ServerSocketManager;
+	private _socketManager: SocketManager;
 
-	constructor(socketManager: ServerSocketManager) {
+	constructor(socketManager: SocketManager) {
 		this._socketManager = socketManager;
 		socketManager.addScopedMessageHandler<GameManagerMessage>(
 			this._handleMessage,
@@ -33,10 +31,10 @@ export default class GameManager {
 
 	private _createGame(title: string, userId: string) {
 		if (!this._gameFactories[title]) {
-			const errorMessage: HostGameErrorInvalidTitleMessage = {
+			const errorMessage: HostGameResponseMessage = {
 				scope: GAME_MANAGER_SOCKET_MESSAGE_SCOPE,
-				type: 'HostGameErrorInvalidTitleMessage',
-				data: { title },
+				type: 'HostGameResponseMessage',
+				data: { error: `No game with title "${title}".` },
 			};
 			this._socketManager.send(userId, errorMessage);
 			return;
@@ -45,6 +43,13 @@ export default class GameManager {
 		const game = this._gameFactories[title](userId, this._socketManager);
 
 		this._games[game.id] = game;
+
+		const successMessage: HostGameResponseMessage = {
+			scope: GAME_MANAGER_SOCKET_MESSAGE_SCOPE,
+			type: 'HostGameResponseMessage',
+			data: { id: game.id },
+		};
+		this._socketManager.send(userId, successMessage);
 	}
 
 	public _removeGame(id: string): void {
@@ -68,11 +73,17 @@ export default class GameManager {
 		return prunedEntries;
 	}
 
-	private _handleMessage({ userId, message }: { userId: string; message: GameManagerMessage }) {
+	private _handleMessage = ({
+		userId,
+		message,
+	}: {
+		userId: string;
+		message: GameManagerMessage;
+	}) => {
 		switch (message.type) {
 			case 'HostGameMessage':
 				this._createGame(message.data.title, userId);
 				break;
 		}
-	}
+	};
 }

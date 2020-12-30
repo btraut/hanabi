@@ -1,7 +1,7 @@
 import 'cross-fetch/polyfill';
 
-import EscapeGame from 'app/src/games/escape/EscapeGame';
-import GameManager from 'app/src/games/GameManager';
+import EscapeGame, { ESCAPE_GAME_TITLE } from 'app/src/games/escape/server/EscapeGame';
+import GameManager from 'app/src/games/server/GameManager';
 import * as bodyParser from 'body-parser';
 import compress from 'compression';
 import cookieParser from 'cookie-parser';
@@ -17,8 +17,8 @@ import * as url from 'url';
 import { v1 as uuidv1 } from 'uuid';
 
 import routes from './routes';
-import Logger from './utils/Logger';
-import ServerSocketManager from './utils/ServerSocketManager';
+import Logger from './utils/server/Logger';
+import SocketManager from './utils/server/SocketManager';
 
 // Define globals from webpack.
 declare const DOMAIN_BASE: string;
@@ -154,7 +154,7 @@ try {
 		server.listen(app.get('port'));
 
 		// Start a socket manager.
-		const socketManager = new ServerSocketManager(server);
+		const socketManager = new SocketManager(server);
 		setInterval(() => socketManager.prune(), 1000 * 60);
 		socketManager.start();
 
@@ -163,7 +163,7 @@ try {
 		setInterval(() => gameManager.prune(), 1000 * 60 * 10);
 
 		// Add games.
-		gameManager.addGameFactory(EscapeGame.title, EscapeGame.factory);
+		gameManager.addGameFactory(ESCAPE_GAME_TITLE, EscapeGame.factory);
 
 		// Notify!
 		Logger.info(
