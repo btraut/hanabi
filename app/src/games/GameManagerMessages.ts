@@ -1,17 +1,21 @@
 import { SocketMessage } from '../models/SocketMessage';
 
-export const GAME_MANAGER_SOCKET_MESSAGE_SCOPE = '__GAME_MANAGER_SOCKET_MESSAGE_SCOPE__';
+export const GAME_MANAGER_SCOPE = '__GAME_MANAGER_SCOPE__';
 
-export type HostGameMessage = SocketMessage<
-	'HostGameMessage',
-	{
-		title: string;
-	}
+export type CreateGameMessage = SocketMessage<'CreateGameMessage', { title: string }>;
+export type CreateGameResponseMessage = SocketMessage<
+	'CreateGameResponseMessage',
+	{ game?: { id: string; code: string }; error?: string }
 >;
 
-export type HostGameResponseMessage = SocketMessage<
-	'HostGameResponseMessage',
+export type GetGameFromCodeMessage = SocketMessage<'GetGameFromCodeMessage', { code: string }>;
+export type GetGameFromCodeResponseMessage = SocketMessage<
+	'GetGameFromCodeResponseMessage',
 	{ id?: string; error?: string }
 >;
 
-export type GameManagerMessage = HostGameMessage | HostGameResponseMessage;
+export type GameManagerMessage =
+	| CreateGameMessage
+	| CreateGameResponseMessage
+	| GetGameFromCodeMessage
+	| GetGameFromCodeResponseMessage;

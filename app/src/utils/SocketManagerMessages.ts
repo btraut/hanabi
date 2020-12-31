@@ -1,6 +1,6 @@
 import { SocketMessage } from '../models/SocketMessage';
 
-export const SOCKET_MANAGER_MESSAGE_SCOPE = '__SOCKET_MANAGER_MESSAGE_SCOPE__';
+export const SOCKET_MANAGER_SCOPE = 'socket-manager';
 
 export type AuthenticateSocketMessage = SocketMessage<'AuthenticateSocketMessage', string>;
 

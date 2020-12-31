@@ -1,8 +1,9 @@
 import Game from 'app/src/games/Game';
 import {
-	GAME_MANAGER_SOCKET_MESSAGE_SCOPE,
+	CreateGameResponseMessage,
+	GAME_MANAGER_SCOPE,
 	GameManagerMessage,
-	HostGameResponseMessage,
+	GetGameFromCodeResponseMessage,
 } from 'app/src/games/GameManagerMessages';
 import SocketManager from 'app/src/utils/server/SocketManager';
 
@@ -17,7 +18,7 @@ export default class GameManager {
 		this._socketManager = socketManager;
 		socketManager.addScopedMessageHandler<GameManagerMessage>(
 			this._handleMessage,
-			GAME_MANAGER_SOCKET_MESSAGE_SCOPE,
+			GAME_MANAGER_SCOPE,
 		);
 	}
 
@@ -31,9 +32,9 @@ export default class GameManager {
 
 	private _createGame(title: string, userId: string) {
 		if (!this._gameFactories[title]) {
-			const errorMessage: HostGameResponseMessage = {
-				scope: GAME_MANAGER_SOCKET_MESSAGE_SCOPE,
-				type: 'HostGameResponseMessage',
+			const errorMessage: CreateGameResponseMessage = {
+				scope: GAME_MANAGER_SCOPE,
+				type: 'CreateGameResponseMessage',
 				data: { error: `No game with title "${title}".` },
 			};
 			this._socketManager.send(userId, errorMessage);
@@ -44,12 +45,34 @@ export default class GameManager {
 
 		this._games[game.id] = game;
 
-		const successMessage: HostGameResponseMessage = {
-			scope: GAME_MANAGER_SOCKET_MESSAGE_SCOPE,
-			type: 'HostGameResponseMessage',
-			data: { id: game.id },
+		const successMessage: CreateGameResponseMessage = {
+			scope: GAME_MANAGER_SCOPE,
+			type: 'CreateGameResponseMessage',
+			data: { game: { id: game.id, code: game.code } },
 		};
 		this._socketManager.send(userId, successMessage);
+	}
+
+	public _getGameFromCode(code: string, userId: string): void {
+		const game = Object.values(this._games).find((g) => g.code === code);
+
+		if (!game) {
+			const errorMessage: GetGameFromCodeResponseMessage = {
+				scope: GAME_MANAGER_SCOPE,
+				type: 'GetGameFromCodeResponseMessage',
+				data: { error: `No game with code "${code}".` },
+			};
+			this._socketManager.send(userId, errorMessage);
+			return;
+		}
+
+		const responseMessage: GetGameFromCodeResponseMessage = {
+			scope: GAME_MANAGER_SCOPE,
+			type: 'GetGameFromCodeResponseMessage',
+			data: { id: game.id },
+		};
+		this._socketManager.send(userId, responseMessage);
+		return;
 	}
 
 	public _removeGame(id: string): void {
@@ -81,8 +104,11 @@ export default class GameManager {
 		message: GameManagerMessage;
 	}) => {
 		switch (message.type) {
-			case 'HostGameMessage':
+			case 'CreateGameMessage':
 				this._createGame(message.data.title, userId);
+				break;
+			case 'GetGameFromCodeMessage':
+				this._getGameFromCode(message.data.code, userId);
 				break;
 		}
 	};

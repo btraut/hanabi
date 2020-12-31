@@ -10,7 +10,7 @@ import PubSub from '../PubSub';
 import {
 	AuthenticateSocketMessage,
 	AuthenticateSocketResponseMessage,
-	SOCKET_MANAGER_MESSAGE_SCOPE,
+	SOCKET_MANAGER_SCOPE,
 } from '../SocketManagerMessages';
 import Ajax from './Ajax';
 
@@ -97,6 +97,8 @@ export default class SocketManager {
 			throw new Error('Can’t send a message on unauthenticated socket.io connections.');
 		}
 
+		console.log('socket.io data sent:', message);
+
 		this._socket.emit('message', message);
 	}
 
@@ -138,7 +140,7 @@ export default class SocketManager {
 
 		// Authenticate the socket connection by sending the token.
 		const authenticateSocketMessage: AuthenticateSocketMessage = {
-			scope: SOCKET_MANAGER_MESSAGE_SCOPE,
+			scope: SOCKET_MANAGER_SCOPE,
 			type: 'AuthenticateSocketMessage',
 			data: token,
 		};

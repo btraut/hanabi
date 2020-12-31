@@ -1,7 +1,7 @@
 import {
 	AuthenticateSocketMessage,
 	AuthenticateSocketResponseMessage,
-	SOCKET_MANAGER_MESSAGE_SCOPE,
+	SOCKET_MANAGER_SCOPE,
 } from 'app/src/utils/SocketManagerMessages';
 import { Server as HTTPServer } from 'http';
 import { Server as SocketServer } from 'socket.io';
@@ -77,16 +77,25 @@ export default class ServerSocketManager {
 	};
 
 	private _handleMessage = (socketId: string, message: SocketMessageBase) => {
-		Logger.debug('socket.io data recieved:', message);
+		Logger.debug(`socket.io data recieved: ${JSON.stringify(message)}`);
 
-		if (message.type === 'AuthenticateSocketMessage') {
-			this._handleAuthenticateMessage(socketId, message as AuthenticateSocketMessage);
+		// Capture all SocketManager messages. Emit the rest.
+		if (message.scope === SOCKET_MANAGER_SCOPE) {
+			this._handleSocketManagerMessate(socketId, message);
 		} else {
 			if (this._authenticatedUsers[socketId]) {
 				this._onMessage.emit({ userId: this._authenticatedUsers[socketId], message });
 			}
 		}
 	};
+
+	private _handleSocketManagerMessate(socketId: string, message: SocketMessageBase) {
+		switch (message.type) {
+			case 'AuthenticateSocketMessage':
+				this._handleAuthenticateMessage(socketId, message as AuthenticateSocketMessage);
+				break;
+		}
+	}
 
 	private _send(socketId: string, message: Partial<SocketMessageBase>) {
 		const blankMessage = { type: '', data: {} };
@@ -153,14 +162,14 @@ export default class ServerSocketManager {
 			this._onConnect.emit({ userId });
 
 			const authenticateResponseSocketMessage: AuthenticateSocketResponseMessage = {
-				scope: SOCKET_MANAGER_MESSAGE_SCOPE,
+				scope: SOCKET_MANAGER_SCOPE,
 				type: 'AuthenticateSocketResponseMessage',
 				data: {},
 			};
 			this._send(socketId, authenticateResponseSocketMessage);
 		} else {
 			const authenticateResponseSocketMessage: AuthenticateSocketResponseMessage = {
-				scope: SOCKET_MANAGER_MESSAGE_SCOPE,
+				scope: SOCKET_MANAGER_SCOPE,
 				type: 'AuthenticateSocketResponseMessage',
 				data: {
 					error: 'Invalid auth token',

@@ -1,0 +1,131 @@
+.EscapeGameJoin-GameForm {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+}
+
+.EscapeGameJoin-Title {
+	flex: 0 0 auto;
+	margin: 0 0 32px;
+	.FontSize-GameTitle();
+	text-align: center;
+	font-style: italic;
+	color: @tfg-orange;
+	text-shadow: 4px 5px 0 black;
+}
+
+@media (max-width: @screen-sm-max) {
+	.EscapeGameJoin-Title {
+		.FontSize-GameTitleSmall();
+		text-shadow: 3px 4px 0 black;
+	}
+}
+
+@media (max-width: @screen-xs-max) {
+	.EscapeGameJoin-Title {
+		.FontSize-GameTitleXSmall();
+	}
+}
+
+.EscapeGameJoin-GameFormContainer {
+	flex: 0 0 auto;
+	display: grid;
+	grid-template-columns: auto 1fr;
+	grid-gap: 16px;
+	align-items: center;
+	margin-bottom: 32px;
+	width: 400px;
+	max-width: 100%;
+}
+
+.EscapeGameJoin-GameFormButtons {
+	flex: 0 0 auto;
+	display: flex;
+	justify-content: center;
+}
+
+.EscapeGameJoin-TextEntryLabel {
+	justify-self: end;
+	.FontSize-BodyLarge();
+	font-weight: bold;
+}
+
+.EscapeGameJoin-TextEntryInput {
+	.TextInput();
+
+	width: 100%;
+	.FontSize-BodyLarge();
+	font-weight: bold;
+}
+
+.EscapeGameJoin-GameActions {
+	display: flex;
+}
+
+.EscapeGameJoin-SubmitButton {
+	.Button();
+	margin-right: 16px;
+
+	&:last-child {
+		margin-right: 0;
+	}
+}
+
+.EscapeGameJoin-ErrorText {
+	.FontSize-BodyLarge();
+	font-weight: bold;
+	background-color: @tfg-red;
+	color: white;
+	padding: 4px 8px;
+}
+
+.EscapeGameJoin-BodyText {
+	.TransparentContainer();
+	.FontSize-BodyLarge();
+	font-weight: bold;
+}
+
+.EscapeGameJoin-CanvasContainer {
+	flex: 1 1 auto;
+	width: 100%;
+	margin-bottom: 20px;
+}
+
+.EscapeGameJoin-PictureContainer {
+	flex: 1 1 0;
+	width: 100%;
+	padding: 20px;
+	background-color: white;
+	margin-bottom: 20px;
+	display: flex;
+	justify-content: center;
+	overflow: hidden;
+}
+
+.EscapeGameJoin-Picture {
+	flex: 0 1 auto;
+	max-width: 100%;
+	object-fit: contain;
+}
+
+.EscapeGameJoin-DescriptionContainer {
+	.TransparentContainer();
+	margin: 0 0 20px;
+	max-width: 600px;
+}
+
+.EscapeGameJoin-DescriptionLabel {
+	.FontSize-Body();
+	font-weight: bold;
+	text-align: center;
+}
+
+.EscapeGameJoin-Description {
+	.FontSize-BodyLarge();
+	font-weight: bold;
+	margin: 0;
+	text-align: center;
+}
