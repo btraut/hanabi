@@ -19,6 +19,11 @@ export default class Game {
 		return this._creatorId;
 	}
 
+	private _watchers: string[] = [];
+	get watchers(): string[] {
+		return this._watchers;
+	}
+
 	private _created = new Date();
 	get created(): Date {
 		return this._created;

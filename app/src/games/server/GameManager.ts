@@ -3,7 +3,7 @@ import {
 	CreateGameResponseMessage,
 	GAME_MANAGER_SCOPE,
 	GameManagerMessage,
-	GetGameFromCodeResponseMessage,
+	WatchGameResponseMessage,
 } from 'app/src/games/GameManagerMessages';
 import SocketManager from 'app/src/utils/server/SocketManager';
 
@@ -53,26 +53,34 @@ export default class GameManager {
 		this._socketManager.send(userId, successMessage);
 	}
 
-	public _getGameFromCode(code: string, userId: string): void {
+	private _watchGame(code: string, userId: string) {
+		// Find the game from the code.
 		const game = Object.values(this._games).find((g) => g.code === code);
 
 		if (!game) {
-			const errorMessage: GetGameFromCodeResponseMessage = {
+			const errorMessage: WatchGameResponseMessage = {
 				scope: GAME_MANAGER_SCOPE,
-				type: 'GetGameFromCodeResponseMessage',
+				type: 'WatchGameResponseMessage',
 				data: { error: `No game with code "${code}".` },
 			};
 			this._socketManager.send(userId, errorMessage);
 			return;
 		}
 
-		const responseMessage: GetGameFromCodeResponseMessage = {
+		// Prevent duplicates.
+		if (game.watchers.includes(userId)) {
+			return;
+		}
+
+		// Add the watcher.
+		game.watchers.push(userId);
+
+		const successMessage: WatchGameResponseMessage = {
 			scope: GAME_MANAGER_SCOPE,
-			type: 'GetGameFromCodeResponseMessage',
-			data: { id: game.id },
+			type: 'WatchGameResponseMessage',
+			data: { game: { id: game.id, code: game.code } },
 		};
-		this._socketManager.send(userId, responseMessage);
-		return;
+		this._socketManager.send(userId, successMessage);
 	}
 
 	public _removeGame(id: string): void {
@@ -107,8 +115,8 @@ export default class GameManager {
 			case 'CreateGameMessage':
 				this._createGame(message.data.title, userId);
 				break;
-			case 'GetGameFromCodeMessage':
-				this._getGameFromCode(message.data.code, userId);
+			case 'WatchGameMessage':
+				this._watchGame(message.data.code, userId);
 				break;
 		}
 	};

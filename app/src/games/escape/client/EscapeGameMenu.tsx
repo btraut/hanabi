@@ -18,14 +18,14 @@ export default function EscapeGameLobby({ gameManager }: Props): JSX.Element {
 
 		loadingRef.current = true;
 		await gameManager.create();
-		await gameManager.refreshState();
+		await gameManager.watch(gameManager.code!);
 		loadingRef.current = false;
 
-		history.push(`/escape/${gameManager.gameId}/host`);
+		history.push(`/escape/${gameManager.code}`);
 	};
 
 	const joinButtonHandler = () => {
-		history.push('/escape/join/');
+		history.push('/escape/join');
 	};
 
 	return (

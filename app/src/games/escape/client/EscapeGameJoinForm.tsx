@@ -6,20 +6,19 @@ interface Props {
 	gameManager: EscapeGameManager;
 }
 
-export default function EscapeGameJoin({ gameManager }: Props): JSX.Element {
+export default function EscapeGameJoinForm({ gameManager }: Props): JSX.Element {
 	const history = useHistory();
 
 	const [joinGameError, setJoinGameError] = useState('');
 
 	const codeInputRef = useRef<HTMLInputElement | null>(null);
-	const nameInputRef = useRef<HTMLInputElement | null>(null);
 
 	const handleJoinGameSubmit = async (event: FormEvent) => {
 		event.preventDefault();
 
-		if (codeInputRef.current?.value && nameInputRef.current?.value) {
+		if (codeInputRef.current?.value) {
 			try {
-				await gameManager.join(codeInputRef.current?.value, nameInputRef.current?.value);
+				await gameManager.watch(codeInputRef.current?.value);
 				history.push(`/escape/${gameManager.gameId}`);
 			} catch (error) {
 				setJoinGameError(error?.message || '');
@@ -39,17 +38,6 @@ export default function EscapeGameJoin({ gameManager }: Props): JSX.Element {
 						className="EscapeGameJoin-TextEntryInput"
 						id="EscapeGameJoin-Code"
 						ref={codeInputRef}
-						type="text"
-						autoCorrect="off"
-						autoCapitalize="none"
-					/>
-					<label className="EscapeGameJoin-TextEntryLabel" htmlFor="EscapeGameJoin-Name">
-						Name:
-					</label>
-					<input
-						className="EscapeGameJoin-TextEntryInput"
-						id="EscapeGameJoin-Name"
-						ref={nameInputRef}
 						type="text"
 						autoCorrect="off"
 						autoCapitalize="none"

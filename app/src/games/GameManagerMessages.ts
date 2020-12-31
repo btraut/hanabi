@@ -8,14 +8,14 @@ export type CreateGameResponseMessage = SocketMessage<
 	{ game?: { id: string; code: string }; error?: string }
 >;
 
-export type GetGameFromCodeMessage = SocketMessage<'GetGameFromCodeMessage', { code: string }>;
-export type GetGameFromCodeResponseMessage = SocketMessage<
-	'GetGameFromCodeResponseMessage',
-	{ id?: string; error?: string }
+export type WatchGameMessage = SocketMessage<'WatchGameMessage', { code: string }>;
+export type WatchGameResponseMessage = SocketMessage<
+	'WatchGameResponseMessage',
+	{ game?: { id: string; code: string }; error?: string }
 >;
 
 export type GameManagerMessage =
 	| CreateGameMessage
 	| CreateGameResponseMessage
-	| GetGameFromCodeMessage
-	| GetGameFromCodeResponseMessage;
+	| WatchGameMessage
+	| WatchGameResponseMessage;

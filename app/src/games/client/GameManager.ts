@@ -2,6 +2,8 @@ import {
 	CreateGameMessage,
 	CreateGameResponseMessage,
 	GAME_MANAGER_SCOPE,
+	WatchGameMessage,
+	WatchGameResponseMessage,
 } from 'app/src/games/GameManagerMessages';
 import ClientSocketManager from 'app/src/utils/client/SocketManager';
 import PubSub from 'app/src/utils/PubSub';
@@ -31,6 +33,7 @@ export default class GameManager {
 	}
 
 	public async create(): Promise<void> {
+		// Attempt to create a game.
 		const hostGameMessage: CreateGameMessage = {
 			scope: GAME_MANAGER_SCOPE,
 			type: 'CreateGameMessage',
@@ -46,8 +49,33 @@ export default class GameManager {
 			throw new Error(`Error creating new game: ${response.data.error}`);
 		}
 
+		// Game created! Save the id/code.
 		this._gameId = response.data.game!.id;
 		this._code = response.data.game!.code;
+
+		this.onUpdate.emit();
+	}
+
+	public async watch(code: string): Promise<void> {
+		// Attempt to watch the game using the game code.
+		const watchGameMessage: WatchGameMessage = {
+			scope: GAME_MANAGER_SCOPE,
+			type: 'WatchGameMessage',
+			data: { code },
+		};
+		this._socketManager.send(watchGameMessage);
+
+		const watchGameResponseMessage = await this._socketManager.expectMessageOfType<WatchGameResponseMessage>(
+			'WatchGameResponseMessage',
+		);
+
+		if (watchGameResponseMessage.data.error) {
+			throw new Error(watchGameResponseMessage.data.error);
+		}
+
+		// We've successfully watched! Save the id/code.
+		this._gameId = watchGameResponseMessage.data.game!.id;
+		this._code = watchGameResponseMessage.data.game!.code;
 
 		this.onUpdate.emit();
 	}
