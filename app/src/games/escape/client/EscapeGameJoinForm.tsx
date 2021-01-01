@@ -22,23 +22,23 @@ export default function EscapeGameJoinForm(): JSX.Element {
 
 	return (
 		<>
-			{addPlayerError && <p className="EscapeGameJoinForm-ErrorText">{addPlayerError}</p>}
-			<form className="EscapeGameJoinForm-GameForm" onSubmit={handleAddPlayerSubmit}>
-				<div className="EscapeGameJoinForm-GameFormContainer">
-					<label className="EscapeGameJoinForm-TextEntryLabel" htmlFor="EscapeGameJoinForm-Code">
-						Code:
+			{addPlayerError && <p className="EscapeGame-ErrorText">{addPlayerError}</p>}
+			<form className="EscapeGame-Form" onSubmit={handleAddPlayerSubmit}>
+				<div className="EscapeGame-FormContainer">
+					<label className="EscapeGame-TextEntryLabel" htmlFor="EscapeGameJoinForm-Name">
+						Name:
 					</label>
 					<input
-						className="EscapeGameJoinForm-TextEntryInput"
-						id="EscapeGameJoinForm-Code"
+						className="EscapeGame-TextEntryInput"
+						id="EscapeGameJoinForm-Name"
 						ref={nameInputRef}
 						type="text"
 						autoCorrect="off"
 						autoCapitalize="none"
 					/>
 				</div>
-				<div className="EscapeGameJoinForm-GameFormButtons">
-					<input className="EscapeGameJoinForm-SubmitButton" type="submit" value="Join" />
+				<div className="EscapeGame-FormButtons">
+					<input className="EscapeGame-GameAction" type="submit" value="Join" />
 				</div>
 			</form>
 		</>

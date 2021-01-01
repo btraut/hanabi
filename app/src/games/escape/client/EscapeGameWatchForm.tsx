@@ -25,14 +25,14 @@ export default function EscapeGameWatchForm(): JSX.Element {
 
 	return (
 		<>
-			{watchGameError && <p className="EscapeGameWatchForm-ErrorText">{watchGameError}</p>}
-			<form className="EscapeGameWatchForm-GameForm" onSubmit={handleWatchGameSubmit}>
-				<div className="EscapeGameWatchForm-GameFormContainer">
-					<label className="EscapeGameWatchForm-TextEntryLabel" htmlFor="EscapeGameWatchForm-Code">
+			{watchGameError && <p className="EscapeGame-ErrorText">{watchGameError}</p>}
+			<form className="EscapeGame-Form" onSubmit={handleWatchGameSubmit}>
+				<div className="EscapeGame-FormContainer">
+					<label className="EscapeGame-TextEntryLabel" htmlFor="EscapeGameWatchForm-Code">
 						Code:
 					</label>
 					<input
-						className="EscapeGameWatchForm-TextEntryInput"
+						className="EscapeGame-TextEntryInput"
 						id="EscapeGameWatchForm-Code"
 						ref={codeInputRef}
 						type="text"
@@ -40,8 +40,8 @@ export default function EscapeGameWatchForm(): JSX.Element {
 						autoCapitalize="none"
 					/>
 				</div>
-				<div className="EscapeGameWatchForm-GameFormButtons">
-					<input className="EscapeGameWatchForm-SubmitButton" type="submit" value="Join" />
+				<div className="EscapeGame-FormButtons">
+					<input className="EscapeGame-GameAction" type="submit" value="Join" />
 				</div>
 			</form>
 		</>

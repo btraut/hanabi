@@ -2,6 +2,7 @@
 
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 
+import CopyWebpackPlugin from 'copy-webpack-plugin';
 import dotenv from 'dotenv';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
@@ -110,6 +111,14 @@ const clientConfig = {
 		new webpack.DefinePlugin({
 			DOMAIN_BASE: JSON.stringify(process.env.DOMAIN_BASE),
 			NODE_ENV: JSON.stringify(process.env.NODE_ENV),
+		}),
+		new CopyWebpackPlugin({
+			patterns: [
+				{
+					from: `${SOURCE_PATH}/images/**/*`,
+					to: CLIENT_BUILD_PATH,
+				},
+			],
 		}),
 	],
 };

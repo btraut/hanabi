@@ -15,9 +15,9 @@ export default function EscapeGameView(): JSX.Element {
 	}, [gameManager]);
 
 	return (
-		<div className="EscapeGameView">
-			<div className="EscapeGameView-Container">
-				<h1 className="EscapeGameView-Title">Escape!</h1>
+		<div className="EscapeGame-View">
+			<div className="EscapeGame-Container">
+				<h1 className="EscapeGame-Title">Escape!</h1>
 				<Switch>
 					<Route path="/escape/join" exact>
 						<EscapeGameWatchForm />
@@ -25,8 +25,9 @@ export default function EscapeGameView(): JSX.Element {
 					<Route path="/escape/:code" exact>
 						<EnsureGameLoaded
 							gameManager={gameManager}
-							fallbackUrl="/escape"
+							redirectUrl="/escape"
 							reloadData={reloadData}
+							fallback={<h1 className="EscapeGame-Subtitle">Loading…</h1>}
 						>
 							<EscapeGamePlayerView />
 						</EnsureGameLoaded>

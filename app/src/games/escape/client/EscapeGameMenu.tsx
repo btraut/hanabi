@@ -28,16 +28,16 @@ export default function EscapeGameLobby(): JSX.Element {
 
 	return (
 		<>
-			<div className="EscapeGameLobby-DescriptionContainer">
-				<p className="EscapeGameLobby-Description">
+			<div className="EscapeGame-DescriptionContainer">
+				<p className="EscapeGame-Description">
 					Escape is a virtual escape room meant for 4-8 players.
 				</p>
 			</div>
-			<div className="EscapeGameLobby-GameActions">
-				<button className="EscapeGameLobby-GameAction" onClick={hostButtonHandler}>
+			<div className="EscapeGame-GameActions">
+				<button className="EscapeGame-GameAction" onClick={hostButtonHandler}>
 					Host
 				</button>
-				<button className="EscapeGameLobby-GameAction" onClick={watchButtonHandler}>
+				<button className="EscapeGame-GameAction" onClick={watchButtonHandler}>
 					Join
 				</button>
 			</div>

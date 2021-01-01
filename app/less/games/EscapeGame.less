@@ -1,3 +1,177 @@
-@import './EscapeGameView.less';
-@import './EscapeGameLobby.less';
-@import './EscapeGameWatchForm.less';
+// Page Structure
+.EscapeGame-View {
+	position: fixed;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	overflow: hidden;
+	padding: 20px;
+	background-image: url(/images/grid-paper.png);
+	background-position: center center;
+}
+
+.EscapeGame-ViewContainer {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+// Type Ramp
+.EscapeGame-Title {
+	position: relative;
+	margin: 0 0 20px;
+	.FontSize-MainTitle();
+	font-style: italic;
+	color: @tfg-orange;
+	text-shadow: 4px 5px 0 black;
+	text-align: center;
+}
+
+@media (max-width: @screen-sm-max) {
+	.EscapeGame-Title {
+		.FontSize-MainTitleSmall();
+	}
+}
+
+@media (max-width: @screen-xs-max) {
+	.EscapeGame-Title {
+		.FontSize-MainTitleXSmall();
+	}
+}
+
+.EscapeGame-Subtitle {
+	flex: 0 0 auto;
+	margin: 0 0 32px;
+	.FontSize-GameTitleSmall();
+	text-align: center;
+	font-style: italic;
+}
+
+@media (max-width: @screen-xs-max) {
+	.EscapeGame-Subtitle {
+		.FontSize-GameTitleXSmall();
+	}
+}
+
+.EscapeGame-DescriptionContainer {
+	.TransparentContainer();
+	margin: 0 0 20px;
+	max-width: 800px;
+}
+
+.EscapeGame-Description {
+	.FontSize-BodyLarge();
+	font-weight: bold;
+	margin: 0;
+}
+
+.EscapeGame-ErrorText {
+	.FontSize-BodyLarge();
+	font-weight: bold;
+	background-color: @tfg-red;
+	color: white;
+	padding: 4px 8px;
+}
+
+.EscapeGame-BodyText {
+	.TransparentContainer();
+	.FontSize-BodyLarge();
+	font-weight: bold;
+}
+
+// Interaction
+.EscapeGame-GameActions {
+	display: flex;
+	justify-content: center;
+}
+
+.EscapeGame-GameAction {
+	.Button();
+
+	margin-right: 16px;
+
+	&:last-child {
+		margin: 0;
+	}
+
+	&:disabled {
+		color: #999;
+		border-color: #999;
+	}
+}
+
+// Forms
+.EscapeGame-Form {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+}
+
+.EscapeGame-FormContainer {
+	flex: 0 0 auto;
+	display: grid;
+	grid-template-columns: auto 1fr;
+	grid-gap: 16px;
+	align-items: center;
+	margin-bottom: 32px;
+	width: 400px;
+	max-width: 100%;
+}
+
+.EscapeGame-FormButtons {
+	flex: 0 0 auto;
+	display: flex;
+	justify-content: center;
+}
+
+.EscapeGame-TextEntryLabel {
+	justify-self: end;
+	.FontSize-BodyLarge();
+	font-weight: bold;
+}
+
+.EscapeGame-TextEntryInput {
+	.TextInput();
+
+	width: 100%;
+	.FontSize-BodyLarge();
+	font-weight: bold;
+}
+
+// Players
+.EscapeGame-PlayersContainer {
+	margin: 0;
+	padding: 0;
+	display: flex;
+	justify-content: center;
+	list-style: none;
+}
+
+.EscapeGame-Player {
+	flex: 0 0 auto;
+	margin: 20px;
+	max-width: 120px;
+}
+
+.EscapeGame-PlayerPicture {
+	max-width: 100%;
+	max-height: 120px;
+	margin-bottom: 10px;
+	display: block;
+}
+
+.EscapeGame-PlayerName {
+	.FontSize-BodyLarge();
+	font-weight: bold;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	text-align: center;
+	margin-top: 8px;
+}

@@ -4,14 +4,17 @@ import { createContext, useContext, useEffect, useRef } from 'react';
 
 const context = createContext<EscapeGameManager | null>(null);
 
-export function useEscapeGameManager(): EscapeGameManager {
-	const forceRefresh = useForceRefresh();
-
+export function useEscapeGameManager(refreshOnUpdate = true): EscapeGameManager {
+	// Grab the game manager from context.
 	const gameManager = useContext(context);
 	const gameManagerOnUpdateSubscriptionIdRef = useRef<number | null>(null);
 
+	const forceRefresh = useForceRefresh();
+
+	// We need to update components whenever the game manager updates its state.
+	// It's expected that
 	useEffect(() => {
-		if (gameManager) {
+		if (gameManager && refreshOnUpdate) {
 			gameManagerOnUpdateSubscriptionIdRef.current = gameManager.onUpdate.subscribe(forceRefresh);
 		}
 
@@ -21,7 +24,7 @@ export function useEscapeGameManager(): EscapeGameManager {
 				gameManagerOnUpdateSubscriptionIdRef.current = null;
 			}
 		};
-	}, [forceRefresh, gameManager]);
+	}, [forceRefresh, gameManager, refreshOnUpdate]);
 
 	if (gameManager === null) {
 		throw new Error('useEscapeGameManager must be used within a EscapeGameManagerContextProvider');

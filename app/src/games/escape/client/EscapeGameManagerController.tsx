@@ -1,6 +1,6 @@
+import { useSocketManager } from 'app/src/components/SocketManagerContext';
 import EscapeGameManager from 'app/src/games/escape/client/EscapeGameManager';
 import { EscapeGameManagerContextProvider } from 'app/src/games/escape/client/EscapeGameManagerContext';
-import useSocketManager from 'app/src/utils/client/useSocketManager';
 import { useEffect, useRef } from 'react';
 
 interface Props {
@@ -9,7 +9,7 @@ interface Props {
 
 export default function EscapeGameManagerController({ children }: Props): JSX.Element {
 	const gameManagerRef = useRef<EscapeGameManager>();
-	const socketManager = useSocketManager();
+	const socketManager = useSocketManager(false);
 
 	if (!gameManagerRef.current) {
 		gameManagerRef.current = new EscapeGameManager(socketManager);
