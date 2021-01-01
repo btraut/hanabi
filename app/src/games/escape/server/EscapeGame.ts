@@ -55,6 +55,10 @@ export default class EscapeGame extends Game {
 		this._messenger.cleanUp();
 	}
 
+	private _getAllPlayerAndWatcherIds(): string[] {
+		return [...this.watchers, ...Object.keys(this._gameData.players)];
+	}
+
 	private _handleMessage = ({
 		userId,
 		message,
@@ -121,7 +125,7 @@ export default class EscapeGame extends Game {
 			type: 'AddPlayerResponseMessage',
 			data: {},
 		};
-		this._messenger.send(Object.keys(this._gameData.players), successMessage);
+		this._messenger.send(playerId, successMessage);
 
 		// Send the new player to all players (including the creator).
 		const playerAddedMessage: PlayerAddedMessage = {
@@ -132,7 +136,7 @@ export default class EscapeGame extends Game {
 				player,
 			},
 		};
-		this._messenger.send(Object.keys(this._gameData.players), playerAddedMessage);
+		this._messenger.send(this._getAllPlayerAndWatcherIds(), playerAddedMessage);
 
 		// Touch the games last updated time.
 		this._update();
@@ -171,7 +175,7 @@ export default class EscapeGame extends Game {
 			this._gameData.map[x][y] = this._gameData.map[x][y].filter((id) => id !== playerId);
 		}
 
-		const allPlayers = Object.keys(this._gameData.players);
+		const allPlayers = this._getAllPlayerAndWatcherIds();
 
 		delete this._gameData.players[removeUserId];
 
@@ -233,7 +237,7 @@ export default class EscapeGame extends Game {
 			type: 'PlayerMovedMessage',
 			data: { playerId, to: newCoordinates },
 		};
-		this._messenger.send(Object.keys(this._gameData.players), playerMovedMessage);
+		this._messenger.send(this._getAllPlayerAndWatcherIds(), playerMovedMessage);
 
 		// Touch the games last updated time.
 		this._update();
