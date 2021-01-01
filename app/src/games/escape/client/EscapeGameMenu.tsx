@@ -19,6 +19,7 @@ export default function EscapeGameLobby({ gameManager }: Props): JSX.Element {
 		loadingRef.current = true;
 		await gameManager.create();
 		await gameManager.watch(gameManager.code!);
+		await gameManager.refreshState();
 		loadingRef.current = false;
 
 		history.push(`/escape/${gameManager.code}`);

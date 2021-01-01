@@ -6,6 +6,7 @@ import { useHistory, useParams } from 'react-router';
 interface Props {
 	fallbackUrl: string;
 	children: JSX.Element | null;
+	reloadData: () => Promise<void>;
 	gameManager: GameManager;
 }
 
@@ -13,6 +14,7 @@ export default function EnsureGameLoaded({
 	children,
 	gameManager,
 	fallbackUrl,
+	reloadData,
 }: Props): JSX.Element | null {
 	const socketManager = useSocketManager();
 	const history = useHistory();
@@ -21,14 +23,13 @@ export default function EnsureGameLoaded({
 	useAsyncEffect(async () => {
 		if (socketManager.authenticated && !gameManager.gameId) {
 			try {
-				console.log('loading');
 				await gameManager.watch(code);
+				await reloadData();
 			} catch (error) {
-				console.log('load error');
-				// history.replace(fallbackUrl);
+				history.replace(fallbackUrl);
 			}
 		}
-	}, [gameManager.gameId, code, fallbackUrl, socketManager.authenticated]);
+	}, [gameManager.gameId, code, fallbackUrl, socketManager.authenticated, reloadData]);
 
 	if (!gameManager.gameId) {
 		return null;
