@@ -1,5 +1,5 @@
 import { useSocketManager } from 'app/src/components/SocketManagerContext';
-import GameManager from 'app/src/games/client/GameManager';
+import EscapeGameManager from 'app/src/games/escape/client/EscapeGameManager';
 import useAsyncEffect from 'app/src/utils/client/useAsyncEffect';
 import { useHistory, useParams } from 'react-router';
 
@@ -8,7 +8,7 @@ interface Props {
 	fallback?: JSX.Element | null;
 	children: JSX.Element | null;
 	reloadData: () => Promise<void>;
-	gameManager: GameManager;
+	gameManager: EscapeGameManager;
 }
 
 export default function EnsureGameLoaded({
@@ -22,10 +22,10 @@ export default function EnsureGameLoaded({
 	const history = useHistory();
 	const { code = '' } = useParams<{ code?: string }>();
 
-	console.log('EnsureGameLoaded render', socketManager.authenticated);
+	console.log('EnsureGameLoaded render', gameManager.gameData, socketManager.authenticated);
 
 	useAsyncEffect(async () => {
-		if (socketManager.authenticated && !gameManager.gameId) {
+		if (socketManager.authenticated && !gameManager.gameData) {
 			try {
 				await gameManager.watch(code);
 				await reloadData();
@@ -33,9 +33,9 @@ export default function EnsureGameLoaded({
 				history.replace(redirectUrl);
 			}
 		}
-	}, [gameManager.gameId, code, redirectUrl, socketManager.authenticated, reloadData]);
+	}, [gameManager.gameData, code, redirectUrl, socketManager.authenticated, reloadData]);
 
-	if (!gameManager.gameId) {
+	if (!gameManager.gameData) {
 		return fallback;
 	}
 

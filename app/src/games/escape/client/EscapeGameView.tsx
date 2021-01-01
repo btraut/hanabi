@@ -1,8 +1,8 @@
+import EnsureGameLoaded from 'app/src/games/escape/client/EnsureGameLoaded';
 import { useEscapeGameManager } from 'app/src/games/escape/client/EscapeGameManagerContext';
 import { useCallback } from 'react';
 import { Route, Switch } from 'react-router-dom';
 
-import EnsureGameLoaded from '../../client/EnsureGameLoaded';
 import EscapeGameMenu from './EscapeGameMenu';
 import EscapeGamePlayerView from './EscapeGamePlayerView';
 import EscapeGameWatchForm from './EscapeGameWatchForm';

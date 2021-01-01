@@ -8,7 +8,7 @@
 
 .Button() {
 	.ButtonStripped();
-	
+
 	display: block;
 	padding: 12px 20px;
 	border: 6px solid black;
@@ -19,14 +19,19 @@
 	cursor: pointer;
 	font-weight: bold;
 	transition: transform 50ms ease-out;
-	
-	&:hover,
-	&:focus {
+
+	&:enabled:hover,
+	&:enabled:focus {
 		color: black;
 		transform: scale(1.02, 1.02);
 	}
-	
-	&:active {
+
+	&:enabled:active {
 		transform: scale(0.98, 0.98);
+	}
+
+	&:disabled {
+		color: #999;
+		border-color: #999;
 	}
 }

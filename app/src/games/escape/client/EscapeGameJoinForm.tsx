@@ -13,7 +13,7 @@ export default function EscapeGameJoinForm(): JSX.Element {
 
 		if (nameInputRef.current?.value) {
 			try {
-				await gameManager.joinGame(nameInputRef.current?.value);
+				await gameManager.join(nameInputRef.current?.value);
 			} catch (error) {
 				setAddPlayerError(error?.message || '');
 			}

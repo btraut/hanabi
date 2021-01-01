@@ -1,4 +1,5 @@
 import EscapeGamePlayer from 'app/src/games/escape/EscapeGamePlayer';
+import { ESCAPE_GAME_TITLE, MAP_SIZE } from 'app/src/games/escape/EscapeGameRules';
 import EscapeGameStage from 'app/src/games/escape/EscapeGameStage';
 import EscapeGameData from 'app/src/games/escape/server/EscapeGameData';
 import GameMessenger from 'app/src/games/server/GameMessenger';
@@ -8,6 +9,7 @@ import Game from '../../Game';
 import {
 	AddPlayerMessage,
 	AddPlayerResponseMessage,
+	ChangeGameStageMessage,
 	EscapeGameMessage,
 	GetGameDataResponseMessage,
 	getScope,
@@ -17,14 +19,14 @@ import {
 	PlayerRemovedMessage,
 	RemovePlayerMessage,
 	RemovePlayerResponseMessage,
+	StartGameMessage,
+	StartGameResponseMessage,
 } from '../EscapeGameMessages';
-import { checkBounds, Location, move, Size } from '../Movement';
-
-const MAP_SIZE: Size = { width: 10, height: 6 };
-
-export const ESCAPE_GAME_TITLE = 'escape';
+import { checkBounds, Location, move } from '../Movement';
 
 export default class EscapeGame extends Game {
+	public static title = ESCAPE_GAME_TITLE;
+
 	public static factory(userId: string, socketManager: ServerSocketManager): EscapeGame {
 		return new EscapeGame(userId, socketManager);
 	}
@@ -56,7 +58,7 @@ export default class EscapeGame extends Game {
 	}
 
 	private _getAllPlayerAndWatcherIds(): string[] {
-		return [...this.watchers, ...Object.keys(this._gameData.players)];
+		return [...new Set([...this.watchers, ...Object.keys(this._gameData.players)])];
 	}
 
 	private _handleMessage = ({
@@ -75,6 +77,9 @@ export default class EscapeGame extends Game {
 				break;
 			case 'RemovePlayerMessage':
 				this._handleRemovePlayerMessage(message, userId);
+				break;
+			case 'StartGameMessage':
+				this._handleStartGameMessage(message, userId);
 				break;
 			case 'MovePlayerMessage':
 				this._handleMovePlayerMessage(message, userId);
@@ -148,13 +153,6 @@ export default class EscapeGame extends Game {
 	): void {
 		const removeUserId = playerId || userId;
 
-		// export type RemovePlayerMessage = SocketMessage<'RemovePlayerMessage', { playerId?: string }>;
-		// export type RemovePlayerResponseMessage = SocketMessage<
-		// 	'RemovePlayerResponseMessage',
-		// 	{ error?: string }
-		// >;
-		// export type PlayerRemovedMessage = SocketMessage<'PlayerRemovedMessage', { playerId: string }>;
-
 		// Error if already started.
 		if (this._stage !== EscapeGameStage.Open) {
 			const errorAlreadyStarted: RemovePlayerResponseMessage = {
@@ -195,6 +193,45 @@ export default class EscapeGame extends Game {
 			},
 		};
 		this._messenger.send(allPlayers, playerRemovedMessage);
+
+		// Touch the games last updated time.
+		this._update();
+	}
+
+	private _handleStartGameMessage(_message: StartGameMessage, userId: string): void {
+		// Error if already started.
+		if (this._stage !== EscapeGameStage.Open) {
+			const errorAlreadyStarted: StartGameResponseMessage = {
+				scope: getScope(ESCAPE_GAME_TITLE, this.id),
+				type: 'StartGameResponseMessage',
+				data: {
+					error: 'Cannot start game because it has already started.',
+				},
+			};
+			this._messenger.send(userId, errorAlreadyStarted);
+			return;
+		}
+
+		// Start the game!
+		this._gameData.stage = EscapeGameStage.Started;
+
+		// Send success message.
+		const startGameResponseMessage: StartGameResponseMessage = {
+			scope: this.id,
+			type: 'StartGameResponseMessage',
+			data: {},
+		};
+		this._messenger.send(userId, startGameResponseMessage);
+
+		// Send the stage change to all players (including the remover).
+		const changeGameStageMessage: ChangeGameStageMessage = {
+			scope: getScope(ESCAPE_GAME_TITLE, this.id),
+			type: 'ChangeGameStageMessage',
+			data: {
+				stage: this._gameData.stage,
+			},
+		};
+		this._messenger.send(this._getAllPlayerAndWatcherIds(), changeGameStageMessage);
 
 		// Touch the games last updated time.
 		this._update();

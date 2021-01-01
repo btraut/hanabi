@@ -1,6 +1,6 @@
 import 'cross-fetch/polyfill';
 
-import EscapeGame, { ESCAPE_GAME_TITLE } from 'app/src/games/escape/server/EscapeGame';
+import EscapeGame from 'app/src/games/escape/server/EscapeGame';
 import GameManager from 'app/src/games/server/GameManager';
 import * as bodyParser from 'body-parser';
 import compress from 'compression';
@@ -163,7 +163,7 @@ try {
 		setInterval(() => gameManager.prune(), 1000 * 60 * 10);
 
 		// Add games.
-		gameManager.addGameFactory(ESCAPE_GAME_TITLE, EscapeGame.factory);
+		gameManager.addGameFactory(EscapeGame.title, EscapeGame.factory);
 
 		// Notify!
 		Logger.info(

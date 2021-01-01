@@ -32,12 +32,12 @@ export default class GameManager {
 		throw new Error();
 	}
 
-	public async create(): Promise<void> {
+	public async create(title: string): Promise<void> {
 		// Attempt to create a game.
 		const hostGameMessage: CreateGameMessage = {
 			scope: GAME_MANAGER_SCOPE,
 			type: 'CreateGameMessage',
-			data: { title: this._title },
+			data: { title },
 		};
 		this._socketManager.send(hostGameMessage);
 

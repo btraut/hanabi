@@ -1,4 +1,5 @@
 import { useEscapeGameManager } from 'app/src/games/escape/client/EscapeGameManagerContext';
+import { ESCAPE_GAME_TITLE } from 'app/src/games/escape/EscapeGameRules';
 import { useRef } from 'react';
 import { useHistory } from 'react-router';
 
@@ -14,7 +15,7 @@ export default function EscapeGameLobby(): JSX.Element {
 		}
 
 		loadingRef.current = true;
-		await gameManager.create();
+		await gameManager.create(ESCAPE_GAME_TITLE);
 		await gameManager.watch(gameManager.code!);
 		await gameManager.refreshGameData();
 		loadingRef.current = false;
@@ -28,11 +29,9 @@ export default function EscapeGameLobby(): JSX.Element {
 
 	return (
 		<>
-			<div className="EscapeGame-DescriptionContainer">
-				<p className="EscapeGame-Description">
-					Escape is a virtual escape room meant for 4-8 players.
-				</p>
-			</div>
+			<p className="EscapeGame-Description">
+				Escape is a virtual escape room meant for 4-8 players.
+			</p>
 			<div className="EscapeGame-GameActions">
 				<button className="EscapeGame-GameAction" onClick={hostButtonHandler}>
 					Host

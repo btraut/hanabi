@@ -8,9 +8,12 @@ import {
 	getScope,
 	RemovePlayerMessage,
 	RemovePlayerResponseMessage,
+	StartGameMessage,
+	StartGameResponseMessage,
 } from 'app/src/games/escape/EscapeGameMessages';
 import EscapeGamePlayer from 'app/src/games/escape/EscapeGamePlayer';
-import { ESCAPE_GAME_TITLE } from 'app/src/games/escape/server/EscapeGame';
+import { ESCAPE_GAME_TITLE } from 'app/src/games/escape/EscapeGameRules';
+import EscapeGameStage from 'app/src/games/escape/EscapeGameStage';
 import { SerialEscapeGameData } from 'app/src/games/escape/server/EscapeGameData';
 import ClientSocketManager from 'app/src/utils/client/SocketManager';
 
@@ -54,6 +57,9 @@ export default class EscapeGameManager extends GameManager {
 			case 'PlayerRemovedMessage':
 				this._handlePlayerRemoved(message.data.playerId);
 				break;
+			case 'ChangeGameStageMessage':
+				this._handleChangeStage(message.data.stage);
+				break;
 		}
 	};
 
@@ -77,7 +83,17 @@ export default class EscapeGameManager extends GameManager {
 		this.onUpdate.emit();
 	}
 
-	public async joinGame(name: string): Promise<void> {
+	private _handleChangeStage(stage: EscapeGameStage) {
+		if (!this._gameData) {
+			return;
+		}
+
+		this._gameData.stage = stage;
+
+		this.onUpdate.emit();
+	}
+
+	public async join(name: string): Promise<void> {
 		if (!this._gameId) {
 			throw new Error('Cannot add a player without a game.');
 		}
@@ -99,7 +115,7 @@ export default class EscapeGameManager extends GameManager {
 		}
 	}
 
-	public async leaveGame(): Promise<void> {
+	public async leave(): Promise<void> {
 		if (!this._gameId) {
 			throw new Error('Cannot remove a player without a game.');
 		}
@@ -121,6 +137,28 @@ export default class EscapeGameManager extends GameManager {
 		}
 	}
 
+	public async start(): Promise<void> {
+		if (!this._gameId) {
+			throw new Error('Cannot start game without a game.');
+		}
+
+		// Attempt to watch the game using the game code.
+		const startGameMessage: StartGameMessage = {
+			scope: getScope(this._title, this._gameId),
+			type: 'StartGameMessage',
+			data: undefined,
+		};
+		this._socketManager.send(startGameMessage);
+
+		const startGameResponseMessage = await this._socketManager.expectMessageOfType<StartGameResponseMessage>(
+			'StartGameResponseMessage',
+		);
+
+		if (startGameResponseMessage.data.error) {
+			throw new Error(startGameResponseMessage.data.error);
+		}
+	}
+
 	public async refreshGameData(): Promise<void> {
 		if (!this._gameId) {
 			throw new Error('Game must be started/loaded first.');
@@ -136,8 +174,6 @@ export default class EscapeGameManager extends GameManager {
 		const getStateResponseMessage = await this._socketManager.expectMessageOfType<GetGameDataResponseMessage>(
 			'GetGameDataResponseMessage',
 		);
-
-		console.log('refreshGameData.getStateResponseMessage', getStateResponseMessage.data);
 
 		this._gameData = getStateResponseMessage.data;
 

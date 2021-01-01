@@ -1,3 +1,4 @@
+import EscapeGameStage from 'app/src/games/escape/EscapeGameStage';
 import { SerialEscapeGameData } from 'app/src/games/escape/server/EscapeGameData';
 
 import { SocketMessage } from '../../models/SocketMessage';
@@ -31,6 +32,12 @@ export type RemovePlayerResponseMessage = SocketMessage<
 >;
 export type PlayerRemovedMessage = SocketMessage<'PlayerRemovedMessage', { playerId: string }>;
 
+export type StartGameMessage = SocketMessage<'StartGameMessage', void>;
+export type StartGameResponseMessage = SocketMessage<
+	'StartGameResponseMessage',
+	{ error?: string }
+>;
+
 export type UpdatePlayerMessage = SocketMessage<'AddPlayerMessage', { name: string }>;
 export type PlayerUpdatedMessage = SocketMessage<
 	'PlayerUpdatedMessage',
@@ -44,6 +51,11 @@ export type MovePlayerMessage = SocketMessage<
 export type PlayerMovedMessage = SocketMessage<
 	'PlayerMovedMessage',
 	{ playerId: string; to: Location }
+>;
+
+export type ChangeGameStageMessage = SocketMessage<
+	'ChangeGameStageMessage',
+	{ stage: EscapeGameStage }
 >;
 
 export type GetGameDataMessage = SocketMessage<'GetGameDataMessage', void>;
@@ -61,9 +73,12 @@ export type EscapeGameMessage =
 	| RemovePlayerMessage
 	| RemovePlayerResponseMessage
 	| PlayerRemovedMessage
+	| StartGameMessage
+	| StartGameResponseMessage
 	| UpdatePlayerMessage
 	| PlayerUpdatedMessage
 	| MovePlayerMessage
 	| PlayerMovedMessage
+	| ChangeGameStageMessage
 	| GetGameDataMessage
 	| GetGameDataResponseMessage;
