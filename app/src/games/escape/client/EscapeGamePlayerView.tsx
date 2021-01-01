@@ -1,17 +1,16 @@
 import EscapeGameManager from 'app/src/games/escape/client/EscapeGameManager';
+import EscapeGameStage from 'app/src/games/escape/EscapeGameStage';
 
 interface Props {
 	gameManager: EscapeGameManager;
 }
 
-export default function EscapeGamePlayerView(_props: Props): JSX.Element {
-	// useEffect(() => {
-	// 	const data = await gameManager.getGameData();
-	// }, []);
+export default function EscapeGamePlayerView({ gameManager }: Props): JSX.Element {
+	const title = gameManager.gameData?.stage === EscapeGameStage.Open ? 'LFM' : 'Game in progress!';
 
 	return (
 		<>
-			<h1 className="HostView-Title">LFM</h1>
+			<h1 className="HostView-Title">{title}</h1>
 			<ul className="HostView-PlayersContainer">
 				{/* {data.players.map((player) => (
 					<li className="HostView-Player" key={player.id}>

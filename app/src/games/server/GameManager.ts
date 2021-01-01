@@ -67,14 +67,12 @@ export default class GameManager {
 			return;
 		}
 
-		// Prevent duplicates.
-		if (game.watchers.includes(userId)) {
-			return;
+		// Add the watcher. Prevent duplicates.
+		if (!game.watchers.includes(userId)) {
+			game.watchers.push(userId);
 		}
 
-		// Add the watcher.
-		game.watchers.push(userId);
-
+		// Send game id/code as a success message.
 		const successMessage: WatchGameResponseMessage = {
 			scope: GAME_MANAGER_SCOPE,
 			type: 'WatchGameResponseMessage',

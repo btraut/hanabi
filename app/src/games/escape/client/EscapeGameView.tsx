@@ -2,9 +2,10 @@ import useEscapeGameManager from 'app/src/games/escape/client/useEscapeGameManag
 import useSocketManager from 'app/src/utils/client/useSocketManager';
 import { Route, Switch } from 'react-router-dom';
 
-import EscapeGameJoinForm from './EscapeGameJoinForm';
+import EnsureGameLoaded from '../../client/EnsureGameLoaded';
 import EscapeGameMenu from './EscapeGameMenu';
 import EscapeGamePlayerView from './EscapeGamePlayerView';
+import EscapeGameWatchForm from './EscapeGameWatchForm';
 
 export default function EscapeGameView(): JSX.Element {
 	const socketManager = useSocketManager();
@@ -16,10 +17,12 @@ export default function EscapeGameView(): JSX.Element {
 				<h1 className="EscapeGameView-Title">Escape!</h1>
 				<Switch>
 					<Route path="/escape/join" exact>
-						<EscapeGameJoinForm gameManager={gameManager} />
+						<EscapeGameWatchForm gameManager={gameManager} />
 					</Route>
 					<Route path="/escape/:code" exact>
-						<EscapeGamePlayerView gameManager={gameManager} />
+						<EnsureGameLoaded gameManager={gameManager} fallbackUrl="/escape">
+							<EscapeGamePlayerView gameManager={gameManager} />
+						</EnsureGameLoaded>
 					</Route>
 					<Route path="/escape" exact>
 						<EscapeGameMenu gameManager={gameManager} />

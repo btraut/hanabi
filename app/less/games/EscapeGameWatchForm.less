@@ -1,4 +1,4 @@
-.EscapeGameJoin-GameForm {
+.EscapeGameWatchForm-GameForm {
 	width: 100%;
 	height: 100%;
 	display: flex;
@@ -7,7 +7,7 @@
 	align-items: center;
 }
 
-.EscapeGameJoin-Title {
+.EscapeGameWatchForm-Title {
 	flex: 0 0 auto;
 	margin: 0 0 32px;
 	.FontSize-GameTitle();
@@ -18,19 +18,19 @@
 }
 
 @media (max-width: @screen-sm-max) {
-	.EscapeGameJoin-Title {
+	.EscapeGameWatchForm-Title {
 		.FontSize-GameTitleSmall();
 		text-shadow: 3px 4px 0 black;
 	}
 }
 
 @media (max-width: @screen-xs-max) {
-	.EscapeGameJoin-Title {
+	.EscapeGameWatchForm-Title {
 		.FontSize-GameTitleXSmall();
 	}
 }
 
-.EscapeGameJoin-GameFormContainer {
+.EscapeGameWatchForm-GameFormContainer {
 	flex: 0 0 auto;
 	display: grid;
 	grid-template-columns: auto 1fr;
@@ -41,19 +41,19 @@
 	max-width: 100%;
 }
 
-.EscapeGameJoin-GameFormButtons {
+.EscapeGameWatchForm-GameFormButtons {
 	flex: 0 0 auto;
 	display: flex;
 	justify-content: center;
 }
 
-.EscapeGameJoin-TextEntryLabel {
+.EscapeGameWatchForm-TextEntryLabel {
 	justify-self: end;
 	.FontSize-BodyLarge();
 	font-weight: bold;
 }
 
-.EscapeGameJoin-TextEntryInput {
+.EscapeGameWatchForm-TextEntryInput {
 	.TextInput();
 
 	width: 100%;
@@ -61,11 +61,11 @@
 	font-weight: bold;
 }
 
-.EscapeGameJoin-GameActions {
+.EscapeGameWatchForm-GameActions {
 	display: flex;
 }
 
-.EscapeGameJoin-SubmitButton {
+.EscapeGameWatchForm-SubmitButton {
 	.Button();
 	margin-right: 16px;
 
@@ -74,7 +74,7 @@
 	}
 }
 
-.EscapeGameJoin-ErrorText {
+.EscapeGameWatchForm-ErrorText {
 	.FontSize-BodyLarge();
 	font-weight: bold;
 	background-color: @tfg-red;
@@ -82,19 +82,19 @@
 	padding: 4px 8px;
 }
 
-.EscapeGameJoin-BodyText {
+.EscapeGameWatchForm-BodyText {
 	.TransparentContainer();
 	.FontSize-BodyLarge();
 	font-weight: bold;
 }
 
-.EscapeGameJoin-CanvasContainer {
+.EscapeGameWatchForm-CanvasContainer {
 	flex: 1 1 auto;
 	width: 100%;
 	margin-bottom: 20px;
 }
 
-.EscapeGameJoin-PictureContainer {
+.EscapeGameWatchForm-PictureContainer {
 	flex: 1 1 0;
 	width: 100%;
 	padding: 20px;
@@ -105,25 +105,25 @@
 	overflow: hidden;
 }
 
-.EscapeGameJoin-Picture {
+.EscapeGameWatchForm-Picture {
 	flex: 0 1 auto;
 	max-width: 100%;
 	object-fit: contain;
 }
 
-.EscapeGameJoin-DescriptionContainer {
+.EscapeGameWatchForm-DescriptionContainer {
 	.TransparentContainer();
 	margin: 0 0 20px;
 	max-width: 600px;
 }
 
-.EscapeGameJoin-DescriptionLabel {
+.EscapeGameWatchForm-DescriptionLabel {
 	.FontSize-Body();
 	font-weight: bold;
 	text-align: center;
 }
 
-.EscapeGameJoin-Description {
+.EscapeGameWatchForm-Description {
 	.FontSize-BodyLarge();
 	font-weight: bold;
 	margin: 0;

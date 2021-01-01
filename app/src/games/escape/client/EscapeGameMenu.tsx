@@ -24,7 +24,7 @@ export default function EscapeGameLobby({ gameManager }: Props): JSX.Element {
 		history.push(`/escape/${gameManager.code}`);
 	};
 
-	const joinButtonHandler = () => {
+	const watchButtonHandler = () => {
 		history.push('/escape/join');
 	};
 
@@ -39,7 +39,7 @@ export default function EscapeGameLobby({ gameManager }: Props): JSX.Element {
 				<button className="EscapeGameLobby-GameAction" onClick={hostButtonHandler}>
 					Host
 				</button>
-				<button className="EscapeGameLobby-GameAction" onClick={joinButtonHandler}>
+				<button className="EscapeGameLobby-GameAction" onClick={watchButtonHandler}>
 					Join
 				</button>
 			</div>
