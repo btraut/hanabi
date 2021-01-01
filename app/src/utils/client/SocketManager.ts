@@ -42,6 +42,12 @@ export default class SocketManager {
 		return this._authenticated;
 	}
 
+	// When authenticated, the user gets an id.
+	private _userId: string | null = null;
+	public get userId(): string | null {
+		return this._userId;
+	}
+
 	// When we're expecting a message from the server of a specific type,
 	// we tracking using an "expectation". This way we can use promises to
 	// halt until we receive our expected messages from the server.
@@ -152,18 +158,19 @@ export default class SocketManager {
 		);
 
 		if (message.type === 'AuthenticateSocketResponseMessage') {
-			if (!message.data.error) {
-				this._authenticated = true;
-
-				console.log('socket.io authenticated');
-
-				// Notify others of the connect. Note that we've already
-				// been connected for a while, but we don't want to notify
-				// externally until our connection has been authenticated.
-				this._onAuthenticated.emit();
-			} else {
+			if (message.data.error) {
 				throw new Error(message.data.error);
 			}
+
+			this._authenticated = true;
+			this._userId = message.data.userId!;
+
+			console.log(`socket.io authenticated, user id: ${this._userId}`);
+
+			// Notify others of the connect. Note that we've already
+			// been connected for a while, but we don't want to notify
+			// externally until our connection has been authenticated.
+			this._onAuthenticated.emit();
 		}
 	}
 
@@ -184,6 +191,7 @@ export default class SocketManager {
 
 		// Reset authentication.
 		this._authenticated = false;
+		this._userId = null;
 
 		// Handle expectations.
 		for (const expectation of this._expectations) {

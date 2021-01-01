@@ -8,9 +8,6 @@ export function getScope(id: string): string {
 	return `game.escape.${id}`;
 }
 
-export type JoinGameMessage = SocketMessage<'JoinGameMessage', { name: string }>;
-export type JoinGameResponseMessage = SocketMessage<'JoinGameResponseMessage', { error?: string }>;
-
 export type LeaveGameMessage = SocketMessage<'LeaveGameMessage', { id: string }>;
 export type LeaveGameResponseMessage = SocketMessage<
 	'LeaveGameResponseMessage',
@@ -26,6 +23,10 @@ export type GetStateResponseMessage = SocketMessage<
 >;
 
 export type AddPlayerMessage = SocketMessage<'AddPlayerMessage', { name: string }>;
+export type AddPlayerResponseMessage = SocketMessage<
+	'AddPlayerResponseMessage',
+	{ error?: string }
+>;
 export type PlayerAddedMessage = SocketMessage<
 	'PlayerAddedMessage',
 	{ playerId: string; player: Player }
@@ -50,11 +51,10 @@ export type PlayerMovedMessage = SocketMessage<
 >;
 
 export type EscapeGameMessage =
-	| JoinGameMessage
-	| JoinGameResponseMessage
 	| LeaveGameMessage
 	| LeaveGameResponseMessage
 	| AddPlayerMessage
+	| AddPlayerResponseMessage
 	| PlayerAddedMessage
 	| RemovePlayerMessage
 	| PlayerRemovedMessage

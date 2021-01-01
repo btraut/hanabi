@@ -1,5 +1,7 @@
 import GameManager from 'app/src/games/client/GameManager';
 import {
+	AddPlayerMessage,
+	AddPlayerResponseMessage,
 	getScope,
 	GetStateMessage,
 	GetStateResponseMessage,
@@ -35,6 +37,30 @@ export default class EscapeGameManager extends GameManager {
 		);
 
 		this._gameData = getStateResponseMessage.data.state;
+
+		this.onUpdate.emit();
+	}
+
+	public async addPlayer(name: string): Promise<void> {
+		if (!this._gameId) {
+			throw new Error('Cannot add a player without a game.');
+		}
+
+		// Attempt to watch the game using the game code.
+		const addPlayerMessage: AddPlayerMessage = {
+			scope: getScope(this._gameId),
+			type: 'AddPlayerMessage',
+			data: { name },
+		};
+		this._socketManager.send(addPlayerMessage);
+
+		const addPlayerResponseMessage = await this._socketManager.expectMessageOfType<AddPlayerResponseMessage>(
+			'AddPlayerResponseMessage',
+		);
+
+		if (addPlayerResponseMessage.data.error) {
+			throw new Error(addPlayerResponseMessage.data.error);
+		}
 
 		this.onUpdate.emit();
 	}

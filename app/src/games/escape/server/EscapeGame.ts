@@ -6,11 +6,11 @@ import ServerSocketManager from 'app/src/utils/server/SocketManager';
 
 import Game from '../../Game';
 import {
+	AddPlayerMessage,
+	AddPlayerResponseMessage,
 	EscapeGameMessage,
 	getScope,
 	GetStateResponseMessage,
-	JoinGameMessage,
-	JoinGameResponseMessage,
 	MovePlayerMessage,
 	PlayerAddedMessage,
 	PlayerMovedMessage,
@@ -60,8 +60,8 @@ export default class EscapeGame extends Game {
 			case 'GetStateMessage':
 				this._sendState(userId);
 				break;
-			case 'JoinGameMessage':
-				this._handleJoinGameMessage(message, userId);
+			case 'AddPlayerMessage':
+				this._handleAddPlayerMessage(message, userId);
 				break;
 			case 'MovePlayerMessage':
 				this._handleMovePlayerMessage(message, userId);
@@ -81,12 +81,12 @@ export default class EscapeGame extends Game {
 		this._update();
 	}
 
-	private _handleJoinGameMessage({ data: { name } }: JoinGameMessage, playerId: string): void {
+	private _handleAddPlayerMessage({ data: { name } }: AddPlayerMessage, playerId: string): void {
 		// Error if already started.
 		if (this._stage !== EscapeGameStage.Open) {
-			const errorAlreadyStarted: JoinGameResponseMessage = {
+			const errorAlreadyStarted: AddPlayerResponseMessage = {
 				scope: this.id,
-				type: 'JoinGameResponseMessage',
+				type: 'AddPlayerResponseMessage',
 				data: {
 					error: 'Cannot join game because it has already started.',
 				},
@@ -104,18 +104,17 @@ export default class EscapeGame extends Game {
 			name,
 		};
 
-		const otherPlayers = Object.keys(this._gameData.players);
 		this._gameData.players[playerId] = player;
 
-		// Success!
-		const successMessage: JoinGameResponseMessage = {
+		// Success! Respond to the creator.
+		const successMessage: AddPlayerResponseMessage = {
 			scope: this.id,
-			type: 'JoinGameResponseMessage',
+			type: 'AddPlayerResponseMessage',
 			data: {},
 		};
 		this._messenger.send(Object.keys(this._gameData.players), successMessage);
 
-		// Send the update to players.
+		// Send the new player to all players (including the creator).
 		const playerAddedMessage: PlayerAddedMessage = {
 			scope: this.id,
 			type: 'PlayerAddedMessage',
@@ -124,7 +123,7 @@ export default class EscapeGame extends Game {
 				player,
 			},
 		};
-		this._messenger.send(otherPlayers, playerAddedMessage);
+		this._messenger.send(Object.keys(this._gameData.players), playerAddedMessage);
 
 		// Touch the games last updated time.
 		this._update();

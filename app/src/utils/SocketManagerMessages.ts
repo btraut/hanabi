@@ -6,7 +6,7 @@ export type AuthenticateSocketMessage = SocketMessage<'AuthenticateSocketMessage
 
 export type AuthenticateSocketResponseMessage = SocketMessage<
 	'AuthenticateSocketResponseMessage',
-	{ error?: string }
+	{ userId?: string; error?: string }
 >;
 
 export type ServerSocketManagerMessage =

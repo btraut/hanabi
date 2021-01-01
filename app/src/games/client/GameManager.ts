@@ -11,11 +11,6 @@ import PubSub from 'app/src/utils/PubSub';
 export default class GameManager {
 	public onUpdate = new PubSub<void>();
 
-	protected _userId: string | null = null;
-	public get userId(): string | null {
-		return this._userId;
-	}
-
 	protected _gameId: string | null = null;
 	public get gameId(): string | null {
 		return this._gameId;

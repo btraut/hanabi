@@ -164,7 +164,7 @@ export default class ServerSocketManager {
 			const authenticateResponseSocketMessage: AuthenticateSocketResponseMessage = {
 				scope: SOCKET_MANAGER_SCOPE,
 				type: 'AuthenticateSocketResponseMessage',
-				data: {},
+				data: { userId },
 			};
 			this._send(socketId, authenticateResponseSocketMessage);
 		} else {

@@ -1,11 +1,9 @@
-import EscapeGameManager from 'app/src/games/escape/client/EscapeGameManager';
+import { useEscapeGameManager } from 'app/src/games/escape/client/EscapeGameManagerContext';
 import { FormEvent, useRef, useState } from 'react';
 
-interface Props {
-	gameManager: EscapeGameManager;
-}
+export default function EscapeGameAddPlayerForm(): JSX.Element {
+	const gameManager = useEscapeGameManager();
 
-export default function EscapeGameAddPlayerForm({ gameManager }: Props): JSX.Element {
 	const [addPlayerError, setAddPlayerError] = useState('');
 
 	const nameInputRef = useRef<HTMLInputElement | null>(null);
@@ -24,23 +22,26 @@ export default function EscapeGameAddPlayerForm({ gameManager }: Props): JSX.Ele
 
 	return (
 		<>
-			{addPlayerError && <p className="EscapeGameWatchForm-ErrorText">{addPlayerError}</p>}
-			<form className="EscapeGameWatchForm-GameForm" onSubmit={handleAddPlayerSubmit}>
-				<div className="EscapeGameWatchForm-GameFormContainer">
-					<label className="EscapeGameWatchForm-TextEntryLabel" htmlFor="EscapeGameWatchForm-Code">
+			{addPlayerError && <p className="EscapeGameAddPlayerForm-ErrorText">{addPlayerError}</p>}
+			<form className="EscapeGameAddPlayerForm-GameForm" onSubmit={handleAddPlayerSubmit}>
+				<div className="EscapeGameAddPlayerForm-GameFormContainer">
+					<label
+						className="EscapeGameAddPlayerForm-TextEntryLabel"
+						htmlFor="EscapeGameAddPlayerForm-Code"
+					>
 						Code:
 					</label>
 					<input
-						className="EscapeGameWatchForm-TextEntryInput"
-						id="EscapeGameWatchForm-Code"
+						className="EscapeGameAddPlayerForm-TextEntryInput"
+						id="EscapeGameAddPlayerForm-Code"
 						ref={nameInputRef}
 						type="text"
 						autoCorrect="off"
 						autoCapitalize="none"
 					/>
 				</div>
-				<div className="EscapeGameWatchForm-GameFormButtons">
-					<input className="EscapeGameWatchForm-SubmitButton" type="submit" value="Join" />
+				<div className="EscapeGameAddPlayerForm-GameFormButtons">
+					<input className="EscapeGameAddPlayerForm-SubmitButton" type="submit" value="Join" />
 				</div>
 			</form>
 		</>
