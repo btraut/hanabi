@@ -6,6 +6,8 @@ import {
 	GetGameDataMessage,
 	GetGameDataResponseMessage,
 	getScope,
+	RemovePlayerMessage,
+	RemovePlayerResponseMessage,
 } from 'app/src/games/escape/EscapeGameMessages';
 import EscapeGamePlayer from 'app/src/games/escape/EscapeGamePlayer';
 import { ESCAPE_GAME_TITLE } from 'app/src/games/escape/server/EscapeGame';
@@ -49,6 +51,9 @@ export default class EscapeGameManager extends GameManager {
 			case 'PlayerAddedMessage':
 				this._handlePlayerAdded(message.data.playerId, message.data.player);
 				break;
+			case 'PlayerRemovedMessage':
+				this._handlePlayerRemoved(message.data.playerId);
+				break;
 		}
 	};
 
@@ -57,9 +62,17 @@ export default class EscapeGameManager extends GameManager {
 			return;
 		}
 
-		console.log('_handlePlayerAdded', playerId, player);
-
 		this._gameData.players[playerId] = player;
+
+		this.onUpdate.emit();
+	}
+
+	private _handlePlayerRemoved(playerId: string) {
+		if (!this._gameData) {
+			return;
+		}
+
+		delete this._gameData.players[playerId];
 
 		this.onUpdate.emit();
 	}
@@ -83,6 +96,28 @@ export default class EscapeGameManager extends GameManager {
 
 		if (addPlayerResponseMessage.data.error) {
 			throw new Error(addPlayerResponseMessage.data.error);
+		}
+	}
+
+	public async leaveGame(): Promise<void> {
+		if (!this._gameId) {
+			throw new Error('Cannot remove a player without a game.');
+		}
+
+		// Attempt to watch the game using the game code.
+		const removePlayerMessage: RemovePlayerMessage = {
+			scope: getScope(this._title, this._gameId),
+			type: 'RemovePlayerMessage',
+			data: {},
+		};
+		this._socketManager.send(removePlayerMessage);
+
+		const removePlayerResponseMessage = await this._socketManager.expectMessageOfType<RemovePlayerResponseMessage>(
+			'RemovePlayerResponseMessage',
+		);
+
+		if (removePlayerResponseMessage.data.error) {
+			throw new Error(removePlayerResponseMessage.data.error);
 		}
 	}
 

@@ -8,6 +8,10 @@ export default function EscapeGamePlayerView(): JSX.Element {
 
 	const gameData = gameManager.gameData;
 
+	const handleLeaveClick = async () => {
+		await gameManager.leaveGame();
+	};
+
 	if (!gameData) {
 		return <h1 className="EscapeGame-Subtitle">Loading…</h1>;
 	}
@@ -32,11 +36,14 @@ export default function EscapeGamePlayerView(): JSX.Element {
 				))}
 			</ul>
 			{!userIsJoined && <EscapeGameJoinForm />}
-			{readyToStart && (
-				<div className="EscapeGame-FormButtons">
-					<button className="EscapeGame-GameAction">Start Game</button>
-				</div>
-			)}
+			<div className="EscapeGame-FormButtons">
+				{userIsJoined && (
+					<button className="EscapeGame-GameAction" onClick={handleLeaveClick}>
+						Leave
+					</button>
+				)}
+				{readyToStart && <button className="EscapeGame-GameAction">Start Game</button>}
+			</div>
 		</>
 	);
 }

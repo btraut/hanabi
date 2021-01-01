@@ -14,7 +14,9 @@ import {
 	MovePlayerMessage,
 	PlayerAddedMessage,
 	PlayerMovedMessage,
-	// PlayerRemovedMessage,
+	PlayerRemovedMessage,
+	RemovePlayerMessage,
+	RemovePlayerResponseMessage,
 } from '../EscapeGameMessages';
 import { checkBounds, Location, move, Size } from '../Movement';
 
@@ -66,6 +68,9 @@ export default class EscapeGame extends Game {
 				break;
 			case 'AddPlayerMessage':
 				this._handleAddPlayerMessage(message, userId);
+				break;
+			case 'RemovePlayerMessage':
+				this._handleRemovePlayerMessage(message, userId);
 				break;
 			case 'MovePlayerMessage':
 				this._handleMovePlayerMessage(message, userId);
@@ -133,29 +138,63 @@ export default class EscapeGame extends Game {
 		this._update();
 	}
 
-	/*
-	private _removePlayer(playerId: string): void {
+	private _handleRemovePlayerMessage(
+		{ data: { playerId } }: RemovePlayerMessage,
+		userId: string,
+	): void {
+		const removeUserId = playerId || userId;
+
+		// export type RemovePlayerMessage = SocketMessage<'RemovePlayerMessage', { playerId?: string }>;
+		// export type RemovePlayerResponseMessage = SocketMessage<
+		// 	'RemovePlayerResponseMessage',
+		// 	{ error?: string }
+		// >;
+		// export type PlayerRemovedMessage = SocketMessage<'PlayerRemovedMessage', { playerId: string }>;
+
+		// Error if already started.
+		if (this._stage !== EscapeGameStage.Open) {
+			const errorAlreadyStarted: RemovePlayerResponseMessage = {
+				scope: getScope(ESCAPE_GAME_TITLE, this.id),
+				type: 'RemovePlayerResponseMessage',
+				data: {
+					error: 'Cannot remove user from game because it has already started.',
+				},
+			};
+			this._messenger.send(userId, errorAlreadyStarted);
+			return;
+		}
+
 		// Remove the player from the map.
-		const playerCoordinates = this._getPlayerCoordinates(playerId);
+		const playerCoordinates = this._getPlayerCoordinates(removeUserId);
 		if (playerCoordinates) {
 			const { x, y } = playerCoordinates;
 			this._gameData.map[x][y] = this._gameData.map[x][y].filter((id) => id !== playerId);
 		}
 
-		// Send the update to players.
-		const playerRemovedMessage: PlayerRemovedMessage = {
+		const allPlayers = Object.keys(this._gameData.players);
+
+		delete this._gameData.players[removeUserId];
+
+		const removePlayerResponseMessage: RemovePlayerResponseMessage = {
 			scope: this.id,
+			type: 'RemovePlayerResponseMessage',
+			data: {},
+		};
+		this._messenger.send(userId, removePlayerResponseMessage);
+
+		// Send the removed player to all players (including the remover).
+		const playerRemovedMessage: PlayerRemovedMessage = {
+			scope: getScope(ESCAPE_GAME_TITLE, this.id),
 			type: 'PlayerRemovedMessage',
 			data: {
-				playerId,
+				playerId: removeUserId,
 			},
 		};
-		this._messenger.send(Object.keys(this._gameData.players), playerRemovedMessage);
+		this._messenger.send(allPlayers, playerRemovedMessage);
 
 		// Touch the games last updated time.
 		this._update();
 	}
-	*/
 
 	private _getPlayerCoordinates(playerId: string): Location | null {
 		for (let x = 0; x < this._gameData.map.length; x += 1) {

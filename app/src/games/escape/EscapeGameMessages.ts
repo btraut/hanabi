@@ -24,7 +24,11 @@ export type PlayerAddedMessage = SocketMessage<
 	{ playerId: string; player: EscapeGamePlayer }
 >;
 
-export type RemovePlayerMessage = SocketMessage<'RemovePlayerMessage', { playerId: string }>;
+export type RemovePlayerMessage = SocketMessage<'RemovePlayerMessage', { playerId?: string }>;
+export type RemovePlayerResponseMessage = SocketMessage<
+	'RemovePlayerResponseMessage',
+	{ error?: string }
+>;
 export type PlayerRemovedMessage = SocketMessage<'PlayerRemovedMessage', { playerId: string }>;
 
 export type UpdatePlayerMessage = SocketMessage<'AddPlayerMessage', { name: string }>;
@@ -55,6 +59,7 @@ export type EscapeGameMessage =
 	| AddPlayerResponseMessage
 	| PlayerAddedMessage
 	| RemovePlayerMessage
+	| RemovePlayerResponseMessage
 	| PlayerRemovedMessage
 	| UpdatePlayerMessage
 	| PlayerUpdatedMessage
