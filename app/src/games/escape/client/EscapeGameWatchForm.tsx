@@ -1,12 +1,9 @@
-import EscapeGameManager from 'app/src/games/escape/client/EscapeGameManager';
+import { useEscapeGameManager } from 'app/src/games/escape/client/EscapeGameManagerContext';
 import { FormEvent, useRef, useState } from 'react';
 import { useHistory } from 'react-router';
 
-interface Props {
-	gameManager: EscapeGameManager;
-}
-
-export default function EscapeGameWatchForm({ gameManager }: Props): JSX.Element {
+export default function EscapeGameWatchForm(): JSX.Element {
+	const gameManager = useEscapeGameManager();
 	const history = useHistory();
 
 	const [watchGameError, setWatchGameError] = useState('');

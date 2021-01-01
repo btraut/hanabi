@@ -1,12 +1,9 @@
-import EscapeGameManager from 'app/src/games/escape/client/EscapeGameManager';
+import { useEscapeGameManager } from 'app/src/games/escape/client/EscapeGameManagerContext';
 import { useRef } from 'react';
 import { useHistory } from 'react-router';
 
-interface Props {
-	gameManager: EscapeGameManager;
-}
-
-export default function EscapeGameLobby({ gameManager }: Props): JSX.Element {
+export default function EscapeGameLobby(): JSX.Element {
+	const gameManager = useEscapeGameManager();
 	const history = useHistory();
 
 	const loadingRef = useRef(false);

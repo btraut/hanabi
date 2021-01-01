@@ -1,11 +1,9 @@
-import EscapeGameManager from 'app/src/games/escape/client/EscapeGameManager';
+import { useEscapeGameManager } from 'app/src/games/escape/client/EscapeGameManagerContext';
 import EscapeGameStage from 'app/src/games/escape/EscapeGameStage';
 
-interface Props {
-	gameManager: EscapeGameManager;
-}
+export default function EscapeGamePlayerView(): JSX.Element {
+	const gameManager = useEscapeGameManager();
 
-export default function EscapeGamePlayerView({ gameManager }: Props): JSX.Element {
 	const title = gameManager.gameData?.stage === EscapeGameStage.Open ? 'LFM' : 'Game in progress!';
 
 	return (

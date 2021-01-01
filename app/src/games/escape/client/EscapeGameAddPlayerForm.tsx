@@ -1,6 +1,5 @@
 import EscapeGameManager from 'app/src/games/escape/client/EscapeGameManager';
 import { FormEvent, useRef, useState } from 'react';
-import { useHistory } from 'react-router';
 
 interface Props {
 	gameManager: EscapeGameManager;

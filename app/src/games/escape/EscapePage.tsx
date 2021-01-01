@@ -1,3 +1,4 @@
+import EscapeGameManagerController from 'app/src/games/escape/client/EscapeGameManagerController';
 import EscapeGameView from 'app/src/games/escape/client/EscapeGameView';
 
 import SocketManagerController from '../../components/SocketManagerController';
@@ -8,7 +9,9 @@ const title = 'Escape | Play';
 const EscapePage: Page = () => {
 	return (
 		<SocketManagerController>
-			<EscapeGameView />
+			<EscapeGameManagerController>
+				<EscapeGameView />
+			</EscapeGameManagerController>
 		</SocketManagerController>
 	);
 };
