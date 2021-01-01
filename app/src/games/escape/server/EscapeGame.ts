@@ -89,7 +89,7 @@ export default class EscapeGame extends Game {
 		// Error if already started.
 		if (this._stage !== EscapeGameStage.Open) {
 			const errorAlreadyStarted: AddPlayerResponseMessage = {
-				scope: this.id,
+				scope: getScope(ESCAPE_GAME_TITLE, this.id),
 				type: 'AddPlayerResponseMessage',
 				data: {
 					error: 'Cannot join game because it has already started.',
@@ -112,7 +112,7 @@ export default class EscapeGame extends Game {
 
 		// Success! Respond to the creator.
 		const successMessage: AddPlayerResponseMessage = {
-			scope: this.id,
+			scope: getScope(ESCAPE_GAME_TITLE, this.id),
 			type: 'AddPlayerResponseMessage',
 			data: {},
 		};
@@ -120,7 +120,7 @@ export default class EscapeGame extends Game {
 
 		// Send the new player to all players (including the creator).
 		const playerAddedMessage: PlayerAddedMessage = {
-			scope: this.id,
+			scope: getScope(ESCAPE_GAME_TITLE, this.id),
 			type: 'PlayerAddedMessage',
 			data: {
 				playerId,

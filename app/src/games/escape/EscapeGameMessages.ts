@@ -1,7 +1,7 @@
 import { SerialEscapeGameData } from 'app/src/games/escape/server/EscapeGameData';
 
 import { SocketMessage } from '../../models/SocketMessage';
-import Player from './EscapeGamePlayer';
+import EscapeGamePlayer from './EscapeGamePlayer';
 import { Direction, Location } from './Movement';
 
 export function getScope(title: string, id: string): string {
@@ -21,7 +21,7 @@ export type AddPlayerResponseMessage = SocketMessage<
 >;
 export type PlayerAddedMessage = SocketMessage<
 	'PlayerAddedMessage',
-	{ playerId: string; player: Player }
+	{ playerId: string; player: EscapeGamePlayer }
 >;
 
 export type RemovePlayerMessage = SocketMessage<'RemovePlayerMessage', { playerId: string }>;
@@ -30,7 +30,7 @@ export type PlayerRemovedMessage = SocketMessage<'PlayerRemovedMessage', { playe
 export type UpdatePlayerMessage = SocketMessage<'AddPlayerMessage', { name: string }>;
 export type PlayerUpdatedMessage = SocketMessage<
 	'PlayerUpdatedMessage',
-	{ playerId: string; player: Player }
+	{ playerId: string; player: EscapeGamePlayer }
 >;
 
 export type MovePlayerMessage = SocketMessage<

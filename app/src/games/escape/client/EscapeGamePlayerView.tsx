@@ -1,27 +1,30 @@
+import EscapeGameJoinForm from 'app/src/games/escape/client/EscapeGameJoinForm';
 import { useEscapeGameManager } from 'app/src/games/escape/client/EscapeGameManagerContext';
-import EscapeGameStage from 'app/src/games/escape/EscapeGameStage';
+import useSocketManager from 'app/src/utils/client/useSocketManager';
 
 export default function EscapeGamePlayerView(): JSX.Element {
 	const gameManager = useEscapeGameManager();
+	const socketManager = useSocketManager();
 
-	const title = gameManager.gameData?.stage === EscapeGameStage.Open ? 'LFM' : 'Game in progress!';
+	const gameData = gameManager.gameData;
+
+	if (!gameData) {
+		return <h1 className="HostView-Title">Loading…</h1>;
+	}
+
+	const userIsJoined = socketManager.userId && !!gameData.players[socketManager.userId];
 
 	return (
 		<>
-			<h1 className="HostView-Title">{title}</h1>
+			<h1 className="HostView-Title">LFM</h1>
 			<ul className="HostView-PlayersContainer">
-				{/* {data.players.map((player) => (
+				{Object.values(gameData.players).map((player) => (
 					<li className="HostView-Player" key={player.id}>
-						{player.pictureData && (
-							<img className="HostView-PlayerPicture" src={player.pictureData} />
-						)}
-						{!player.pictureData && (
-							<img className="HostView-PlayerPicture" src="/images/drawing-face.svg" />
-						)}
 						<div className="HostView-PlayerName">{player.name}</div>
 					</li>
-				))} */}
+				))}
 			</ul>
+			{userIsJoined ? 'You’re in!' : <EscapeGameJoinForm />}
 		</>
 	);
 }

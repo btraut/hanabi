@@ -1,6 +1,12 @@
+import useSetTitle from 'app/src/utils/client/useSetTitle';
+
 import Page from './Page';
 
+const title = 'Ten Four Games | 404';
+
 const Error404Page: Page = () => {
+	useSetTitle(title);
+
 	return (
 		<div>
 			<h1 className="Error404Page-SectionHeader">404 &ndash; Page Not Found</h1>
@@ -11,10 +17,6 @@ const Error404Page: Page = () => {
 	);
 };
 
-Error404Page.preload = async function () {
-	console.log('404 preloaded');
-};
-
-Error404Page.title = 'Ten Four Games | 404';
+Error404Page.title = title;
 
 export default Error404Page;

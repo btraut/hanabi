@@ -1,22 +1,32 @@
 import EscapeGameManager from 'app/src/games/escape/client/EscapeGameManager';
 import { EscapeGameManagerContextProvider } from 'app/src/games/escape/client/EscapeGameManagerContext';
 import useSocketManager from 'app/src/utils/client/useSocketManager';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 interface Props {
 	readonly children: JSX.Element;
 }
 
 export default function EscapeGameManagerController({ children }: Props): JSX.Element {
-	const managerRef = useRef<EscapeGameManager>();
+	const gameManagerRef = useRef<EscapeGameManager>();
 	const socketManager = useSocketManager();
 
-	if (!managerRef.current) {
-		managerRef.current = new EscapeGameManager(socketManager);
+	if (!gameManagerRef.current) {
+		gameManagerRef.current = new EscapeGameManager(socketManager);
 	}
 
+	useEffect(
+		() => () => {
+			if (gameManagerRef.current) {
+				gameManagerRef.current.cleanUp();
+				gameManagerRef.current = undefined;
+			}
+		},
+		[],
+	);
+
 	return (
-		<EscapeGameManagerContextProvider value={managerRef.current}>
+		<EscapeGameManagerContextProvider value={gameManagerRef.current}>
 			{children}
 		</EscapeGameManagerContextProvider>
 	);

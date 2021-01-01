@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import useSetTitle from 'app/src/utils/client/useSetTitle';
 import { Link } from 'react-router-dom';
 
 import Page from './Page';
@@ -6,9 +6,7 @@ import Page from './Page';
 const title = 'Ten Four Games | Home';
 
 const HomePage: Page = () => {
-	useEffect(() => {
-		document.title = title;
-	}, []);
+	useSetTitle(title);
 
 	return (
 		<div className="HomePage">
@@ -24,10 +22,6 @@ const HomePage: Page = () => {
 			</div>
 		</div>
 	);
-};
-
-HomePage.preload = async function () {
-	console.log('homepage preloaded');
 };
 
 HomePage.title = title;

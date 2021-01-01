@@ -119,14 +119,12 @@ export default class ServerSocketManager {
 		for (const userId of userIds) {
 			const socketIds = authenticatedSockets[userId];
 
-			if (socketIds) {
+			if (socketIds && socketIds.length > 0) {
 				console.log(`Sending message(s) to ${userId}:`, message);
 
 				for (const socketId of socketIds) {
 					this._send(socketId, message);
 				}
-			} else {
-				console.log(`Can’t send message to offline or non-existant user ${userId}.`);
 			}
 		}
 	}
