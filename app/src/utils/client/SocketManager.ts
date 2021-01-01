@@ -229,4 +229,21 @@ export default class SocketManager {
 		// Post the message.
 		this._onMessage.emit(message);
 	};
+
+	public addScopedMessageHandler<MessageType extends SocketMessageBase>(
+		handler: (data: { userId: string; message: MessageType }) => void,
+		scope: string,
+	): void {
+		this.onMessage.subscribe((m) => {
+			if (m.scope !== scope) {
+				return;
+			}
+
+			// At this point, we presume that the scope check has limited the
+			// message type to only those used in this handler. It's possible
+			// that this is not true, but in practice, we should always limit a
+			// specific scope to its associated types.
+			handler(m as any);
+		});
+	}
 }

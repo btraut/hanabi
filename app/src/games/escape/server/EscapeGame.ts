@@ -9,8 +9,8 @@ import {
 	AddPlayerMessage,
 	AddPlayerResponseMessage,
 	EscapeGameMessage,
+	GetGameDataResponseMessage,
 	getScope,
-	GetStateResponseMessage,
 	MovePlayerMessage,
 	PlayerAddedMessage,
 	PlayerMovedMessage,
@@ -42,7 +42,11 @@ export default class EscapeGame extends Game {
 			.fill('')
 			.map(() => new Array(MAP_SIZE.height).fill('').map(() => []));
 
-		this._messenger = new GameMessenger(getScope(this.id), socketManager, this._handleMessage);
+		this._messenger = new GameMessenger(
+			getScope(ESCAPE_GAME_TITLE, this.id),
+			socketManager,
+			this._handleMessage,
+		);
 	}
 
 	public cleanUp(): void {
@@ -57,8 +61,8 @@ export default class EscapeGame extends Game {
 		message: EscapeGameMessage;
 	}): void => {
 		switch (message.type) {
-			case 'GetStateMessage':
-				this._sendState(userId);
+			case 'GetGameDataMessage':
+				this._sendGameData(userId);
 				break;
 			case 'AddPlayerMessage':
 				this._handleAddPlayerMessage(message, userId);
@@ -69,13 +73,13 @@ export default class EscapeGame extends Game {
 		}
 	};
 
-	private _sendState(playerId: string): void {
-		const getStateResponseMessage: GetStateResponseMessage = {
-			scope: getScope(this.id),
-			type: 'GetStateResponseMessage',
-			data: { state: this._gameData.serialize() },
+	private _sendGameData(playerId: string): void {
+		const getGameDataResponseMessage: GetGameDataResponseMessage = {
+			scope: getScope(ESCAPE_GAME_TITLE, this.id),
+			type: 'GetGameDataResponseMessage',
+			data: this._gameData.serialize(),
 		};
-		this._messenger.send(playerId, getStateResponseMessage);
+		this._messenger.send(playerId, getGameDataResponseMessage);
 
 		// Touch the games last updated time.
 		this._update();

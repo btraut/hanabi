@@ -11,7 +11,7 @@ export default function EscapeGameView(): JSX.Element {
 	const gameManager = useEscapeGameManager();
 
 	const reloadData = useCallback(() => {
-		return gameManager.refreshState();
+		return gameManager.refreshGameData();
 	}, [gameManager]);
 
 	return (
