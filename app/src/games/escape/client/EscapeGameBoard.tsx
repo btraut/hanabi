@@ -9,11 +9,11 @@ export default function EscapeGameBoard(): JSX.Element {
 	const socketManager = useSocketManager();
 	const game = useEscapeGame();
 
-	if (!game) {
-		throw new Error('Cannot render with empty game. This should never happen.');
+	if (!game || !socketManager.userId) {
+		throw new Error('Must connect/join. This should never happen.');
 	}
 
-	const viewerIsPlayer = !!(socketManager.userId && game.gameData.players[socketManager.userId]);
+	const viewerIsPlayer = !!game.gameData.players[socketManager.userId];
 
 	const handleArrowKey = useCallback(
 		async (direction: Direction) => {
@@ -37,6 +37,14 @@ export default function EscapeGameBoard(): JSX.Element {
 		);
 	};
 
+	const myLocation = game.gameData.players[socketManager.userId].location;
+	const distanceToPlayers: { [userId: string]: number } = {};
+	for (const player of players) {
+		distanceToPlayers[player.id] = Math.sqrt(
+			Math.pow(player.location.x - myLocation.x, 2) + Math.pow(player.location.y - myLocation.y, 2),
+		);
+	}
+
 	return (
 		<>
 			<h1 className="EscapeGame-Subtitle">Game on!</h1>
@@ -53,6 +61,16 @@ export default function EscapeGameBoard(): JSX.Element {
 					))}
 				</tbody>
 			</table>
+			<p>Close players:</p>
+			<ul>
+				{players
+					.filter(({ id }) => id !== socketManager.userId)
+					.map((player) => (
+						<li key={`player-distance-${player.id}`}>{`Distance to ${player.name}: ${
+							distanceToPlayers[player.id]
+						}`}</li>
+					))}
+			</ul>
 		</>
 	);
 }

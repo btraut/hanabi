@@ -7,11 +7,11 @@ import classnames from 'classnames';
 declare const DOMAIN_BASE: string;
 
 export default function EscapeGameLobby(): JSX.Element {
+	const game = useEscapeGame();
 	const socketManager = useSocketManager();
 
-	const game = useEscapeGame();
-	if (!game) {
-		throw new Error('Cannot render with empty game. This should never happen.');
+	if (!game || !socketManager.userId) {
+		throw new Error('Must connect/join. This should never happen.');
 	}
 
 	const handleLeaveClick = async () => {
