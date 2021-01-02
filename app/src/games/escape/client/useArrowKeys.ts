@@ -8,15 +8,19 @@ export default function useArrowKeys(handler: ArrowKeyHandler): void {
 		(event: KeyboardEvent) => {
 			switch (event.key) {
 				case 'ArrowUp':
+					event.preventDefault();
 					handler(Direction.Up);
 					break;
 				case 'ArrowLeft':
+					event.preventDefault();
 					handler(Direction.Left);
 					break;
 				case 'ArrowRight':
+					event.preventDefault();
 					handler(Direction.Right);
 					break;
 				case 'ArrowDown':
+					event.preventDefault();
 					handler(Direction.Down);
 					break;
 			}
