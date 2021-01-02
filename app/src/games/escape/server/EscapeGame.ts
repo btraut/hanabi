@@ -8,17 +8,10 @@ import ServerSocketManager from 'app/src/utils/server/SocketManager';
 import Game from '../../server/Game';
 import {
 	AddPlayerMessage,
-	AddPlayerResponseMessage,
-	ChangeGameStageMessage,
 	EscapeGameMessage,
-	GetGameDataResponseMessage,
 	getScope,
 	MovePlayerMessage,
-	PlayerAddedMessage,
-	PlayerMovedMessage,
-	PlayerRemovedMessage,
 	RemovePlayerMessage,
-	RemovePlayerResponseMessage,
 	StartGameMessage,
 	StartGameResponseMessage,
 } from '../EscapeGameMessages';
@@ -42,9 +35,9 @@ export default class EscapeGame extends Game {
 
 		this._gameData.id = this.id;
 		this._gameData.code = this.code;
-		this._gameData.map = new Array(MAP_SIZE.width)
+		this._gameData.map = new Array(MAP_SIZE.height)
 			.fill('')
-			.map(() => new Array(MAP_SIZE.height).fill('').map(() => []));
+			.map(() => new Array(MAP_SIZE.width).fill('').map(() => []));
 
 		this._messenger = new GameMessenger(
 			getScope(ESCAPE_GAME_TITLE, this.id),
@@ -88,12 +81,11 @@ export default class EscapeGame extends Game {
 	};
 
 	private _sendGameData(playerId: string): void {
-		const getGameDataResponseMessage: GetGameDataResponseMessage = {
+		this._messenger.send(playerId, {
 			scope: getScope(ESCAPE_GAME_TITLE, this.id),
 			type: 'GetGameDataResponseMessage',
 			data: this._gameData.serialize(),
-		};
-		this._messenger.send(playerId, getGameDataResponseMessage);
+		});
 
 		// Touch the games last updated time.
 		this._update();
@@ -102,14 +94,13 @@ export default class EscapeGame extends Game {
 	private _handleAddPlayerMessage({ data: { name } }: AddPlayerMessage, playerId: string): void {
 		// Error if already started.
 		if (this._stage !== EscapeGameStage.Open) {
-			const errorAlreadyStarted: AddPlayerResponseMessage = {
+			this._messenger.send(playerId, {
 				scope: getScope(ESCAPE_GAME_TITLE, this.id),
 				type: 'AddPlayerResponseMessage',
 				data: {
 					error: 'Cannot join game because it has already started.',
 				},
-			};
-			this._messenger.send(playerId, errorAlreadyStarted);
+			});
 			return;
 		}
 
@@ -125,23 +116,27 @@ export default class EscapeGame extends Game {
 		this._gameData.players[playerId] = player;
 
 		// Success! Respond to the creator.
-		const successMessage: AddPlayerResponseMessage = {
+		this._messenger.send(playerId, {
 			scope: getScope(ESCAPE_GAME_TITLE, this.id),
 			type: 'AddPlayerResponseMessage',
 			data: {},
-		};
-		this._messenger.send(playerId, successMessage);
+		});
 
 		// Send the new player to all players (including the creator).
-		const playerAddedMessage: PlayerAddedMessage = {
+		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
 			scope: getScope(ESCAPE_GAME_TITLE, this.id),
 			type: 'PlayerAddedMessage',
 			data: {
 				playerId,
 				player,
 			},
-		};
-		this._messenger.send(this._getAllPlayerAndWatcherIds(), playerAddedMessage);
+		});
+
+		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
+			scope: getScope(ESCAPE_GAME_TITLE, this.id),
+			type: 'UpdateMapMessage',
+			data: { map: this._gameData.map },
+		});
 
 		// Touch the games last updated time.
 		this._update();
@@ -155,14 +150,13 @@ export default class EscapeGame extends Game {
 
 		// Error if already started.
 		if (this._stage !== EscapeGameStage.Open) {
-			const errorAlreadyStarted: RemovePlayerResponseMessage = {
+			this._messenger.send(userId, {
 				scope: getScope(ESCAPE_GAME_TITLE, this.id),
 				type: 'RemovePlayerResponseMessage',
 				data: {
 					error: 'Cannot remove user from game because it has already started.',
 				},
-			};
-			this._messenger.send(userId, errorAlreadyStarted);
+			});
 			return;
 		}
 
@@ -177,22 +171,26 @@ export default class EscapeGame extends Game {
 
 		delete this._gameData.players[removeUserId];
 
-		const removePlayerResponseMessage: RemovePlayerResponseMessage = {
-			scope: this.id,
+		this._messenger.send(userId, {
+			scope: getScope(ESCAPE_GAME_TITLE, this.id),
 			type: 'RemovePlayerResponseMessage',
 			data: {},
-		};
-		this._messenger.send(userId, removePlayerResponseMessage);
+		});
 
 		// Send the removed player to all players (including the remover).
-		const playerRemovedMessage: PlayerRemovedMessage = {
+		this._messenger.send(allPlayers, {
 			scope: getScope(ESCAPE_GAME_TITLE, this.id),
 			type: 'PlayerRemovedMessage',
 			data: {
 				playerId: removeUserId,
 			},
-		};
-		this._messenger.send(allPlayers, playerRemovedMessage);
+		});
+
+		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
+			scope: getScope(ESCAPE_GAME_TITLE, this.id),
+			type: 'UpdateMapMessage',
+			data: { map: this._gameData.map },
+		});
 
 		// Touch the games last updated time.
 		this._update();
@@ -216,22 +214,20 @@ export default class EscapeGame extends Game {
 		this._gameData.stage = EscapeGameStage.Started;
 
 		// Send success message.
-		const startGameResponseMessage: StartGameResponseMessage = {
-			scope: this.id,
+		this._messenger.send(userId, {
+			scope: getScope(ESCAPE_GAME_TITLE, this.id),
 			type: 'StartGameResponseMessage',
 			data: {},
-		};
-		this._messenger.send(userId, startGameResponseMessage);
+		});
 
 		// Send the stage change to all players (including the remover).
-		const changeGameStageMessage: ChangeGameStageMessage = {
+		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
 			scope: getScope(ESCAPE_GAME_TITLE, this.id),
 			type: 'ChangeGameStageMessage',
 			data: {
 				stage: this._gameData.stage,
 			},
-		};
-		this._messenger.send(this._getAllPlayerAndWatcherIds(), changeGameStageMessage);
+		});
 
 		// Touch the games last updated time.
 		this._update();
@@ -269,12 +265,11 @@ export default class EscapeGame extends Game {
 		const { x: newX, y: newY } = newCoordinates;
 		this._gameData.map[newX][newY].push(playerId);
 
-		const playerMovedMessage: PlayerMovedMessage = {
-			scope: this.id,
-			type: 'PlayerMovedMessage',
-			data: { playerId, to: newCoordinates },
-		};
-		this._messenger.send(this._getAllPlayerAndWatcherIds(), playerMovedMessage);
+		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
+			scope: getScope(ESCAPE_GAME_TITLE, this.id),
+			type: 'UpdateMapMessage',
+			data: { map: this._gameData.map },
+		});
 
 		// Touch the games last updated time.
 		this._update();

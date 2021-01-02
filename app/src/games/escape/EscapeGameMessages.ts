@@ -58,6 +58,13 @@ export type ChangeGameStageMessage = SocketMessage<
 	{ stage: EscapeGameStage }
 >;
 
+export type UpdateMapMessage = SocketMessage<
+	'UpdateMapMessage',
+	{
+		map: string[][][];
+	}
+>;
+
 export type GetGameDataMessage = SocketMessage<'GetGameDataMessage', void>;
 export type GetGameDataResponseMessage = SocketMessage<
 	'GetGameDataResponseMessage',
@@ -80,5 +87,6 @@ export type EscapeGameMessage =
 	| MovePlayerMessage
 	| PlayerMovedMessage
 	| ChangeGameStageMessage
+	| UpdateMapMessage
 	| GetGameDataMessage
 	| GetGameDataResponseMessage;

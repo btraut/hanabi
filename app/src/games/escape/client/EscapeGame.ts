@@ -2,18 +2,20 @@ import Game from 'app/src/games/client/Game';
 import {
 	AddPlayerMessage,
 	AddPlayerResponseMessage,
+	ChangeGameStageMessage,
 	EscapeGameMessage,
 	GetGameDataMessage,
 	GetGameDataResponseMessage,
 	getScope,
+	PlayerAddedMessage,
+	PlayerRemovedMessage,
 	RemovePlayerMessage,
 	RemovePlayerResponseMessage,
 	StartGameMessage,
 	StartGameResponseMessage,
+	UpdateMapMessage,
 } from 'app/src/games/escape/EscapeGameMessages';
-import EscapeGamePlayer from 'app/src/games/escape/EscapeGamePlayer';
 import { ESCAPE_GAME_TITLE } from 'app/src/games/escape/EscapeGameRules';
-import EscapeGameStage from 'app/src/games/escape/EscapeGameStage';
 import { SerialEscapeGameData } from 'app/src/games/escape/server/EscapeGameData';
 import ClientSocketManager from 'app/src/utils/client/SocketManager';
 import PubSub from 'app/src/utils/PubSub';
@@ -52,18 +54,21 @@ export default class EscapeGame extends Game {
 
 		switch (message.type) {
 			case 'PlayerAddedMessage':
-				this._handlePlayerAdded(message.data.playerId, message.data.player);
+				this._handlePlayerAddedMessage(message);
 				break;
 			case 'PlayerRemovedMessage':
-				this._handlePlayerRemoved(message.data.playerId);
+				this._handlePlayerRemovedMessage(message);
 				break;
 			case 'ChangeGameStageMessage':
-				this._handleChangeStage(message.data.stage);
+				this._handleChangeStageMessage(message);
+				break;
+			case 'UpdateMapMessage':
+				this._handleUpdateMapMessage(message);
 				break;
 		}
 	};
 
-	private _handlePlayerAdded(playerId: string, player: EscapeGamePlayer) {
+	private _handlePlayerAddedMessage({ data: { playerId, player } }: PlayerAddedMessage) {
 		if (!this._gameData) {
 			return;
 		}
@@ -73,7 +78,7 @@ export default class EscapeGame extends Game {
 		this.onUpdate.emit();
 	}
 
-	private _handlePlayerRemoved(playerId: string) {
+	private _handlePlayerRemovedMessage({ data: { playerId } }: PlayerRemovedMessage) {
 		if (!this._gameData) {
 			return;
 		}
@@ -83,12 +88,24 @@ export default class EscapeGame extends Game {
 		this.onUpdate.emit();
 	}
 
-	private _handleChangeStage(stage: EscapeGameStage) {
+	private _handleChangeStageMessage({ data: { stage } }: ChangeGameStageMessage) {
 		if (!this._gameData) {
 			return;
 		}
 
 		this._gameData.stage = stage;
+
+		this.onUpdate.emit();
+	}
+
+	private _handleUpdateMapMessage({ data: { map } }: UpdateMapMessage) {
+		if (!this._gameData) {
+			return;
+		}
+
+		console.log('_handleUpdateMapMessage', this._gameData.map);
+
+		this._gameData.map = map;
 
 		this.onUpdate.emit();
 	}
