@@ -10,8 +10,8 @@ export default class GameMessenger<MessageType extends SocketMessageBase> {
 	private _scope: string;
 	private _messageHandler: (data: { userId: string; message: MessageType }) => void;
 
-	private _socketManager: SocketManager<MessageType> | null = null;
-	private _socketManagerOnMessageSubscriptionId: number | null = null;
+	private _socketManager: SocketManager<MessageType>;
+	private _socketManagerOnMessageSubscriptionId: number;
 
 	constructor(
 		scope: string,
@@ -28,14 +28,7 @@ export default class GameMessenger<MessageType extends SocketMessageBase> {
 	}
 
 	public cleanUp(): void {
-		if (this._socketManager === null || this._socketManagerOnMessageSubscriptionId === null) {
-			return;
-		}
-
 		this._socketManager.onMessage.unsubscribe(this._socketManagerOnMessageSubscriptionId);
-		this._socketManagerOnMessageSubscriptionId = null;
-
-		this._socketManager = null;
 	}
 
 	private _filterMessage = (data: { userId: string; message: MessageType }): void => {
@@ -51,10 +44,6 @@ export default class GameMessenger<MessageType extends SocketMessageBase> {
 	};
 
 	public send(userIdOrIds: string | readonly string[], message: MessageType): void {
-		if (!this._socketManager) {
-			throw new Error('No socket manager specified.');
-		}
-
 		this._socketManager.send(userIdOrIds, message);
 	}
 }

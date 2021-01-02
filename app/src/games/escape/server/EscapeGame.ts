@@ -3,6 +3,9 @@ import { ESCAPE_GAME_TITLE, MAP_SIZE } from 'app/src/games/escape/EscapeGameRule
 import EscapeGameStage from 'app/src/games/escape/EscapeGameStage';
 import EscapeGameData from 'app/src/games/escape/server/EscapeGameData';
 import GameMessenger from 'app/src/games/server/GameMessenger';
+import UserConnectionListener, {
+	UserConnectionChange,
+} from 'app/src/games/server/UserConnectionListener';
 import ServerSocketManager from 'app/src/utils/server/SocketManager';
 
 import Game from '../../server/Game';
@@ -31,6 +34,7 @@ export default class EscapeGame extends Game {
 	private _gameData: EscapeGameData = new EscapeGameData();
 
 	private _messenger: GameMessenger<EscapeGameMessage>;
+	private _userConnectionListener: UserConnectionListener;
 
 	constructor(userId: string, socketManager: ServerSocketManager<EscapeGameMessage>) {
 		super(userId);
@@ -40,10 +44,16 @@ export default class EscapeGame extends Game {
 			socketManager,
 			this._handleMessage,
 		);
+
+		this._userConnectionListener = new UserConnectionListener(
+			socketManager,
+			this._handleUserConnectionChange,
+		);
 	}
 
 	public cleanUp(): void {
 		this._messenger.cleanUp();
+		this._userConnectionListener.cleanUp();
 	}
 
 	private _getAllPlayerAndWatcherIds(): string[] {
@@ -76,6 +86,23 @@ export default class EscapeGame extends Game {
 		}
 	};
 
+	private _handleUserConnectionChange = (userId: string, change: UserConnectionChange) => {
+		if (!this._gameData.players[userId]) {
+			return;
+		}
+
+		this._gameData.players[userId].connected = change === UserConnectionChange.Authenticated;
+
+		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
+			scope: getScope(ESCAPE_GAME_TITLE, this.id),
+			type: 'RefreshGameDataMessage',
+			data: this._gameData.serialize(),
+		});
+
+		// Touch the games last updated time.
+		this._update();
+	};
+
 	private _sendGameData(playerId: string): void {
 		this._messenger.send(playerId, {
 			scope: getScope(ESCAPE_GAME_TITLE, this.id),
@@ -103,6 +130,7 @@ export default class EscapeGame extends Game {
 		// Add the player to the player list.
 		const player: EscapeGamePlayer = {
 			id: playerId,
+			connected: true,
 			name,
 			location: {
 				x: 0,

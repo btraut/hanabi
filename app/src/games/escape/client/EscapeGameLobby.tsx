@@ -2,6 +2,7 @@ import { useSocketManager } from 'app/src/components/SocketManagerContext';
 import { useEscapeGame } from 'app/src/games/escape/client/EscapeGameContext';
 import EscapeGameJoinForm from 'app/src/games/escape/client/EscapeGameJoinForm';
 import { MINIMUM_PLAYERS } from 'app/src/games/escape/EscapeGameRules';
+import classnames from 'classnames';
 
 declare const DOMAIN_BASE: string;
 
@@ -38,7 +39,12 @@ export default function EscapeGameLobby(): JSX.Element {
 			</p>
 			<ul className="EscapeGame-PlayersContainer">
 				{Object.values(game.gameData.players).map((player) => (
-					<li className="EscapeGame-Player" key={player.id}>
+					<li
+						className={classnames('EscapeGame-Player', {
+							'EscapeGame-Player--Disconnected': !player.connected,
+						})}
+						key={player.id}
+					>
 						<img className="EscapeGame-PlayerPicture" src="/images/user.svg" />
 						<div className="EscapeGame-PlayerName">{player.name}</div>
 					</li>

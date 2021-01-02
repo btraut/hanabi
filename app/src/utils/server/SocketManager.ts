@@ -27,14 +27,18 @@ export default class ServerSocketManager<MessageType extends SocketMessageBase> 
 
 	private _authenticatedUsers: { [socketId: string]: string } = {};
 
-	public _onConnect = new PubSub<{ userId: string }>();
+	public _onConnect = new PubSub<{ socketId: string }>();
+	public _onAuthenticate = new PubSub<{ userId: string }>();
 	public _onDisconnect = new PubSub<{ userId: string }>();
 	public _onMessage = new PubSub<{ userId: string; message: MessageTypeWithAuth<MessageType> }>();
 
 	private _tokens: { [token: string]: AuthToken } = {};
 
-	public get onConnect(): PubSub<{ userId: string }> {
+	public get onConnect(): PubSub<{ socketId: string }> {
 		return this._onConnect;
+	}
+	public get onAuthenticate(): PubSub<{ userId: string }> {
+		return this._onAuthenticate;
 	}
 	public get onDisconnect(): PubSub<{ userId: string }> {
 		return this._onDisconnect;
@@ -72,6 +76,8 @@ export default class ServerSocketManager<MessageType extends SocketMessageBase> 
 
 	private _handleConnect = (socketId: string) => {
 		Logger.debug(`socket.io connected: ${socketId}`);
+
+		this._onConnect.emit({ socketId });
 	};
 
 	private _handleDisconnect = (socketId: string) => {
@@ -161,10 +167,7 @@ export default class ServerSocketManager<MessageType extends SocketMessageBase> 
 			delete this._tokens[token];
 			this._authenticatedUsers[socketId] = userId;
 
-			// Only when a user is authenticated do we truly consider it a
-			// connection. Until then, we don't know how to associate a socketId
-			// with a userId.
-			this._onConnect.emit({ userId });
+			this._onAuthenticate.emit({ userId });
 
 			this._send(socketId, {
 				scope: SOCKET_MANAGER_SCOPE,
