@@ -14,7 +14,7 @@ import {
 	RemovePlayerMessage,
 	StartGameMessage,
 } from '../EscapeGameMessages';
-import { Location, locationIsInBounds, move } from '../Movement';
+import { locationIsInBounds, move } from '../Movement';
 
 export default class EscapeGame extends Game {
 	public static title = ESCAPE_GAME_TITLE;
@@ -34,10 +34,6 @@ export default class EscapeGame extends Game {
 
 	constructor(userId: string, socketManager: ServerSocketManager<EscapeGameMessage>) {
 		super(userId);
-
-		this._gameData.map = new Array(MAP_SIZE.height)
-			.fill('')
-			.map(() => new Array(MAP_SIZE.width).fill('').map(() => []));
 
 		this._messenger = new GameMessenger(
 			getScope(ESCAPE_GAME_TITLE, this.id),
@@ -104,13 +100,14 @@ export default class EscapeGame extends Game {
 			return;
 		}
 
-		// Add the player to the map.
-		this._gameData.map[0][0].push(playerId);
-
 		// Add the player to the player list.
 		const player: EscapeGamePlayer = {
 			id: playerId,
 			name,
+			location: {
+				x: 0,
+				y: 0,
+			},
 		};
 
 		this._gameData.players[playerId] = player;
@@ -158,13 +155,6 @@ export default class EscapeGame extends Game {
 				},
 			});
 			return;
-		}
-
-		// Remove the player from the map.
-		const playerCoordinates = this._getPlayerCoordinates(removeUserId);
-		if (playerCoordinates) {
-			const { x, y } = playerCoordinates;
-			this._gameData.map[x][y] = this._gameData.map[x][y].filter((id) => id !== playerId);
 		}
 
 		const allPlayers = this._getAllPlayerAndWatcherIds();
@@ -230,38 +220,21 @@ export default class EscapeGame extends Game {
 		this._update();
 	}
 
-	private _getPlayerCoordinates(playerId: string): Location | null {
-		for (let x = 0; x < this._gameData.map.length; x += 1) {
-			for (let y = 0; y < this._gameData.map[x].length; y += 1) {
-				if (this._gameData.map[x][y].includes(playerId)) {
-					return { x, y };
-				}
-			}
-		}
-
-		return null;
-	}
-
 	private _handleMovePlayerMessage(
 		{ data: { playerId, direction } }: MovePlayerMessage,
 		userId: string,
 	): void {
 		const movingPlayerId = playerId || userId;
+		const movingPlayer = this._gameData.players[movingPlayerId];
 
-		const playerCoordinates = this._getPlayerCoordinates(movingPlayerId);
-		if (!playerCoordinates) {
+		if (!this._gameData.players[movingPlayerId]) {
+			// TODO: error
 			return;
 		}
 
-		const newCoordinates = move(playerCoordinates, direction);
+		const newCoordinates = move(movingPlayer.location, direction);
 		if (locationIsInBounds(newCoordinates, MAP_SIZE)) {
-			const { x: oldX, y: oldY } = playerCoordinates;
-			this._gameData.map[oldY][oldX] = this._gameData.map[oldY][oldX].filter(
-				(id) => id !== movingPlayerId,
-			);
-
-			const { x: newX, y: newY } = newCoordinates;
-			this._gameData.map[newY][newX].push(movingPlayerId);
+			movingPlayer.location = newCoordinates;
 		}
 
 		this._messenger.send(this._getAllPlayerAndWatcherIds(), {

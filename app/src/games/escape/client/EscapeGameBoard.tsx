@@ -1,6 +1,7 @@
 import { useSocketManager } from 'app/src/components/SocketManagerContext';
 import { useEscapeGame } from 'app/src/games/escape/client/EscapeGameContext';
 import useArrowKeys from 'app/src/games/escape/client/useArrowKeys';
+import { MAP_SIZE } from 'app/src/games/escape/EscapeGameRules';
 import { Direction } from 'app/src/games/escape/Movement';
 import { useCallback } from 'react';
 
@@ -24,25 +25,28 @@ export default function EscapeGameBoard(): JSX.Element {
 	);
 	useArrowKeys(handleArrowKey);
 
+	const players = Object.values(game.gameData.players);
+	const buildCell = (x: number, y: number) => {
+		const playersInCell = players.filter((p) => p.location.x === x && p.location.y === y);
+		return playersInCell.map((p) =>
+			p.id === socketManager.userId ? (
+				<div key={`player-${p.id}`} className="EscapeGame-BoardDot EscapeGame-BoardDot--Self" />
+			) : (
+				<div key={`player-${p.id}`} className="EscapeGame-BoardDot" />
+			),
+		);
+	};
+
 	return (
 		<>
 			<h1 className="EscapeGame-Subtitle">Game on!</h1>
 			<table className="EscapeGame-Board">
 				<tbody>
-					{game.gameData.map.map((row, rowIndex) => (
+					{new Array(MAP_SIZE.height).fill('').map((_row, rowIndex) => (
 						<tr key={`row-${rowIndex}`}>
-							{row.map((cell, colIndex) => (
+							{new Array(MAP_SIZE.width).fill('').map((_cell, colIndex) => (
 								<td className="EscapeGame-BoardCell" key={`row-${colIndex}`}>
-									{cell.map((playerId) =>
-										playerId === socketManager.userId ? (
-											<div
-												key={`player-${playerId}`}
-												className="EscapeGame-BoardDot EscapeGame-BoardDot--Self"
-											/>
-										) : (
-											<div key={`player-${playerId}`} className="EscapeGame-BoardDot" />
-										),
-									)}
+									{buildCell(colIndex, rowIndex)}
 								</td>
 							))}
 						</tr>

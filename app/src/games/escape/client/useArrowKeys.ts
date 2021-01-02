@@ -6,8 +6,6 @@ type ArrowKeyHandler = (direction: Direction) => void;
 export default function useArrowKeys(handler: ArrowKeyHandler): void {
 	const handleKeyDown = useCallback(
 		(event: KeyboardEvent) => {
-			console.log(event.key);
-
 			switch (event.key) {
 				case 'ArrowUp':
 					handler(Direction.Up);
@@ -27,7 +25,6 @@ export default function useArrowKeys(handler: ArrowKeyHandler): void {
 	);
 
 	useEffect(() => {
-		console.log('adding keydown');
 		document.addEventListener('keydown', handleKeyDown);
 
 		return () => {
