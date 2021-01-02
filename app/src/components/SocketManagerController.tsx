@@ -1,3 +1,4 @@
+import { SocketMessageBase } from 'app/src/models/SocketMessage';
 import { useEffect, useRef } from 'react';
 
 import SocketManager from '../utils/client/SocketManager';
@@ -7,11 +8,13 @@ interface Props {
 	readonly children: JSX.Element;
 }
 
-export default function SocketManagerController({ children }: Props): JSX.Element {
-	const managerRef = useRef<SocketManager>();
+export default function SocketManagerController<MessageType extends SocketMessageBase>({
+	children,
+}: Props): JSX.Element {
+	const managerRef = useRef<SocketManager<MessageType>>();
 
 	if (!managerRef.current) {
-		managerRef.current = new SocketManager();
+		managerRef.current = new SocketManager<MessageType>();
 	}
 
 	useEffect(() => {

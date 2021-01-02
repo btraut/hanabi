@@ -17,14 +17,19 @@ interface AuthToken {
 	token: string;
 }
 
-export default class ServerSocketManager {
+type MessageTypeWithAuth<MessageType extends SocketMessageBase> =
+	| MessageType
+	| AuthenticateSocketMessage
+	| AuthenticateSocketResponseMessage;
+
+export default class ServerSocketManager<MessageType extends SocketMessageBase> {
 	private _server: SocketServer;
 
 	private _authenticatedUsers: { [socketId: string]: string } = {};
 
 	public _onConnect = new PubSub<{ userId: string }>();
 	public _onDisconnect = new PubSub<{ userId: string }>();
-	public _onMessage = new PubSub<{ userId: string; message: SocketMessageBase }>();
+	public _onMessage = new PubSub<{ userId: string; message: MessageTypeWithAuth<MessageType> }>();
 
 	private _tokens: { [token: string]: AuthToken } = {};
 
@@ -34,7 +39,10 @@ export default class ServerSocketManager {
 	public get onDisconnect(): PubSub<{ userId: string }> {
 		return this._onDisconnect;
 	}
-	public get onMessage(): PubSub<{ userId: string | undefined; message: SocketMessageBase }> {
+	public get onMessage(): PubSub<{
+		userId: string | undefined;
+		message: MessageTypeWithAuth<MessageType>;
+	}> {
 		return this._onMessage;
 	}
 
@@ -56,7 +64,7 @@ export default class ServerSocketManager {
 				this._handleDisconnect(connection.id);
 			});
 
-			connection.on('message', (data: SocketMessageBase) => {
+			connection.on('message', (data: MessageTypeWithAuth<MessageType>) => {
 				this._handleMessage(connection.id, data);
 			});
 		});
@@ -76,7 +84,7 @@ export default class ServerSocketManager {
 		this._onDisconnect.emit({ userId });
 	};
 
-	private _handleMessage = (socketId: string, message: SocketMessageBase) => {
+	private _handleMessage = (socketId: string, message: MessageTypeWithAuth<MessageType>) => {
 		Logger.debug(`socket.io data recieved: ${JSON.stringify(message)}`);
 
 		// Capture all SocketManager messages. Emit the rest.
@@ -89,7 +97,7 @@ export default class ServerSocketManager {
 		}
 	};
 
-	private _handleSocketManagerMessate(socketId: string, message: SocketMessageBase) {
+	private _handleSocketManagerMessate(socketId: string, message: MessageTypeWithAuth<MessageType>) {
 		switch (message.type) {
 			case 'AuthenticateSocketMessage':
 				this._handleAuthenticateMessage(socketId, message as AuthenticateSocketMessage);
@@ -97,12 +105,11 @@ export default class ServerSocketManager {
 		}
 	}
 
-	private _send(socketId: string, message: Partial<SocketMessageBase>) {
-		const blankMessage = { type: '', data: {} };
-		this._server!.to(socketId).emit('message', { ...blankMessage, ...message });
+	private _send(socketId: string, message: MessageTypeWithAuth<MessageType>) {
+		this._server!.to(socketId).emit('message', message);
 	}
 
-	public send(userIdOrIds: string | readonly string[], message: SocketMessageBase): void {
+	public send(userIdOrIds: string | readonly string[], message: MessageType): void {
 		const userIds = typeof userIdOrIds === 'string' ? [userIdOrIds] : userIdOrIds;
 
 		const authenticatedSockets = Object.keys(this._authenticatedUsers).reduce<{
@@ -129,7 +136,7 @@ export default class ServerSocketManager {
 		}
 	}
 
-	public addScopedMessageHandler<MessageType extends SocketMessageBase>(
+	public addScopedMessageHandler(
 		handler: (data: { userId: string; message: MessageType }) => void,
 		scope: string,
 	): number {
@@ -159,21 +166,19 @@ export default class ServerSocketManager {
 			// with a userId.
 			this._onConnect.emit({ userId });
 
-			const authenticateResponseSocketMessage: AuthenticateSocketResponseMessage = {
+			this._send(socketId, {
 				scope: SOCKET_MANAGER_SCOPE,
 				type: 'AuthenticateSocketResponseMessage',
 				data: { userId },
-			};
-			this._send(socketId, authenticateResponseSocketMessage);
+			});
 		} else {
-			const authenticateResponseSocketMessage: AuthenticateSocketResponseMessage = {
+			this._send(socketId, {
 				scope: SOCKET_MANAGER_SCOPE,
 				type: 'AuthenticateSocketResponseMessage',
 				data: {
 					error: 'Invalid auth token',
 				},
-			};
-			this._send(socketId, authenticateResponseSocketMessage);
+			});
 		}
 	}
 

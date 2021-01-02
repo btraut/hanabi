@@ -1,11 +1,14 @@
+import { SocketMessageBase } from 'app/src/models/SocketMessage';
 import useForceRefresh from 'app/src/utils/client/useForceRefresh';
 import { createContext, useContext, useEffect, useRef } from 'react';
 
 import SocketManager from '../utils/client/SocketManager';
 
-const context = createContext<SocketManager | null>(null);
+const context = createContext<SocketManager<any> | null>(null);
 
-export function useSocketManager(refreshOnUpdate = true): SocketManager {
+export function useSocketManager<MessageType extends SocketMessageBase>(
+	refreshOnUpdate = true,
+): SocketManager<MessageType> {
 	const socketManager = useContext(context);
 
 	const socketManagerOnConnectSubscriptionId = useRef<number | null>(null);

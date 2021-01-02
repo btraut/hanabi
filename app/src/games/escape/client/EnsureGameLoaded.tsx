@@ -21,7 +21,7 @@ export default function EnsureGameLoaded({
 	const { code = '' } = useParams<{ code?: string }>();
 
 	useAsyncEffect(async () => {
-		if (socketManager.authenticated && !escapeGameContext.game?.gameData) {
+		if (socketManager.authenticated) {
 			try {
 				await escapeGameContext.watch(code);
 			} catch (error) {
@@ -30,7 +30,7 @@ export default function EnsureGameLoaded({
 		}
 	}, [code, redirectUrl, socketManager.authenticated]);
 
-	if (!escapeGameContext.game?.gameData) {
+	if (!escapeGameContext.game) {
 		return fallback;
 	}
 

@@ -28,6 +28,6 @@ export function move({ x, y }: Location, direction: Direction): Location {
 	}
 }
 
-export function checkBounds({ x, y }: Location, size: Size): boolean {
+export function locationIsInBounds({ x, y }: Location, size: Size): boolean {
 	return x >= 0 && x < size.width && y >= 0 && y < size.height;
 }

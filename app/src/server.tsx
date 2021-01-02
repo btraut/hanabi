@@ -154,7 +154,7 @@ try {
 		server.listen(app.get('port'));
 
 		// Start a socket manager.
-		const socketManager = new SocketManager(server);
+		const socketManager = new SocketManager<any>(server);
 		setInterval(() => socketManager.prune(), 1000 * 60);
 		socketManager.start();
 

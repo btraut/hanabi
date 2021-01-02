@@ -1,24 +1,19 @@
-import {
-	CreateGameResponseMessage,
-	GAME_MANAGER_SCOPE,
-	GameManagerMessage,
-	WatchGameResponseMessage,
-} from 'app/src/games/GameManagerMessages';
+import { GAME_MANAGER_SCOPE, GameManagerMessage } from 'app/src/games/GameManagerMessages';
 import Game from 'app/src/games/server/Game';
 import SocketManager from 'app/src/utils/server/SocketManager';
 
-type GameFactory = (creatorId: string, socketManager: SocketManager) => Game;
+type GameFactory = (creatorId: string, socketManager: SocketManager<any>) => Game;
 
 export default class GameManager {
 	private _gameFactories: { [title: string]: GameFactory } = {};
 	private _games: { [id: string]: Game } = {};
 
-	private _socketManager: SocketManager;
+	private _socketManager: SocketManager<GameManagerMessage>;
 	private _socketManagerOnMessageSubscriptionId: number | null = null;
 
-	constructor(socketManager: SocketManager) {
+	constructor(socketManager: SocketManager<GameManagerMessage>) {
 		this._socketManager = socketManager;
-		this._socketManagerOnMessageSubscriptionId = socketManager.addScopedMessageHandler<GameManagerMessage>(
+		this._socketManagerOnMessageSubscriptionId = socketManager.addScopedMessageHandler(
 			this._handleMessage,
 			GAME_MANAGER_SCOPE,
 		);
@@ -41,12 +36,11 @@ export default class GameManager {
 	private _createGame(title: string, watch: boolean, userId: string) {
 		// Make sure the title is valid.
 		if (!this._gameFactories[title]) {
-			const errorMessage: CreateGameResponseMessage = {
+			this._socketManager.send(userId, {
 				scope: GAME_MANAGER_SCOPE,
 				type: 'CreateGameResponseMessage',
 				data: { error: `No game with title "${title}".` },
-			};
-			this._socketManager.send(userId, errorMessage);
+			});
 			return;
 		}
 
@@ -60,12 +54,11 @@ export default class GameManager {
 		}
 
 		// Send game data back.
-		const successMessage: CreateGameResponseMessage = {
+		this._socketManager.send(userId, {
 			scope: GAME_MANAGER_SCOPE,
 			type: 'CreateGameResponseMessage',
 			data: { game: { id: game.id, code: game.code } },
-		};
-		this._socketManager.send(userId, successMessage);
+		});
 	}
 
 	private _watchGame(code: string, userId: string) {
@@ -73,12 +66,11 @@ export default class GameManager {
 		const game = Object.values(this._games).find((g) => g.code === code);
 
 		if (!game) {
-			const errorMessage: WatchGameResponseMessage = {
+			this._socketManager.send(userId, {
 				scope: GAME_MANAGER_SCOPE,
 				type: 'WatchGameResponseMessage',
 				data: { error: `No game with code "${code}".` },
-			};
-			this._socketManager.send(userId, errorMessage);
+			});
 			return;
 		}
 
@@ -88,12 +80,11 @@ export default class GameManager {
 		}
 
 		// Send game id/code as a success message.
-		const successMessage: WatchGameResponseMessage = {
+		this._socketManager.send(userId, {
 			scope: GAME_MANAGER_SCOPE,
 			type: 'WatchGameResponseMessage',
 			data: { game: { id: game.id, code: game.code } },
-		};
-		this._socketManager.send(userId, successMessage);
+		});
 	}
 
 	public _removeGame(id: string): void {

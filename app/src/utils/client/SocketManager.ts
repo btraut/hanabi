@@ -14,18 +14,23 @@ import {
 } from '../SocketManagerMessages';
 import Ajax from './Ajax';
 
-export interface ClientSocketManagerSendOptions {
+export interface SocketManagerSendOptions {
 	requireAuth?: boolean;
 }
 
-interface SocketManagerExpectation {
-	resolve: (message: SocketMessageBase) => void;
+type MessageTypeWithAuth<MessageType extends SocketMessageBase> =
+	| MessageType
+	| AuthenticateSocketMessage
+	| AuthenticateSocketResponseMessage;
+
+interface SocketManagerExpectation<MessageType extends SocketMessageBase> {
+	resolve: (message: MessageTypeWithAuth<MessageType>) => void;
 	reject: (error: string) => void;
-	isCorrectMessage: (message: SocketMessageBase) => boolean;
+	isCorrectMessage: (message: MessageTypeWithAuth<MessageType>) => boolean;
 	timeoutToken: any;
 }
 
-export default class SocketManager {
+export default class SocketManager<MessageType extends SocketMessageBase> {
 	// socket.io Client
 	private _socket?: Socket;
 
@@ -51,12 +56,12 @@ export default class SocketManager {
 	// When we're expecting a message from the server of a specific type,
 	// we tracking using an "expectation". This way we can use promises to
 	// halt until we receive our expected messages from the server.
-	private _expectations: SocketManagerExpectation[] = [];
+	private _expectations: SocketManagerExpectation<MessageTypeWithAuth<MessageType>>[] = [];
 
 	public _onConnect = new PubSub<void>();
 	public _onAuthenticated = new PubSub<void>();
 	public _onDisconnect = new PubSub<void>();
-	public _onMessage = new PubSub<SocketMessageBase>();
+	public _onMessage = new PubSub<MessageTypeWithAuth<MessageType>>();
 
 	public get onConnect(): PubSub<void> {
 		return this._onConnect;
@@ -67,7 +72,7 @@ export default class SocketManager {
 	public get onDisconnect(): PubSub<void> {
 		return this._onDisconnect;
 	}
-	public get onMessage(): PubSub<SocketMessageBase> {
+	public get onMessage(): PubSub<MessageTypeWithAuth<MessageType>> {
 		return this._onMessage;
 	}
 
@@ -92,8 +97,8 @@ export default class SocketManager {
 	}
 
 	public send(
-		message: SocketMessageBase,
-		{ requireAuth }: ClientSocketManagerSendOptions = { requireAuth: true },
+		message: MessageTypeWithAuth<MessageType>,
+		{ requireAuth }: SocketManagerSendOptions = { requireAuth: true },
 	): void {
 		if (!this._socket || !this._socket.connected) {
 			throw new Error('Can’t send a message on a closed socket.io connection.');
@@ -109,9 +114,9 @@ export default class SocketManager {
 	}
 
 	public async expect(
-		isCorrectMessage: (message: SocketMessageBase) => boolean,
-	): Promise<SocketMessageBase> {
-		return new Promise<SocketMessageBase>((resolve, reject) => {
+		isCorrectMessage: (message: MessageTypeWithAuth<MessageType>) => boolean,
+	): Promise<MessageTypeWithAuth<MessageType>> {
+		return new Promise<MessageTypeWithAuth<MessageType>>((resolve, reject) => {
 			const timeoutToken = setTimeout(() => {
 				this._expectations = this._expectations.filter(
 					(expectation) => expectation.resolve !== resolve,
@@ -128,7 +133,9 @@ export default class SocketManager {
 		});
 	}
 
-	public async expectMessageOfType<T extends SocketMessageBase>(type: string): Promise<T> {
+	public async expectMessageOfType<T extends MessageTypeWithAuth<MessageType>>(
+		type: string,
+	): Promise<T> {
 		return this.expect((response) => response.type === type) as Promise<T>;
 	}
 
@@ -145,12 +152,14 @@ export default class SocketManager {
 		const { token } = await Ajax.get('/api/auth-socket');
 
 		// Authenticate the socket connection by sending the token.
-		const authenticateSocketMessage: AuthenticateSocketMessage = {
-			scope: SOCKET_MANAGER_SCOPE,
-			type: 'AuthenticateSocketMessage',
-			data: token,
-		};
-		this.send(authenticateSocketMessage, { requireAuth: false });
+		this.send(
+			{
+				scope: SOCKET_MANAGER_SCOPE,
+				type: 'AuthenticateSocketMessage',
+				data: token,
+			},
+			{ requireAuth: false },
+		);
 
 		// Wait for a socket response to authentication.
 		const message = await this.expectMessageOfType<AuthenticateSocketResponseMessage>(
@@ -205,7 +214,7 @@ export default class SocketManager {
 		this._onDisconnect.emit();
 	};
 
-	private _handleMessage = (message: SocketMessageBase) => {
+	private _handleMessage = (message: MessageTypeWithAuth<MessageType>) => {
 		console.log('socket.io data recieved:', message);
 
 		// Start tracking the expected messages we've resolved.
@@ -230,8 +239,8 @@ export default class SocketManager {
 		this._onMessage.emit(message);
 	};
 
-	public addScopedMessageHandler<MessageType extends SocketMessageBase>(
-		handler: (data: { userId: string; message: MessageType }) => void,
+	public addScopedMessageHandler(
+		handler: (message: MessageTypeWithAuth<MessageType>) => void,
 		scope: string,
 	): number {
 		return this.onMessage.subscribe((m) => {

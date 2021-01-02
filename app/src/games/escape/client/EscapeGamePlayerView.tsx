@@ -6,8 +6,8 @@ import EscapeGameStage from 'app/src/games/escape/EscapeGameStage';
 export default function EscapeGamePlayerView(): JSX.Element | null {
 	const game = useEscapeGame();
 
-	if (!game?.gameData) {
-		throw new Error('Cannot render with empty game data. This should never happen.');
+	if (!game) {
+		throw new Error('Cannot render with empty game. This should never happen.');
 	}
 
 	return (

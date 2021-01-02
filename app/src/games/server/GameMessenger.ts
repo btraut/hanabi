@@ -10,12 +10,12 @@ export default class GameMessenger<MessageType extends SocketMessageBase> {
 	private _scope: string;
 	private _messageHandler: (data: { userId: string; message: MessageType }) => void;
 
-	private _socketManager: SocketManager | null = null;
+	private _socketManager: SocketManager<MessageType> | null = null;
 	private _socketManagerOnMessageSubscriptionId: number | null = null;
 
 	constructor(
 		scope: string,
-		socketManager: SocketManager,
+		socketManager: SocketManager<MessageType>,
 		messageHandler: (data: { userId: string; message: SocketMessageBase }) => void,
 	) {
 		this._scope = scope;
@@ -38,7 +38,7 @@ export default class GameMessenger<MessageType extends SocketMessageBase> {
 		this._socketManager = null;
 	}
 
-	private _filterMessage = (data: { userId: string; message: SocketMessageBase }): void => {
+	private _filterMessage = (data: { userId: string; message: MessageType }): void => {
 		if (data.message.scope !== this._scope) {
 			return;
 		}

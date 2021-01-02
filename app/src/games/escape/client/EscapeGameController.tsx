@@ -5,6 +5,7 @@ import {
 	EscapeGameContext,
 	EscapeGameContextProvider,
 } from 'app/src/games/escape/client/EscapeGameContext';
+import { EscapeGameMessage } from 'app/src/games/escape/EscapeGameMessages';
 import { ESCAPE_GAME_TITLE } from 'app/src/games/escape/EscapeGameRules';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -15,7 +16,7 @@ interface Props {
 export default function EscapeGameController({ children }: Props): JSX.Element {
 	const [game, setGame] = useState<EscapeGame | null>(null);
 	const gameRef = useRef<EscapeGame | null>(null);
-	const socketManager = useSocketManager(false);
+	const socketManager = useSocketManager<EscapeGameMessage>(false);
 	const gameManager = useGameManager();
 
 	useEffect(() => {

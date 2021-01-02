@@ -1,13 +1,28 @@
 import { useSocketManager } from 'app/src/components/SocketManagerContext';
 import { useEscapeGame } from 'app/src/games/escape/client/EscapeGameContext';
+import useArrowKeys from 'app/src/games/escape/client/useArrowKeys';
+import { Direction } from 'app/src/games/escape/Movement';
+import { useCallback } from 'react';
 
-export default function EscapeGamePlayerView(): JSX.Element {
-	const game = useEscapeGame();
+export default function EscapeGameBoard(): JSX.Element {
 	const socketManager = useSocketManager();
+	const game = useEscapeGame();
 
-	if (!game?.gameData) {
-		throw new Error('Cannot render with empty game data. This should never happen.');
+	if (!game) {
+		throw new Error('Cannot render with empty game. This should never happen.');
 	}
+
+	const viewerIsPlayer = !!(socketManager.userId && game.gameData.players[socketManager.userId]);
+
+	const handleArrowKey = useCallback(
+		async (direction: Direction) => {
+			if (viewerIsPlayer) {
+				await game.move(direction);
+			}
+		},
+		[game, viewerIsPlayer],
+	);
+	useArrowKeys(handleArrowKey);
 
 	return (
 		<>
@@ -20,9 +35,12 @@ export default function EscapeGamePlayerView(): JSX.Element {
 								<td className="EscapeGame-BoardCell" key={`row-${colIndex}`}>
 									{cell.map((playerId) =>
 										playerId === socketManager.userId ? (
-											<div className="EscapeGame-BoardDot EscapeGame-BoardDot--Self" />
+											<div
+												key={`player-${playerId}`}
+												className="EscapeGame-BoardDot EscapeGame-BoardDot--Self"
+											/>
 										) : (
-											<div className="EscapeGame-BoardDot" />
+											<div key={`player-${playerId}`} className="EscapeGame-BoardDot" />
 										),
 									)}
 								</td>

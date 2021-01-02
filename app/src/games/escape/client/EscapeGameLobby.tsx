@@ -5,12 +5,12 @@ import { MINIMUM_PLAYERS } from 'app/src/games/escape/EscapeGameRules';
 
 declare const DOMAIN_BASE: string;
 
-export default function EscapeGamePlayerView(): JSX.Element {
+export default function EscapeGameLobby(): JSX.Element {
 	const socketManager = useSocketManager();
 
 	const game = useEscapeGame();
-	if (!game || !game.gameData) {
-		throw new Error('Cannot render with empty game data. This should never happen.');
+	if (!game) {
+		throw new Error('Cannot render with empty game. This should never happen.');
 	}
 
 	const handleLeaveClick = async () => {

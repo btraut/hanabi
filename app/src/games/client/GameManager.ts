@@ -1,27 +1,25 @@
 import {
-	CreateGameMessage,
 	CreateGameResponseMessage,
 	GAME_MANAGER_SCOPE,
-	WatchGameMessage,
+	GameManagerMessage,
 	WatchGameResponseMessage,
 } from 'app/src/games/GameManagerMessages';
-import ClientSocketManager from 'app/src/utils/client/SocketManager';
+import SocketManager from 'app/src/utils/client/SocketManager';
 
 export default class GameManager {
-	protected _socketManager: ClientSocketManager;
+	protected _socketManager: SocketManager<GameManagerMessage>;
 
-	constructor(socketManager: ClientSocketManager) {
+	constructor(socketManager: SocketManager<GameManagerMessage>) {
 		this._socketManager = socketManager;
 	}
 
 	public async create(title: string): Promise<{ id: string; code: string }> {
 		// Attempt to create a game.
-		const hostGameMessage: CreateGameMessage = {
+		this._socketManager.send({
 			scope: GAME_MANAGER_SCOPE,
 			type: 'CreateGameMessage',
 			data: { title, watch: true },
-		};
-		this._socketManager.send(hostGameMessage);
+		});
 
 		const response = await this._socketManager.expectMessageOfType<CreateGameResponseMessage>(
 			'CreateGameResponseMessage',
@@ -37,12 +35,11 @@ export default class GameManager {
 
 	public async watch(code: string): Promise<{ id: string; code: string }> {
 		// Attempt to watch the game using the game code.
-		const watchGameMessage: WatchGameMessage = {
+		this._socketManager.send({
 			scope: GAME_MANAGER_SCOPE,
 			type: 'WatchGameMessage',
 			data: { code },
-		};
-		this._socketManager.send(watchGameMessage);
+		});
 
 		const response = await this._socketManager.expectMessageOfType<WatchGameResponseMessage>(
 			'WatchGameResponseMessage',

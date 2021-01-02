@@ -13,14 +13,16 @@ import {
 	MovePlayerMessage,
 	RemovePlayerMessage,
 	StartGameMessage,
-	StartGameResponseMessage,
 } from '../EscapeGameMessages';
-import { checkBounds, Location, move } from '../Movement';
+import { Location, locationIsInBounds, move } from '../Movement';
 
 export default class EscapeGame extends Game {
 	public static title = ESCAPE_GAME_TITLE;
 
-	public static factory(userId: string, socketManager: ServerSocketManager): EscapeGame {
+	public static factory(
+		userId: string,
+		socketManager: ServerSocketManager<EscapeGameMessage>,
+	): EscapeGame {
 		return new EscapeGame(userId, socketManager);
 	}
 
@@ -30,11 +32,9 @@ export default class EscapeGame extends Game {
 
 	private _messenger: GameMessenger<EscapeGameMessage>;
 
-	constructor(userId: string, socketManager: ServerSocketManager) {
+	constructor(userId: string, socketManager: ServerSocketManager<EscapeGameMessage>) {
 		super(userId);
 
-		this._gameData.id = this.id;
-		this._gameData.code = this.code;
 		this._gameData.map = new Array(MAP_SIZE.height)
 			.fill('')
 			.map(() => new Array(MAP_SIZE.width).fill('').map(() => []));
@@ -83,7 +83,7 @@ export default class EscapeGame extends Game {
 	private _sendGameData(playerId: string): void {
 		this._messenger.send(playerId, {
 			scope: getScope(ESCAPE_GAME_TITLE, this.id),
-			type: 'GetGameDataResponseMessage',
+			type: 'RefreshGameDataMessage',
 			data: this._gameData.serialize(),
 		});
 
@@ -134,8 +134,8 @@ export default class EscapeGame extends Game {
 
 		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
 			scope: getScope(ESCAPE_GAME_TITLE, this.id),
-			type: 'UpdateMapMessage',
-			data: { map: this._gameData.map },
+			type: 'RefreshGameDataMessage',
+			data: this._gameData.serialize(),
 		});
 
 		// Touch the games last updated time.
@@ -188,8 +188,8 @@ export default class EscapeGame extends Game {
 
 		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
 			scope: getScope(ESCAPE_GAME_TITLE, this.id),
-			type: 'UpdateMapMessage',
-			data: { map: this._gameData.map },
+			type: 'RefreshGameDataMessage',
+			data: this._gameData.serialize(),
 		});
 
 		// Touch the games last updated time.
@@ -199,14 +199,13 @@ export default class EscapeGame extends Game {
 	private _handleStartGameMessage(_message: StartGameMessage, userId: string): void {
 		// Error if already started.
 		if (this._stage !== EscapeGameStage.Open) {
-			const errorAlreadyStarted: StartGameResponseMessage = {
+			this._messenger.send(userId, {
 				scope: getScope(ESCAPE_GAME_TITLE, this.id),
 				type: 'StartGameResponseMessage',
 				data: {
 					error: 'Cannot start game because it has already started.',
 				},
-			};
-			this._messenger.send(userId, errorAlreadyStarted);
+			});
 			return;
 		}
 
@@ -223,10 +222,8 @@ export default class EscapeGame extends Game {
 		// Send the stage change to all players (including the remover).
 		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
 			scope: getScope(ESCAPE_GAME_TITLE, this.id),
-			type: 'ChangeGameStageMessage',
-			data: {
-				stage: this._gameData.stage,
-			},
+			type: 'RefreshGameDataMessage',
+			data: this._gameData.serialize(),
 		});
 
 		// Touch the games last updated time.
@@ -247,28 +244,30 @@ export default class EscapeGame extends Game {
 
 	private _handleMovePlayerMessage(
 		{ data: { playerId, direction } }: MovePlayerMessage,
-		_userId: string,
+		userId: string,
 	): void {
-		const playerCoordinates = this._getPlayerCoordinates(playerId);
+		const movingPlayerId = playerId || userId;
+
+		const playerCoordinates = this._getPlayerCoordinates(movingPlayerId);
 		if (!playerCoordinates) {
 			return;
 		}
 
 		const newCoordinates = move(playerCoordinates, direction);
-		if (checkBounds(newCoordinates, MAP_SIZE)) {
-			return;
+		if (locationIsInBounds(newCoordinates, MAP_SIZE)) {
+			const { x: oldX, y: oldY } = playerCoordinates;
+			this._gameData.map[oldY][oldX] = this._gameData.map[oldY][oldX].filter(
+				(id) => id !== movingPlayerId,
+			);
+
+			const { x: newX, y: newY } = newCoordinates;
+			this._gameData.map[newY][newX].push(movingPlayerId);
 		}
-
-		const { x: oldX, y: oldY } = playerCoordinates;
-		this._gameData.map[oldX][oldY] = this._gameData.map[oldX][oldY].filter((id) => id !== playerId);
-
-		const { x: newX, y: newY } = newCoordinates;
-		this._gameData.map[newX][newY].push(playerId);
 
 		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
 			scope: getScope(ESCAPE_GAME_TITLE, this.id),
-			type: 'UpdateMapMessage',
-			data: { map: this._gameData.map },
+			type: 'RefreshGameDataMessage',
+			data: this._gameData.serialize(),
 		});
 
 		// Touch the games last updated time.

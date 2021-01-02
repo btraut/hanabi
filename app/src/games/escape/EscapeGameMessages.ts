@@ -1,9 +1,8 @@
-import EscapeGameStage from 'app/src/games/escape/EscapeGameStage';
 import { SerialEscapeGameData } from 'app/src/games/escape/server/EscapeGameData';
 
 import { SocketMessage } from '../../models/SocketMessage';
 import EscapeGamePlayer from './EscapeGamePlayer';
-import { Direction, Location } from './Movement';
+import { Direction } from './Movement';
 
 export function getScope(title: string, id: string): string {
 	return `game.${title}.${id}`;
@@ -46,30 +45,11 @@ export type PlayerUpdatedMessage = SocketMessage<
 
 export type MovePlayerMessage = SocketMessage<
 	'MovePlayerMessage',
-	{ playerId: string; direction: Direction }
->;
-export type PlayerMovedMessage = SocketMessage<
-	'PlayerMovedMessage',
-	{ playerId: string; to: Location }
->;
-
-export type ChangeGameStageMessage = SocketMessage<
-	'ChangeGameStageMessage',
-	{ stage: EscapeGameStage }
->;
-
-export type UpdateMapMessage = SocketMessage<
-	'UpdateMapMessage',
-	{
-		map: string[][][];
-	}
+	{ playerId?: string; direction: Direction }
 >;
 
 export type GetGameDataMessage = SocketMessage<'GetGameDataMessage', void>;
-export type GetGameDataResponseMessage = SocketMessage<
-	'GetGameDataResponseMessage',
-	SerialEscapeGameData
->;
+export type RefreshGameDataMessage = SocketMessage<'RefreshGameDataMessage', SerialEscapeGameData>;
 
 export type EscapeGameMessage =
 	| LeaveGameMessage
@@ -85,8 +65,5 @@ export type EscapeGameMessage =
 	| UpdatePlayerMessage
 	| PlayerUpdatedMessage
 	| MovePlayerMessage
-	| PlayerMovedMessage
-	| ChangeGameStageMessage
-	| UpdateMapMessage
 	| GetGameDataMessage
-	| GetGameDataResponseMessage;
+	| RefreshGameDataMessage;
