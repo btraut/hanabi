@@ -1,9 +1,9 @@
-import { useEscapeGameManager } from 'app/src/games/escape/client/EscapeGameManagerContext';
+import { useEscapeGameContext } from 'app/src/games/escape/client/EscapeGameContext';
 import { FormEvent, useRef, useState } from 'react';
 import { useHistory } from 'react-router';
 
 export default function EscapeGameWatchForm(): JSX.Element {
-	const gameManager = useEscapeGameManager();
+	const escapeGameContext = useEscapeGameContext();
 	const history = useHistory();
 
 	const [watchGameError, setWatchGameError] = useState('');
@@ -15,8 +15,8 @@ export default function EscapeGameWatchForm(): JSX.Element {
 
 		if (codeInputRef.current?.value) {
 			try {
-				await gameManager.watch(codeInputRef.current?.value);
-				history.push(`/escape/${gameManager.gameId}`);
+				const watchedGame = await escapeGameContext.watch(codeInputRef.current?.value);
+				history.push(`/escape/${watchedGame.id}`);
 			} catch (error) {
 				setWatchGameError(error?.message || '');
 			}

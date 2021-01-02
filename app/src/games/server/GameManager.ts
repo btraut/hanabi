@@ -1,10 +1,10 @@
-import Game from 'app/src/games/Game';
 import {
 	CreateGameResponseMessage,
 	GAME_MANAGER_SCOPE,
 	GameManagerMessage,
 	WatchGameResponseMessage,
 } from 'app/src/games/GameManagerMessages';
+import Game from 'app/src/games/server/Game';
 import SocketManager from 'app/src/utils/server/SocketManager';
 
 type GameFactory = (creatorId: string, socketManager: SocketManager) => Game;
@@ -12,14 +12,22 @@ type GameFactory = (creatorId: string, socketManager: SocketManager) => Game;
 export default class GameManager {
 	private _gameFactories: { [title: string]: GameFactory } = {};
 	private _games: { [id: string]: Game } = {};
+
 	private _socketManager: SocketManager;
+	private _socketManagerOnMessageSubscriptionId: number | null = null;
 
 	constructor(socketManager: SocketManager) {
 		this._socketManager = socketManager;
-		socketManager.addScopedMessageHandler<GameManagerMessage>(
+		this._socketManagerOnMessageSubscriptionId = socketManager.addScopedMessageHandler<GameManagerMessage>(
 			this._handleMessage,
 			GAME_MANAGER_SCOPE,
 		);
+	}
+
+	public cleanUp(): void {
+		if (this._socketManagerOnMessageSubscriptionId !== null) {
+			this._socketManager.onMessage.unsubscribe(this._socketManagerOnMessageSubscriptionId);
+		}
 	}
 
 	public addGameFactory(title: string, factory: GameFactory): void {
@@ -30,7 +38,8 @@ export default class GameManager {
 		delete this._gameFactories[title];
 	}
 
-	private _createGame(title: string, userId: string) {
+	private _createGame(title: string, watch: boolean, userId: string) {
+		// Make sure the title is valid.
 		if (!this._gameFactories[title]) {
 			const errorMessage: CreateGameResponseMessage = {
 				scope: GAME_MANAGER_SCOPE,
@@ -41,10 +50,16 @@ export default class GameManager {
 			return;
 		}
 
+		// Make the game.
 		const game = this._gameFactories[title](userId, this._socketManager);
-
 		this._games[game.id] = game;
 
+		// Add the watcher.
+		if (!watch) {
+			game.watchers.push(userId);
+		}
+
+		// Send game data back.
 		const successMessage: CreateGameResponseMessage = {
 			scope: GAME_MANAGER_SCOPE,
 			type: 'CreateGameResponseMessage',
@@ -111,7 +126,7 @@ export default class GameManager {
 	}) => {
 		switch (message.type) {
 			case 'CreateGameMessage':
-				this._createGame(message.data.title, userId);
+				this._createGame(message.data.title, !!message.data.watch, userId);
 				break;
 			case 'WatchGameMessage':
 				this._watchGame(message.data.code, userId);

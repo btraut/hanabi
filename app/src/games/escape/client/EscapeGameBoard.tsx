@@ -1,9 +1,9 @@
-import { useEscapeGameManager } from 'app/src/games/escape/client/EscapeGameManagerContext';
+import { useEscapeGame } from 'app/src/games/escape/client/EscapeGameContext';
 
 export default function EscapeGamePlayerView(): JSX.Element {
-	const gameManager = useEscapeGameManager();
+	const game = useEscapeGame();
 
-	const gameData = gameManager.gameData;
+	const gameData = game?.gameData;
 	if (!gameData) {
 		throw new Error('Cannot render with empty game data. This should never happen.');
 	}

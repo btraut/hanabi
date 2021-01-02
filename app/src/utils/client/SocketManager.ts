@@ -233,8 +233,8 @@ export default class SocketManager {
 	public addScopedMessageHandler<MessageType extends SocketMessageBase>(
 		handler: (data: { userId: string; message: MessageType }) => void,
 		scope: string,
-	): void {
-		this.onMessage.subscribe((m) => {
+	): number {
+		return this.onMessage.subscribe((m) => {
 			if (m.scope !== scope) {
 				return;
 			}

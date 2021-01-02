@@ -1,10 +1,9 @@
-import { useEscapeGameManager } from 'app/src/games/escape/client/EscapeGameManagerContext';
-import { ESCAPE_GAME_TITLE } from 'app/src/games/escape/EscapeGameRules';
+import { useEscapeGameContext } from 'app/src/games/escape/client/EscapeGameContext';
 import { useRef } from 'react';
 import { useHistory } from 'react-router';
 
 export default function EscapeGameLobby(): JSX.Element {
-	const gameManager = useEscapeGameManager();
+	const escapeGameContext = useEscapeGameContext();
 	const history = useHistory();
 
 	const loadingRef = useRef(false);
@@ -15,12 +14,10 @@ export default function EscapeGameLobby(): JSX.Element {
 		}
 
 		loadingRef.current = true;
-		await gameManager.create(ESCAPE_GAME_TITLE);
-		await gameManager.watch(gameManager.code!);
-		await gameManager.refreshGameData();
+		const { code } = await escapeGameContext.create();
 		loadingRef.current = false;
 
-		history.push(`/escape/${gameManager.code}`);
+		history.push(`/escape/${code}`);
 	};
 
 	const watchButtonHandler = () => {

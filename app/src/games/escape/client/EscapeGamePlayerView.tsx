@@ -1,16 +1,15 @@
+import { useEscapeGame } from 'app/src/games/escape/client/EscapeGameContext';
 import EscapeGameLobby from 'app/src/games/escape/client/EscapeGameLobby';
-import { useEscapeGameManager } from 'app/src/games/escape/client/EscapeGameManagerContext';
 import EscapeGameStage from 'app/src/games/escape/EscapeGameStage';
 
 export default function EscapeGamePlayerView(): JSX.Element | null {
-	const gameManager = useEscapeGameManager();
+	const game = useEscapeGame();
 
-	const gameData = gameManager.gameData;
-	if (!gameData) {
+	if (!game?.gameData) {
 		throw new Error('Cannot render with empty game data. This should never happen.');
 	}
 
-	if (gameData.stage === EscapeGameStage.Open) {
+	if (game.gameData.stage === EscapeGameStage.Open) {
 		return <EscapeGameLobby />;
 	}
 

@@ -1,4 +1,4 @@
-import GameManager from 'app/src/games/client/GameManager';
+import Game from 'app/src/games/client/Game';
 import {
 	AddPlayerMessage,
 	AddPlayerResponseMessage,
@@ -16,23 +16,23 @@ import { ESCAPE_GAME_TITLE } from 'app/src/games/escape/EscapeGameRules';
 import EscapeGameStage from 'app/src/games/escape/EscapeGameStage';
 import { SerialEscapeGameData } from 'app/src/games/escape/server/EscapeGameData';
 import ClientSocketManager from 'app/src/utils/client/SocketManager';
+import PubSub from 'app/src/utils/PubSub';
 
-export default class EscapeGameManager extends GameManager {
-	// Children must override.
-	protected get _title(): string {
-		return ESCAPE_GAME_TITLE;
-	}
+export default class EscapeGame extends Game {
+	public onUpdate = new PubSub<void>();
 
-	protected _gameData: SerialEscapeGameData | null = null;
+	private _gameData: SerialEscapeGameData | null = null;
 	public get gameData(): SerialEscapeGameData | null {
 		return this._gameData;
 	}
 
+	private _socketManager: ClientSocketManager;
 	private _socketManagerOnMessageSubscriptionId: number | null = null;
 
-	constructor(socketManager: ClientSocketManager) {
-		super(socketManager);
+	constructor(id: string, code: string, socketManager: ClientSocketManager) {
+		super(id, code);
 
+		this._socketManager = socketManager;
 		this._socketManagerOnMessageSubscriptionId = socketManager.onMessage.subscribe(
 			this._handleMessage,
 		);
@@ -46,7 +46,7 @@ export default class EscapeGameManager extends GameManager {
 	}
 
 	private _handleMessage = (message: EscapeGameMessage) => {
-		if (!this._gameId || message.scope !== getScope(this._title, this._gameId)) {
+		if (!this._id || message.scope !== getScope(ESCAPE_GAME_TITLE, this._id)) {
 			return;
 		}
 
@@ -94,13 +94,13 @@ export default class EscapeGameManager extends GameManager {
 	}
 
 	public async join(name: string): Promise<void> {
-		if (!this._gameId) {
+		if (!this._id) {
 			throw new Error('Cannot add a player without a game.');
 		}
 
 		// Attempt to watch the game using the game code.
 		const addPlayerMessage: AddPlayerMessage = {
-			scope: getScope(this._title, this._gameId),
+			scope: getScope(ESCAPE_GAME_TITLE, this._id),
 			type: 'AddPlayerMessage',
 			data: { name },
 		};
@@ -116,13 +116,13 @@ export default class EscapeGameManager extends GameManager {
 	}
 
 	public async leave(): Promise<void> {
-		if (!this._gameId) {
+		if (!this._id) {
 			throw new Error('Cannot remove a player without a game.');
 		}
 
 		// Attempt to watch the game using the game code.
 		const removePlayerMessage: RemovePlayerMessage = {
-			scope: getScope(this._title, this._gameId),
+			scope: getScope(ESCAPE_GAME_TITLE, this._id),
 			type: 'RemovePlayerMessage',
 			data: {},
 		};
@@ -138,13 +138,13 @@ export default class EscapeGameManager extends GameManager {
 	}
 
 	public async start(): Promise<void> {
-		if (!this._gameId) {
+		if (!this._id) {
 			throw new Error('Cannot start game without a game.');
 		}
 
 		// Attempt to watch the game using the game code.
 		const startGameMessage: StartGameMessage = {
-			scope: getScope(this._title, this._gameId),
+			scope: getScope(ESCAPE_GAME_TITLE, this._id),
 			type: 'StartGameMessage',
 			data: undefined,
 		};
@@ -160,12 +160,12 @@ export default class EscapeGameManager extends GameManager {
 	}
 
 	public async refreshGameData(): Promise<void> {
-		if (!this._gameId) {
+		if (!this._id) {
 			throw new Error('Game must be started/loaded first.');
 		}
 
 		const getGameDataMessage: GetGameDataMessage = {
-			scope: getScope(this._title, this._gameId),
+			scope: getScope(ESCAPE_GAME_TITLE, this._id),
 			type: 'GetGameDataMessage',
 			data: undefined,
 		};

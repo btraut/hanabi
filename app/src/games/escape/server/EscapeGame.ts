@@ -5,7 +5,7 @@ import EscapeGameData from 'app/src/games/escape/server/EscapeGameData';
 import GameMessenger from 'app/src/games/server/GameMessenger';
 import ServerSocketManager from 'app/src/utils/server/SocketManager';
 
-import Game from '../../Game';
+import Game from '../../server/Game';
 import {
 	AddPlayerMessage,
 	AddPlayerResponseMessage,

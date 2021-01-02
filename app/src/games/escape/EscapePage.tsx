@@ -1,4 +1,5 @@
-import EscapeGameManagerController from 'app/src/games/escape/client/EscapeGameManagerController';
+import GameManagerController from 'app/src/games/client/GameManagerController';
+import EscapeGameController from 'app/src/games/escape/client/EscapeGameController';
 import EscapeGameView from 'app/src/games/escape/client/EscapeGameView';
 import useSetTitle from 'app/src/utils/client/useSetTitle';
 
@@ -12,9 +13,11 @@ const EscapePage: Page = () => {
 
 	return (
 		<SocketManagerController>
-			<EscapeGameManagerController>
-				<EscapeGameView />
-			</EscapeGameManagerController>
+			<GameManagerController>
+				<EscapeGameController>
+					<EscapeGameView />
+				</EscapeGameController>
+			</GameManagerController>
 		</SocketManagerController>
 	);
 };

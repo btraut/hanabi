@@ -6,38 +6,20 @@ import {
 	WatchGameResponseMessage,
 } from 'app/src/games/GameManagerMessages';
 import ClientSocketManager from 'app/src/utils/client/SocketManager';
-import PubSub from 'app/src/utils/PubSub';
 
 export default class GameManager {
-	public onUpdate = new PubSub<void>();
-
-	protected _gameId: string | null = null;
-	public get gameId(): string | null {
-		return this._gameId;
-	}
-
-	protected _code: string | null = null;
-	public get code(): string | null {
-		return this._code;
-	}
-
 	protected _socketManager: ClientSocketManager;
 
 	constructor(socketManager: ClientSocketManager) {
 		this._socketManager = socketManager;
 	}
 
-	// Children must override.
-	protected get _title(): string {
-		throw new Error();
-	}
-
-	public async create(title: string): Promise<void> {
+	public async create(title: string): Promise<{ id: string; code: string }> {
 		// Attempt to create a game.
 		const hostGameMessage: CreateGameMessage = {
 			scope: GAME_MANAGER_SCOPE,
 			type: 'CreateGameMessage',
-			data: { title },
+			data: { title, watch: true },
 		};
 		this._socketManager.send(hostGameMessage);
 
@@ -49,14 +31,11 @@ export default class GameManager {
 			throw new Error(`Error creating new game: ${response.data.error}`);
 		}
 
-		// Game created! Save the id/code.
-		this._gameId = response.data.game!.id;
-		this._code = response.data.game!.code;
-
-		this.onUpdate.emit();
+		// Game created!
+		return response.data.game!;
 	}
 
-	public async watch(code: string): Promise<void> {
+	public async watch(code: string): Promise<{ id: string; code: string }> {
 		// Attempt to watch the game using the game code.
 		const watchGameMessage: WatchGameMessage = {
 			scope: GAME_MANAGER_SCOPE,
@@ -65,18 +44,15 @@ export default class GameManager {
 		};
 		this._socketManager.send(watchGameMessage);
 
-		const watchGameResponseMessage = await this._socketManager.expectMessageOfType<WatchGameResponseMessage>(
+		const response = await this._socketManager.expectMessageOfType<WatchGameResponseMessage>(
 			'WatchGameResponseMessage',
 		);
 
-		if (watchGameResponseMessage.data.error) {
-			throw new Error(watchGameResponseMessage.data.error);
+		if (response.data.error) {
+			throw new Error(response.data.error);
 		}
 
-		// We've successfully watched! Save the id/code.
-		this._gameId = watchGameResponseMessage.data.game!.id;
-		this._code = watchGameResponseMessage.data.game!.code;
-
-		this.onUpdate.emit();
+		// Game watched!
+		return response.data.game!;
 	}
 }

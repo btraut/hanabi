@@ -1,6 +1,4 @@
 import EnsureGameLoaded from 'app/src/games/escape/client/EnsureGameLoaded';
-import { useEscapeGameManager } from 'app/src/games/escape/client/EscapeGameManagerContext';
-import { useCallback } from 'react';
 import { Route, Switch } from 'react-router-dom';
 
 import EscapeGameMenu from './EscapeGameMenu';
@@ -8,12 +6,6 @@ import EscapeGamePlayerView from './EscapeGamePlayerView';
 import EscapeGameWatchForm from './EscapeGameWatchForm';
 
 export default function EscapeGameView(): JSX.Element {
-	const gameManager = useEscapeGameManager();
-
-	const reloadData = useCallback(() => {
-		return gameManager.refreshGameData();
-	}, [gameManager]);
-
 	return (
 		<div className="EscapeGame-View">
 			<div className="EscapeGame-Container">
@@ -24,9 +16,7 @@ export default function EscapeGameView(): JSX.Element {
 					</Route>
 					<Route path="/escape/:code" exact>
 						<EnsureGameLoaded
-							gameManager={gameManager}
 							redirectUrl="/escape"
-							reloadData={reloadData}
 							fallback={<h1 className="EscapeGame-Subtitle">Loading…</h1>}
 						>
 							<EscapeGamePlayerView />

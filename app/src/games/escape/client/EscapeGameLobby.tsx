@@ -1,35 +1,34 @@
 import { useSocketManager } from 'app/src/components/SocketManagerContext';
+import { useEscapeGame } from 'app/src/games/escape/client/EscapeGameContext';
 import EscapeGameJoinForm from 'app/src/games/escape/client/EscapeGameJoinForm';
-import { useEscapeGameManager } from 'app/src/games/escape/client/EscapeGameManagerContext';
 import { MINIMUM_PLAYERS } from 'app/src/games/escape/EscapeGameRules';
 
 declare const DOMAIN_BASE: string;
 
 export default function EscapeGamePlayerView(): JSX.Element {
-	const gameManager = useEscapeGameManager();
 	const socketManager = useSocketManager();
 
-	const gameData = gameManager.gameData;
-	if (!gameData) {
+	const game = useEscapeGame();
+	if (!game || !game.gameData) {
 		throw new Error('Cannot render with empty game data. This should never happen.');
 	}
 
 	const handleLeaveClick = async () => {
-		await gameManager.leave();
+		await game.leave();
 	};
 
 	const handleStartClick = async () => {
-		await gameManager.start();
+		await game.start();
 	};
 
-	const userIsJoined = !!(socketManager.userId && gameData.players[socketManager.userId]);
-	const enoughPlayers = Object.keys(gameData.players).length >= MINIMUM_PLAYERS;
+	const userIsJoined = !!(socketManager.userId && game.gameData.players[socketManager.userId]);
+	const enoughPlayers = Object.keys(game.gameData.players).length >= MINIMUM_PLAYERS;
 	const title = userIsJoined
 		? enoughPlayers
 			? 'Ready to get started?'
 			: 'Keep recruiting!'
 		: 'C’mon in! Bring your friends.';
-	const link = `${DOMAIN_BASE}/escape/${gameManager.code}`;
+	const link = `${DOMAIN_BASE}/escape/${game.code}`;
 
 	return (
 		<>
@@ -38,7 +37,7 @@ export default function EscapeGamePlayerView(): JSX.Element {
 				<a href={link}>{link}</a>
 			</p>
 			<ul className="EscapeGame-PlayersContainer">
-				{Object.values(gameData.players).map((player) => (
+				{Object.values(game.gameData.players).map((player) => (
 					<li className="EscapeGame-Player" key={player.id}>
 						<img className="EscapeGame-PlayerPicture" src="/images/user.svg" />
 						<div className="EscapeGame-PlayerName">{player.name}</div>

@@ -1,8 +1,8 @@
-import { useEscapeGameManager } from 'app/src/games/escape/client/EscapeGameManagerContext';
+import { useEscapeGame } from 'app/src/games/escape/client/EscapeGameContext';
 import { FormEvent, useRef, useState } from 'react';
 
 export default function EscapeGameJoinForm(): JSX.Element {
-	const gameManager = useEscapeGameManager();
+	const game = useEscapeGame();
 
 	const [addPlayerError, setAddPlayerError] = useState('');
 
@@ -11,9 +11,9 @@ export default function EscapeGameJoinForm(): JSX.Element {
 	const handleAddPlayerSubmit = async (event: FormEvent) => {
 		event.preventDefault();
 
-		if (nameInputRef.current?.value) {
+		if (game && nameInputRef.current?.value) {
 			try {
-				await gameManager.join(nameInputRef.current?.value);
+				await game.join(nameInputRef.current?.value);
 			} catch (error) {
 				setAddPlayerError(error?.message || '');
 			}
