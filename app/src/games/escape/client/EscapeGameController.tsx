@@ -6,7 +6,7 @@ import {
 	EscapeGameContextProvider,
 } from 'app/src/games/escape/client/EscapeGameContext';
 import { ESCAPE_GAME_TITLE } from 'app/src/games/escape/EscapeGameRules';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 interface Props {
 	readonly children: JSX.Element;
@@ -14,39 +14,36 @@ interface Props {
 
 export default function EscapeGameController({ children }: Props): JSX.Element {
 	const [game, setGame] = useState<EscapeGame | null>(null);
+	const gameRef = useRef<EscapeGame | null>(null);
 	const socketManager = useSocketManager(false);
 	const gameManager = useGameManager();
 
-	const resetGame = useCallback(
-		(newGame: EscapeGame | null) => {
-			if (game) {
-				game.cleanUp();
-			}
-
-			setGame(newGame);
-		},
-		[game],
-	);
+	useEffect(() => {
+		if (gameRef.current && gameRef.current !== game) {
+			gameRef.current.cleanUp();
+			gameRef.current = game;
+		}
+	}, [game]);
 
 	const create = useCallback(async () => {
 		const { id: gameId, code } = await gameManager.create(ESCAPE_GAME_TITLE);
 		const newGame = new EscapeGame(gameId, code, socketManager);
 		await newGame.refreshGameData();
-		resetGame(newGame);
+		setGame(newGame);
 
 		return newGame;
-	}, [gameManager, resetGame, socketManager]);
+	}, [gameManager, socketManager]);
 
 	const watch = useCallback(
 		async (code: string) => {
 			const { id: gameId } = await gameManager.watch(code);
 			const newGame = new EscapeGame(gameId, code, socketManager);
 			await newGame.refreshGameData();
-			resetGame(newGame);
+			setGame(newGame);
 
 			return newGame;
 		},
-		[gameManager, resetGame, socketManager],
+		[gameManager, socketManager],
 	);
 
 	const contextValue = useMemo<EscapeGameContext>(
