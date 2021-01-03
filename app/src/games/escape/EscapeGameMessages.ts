@@ -19,17 +19,12 @@ export type AddPlayerResponseMessage = SocketMessage<
 	'AddPlayerResponseMessage',
 	{ error?: string }
 >;
-export type PlayerAddedMessage = SocketMessage<
-	'PlayerAddedMessage',
-	{ playerId: string; player: EscapeGamePlayer }
->;
 
 export type RemovePlayerMessage = SocketMessage<'RemovePlayerMessage', { playerId?: string }>;
 export type RemovePlayerResponseMessage = SocketMessage<
 	'RemovePlayerResponseMessage',
 	{ error?: string }
 >;
-export type PlayerRemovedMessage = SocketMessage<'PlayerRemovedMessage', { playerId: string }>;
 
 export type StartGameMessage = SocketMessage<'StartGameMessage', void>;
 export type StartGameResponseMessage = SocketMessage<
@@ -47,6 +42,10 @@ export type MovePlayerMessage = SocketMessage<
 	'MovePlayerMessage',
 	{ playerId?: string; direction: Direction }
 >;
+export type MovePlayerResponseMessage = SocketMessage<
+	'MovePlayerResponseMessage',
+	{ error?: string }
+>;
 
 export type GetGameDataMessage = SocketMessage<'GetGameDataMessage', void>;
 export type RefreshGameDataMessage = SocketMessage<'RefreshGameDataMessage', SerialEscapeGameData>;
@@ -56,14 +55,13 @@ export type EscapeGameMessage =
 	| LeaveGameResponseMessage
 	| AddPlayerMessage
 	| AddPlayerResponseMessage
-	| PlayerAddedMessage
 	| RemovePlayerMessage
 	| RemovePlayerResponseMessage
-	| PlayerRemovedMessage
 	| StartGameMessage
 	| StartGameResponseMessage
 	| UpdatePlayerMessage
 	| PlayerUpdatedMessage
 	| MovePlayerMessage
+	| MovePlayerResponseMessage
 	| GetGameDataMessage
 	| RefreshGameDataMessage;

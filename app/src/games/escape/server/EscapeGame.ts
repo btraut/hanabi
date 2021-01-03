@@ -1,4 +1,4 @@
-import EscapeGamePlayer from 'app/src/games/escape/EscapeGamePlayer';
+import { generatePlayer } from 'app/src/games/escape/EscapeGamePlayer';
 import { ESCAPE_GAME_TITLE, MAP_SIZE } from 'app/src/games/escape/EscapeGameRules';
 import EscapeGameStage from 'app/src/games/escape/EscapeGameStage';
 import EscapeGameData from 'app/src/games/escape/server/EscapeGameData';
@@ -128,16 +128,7 @@ export default class EscapeGame extends Game {
 		}
 
 		// Add the player to the player list.
-		const player: EscapeGamePlayer = {
-			id: playerId,
-			connected: true,
-			name,
-			location: {
-				x: 0,
-				y: 0,
-			},
-		};
-
+		const player = generatePlayer({ id: playerId, name });
 		this._gameData.players[playerId] = player;
 
 		// Success! Respond to the creator.
@@ -147,16 +138,7 @@ export default class EscapeGame extends Game {
 			data: {},
 		});
 
-		// Send the new player to all players (including the creator).
-		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
-			scope: getScope(ESCAPE_GAME_TITLE, this.id),
-			type: 'PlayerAddedMessage',
-			data: {
-				playerId,
-				player,
-			},
-		});
-
+		// Send the updated state to all players/watchers.
 		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
 			scope: getScope(ESCAPE_GAME_TITLE, this.id),
 			type: 'RefreshGameDataMessage',
@@ -185,8 +167,6 @@ export default class EscapeGame extends Game {
 			return;
 		}
 
-		const allPlayers = this._getAllPlayerAndWatcherIds();
-
 		delete this._gameData.players[removeUserId];
 
 		this._messenger.send(userId, {
@@ -195,15 +175,7 @@ export default class EscapeGame extends Game {
 			data: {},
 		});
 
-		// Send the removed player to all players (including the remover).
-		this._messenger.send(allPlayers, {
-			scope: getScope(ESCAPE_GAME_TITLE, this.id),
-			type: 'PlayerRemovedMessage',
-			data: {
-				playerId: removeUserId,
-			},
-		});
-
+		// Send the updated state to all players/watchers.
 		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
 			scope: getScope(ESCAPE_GAME_TITLE, this.id),
 			type: 'RefreshGameDataMessage',
@@ -237,7 +209,7 @@ export default class EscapeGame extends Game {
 			data: {},
 		});
 
-		// Send the stage change to all players (including the remover).
+		// Send the updated state to all players/watchers.
 		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
 			scope: getScope(ESCAPE_GAME_TITLE, this.id),
 			type: 'RefreshGameDataMessage',
@@ -256,15 +228,28 @@ export default class EscapeGame extends Game {
 		const movingPlayer = this._gameData.players[movingPlayerId];
 
 		if (!this._gameData.players[movingPlayerId]) {
-			// TODO: error
+			this._messenger.send(userId, {
+				scope: getScope(ESCAPE_GAME_TITLE, this.id),
+				type: 'MovePlayerResponseMessage',
+				data: { error: 'Invalid player id.' },
+			});
 			return;
 		}
 
+		// Send success message.
+		this._messenger.send(userId, {
+			scope: getScope(ESCAPE_GAME_TITLE, this.id),
+			type: 'MovePlayerResponseMessage',
+			data: {},
+		});
+
+		// Move the player.
 		const newCoordinates = move(movingPlayer.location, direction);
 		if (locationIsInBounds(newCoordinates, MAP_SIZE)) {
 			movingPlayer.location = newCoordinates;
 		}
 
+		// Send the updated state to all players/watchers.
 		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
 			scope: getScope(ESCAPE_GAME_TITLE, this.id),
 			type: 'RefreshGameDataMessage',

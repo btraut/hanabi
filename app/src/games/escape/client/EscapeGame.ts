@@ -3,6 +3,7 @@ import {
 	AddPlayerResponseMessage,
 	EscapeGameMessage,
 	getScope,
+	MovePlayerResponseMessage,
 	PlayerAddedMessage,
 	PlayerRemovedMessage,
 	RefreshGameDataMessage,
@@ -162,8 +163,15 @@ export default class EscapeGame extends Game {
 			data: { direction },
 		});
 
-		await this._expectRefreshGameData();
+		const movePlayerResponseMessage = await this._socketManager.expectMessageOfType<MovePlayerResponseMessage>(
+			'MovePlayerResponseMessage',
+		);
 
-		this.onUpdate.emit();
+		if (movePlayerResponseMessage.data.error) {
+			throw new Error(movePlayerResponseMessage.data.error);
+		}
+
+		// After responding to our initial message, the server will also send a
+		// RefreshGameData message. We'll handle that in a separate handler.
 	}
 }
