@@ -4,8 +4,6 @@ import {
 	EscapeGameMessage,
 	getScope,
 	MovePlayerResponseMessage,
-	PlayerAddedMessage,
-	PlayerRemovedMessage,
 	RefreshGameDataMessage,
 	RemovePlayerResponseMessage,
 	StartGameResponseMessage,
@@ -49,29 +47,11 @@ export default class EscapeGame extends Game {
 
 	private _handleMessage = (message: EscapeGameMessage) => {
 		switch (message.type) {
-			case 'PlayerAddedMessage':
-				this._handlePlayerAddedMessage(message);
-				break;
-			case 'PlayerRemovedMessage':
-				this._handlePlayerRemovedMessage(message);
-				break;
 			case 'RefreshGameDataMessage':
 				this._handleRefreshGameDataMessage(message);
 				break;
 		}
 	};
-
-	private _handlePlayerAddedMessage({ data: { playerId, player } }: PlayerAddedMessage) {
-		this._gameData.players[playerId] = player;
-
-		this.onUpdate.emit();
-	}
-
-	private _handlePlayerRemovedMessage({ data: { playerId } }: PlayerRemovedMessage) {
-		delete this._gameData.players[playerId];
-
-		this.onUpdate.emit();
-	}
 
 	private _handleRefreshGameDataMessage({ data }: RefreshGameDataMessage) {
 		this._gameData = data;

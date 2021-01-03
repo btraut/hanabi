@@ -21,7 +21,11 @@ export default function EscapeGamePlayerView(): JSX.Element | null {
 		<div className="EscapeGame-PlayerView">
 			{game.gameData.stage === EscapeGameStage.Open && <EscapeGameLobby />}
 			{game.gameData.stage === EscapeGameStage.Started && <EscapeGameBoard />}
-			<Streams includeViewer={viewerIsPlayer} id={getScope(ESCAPE_GAME_TITLE, game.id)} />
+			<Streams
+				includeViewer={viewerIsPlayer}
+				userId={socketManager.userId}
+				hubId={getScope(ESCAPE_GAME_TITLE, game.id)}
+			/>
 		</div>
 	);
 }

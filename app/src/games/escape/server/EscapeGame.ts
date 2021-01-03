@@ -39,11 +39,8 @@ export default class EscapeGame extends Game {
 	constructor(userId: string, socketManager: ServerSocketManager<EscapeGameMessage>) {
 		super(userId);
 
-		this._messenger = new GameMessenger(
-			getScope(ESCAPE_GAME_TITLE, this.id),
-			socketManager,
-			this._handleMessage,
-		);
+		this._messenger = new GameMessenger(socketManager, getScope(ESCAPE_GAME_TITLE, this.id));
+		this._messenger.connect(this._handleMessage);
 
 		this._userConnectionListener = new UserConnectionListener(
 			socketManager,
@@ -52,7 +49,7 @@ export default class EscapeGame extends Game {
 	}
 
 	public cleanUp(): void {
-		this._messenger.cleanUp();
+		this._messenger.disconnect();
 		this._userConnectionListener.cleanUp();
 	}
 

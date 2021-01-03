@@ -18,6 +18,10 @@ export default class PubSub<T> {
 		delete this._subscriptions[nonce];
 	}
 
+	public unsubscribeAll(): void {
+		this._subscriptions = {};
+	}
+
 	public emit(data?: T): void {
 		for (const nonce of Object.keys(this._subscriptions)) {
 			this._subscriptions[nonce].apply(this, data ? [data] : []);

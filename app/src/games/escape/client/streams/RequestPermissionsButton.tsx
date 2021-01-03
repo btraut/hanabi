@@ -2,7 +2,7 @@ import getMyStream from 'app/src/games/escape/client/streams/getMyStream';
 
 interface Props {
 	onPermissionsRequested: (result: {
-		myStream: MediaStream | null;
+		stream: MediaStream | null;
 		audioEnabled: boolean;
 		videoEnabled: boolean;
 	}) => void;
@@ -10,9 +10,9 @@ interface Props {
 
 export default function RequestPermissionsButton({ onPermissionsRequested }: Props): JSX.Element {
 	const handleRequestPerms = async () => {
-		const { myStream, audioEnabled, videoEnabled } = await getMyStream();
+		const { stream, audioEnabled, videoEnabled } = await getMyStream();
 		console.log({ audioEnabled, videoEnabled });
-		onPermissionsRequested({ myStream, audioEnabled, videoEnabled });
+		onPermissionsRequested({ stream, audioEnabled, videoEnabled });
 	};
 
 	return (

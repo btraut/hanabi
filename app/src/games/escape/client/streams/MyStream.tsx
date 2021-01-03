@@ -1,33 +1,22 @@
 import MyStreamControls from 'app/src/games/escape/client/streams/MyStreamControls';
-import MyVideo from 'app/src/games/escape/client/streams/MyVideo';
+import Stream, { StreamConnection } from 'app/src/games/escape/client/streams/Stream';
 
 interface Props {
-	stream: MediaStream | null;
-	audioOn: boolean;
-	videoOn: boolean;
-	audioEnabled: boolean;
-	videoEnabled: boolean;
+	connection: StreamConnection;
 	handleAudioToggle: () => void;
 	handleVideoToggle: () => void;
 }
 
 export default function MyStream({
-	stream,
-	audioOn,
-	videoOn,
-	audioEnabled,
-	videoEnabled,
+	connection,
 	handleAudioToggle,
 	handleVideoToggle,
 }: Props): JSX.Element {
 	return (
 		<div className="Streams-MyStream">
-			<MyVideo stream={stream} videoOn={videoOn} videoEnabled={videoEnabled} />
+			<Stream ownStream connection={connection} />
 			<MyStreamControls
-				audioOn={audioOn}
-				videoOn={videoOn}
-				audioEnabled={audioEnabled}
-				videoEnabled={videoEnabled}
+				connection={connection}
 				handleAudioToggle={handleAudioToggle}
 				handleVideoToggle={handleVideoToggle}
 			/>

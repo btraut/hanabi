@@ -3,7 +3,7 @@ async function getMediaStream(options?: MediaStreamConstraints) {
 }
 
 export default async function getMyStream(): Promise<{
-	myStream: MediaStream | null;
+	stream: MediaStream | null;
 	audioEnabled: boolean;
 	videoEnabled: boolean;
 }> {
@@ -24,7 +24,7 @@ export default async function getMyStream(): Promise<{
 	try {
 		console.log('Loading audio/video stream.');
 		const stream = await getMediaStream({ video, audio });
-		return { myStream: stream, audioEnabled: true, videoEnabled: true };
+		return { stream, audioEnabled: true, videoEnabled: true };
 	} catch (error) {
 		console.error(error);
 	}
@@ -33,7 +33,7 @@ export default async function getMyStream(): Promise<{
 	try {
 		console.log('Loading audio stream.');
 		const stream = await getMediaStream({ audio });
-		return { myStream: stream, audioEnabled: true, videoEnabled: false };
+		return { stream, audioEnabled: true, videoEnabled: false };
 	} catch (error) {
 		console.error(error);
 	}
@@ -42,9 +42,9 @@ export default async function getMyStream(): Promise<{
 	try {
 		console.log('Loading video stream.');
 		const stream = await getMediaStream({ video });
-		return { myStream: stream, audioEnabled: false, videoEnabled: true };
+		return { stream, audioEnabled: false, videoEnabled: true };
 	} catch (error) {
 		console.error(error);
-		return { myStream: null, audioEnabled: false, videoEnabled: false };
+		return { stream: null, audioEnabled: false, videoEnabled: false };
 	}
 }

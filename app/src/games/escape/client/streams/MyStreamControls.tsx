@@ -1,21 +1,16 @@
+import { StreamConnection } from 'app/src/games/escape/client/streams/Stream';
 import classnames from 'classnames';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Mic, MicOff, Video, VideoOff } from 'react-feather';
 
 interface Props {
-	audioOn: boolean;
-	videoOn: boolean;
-	audioEnabled: boolean;
-	videoEnabled: boolean;
+	connection: StreamConnection;
 	handleVideoToggle: () => void;
 	handleAudioToggle: () => void;
 }
 
 export default function MyStreamControls({
-	audioOn,
-	videoOn,
-	audioEnabled,
-	videoEnabled,
+	connection,
 	handleVideoToggle,
 	handleAudioToggle,
 }: Props): JSX.Element {
@@ -58,25 +53,25 @@ export default function MyStreamControls({
 				className={classnames([
 					'MyStreamControls-ToggleButton',
 					{
-						'MyStreamControls-ToggleButton--On': videoOn,
+						'MyStreamControls-ToggleButton--On': connection.videoOn,
 					},
 				])}
 				onClick={handleVideoToggle}
-				disabled={!videoEnabled}
+				disabled={!connection.videoEnabled}
 			>
-				{videoOn && videoEnabled ? <Video /> : <VideoOff />}
+				{connection.videoOn && connection.videoEnabled ? <Video /> : <VideoOff />}
 			</button>
 			<button
 				className={classnames([
 					'MyStreamControls-ToggleButton',
 					{
-						'MyStreamControls-ToggleButton--On': audioOn,
+						'MyStreamControls-ToggleButton--On': connection.audioOn,
 					},
 				])}
 				onClick={handleAudioToggle}
-				disabled={!audioEnabled}
+				disabled={!connection.audioEnabled}
 			>
-				{audioOn && audioEnabled ? <Mic /> : <MicOff />}
+				{connection.audioOn && connection.audioEnabled ? <Mic /> : <MicOff />}
 			</button>
 		</div>
 	);

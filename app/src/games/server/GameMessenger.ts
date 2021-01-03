@@ -8,40 +8,40 @@ import SocketManager from 'app/src/utils/server/SocketManager';
 
 export default class GameMessenger<MessageType extends SocketMessageBase> {
 	private _scope: string;
-	private _messageHandler: (data: { userId: string; message: MessageType }) => void;
-
 	private _socketManager: SocketManager<MessageType>;
 	private _socketManagerOnMessageSubscriptionId: number;
 
-	constructor(
-		scope: string,
-		socketManager: SocketManager<MessageType>,
-		messageHandler: (data: { userId: string; message: SocketMessageBase }) => void,
-	) {
-		this._scope = scope;
+	constructor(socketManager: SocketManager<MessageType>, scope: string) {
 		this._socketManager = socketManager;
-		this._messageHandler = messageHandler;
+		this._scope = scope;
+	}
 
+	public connect(handler: (data: { userId: string; message: SocketMessageBase }) => void): void {
 		this._socketManagerOnMessageSubscriptionId = this._socketManager.onMessage.subscribe(
-			this._filterMessage,
+			GameMessenger._createScopedHandler<MessageType>(this._scope, handler),
 		);
 	}
 
-	public cleanUp(): void {
-		this._socketManager.onMessage.unsubscribe(this._socketManagerOnMessageSubscriptionId);
+	private static _createScopedHandler<M extends SocketMessageBase>(
+		scope: string,
+		handler: (data: { userId: string; message: SocketMessageBase }) => void,
+	) {
+		return (data: { userId: string; message: M }) => {
+			if (data.message.scope !== scope) {
+				return;
+			}
+
+			// At this point, we presume that the scope check has limited the
+			// message type to only those used in this game. It's possible that
+			// this is not true in practice, but we should never be sending
+			// messages cross- game type or even cross-game.
+			handler(data as any);
+		};
 	}
 
-	private _filterMessage = (data: { userId: string; message: MessageType }): void => {
-		if (data.message.scope !== this._scope) {
-			return;
-		}
-
-		// At this point, we presume that the scope check has limited the
-		// message type to only those used in this game. It's possible that
-		// this is not true in practice, but we should never be sending
-		// messages cross- game type or even cross-game.
-		this._messageHandler(data as any);
-	};
+	public disconnect(): void {
+		this._socketManager.onMessage.unsubscribe(this._socketManagerOnMessageSubscriptionId);
+	}
 
 	public send(userIdOrIds: string | readonly string[], message: MessageType): void {
 		this._socketManager.send(userIdOrIds, message);
