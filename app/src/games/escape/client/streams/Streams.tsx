@@ -1,20 +1,14 @@
 import MyStream from 'app/src/games/escape/client/streams/MyStream';
-import PeerStreams from 'app/src/games/escape/client/streams/PeerStreams';
 import RequestPermissionsButton from 'app/src/games/escape/client/streams/RequestPermissionsButton';
 import { StreamConnection } from 'app/src/games/escape/client/streams/Stream';
-import useSignalHubManager from 'app/src/games/escape/client/streams/useSignalHubManager';
 import { useCallback, useState } from 'react';
 
 interface Props {
-	hubId: string;
-	userId: string;
 	includeViewer: boolean;
 }
 
-export default function Streams({ hubId, userId, includeViewer }: Props): JSX.Element {
+export default function Streams({ includeViewer }: Props): JSX.Element {
 	const [myConnection, setMyConnection] = useState<StreamConnection | null>(null);
-
-	const signalHubManager = useSignalHubManager(hubId);
 
 	const handleRequestPermissions = useCallback(
 		(result: { stream: MediaStream | null; audioEnabled: boolean; videoEnabled: boolean }) => {
@@ -23,15 +17,8 @@ export default function Streams({ hubId, userId, includeViewer }: Props): JSX.El
 				audioOn: true,
 				videoOn: true,
 			});
-
-			signalHubManager.connect({
-				userId,
-				stream: result.stream,
-				audioOn: result.audioEnabled,
-				videoOn: result.videoEnabled,
-			});
 		},
-		[signalHubManager, userId],
+		[],
 	);
 
 	const handleToggleAudio = useCallback(() => {
@@ -42,10 +29,8 @@ export default function Streams({ hubId, userId, includeViewer }: Props): JSX.El
 				...myConnection,
 				audioOn,
 			});
-
-			signalHubManager.audioOn = audioOn;
 		}
-	}, [myConnection, signalHubManager]);
+	}, [myConnection]);
 	const handleToggleVideo = useCallback(() => {
 		if (myConnection) {
 			const videoOn = !myConnection.videoOn;
@@ -54,10 +39,8 @@ export default function Streams({ hubId, userId, includeViewer }: Props): JSX.El
 				...myConnection,
 				videoOn,
 			});
-
-			signalHubManager.audioOn = videoOn;
 		}
-	}, [myConnection, signalHubManager]);
+	}, [myConnection]);
 
 	return (
 		<div className="Streams">
@@ -71,10 +54,6 @@ export default function Streams({ hubId, userId, includeViewer }: Props): JSX.El
 				) : (
 					<RequestPermissionsButton onPermissionsRequested={handleRequestPermissions} />
 				))}
-			<PeerStreams
-				peerStreams={signalHubManager.peerStreams}
-				swarmInitialized={signalHubManager.swarmInitialized}
-			/>
 		</div>
 	);
 }
