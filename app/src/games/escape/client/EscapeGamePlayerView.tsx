@@ -2,7 +2,7 @@ import { useSocketManager } from 'app/src/components/SocketManagerContext';
 import EscapeGameBoard from 'app/src/games/escape/client/EscapeGameBoard';
 import { useEscapeGame } from 'app/src/games/escape/client/EscapeGameContext';
 import EscapeGameLobby from 'app/src/games/escape/client/EscapeGameLobby';
-import Streams from 'app/src/games/escape/client/streams/Streams';
+// import Streams from 'app/src/games/escape/client/streams/Streams';
 import EscapeGameStage from 'app/src/games/escape/EscapeGameStage';
 
 export default function EscapeGamePlayerView(): JSX.Element | null {
@@ -13,13 +13,13 @@ export default function EscapeGamePlayerView(): JSX.Element | null {
 		throw new Error('Must connect/join. This should never happen.');
 	}
 
-	const viewerIsPlayer = !!game.gameData.players[socketManager.userId];
+	// const viewerIsPlayer = !!game.gameData.players[socketManager.userId];
 
 	return (
 		<div className="EscapeGame-PlayerView">
 			{game.gameData.stage === EscapeGameStage.Open && <EscapeGameLobby />}
 			{game.gameData.stage === EscapeGameStage.Started && <EscapeGameBoard />}
-			<Streams includeViewer={viewerIsPlayer} />
+			{/* <Streams includeViewer={viewerIsPlayer} /> */}
 		</div>
 	);
 }
