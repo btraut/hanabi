@@ -1,6 +1,6 @@
 import GameManagerController from 'app/src/games/client/GameManagerController';
-import EscapeGameController from 'app/src/games/escape/client/EscapeGameController';
-import EscapeGameView from 'app/src/games/escape/client/EscapeGameView';
+import EscapeController from 'app/src/games/escape/client/EscapeController';
+import EscapeGameView from 'app/src/games/escape/client/EscapeRouter';
 import useSetTitle from 'app/src/utils/client/useSetTitle';
 import { useEffect } from 'react';
 
@@ -13,16 +13,16 @@ const EscapePage: Page = () => {
 	useSetTitle(title);
 
 	useEffect(() => {
-		document.body.classList.add('EscapeGame-DocumentBody');
-		return () => document.body.classList.remove('EscapeGame-DocumentBody');
+		document.body.classList.add('Escape-DocumentBody');
+		return () => document.body.classList.remove('Escape-DocumentBody');
 	});
 
 	return (
 		<SocketManagerController>
 			<GameManagerController>
-				<EscapeGameController>
+				<EscapeController>
 					<EscapeGameView />
-				</EscapeGameController>
+				</EscapeController>
 			</GameManagerController>
 		</SocketManagerController>
 	);

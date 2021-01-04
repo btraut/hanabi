@@ -1,22 +1,19 @@
 import { useSocketManager } from 'app/src/components/SocketManagerContext';
 import { useGameManager } from 'app/src/games/client/GameManagerContext';
+import { EscapeContext, EscapeContextProvider } from 'app/src/games/escape/client/EscapeContext';
 import EscapeGame from 'app/src/games/escape/client/EscapeGame';
-import {
-	EscapeGameContext,
-	EscapeGameContextProvider,
-} from 'app/src/games/escape/client/EscapeGameContext';
-import { EscapeGameMessage } from 'app/src/games/escape/EscapeGameMessages';
-import { ESCAPE_GAME_TITLE } from 'app/src/games/escape/EscapeGameRules';
+import { EscapeMessage } from 'app/src/games/escape/EscapeMessages';
+import { ESCAPE_GAME_TITLE } from 'app/src/games/escape/EscapeRules';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 interface Props {
 	readonly children: JSX.Element;
 }
 
-export default function EscapeGameController({ children }: Props): JSX.Element {
+export default function EscapeController({ children }: Props): JSX.Element {
 	const [game, setGame] = useState<EscapeGame | null>(null);
 	const gameRef = useRef<EscapeGame | null>(null);
-	const socketManager = useSocketManager<EscapeGameMessage>(false);
+	const socketManager = useSocketManager<EscapeMessage>(false);
 	const gameManager = useGameManager();
 
 	useEffect(() => {
@@ -47,7 +44,7 @@ export default function EscapeGameController({ children }: Props): JSX.Element {
 		[gameManager, socketManager],
 	);
 
-	const contextValue = useMemo<EscapeGameContext>(
+	const contextValue = useMemo<EscapeContext>(
 		() => ({
 			create,
 			watch,
@@ -56,5 +53,5 @@ export default function EscapeGameController({ children }: Props): JSX.Element {
 		[create, game, watch],
 	);
 
-	return <EscapeGameContextProvider value={contextValue}>{children}</EscapeGameContextProvider>;
+	return <EscapeContextProvider value={contextValue}>{children}</EscapeContextProvider>;
 }

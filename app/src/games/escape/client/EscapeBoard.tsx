@@ -1,11 +1,11 @@
 import { useSocketManager } from 'app/src/components/SocketManagerContext';
-import { useEscapeGame } from 'app/src/games/escape/client/EscapeGameContext';
+import { useEscapeGame } from 'app/src/games/escape/client/EscapeContext';
 import useArrowKeys from 'app/src/games/escape/client/useArrowKeys';
-import { MAP_SIZE } from 'app/src/games/escape/EscapeGameRules';
+import { MAP_SIZE } from 'app/src/games/escape/EscapeRules';
 import { Direction } from 'app/src/games/escape/Movement';
 import { useCallback } from 'react';
 
-export default function EscapeGameBoard(): JSX.Element {
+export default function EscapeBoard(): JSX.Element {
 	const socketManager = useSocketManager();
 	const game = useEscapeGame();
 
@@ -30,9 +30,9 @@ export default function EscapeGameBoard(): JSX.Element {
 		const playersInCell = players.filter((p) => p.location.x === x && p.location.y === y);
 		return playersInCell.map((p) =>
 			p.id === socketManager.userId ? (
-				<div key={`player-${p.id}`} className="EscapeGame-BoardDot EscapeGame-BoardDot--Self" />
+				<div key={`player-${p.id}`} className="Escape-BoardDot Escape-BoardDot--Self" />
 			) : (
-				<div key={`player-${p.id}`} className="EscapeGame-BoardDot" />
+				<div key={`player-${p.id}`} className="Escape-BoardDot" />
 			),
 		);
 	};
@@ -47,13 +47,13 @@ export default function EscapeGameBoard(): JSX.Element {
 
 	return (
 		<>
-			<h1 className="EscapeGame-Subtitle">Game on!</h1>
-			<table className="EscapeGame-Board">
+			<h1 className="Escape-Subtitle">Game on!</h1>
+			<table className="Escape-Board">
 				<tbody>
 					{new Array(MAP_SIZE.height).fill('').map((_row, rowIndex) => (
 						<tr key={`row-${rowIndex}`}>
 							{new Array(MAP_SIZE.width).fill('').map((_cell, colIndex) => (
-								<td className="EscapeGame-BoardCell" key={`row-${colIndex}`}>
+								<td className="Escape-BoardCell" key={`row-${colIndex}`}>
 									{buildCell(colIndex, rowIndex)}
 								</td>
 							))}

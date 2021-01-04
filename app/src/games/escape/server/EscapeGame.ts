@@ -1,6 +1,6 @@
-import { generatePlayer } from 'app/src/games/escape/EscapeGamePlayer';
-import { ESCAPE_GAME_TITLE, MAP_SIZE } from 'app/src/games/escape/EscapeGameRules';
-import EscapeGameStage from 'app/src/games/escape/EscapeGameStage';
+import { generatePlayer } from 'app/src/games/escape/EscapePlayer';
+import { ESCAPE_GAME_TITLE, MAP_SIZE } from 'app/src/games/escape/EscapeRules';
+import EscapeStage from 'app/src/games/escape/EscapeStage';
 import EscapeGameData from 'app/src/games/escape/server/EscapeGameData';
 import GameMessenger from 'app/src/games/server/GameMessenger';
 import UserConnectionListener, {
@@ -11,12 +11,12 @@ import ServerSocketManager from 'app/src/utils/server/SocketManager';
 import Game from '../../server/Game';
 import {
 	AddPlayerMessage,
-	EscapeGameMessage,
+	EscapeMessage,
 	getScope,
 	MovePlayerMessage,
 	RemovePlayerMessage,
 	StartGameMessage,
-} from '../EscapeGameMessages';
+} from '../EscapeMessages';
 import { locationIsInBounds, move } from '../Movement';
 
 export default class EscapeGame extends Game {
@@ -24,19 +24,19 @@ export default class EscapeGame extends Game {
 
 	public static factory(
 		userId: string,
-		socketManager: ServerSocketManager<EscapeGameMessage>,
+		socketManager: ServerSocketManager<EscapeMessage>,
 	): EscapeGame {
 		return new EscapeGame(userId, socketManager);
 	}
 
-	private _stage: EscapeGameStage = EscapeGameStage.Open;
+	private _stage = EscapeStage.Open;
 
 	private _gameData: EscapeGameData = new EscapeGameData();
 
-	private _messenger: GameMessenger<EscapeGameMessage>;
+	private _messenger: GameMessenger<EscapeMessage>;
 	private _userConnectionListener: UserConnectionListener;
 
-	constructor(userId: string, socketManager: ServerSocketManager<EscapeGameMessage>) {
+	constructor(userId: string, socketManager: ServerSocketManager<EscapeMessage>) {
 		super(userId);
 
 		this._messenger = new GameMessenger(socketManager, getScope(ESCAPE_GAME_TITLE, this.id));
@@ -62,7 +62,7 @@ export default class EscapeGame extends Game {
 		message,
 	}: {
 		userId: string;
-		message: EscapeGameMessage;
+		message: EscapeMessage;
 	}): void => {
 		switch (message.type) {
 			case 'GetGameDataMessage':
@@ -113,7 +113,7 @@ export default class EscapeGame extends Game {
 
 	private _handleAddPlayerMessage({ data: { name } }: AddPlayerMessage, playerId: string): void {
 		// Error if already started.
-		if (this._stage !== EscapeGameStage.Open) {
+		if (this._stage !== EscapeStage.Open) {
 			this._messenger.send(playerId, {
 				scope: getScope(ESCAPE_GAME_TITLE, this.id),
 				type: 'AddPlayerResponseMessage',
@@ -153,7 +153,7 @@ export default class EscapeGame extends Game {
 		const removeUserId = playerId || userId;
 
 		// Error if already started.
-		if (this._stage !== EscapeGameStage.Open) {
+		if (this._stage !== EscapeStage.Open) {
 			this._messenger.send(userId, {
 				scope: getScope(ESCAPE_GAME_TITLE, this.id),
 				type: 'RemovePlayerResponseMessage',
@@ -185,7 +185,7 @@ export default class EscapeGame extends Game {
 
 	private _handleStartGameMessage(_message: StartGameMessage, userId: string): void {
 		// Error if already started.
-		if (this._stage !== EscapeGameStage.Open) {
+		if (this._stage !== EscapeStage.Open) {
 			this._messenger.send(userId, {
 				scope: getScope(ESCAPE_GAME_TITLE, this.id),
 				type: 'StartGameResponseMessage',
@@ -197,7 +197,7 @@ export default class EscapeGame extends Game {
 		}
 
 		// Start the game!
-		this._gameData.stage = EscapeGameStage.Started;
+		this._gameData.stage = EscapeStage.Started;
 
 		// Send success message.
 		this._messenger.send(userId, {

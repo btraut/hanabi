@@ -1,11 +1,11 @@
 // Page Structure
-.EscapeGame-DocumentBody {
+.Escape-DocumentBody {
 	background-image: url(/images/grid-paper.png);
 	background-position: center center;
 	background-attachment: fixed;
 }
 
-.EscapeGame-View {
+.Escape-View {
 	width: 100%;
 	min-height: 100vh;
 	display: flex;
@@ -15,24 +15,24 @@
 	padding: 20px;
 }
 
-.EscapeGame-Container {
+.Escape-Container {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 }
 
-.EscapeGame-Container > * {
+.Escape-Container > * {
 	flex-shrink: 0;
 }
 
-.EscapeGame-PlayerView {
+.Escape-PlayerView {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 }
 
 // Type Ramp
-.EscapeGame-Title {
+.Escape-Title {
 	position: relative;
 	margin: 0 0 20px;
 	.FontSize-MainTitle();
@@ -43,18 +43,18 @@
 }
 
 @media (max-width: @screen-sm-max) {
-	.EscapeGame-Title {
+	.Escape-Title {
 		.FontSize-MainTitleSmall();
 	}
 }
 
 @media (max-width: @screen-xs-max) {
-	.EscapeGame-Title {
+	.Escape-Title {
 		.FontSize-MainTitleXSmall();
 	}
 }
 
-.EscapeGame-Subtitle {
+.Escape-Subtitle {
 	flex: 0 0 auto;
 	margin: 0 0 24px;
 	.FontSize-GameTitleSmall();
@@ -63,12 +63,12 @@
 }
 
 @media (max-width: @screen-xs-max) {
-	.EscapeGame-Subtitle {
+	.Escape-Subtitle {
 		.FontSize-GameTitleXSmall();
 	}
 }
 
-.EscapeGame-Description {
+.Escape-Description {
 	.TransparentContainer();
 	.FontSize-BodyLarge();
 	font-weight: bold;
@@ -77,7 +77,7 @@
 	text-align: center;
 }
 
-.EscapeGame-ErrorText {
+.Escape-ErrorText {
 	.FontSize-BodyLarge();
 	font-weight: bold;
 	background-color: @tfg-red;
@@ -85,19 +85,19 @@
 	padding: 4px 8px;
 }
 
-.EscapeGame-BodyText {
+.Escape-BodyText {
 	.TransparentContainer();
 	.FontSize-BodyLarge();
 	font-weight: bold;
 }
 
 // Interaction
-.EscapeGame-GameActions {
+.Escape-GameActions {
 	display: flex;
 	justify-content: center;
 }
 
-.EscapeGame-GameAction {
+.Escape-GameAction {
 	.Button();
 
 	margin-right: 16px;
@@ -108,7 +108,7 @@
 }
 
 // Forms
-.EscapeGame-Form {
+.Escape-Form {
 	width: 100%;
 	height: 100%;
 	display: flex;
@@ -117,7 +117,7 @@
 	align-items: center;
 }
 
-.EscapeGame-FormContainer {
+.Escape-FormContainer {
 	flex: 0 0 auto;
 	display: grid;
 	grid-template-columns: auto 1fr;
@@ -128,19 +128,19 @@
 	max-width: 100%;
 }
 
-.EscapeGame-FormButtons {
+.Escape-FormButtons {
 	flex: 0 0 auto;
 	display: flex;
 	justify-content: center;
 }
 
-.EscapeGame-TextEntryLabel {
+.Escape-TextEntryLabel {
 	justify-self: end;
 	.FontSize-BodyLarge();
 	font-weight: bold;
 }
 
-.EscapeGame-TextEntryInput {
+.Escape-TextEntryInput {
 	.TextInput();
 
 	width: 100%;
@@ -149,7 +149,7 @@
 }
 
 // Players
-.EscapeGame-PlayersContainer {
+.Escape-PlayersContainer {
 	margin: 0 0 20px;
 	padding: 0;
 	display: flex;
@@ -157,24 +157,24 @@
 	list-style: none;
 }
 
-.EscapeGame-Player {
+.Escape-Player {
 	flex: 0 0 auto;
 	margin: 20px;
 	max-width: 120px;
 }
 
-.EscapeGame-Player--Disconnected {
+.Escape-Player--Disconnected {
 	opacity: 0.4;
 }
 
-.EscapeGame-PlayerPicture {
+.Escape-PlayerPicture {
 	max-width: 100%;
 	max-height: 120px;
 	margin-bottom: 10px;
 	display: block;
 }
 
-.EscapeGame-PlayerName {
+.Escape-PlayerName {
 	.FontSize-BodyLarge();
 	font-weight: bold;
 	overflow: hidden;
@@ -185,19 +185,19 @@
 }
 
 // Board
-.EscapeGame-Board {
+.Escape-Board {
 	background: white;
 	border-collapse: collapse;
 }
 
-.EscapeGame-BoardCell {
+.Escape-BoardCell {
 	border: 2px solid black;
 	width: 40px;
 	height: 40px;
 	position: relative;
 }
 
-.EscapeGame-BoardDot {
+.Escape-BoardDot {
 	position: absolute;
 	left: 5px;
 	top: 5px;
@@ -207,6 +207,6 @@
 	background: blue;
 }
 
-.EscapeGame-BoardDot--Self {
+.Escape-BoardDot--Self {
 	background: red;
 }

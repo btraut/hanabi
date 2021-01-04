@@ -2,19 +2,19 @@ import EscapeGame from 'app/src/games/escape/client/EscapeGame';
 import useForceRefresh from 'app/src/utils/client/useForceRefresh';
 import { createContext, useContext, useEffect, useRef } from 'react';
 
-export interface EscapeGameContext {
+export interface EscapeContext {
 	create(): Promise<EscapeGame>;
 	watch(code: string): Promise<EscapeGame>;
 	game: EscapeGame | null;
 }
 
-const context = createContext<EscapeGameContext | null>(null);
+const context = createContext<EscapeContext | null>(null);
 
-export function useEscapeGameContext(): EscapeGameContext {
+export function useEscapeContext(): EscapeContext {
 	const contextValue = useContext(context);
 
 	if (contextValue === null) {
-		throw new Error('useEscapeGameContext must be used within a EscapeGameContextProvider');
+		throw new Error('useEscapeContext must be used within a EscapeContextProvider');
 	}
 
 	return contextValue;
@@ -24,7 +24,7 @@ export function useEscapeGame(refreshOnUpdate = true): EscapeGame | null {
 	const contextValue = useContext(context);
 
 	if (contextValue === null) {
-		throw new Error('useEscapeGame must be used within a EscapeGameContextProvider');
+		throw new Error('useEscapeGame must be used within a EscapeContextProvider');
 	}
 
 	const game = contextValue.game;
@@ -50,5 +50,5 @@ export function useEscapeGame(refreshOnUpdate = true): EscapeGame | null {
 	return game;
 }
 
-export const EscapeGameContextConsumer = context.Consumer;
-export const EscapeGameContextProvider = context.Provider;
+export const EscapeContextConsumer = context.Consumer;
+export const EscapeContextProvider = context.Provider;

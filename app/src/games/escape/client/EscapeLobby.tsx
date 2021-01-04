@@ -1,12 +1,12 @@
 import { useSocketManager } from 'app/src/components/SocketManagerContext';
-import { useEscapeGame } from 'app/src/games/escape/client/EscapeGameContext';
-import EscapeGameJoinForm from 'app/src/games/escape/client/EscapeGameJoinForm';
-import { MINIMUM_PLAYERS } from 'app/src/games/escape/EscapeGameRules';
+import { useEscapeGame } from 'app/src/games/escape/client/EscapeContext';
+import EscapeJoinForm from 'app/src/games/escape/client/EscapeJoinForm';
+import { MINIMUM_PLAYERS } from 'app/src/games/escape/EscapeRules';
 import classnames from 'classnames';
 
 declare const DOMAIN_BASE: string;
 
-export default function EscapeGameLobby(): JSX.Element {
+export default function EscapeLobby(): JSX.Element {
 	const game = useEscapeGame();
 	const socketManager = useSocketManager();
 
@@ -33,38 +33,38 @@ export default function EscapeGameLobby(): JSX.Element {
 
 	return (
 		<>
-			<h1 className="EscapeGame-Subtitle">{title}</h1>
-			<p className="EscapeGame-Description">
+			<h1 className="Escape-Subtitle">{title}</h1>
+			<p className="Escape-Description">
 				<a href={link}>{link}</a>
 			</p>
-			<ul className="EscapeGame-PlayersContainer">
+			<ul className="Escape-PlayersContainer">
 				{Object.values(game.gameData.players).map((player) => (
 					<li
-						className={classnames('EscapeGame-Player', {
-							'EscapeGame-Player--Disconnected': !player.connected,
+						className={classnames('Escape-Player', {
+							'Escape-Player--Disconnected': !player.connected,
 						})}
 						key={player.id}
 					>
-						<img className="EscapeGame-PlayerPicture" src="/images/user.svg" />
-						<div className="EscapeGame-PlayerName">{player.name}</div>
+						<img className="Escape-PlayerPicture" src="/images/user.svg" />
+						<div className="Escape-PlayerName">{player.name}</div>
 					</li>
 				))}
 			</ul>
 			{userIsJoined ? (
-				<div className="EscapeGame-FormButtons">
-					<button className="EscapeGame-GameAction" onClick={handleLeaveClick}>
+				<div className="Escape-FormButtons">
+					<button className="Escape-GameAction" onClick={handleLeaveClick}>
 						Leave
 					</button>
 					<button
 						disabled={!enoughPlayers}
-						className="EscapeGame-GameAction"
+						className="Escape-GameAction"
 						onClick={handleStartClick}
 					>
 						Start Game
 					</button>
 				</div>
 			) : (
-				<EscapeGameJoinForm />
+				<EscapeJoinForm />
 			)}
 		</>
 	);

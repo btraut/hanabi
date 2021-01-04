@@ -1,20 +1,20 @@
-import EscapeGamePlayer from 'app/src/games/escape/EscapeGamePlayer';
-import EscapeGameStage from 'app/src/games/escape/EscapeGameStage';
+import EscapePlayer from 'app/src/games/escape/EscapePlayer';
+import EscapeStage from 'app/src/games/escape/EscapeStage';
 
 export interface SerialEscapeGameData {
-	stage: EscapeGameStage;
-	players: { [id: string]: EscapeGamePlayer };
+	stage: EscapeStage;
+	players: { [id: string]: EscapePlayer };
 }
 
 export const emptyEscapeGameData: SerialEscapeGameData = {
-	stage: EscapeGameStage.Open,
+	stage: EscapeStage.Open,
 	players: {},
 };
 
 export default class EscapeGameData {
-	public stage = EscapeGameStage.Open;
+	public stage = EscapeStage.Open;
 	public map: string[][][] = [];
-	public players: { [id: string]: EscapeGamePlayer } = {};
+	public players: { [id: string]: EscapePlayer } = {};
 
 	public serialize(): SerialEscapeGameData {
 		return {

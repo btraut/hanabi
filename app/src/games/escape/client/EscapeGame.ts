@@ -1,14 +1,14 @@
 import Game from 'app/src/games/client/Game';
 import {
 	AddPlayerResponseMessage,
-	EscapeGameMessage,
+	EscapeMessage,
 	getScope,
 	MovePlayerResponseMessage,
 	RefreshGameDataMessage,
 	RemovePlayerResponseMessage,
 	StartGameResponseMessage,
-} from 'app/src/games/escape/EscapeGameMessages';
-import { ESCAPE_GAME_TITLE } from 'app/src/games/escape/EscapeGameRules';
+} from 'app/src/games/escape/EscapeMessages';
+import { ESCAPE_GAME_TITLE } from 'app/src/games/escape/EscapeRules';
 import { Direction } from 'app/src/games/escape/Movement';
 import {
 	emptyEscapeGameData,
@@ -25,10 +25,10 @@ export default class EscapeGame extends Game {
 		return this._gameData;
 	}
 
-	private _socketManager: SocketManager<EscapeGameMessage>;
+	private _socketManager: SocketManager<EscapeMessage>;
 	private _socketManagerOnMessageSubscriptionId: number | null = null;
 
-	constructor(id: string, code: string, socketManager: SocketManager<EscapeGameMessage>) {
+	constructor(id: string, code: string, socketManager: SocketManager<EscapeMessage>) {
 		super(id, code);
 
 		this._socketManager = socketManager;
@@ -45,7 +45,7 @@ export default class EscapeGame extends Game {
 		}
 	}
 
-	private _handleMessage = (message: EscapeGameMessage) => {
+	private _handleMessage = (message: EscapeMessage) => {
 		switch (message.type) {
 			case 'RefreshGameDataMessage':
 				this._handleRefreshGameDataMessage(message);

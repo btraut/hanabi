@@ -1,7 +1,7 @@
-import { useEscapeGame } from 'app/src/games/escape/client/EscapeGameContext';
+import { useEscapeGame } from 'app/src/games/escape/client/EscapeContext';
 import { FormEvent, useRef, useState } from 'react';
 
-export default function EscapeGameJoinForm(): JSX.Element {
+export default function EscapeJoinForm(): JSX.Element {
 	const game = useEscapeGame();
 
 	const [addPlayerError, setAddPlayerError] = useState('');
@@ -22,23 +22,23 @@ export default function EscapeGameJoinForm(): JSX.Element {
 
 	return (
 		<>
-			{addPlayerError && <p className="EscapeGame-ErrorText">{addPlayerError}</p>}
-			<form className="EscapeGame-Form" onSubmit={handleAddPlayerSubmit}>
-				<div className="EscapeGame-FormContainer">
-					<label className="EscapeGame-TextEntryLabel" htmlFor="EscapeGameJoinForm-Name">
+			{addPlayerError && <p className="Escape-ErrorText">{addPlayerError}</p>}
+			<form className="Escape-Form" onSubmit={handleAddPlayerSubmit}>
+				<div className="Escape-FormContainer">
+					<label className="Escape-TextEntryLabel" htmlFor="EscapeJoinForm-Name">
 						Name:
 					</label>
 					<input
-						className="EscapeGame-TextEntryInput"
-						id="EscapeGameJoinForm-Name"
+						className="Escape-TextEntryInput"
+						id="EscapeJoinForm-Name"
 						ref={nameInputRef}
 						type="text"
 						autoCorrect="off"
 						autoCapitalize="none"
 					/>
 				</div>
-				<div className="EscapeGame-FormButtons">
-					<input className="EscapeGame-GameAction" type="submit" value="Join" />
+				<div className="Escape-FormButtons">
+					<input className="Escape-GameAction" type="submit" value="Join" />
 				</div>
 			</form>
 		</>

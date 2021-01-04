@@ -3,16 +3,16 @@
 // do an authentication handshake with the server to associate this socket.io
 // connection to a user cookie and ultimately his session.
 
+import { SocketMessageBase } from 'app/src/models/SocketMessage';
+import Ajax from 'app/src/utils/client/Ajax';
+import PubSub from 'app/src/utils/PubSub';
 import { io, Socket } from 'socket.io-client';
 
-import { SocketMessageBase } from '../../models/SocketMessage';
-import PubSub from '../PubSub';
 import {
 	AuthenticateSocketMessage,
 	AuthenticateSocketResponseMessage,
 	SOCKET_MANAGER_SCOPE,
 } from '../SocketManagerMessages';
-import Ajax from './Ajax';
 
 export interface SocketManagerSendOptions {
 	requireAuth?: boolean;

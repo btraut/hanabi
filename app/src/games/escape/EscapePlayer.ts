@@ -1,13 +1,13 @@
 import { Location } from 'app/src/games/escape/Movement';
 
-export default interface EscapeGamePlayer {
+export default interface EscapePlayer {
 	id: string;
 	connected: boolean;
 	name: string;
 	location: Location;
 }
 
-export function generatePlayer(data: Partial<EscapeGamePlayer> = {}): EscapeGamePlayer {
+export function generatePlayer(data: Partial<EscapePlayer> = {}): EscapePlayer {
 	return {
 		...{
 			connected: true,
