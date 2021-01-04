@@ -6,14 +6,14 @@ import { Direction } from 'app/src/games/escape/Movement';
 import { useCallback } from 'react';
 
 export default function EscapeBoard(): JSX.Element {
-	const { authSocketManager } = useSocket();
+	const { userId } = useSocket();
 	const game = useEscapeGame();
 
-	if (!game || !authSocketManager.userId) {
+	if (!game || !userId) {
 		throw new Error('Must connect/join. This should never happen.');
 	}
 
-	const viewerIsPlayer = !!game.gameData.players[authSocketManager.userId];
+	const viewerIsPlayer = !!game.gameData.players[userId];
 
 	const handleArrowKey = useCallback(
 		async (direction: Direction) => {
@@ -29,7 +29,7 @@ export default function EscapeBoard(): JSX.Element {
 	const buildCell = (x: number, y: number) => {
 		const playersInCell = players.filter((p) => p.location.x === x && p.location.y === y);
 		return playersInCell.map((p) =>
-			p.id === authSocketManager.userId ? (
+			p.id === userId ? (
 				<div key={`player-${p.id}`} className="Escape-BoardDot Escape-BoardDot--Self" />
 			) : (
 				<div key={`player-${p.id}`} className="Escape-BoardDot" />
@@ -37,7 +37,7 @@ export default function EscapeBoard(): JSX.Element {
 		);
 	};
 
-	const myLocation = game.gameData.players[authSocketManager.userId].location;
+	const myLocation = game.gameData.players[userId].location;
 	const distanceToPlayers: { [userId: string]: number } = {};
 	for (const player of players) {
 		distanceToPlayers[player.id] = Math.sqrt(
@@ -64,7 +64,7 @@ export default function EscapeBoard(): JSX.Element {
 			<p>Close players:</p>
 			<ul>
 				{players
-					.filter(({ id }) => id !== authSocketManager.userId)
+					.filter(({ id }) => id !== userId)
 					.map((player) => (
 						<li key={`player-distance-${player.id}`}>{`Distance to ${player.name}: ${
 							distanceToPlayers[player.id]

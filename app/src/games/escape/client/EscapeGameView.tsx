@@ -6,9 +6,9 @@ import EscapeStage from 'app/src/games/escape/EscapeStage';
 
 export default function EscapeGameView(): JSX.Element | null {
 	const game = useEscapeGame();
-	const { authSocketManager } = useSocket();
+	const { userId } = useSocket();
 
-	if (!game || !authSocketManager.userId) {
+	if (!game || !userId) {
 		throw new Error('Must connect/join. This should never happen.');
 	}
 

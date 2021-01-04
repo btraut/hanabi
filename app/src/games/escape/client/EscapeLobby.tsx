@@ -8,9 +8,9 @@ declare const DOMAIN_BASE: string;
 
 export default function EscapeLobby(): JSX.Element {
 	const game = useEscapeGame();
-	const { authSocketManager } = useSocket();
+	const { userId } = useSocket();
 
-	if (!game || !authSocketManager.userId) {
+	if (!game || !userId) {
 		throw new Error('Must connect/join. This should never happen.');
 	}
 
@@ -22,9 +22,7 @@ export default function EscapeLobby(): JSX.Element {
 		await game.start();
 	};
 
-	const userIsJoined = !!(
-		authSocketManager.userId && game.gameData.players[authSocketManager.userId]
-	);
+	const userIsJoined = !!(userId && game.gameData.players[userId]);
 	const enoughPlayers = Object.keys(game.gameData.players).length >= MINIMUM_PLAYERS;
 	const title = userIsJoined
 		? enoughPlayers

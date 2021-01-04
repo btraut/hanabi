@@ -44,6 +44,9 @@ export default function SocketManagerController<MessageType extends SocketMessag
 
 	const socketManager = socketManagerRef.current;
 	const authSocketManager = authSocketManagerRef.current;
+	const connectionState = socketManager.connectionState;
+	const authenticationState = authSocketManager.authenticationState;
+	const userId = authSocketManager.userId;
 
 	useAsyncEffect(async () => {
 		await socketManager.connect();
@@ -58,8 +61,11 @@ export default function SocketManagerController<MessageType extends SocketMessag
 		() => ({
 			socketManager,
 			authSocketManager,
+			connectionState,
+			authenticationState,
+			userId,
 		}),
-		[socketManager, authSocketManager],
+		[socketManager, authSocketManager, connectionState, authenticationState, userId],
 	);
 
 	return <SocketContextProvider value={contextValue}>{children}</SocketContextProvider>;

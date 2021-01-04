@@ -1,11 +1,14 @@
 import { SocketMessageBase } from 'app/src/models/SocketMessage';
-import AuthSocketManager from 'app/src/utils/client/AuthSocketManager';
-import SocketManager from 'app/src/utils/client/SocketManager';
+import AuthSocketManager, { AuthenticationState } from 'app/src/utils/client/AuthSocketManager';
+import SocketManager, { ConnectionState } from 'app/src/utils/client/SocketManager';
 import { createContext, useContext } from 'react';
 
 interface SocketContext<MessageType extends SocketMessageBase> {
 	socketManager: SocketManager<MessageType>;
 	authSocketManager: AuthSocketManager;
+	connectionState: ConnectionState;
+	authenticationState: AuthenticationState;
+	userId: string | null;
 }
 
 const context = createContext<SocketContext<any> | null>(null);
