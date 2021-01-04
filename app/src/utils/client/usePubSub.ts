@@ -1,6 +1,5 @@
+import PubSub from 'app/src/utils/PubSub';
 import { useEffect, useRef } from 'react';
-
-import PubSub from '../PubSub';
 
 export default function usePubSub<T>(pubSub: PubSub<T>, handler: (arg: T) => void): void {
 	const subscriptionIdRef = useRef<number | null>(null);

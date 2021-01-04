@@ -1,14 +1,3 @@
-import { generatePlayer } from 'app/src/games/escape/EscapePlayer';
-import { ESCAPE_GAME_TITLE, MAP_SIZE } from 'app/src/games/escape/EscapeRules';
-import EscapeStage from 'app/src/games/escape/EscapeStage';
-import EscapeGameData from 'app/src/games/escape/server/EscapeGameData';
-import GameMessenger from 'app/src/games/server/GameMessenger';
-import UserConnectionListener, {
-	UserConnectionChange,
-} from 'app/src/games/server/UserConnectionListener';
-import ServerSocketManager from 'app/src/utils/server/SocketManager';
-
-import Game from '../../server/Game';
 import {
 	AddPlayerMessage,
 	EscapeMessage,
@@ -16,8 +5,18 @@ import {
 	MovePlayerMessage,
 	RemovePlayerMessage,
 	StartGameMessage,
-} from '../EscapeMessages';
-import { locationIsInBounds, move } from '../Movement';
+} from 'app/src/games/escape/EscapeMessages';
+import { generatePlayer } from 'app/src/games/escape/EscapePlayer';
+import { ESCAPE_GAME_TITLE, MAP_SIZE } from 'app/src/games/escape/EscapeRules';
+import EscapeStage from 'app/src/games/escape/EscapeStage';
+import { locationIsInBounds, move } from 'app/src/games/escape/Movement';
+import EscapeGameData from 'app/src/games/escape/server/EscapeGameData';
+import Game from 'app/src/games/server/Game';
+import GameMessenger from 'app/src/games/server/GameMessenger';
+import UserConnectionListener, {
+	UserConnectionChange,
+} from 'app/src/games/server/UserConnectionListener';
+import ServerSocketManager from 'app/src/utils/server/SocketManager';
 
 export default class EscapeGame extends Game {
 	public static title = ESCAPE_GAME_TITLE;
@@ -42,15 +41,13 @@ export default class EscapeGame extends Game {
 		this._messenger = new GameMessenger(socketManager, getScope(ESCAPE_GAME_TITLE, this.id));
 		this._messenger.connect(this._handleMessage);
 
-		this._userConnectionListener = new UserConnectionListener(
-			socketManager,
-			this._handleUserConnectionChange,
-		);
+		this._userConnectionListener = new UserConnectionListener(socketManager);
+		this._userConnectionListener.start(this._handleUserConnectionChange);
 	}
 
 	public cleanUp(): void {
 		this._messenger.disconnect();
-		this._userConnectionListener.cleanUp();
+		this._userConnectionListener.stop();
 	}
 
 	private _getAllPlayerAndWatcherIds(): string[] {

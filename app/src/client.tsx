@@ -1,12 +1,11 @@
 import 'cross-fetch/polyfill';
 import 'normalize.css';
-import '../less/main.less';
+import 'app/less/main.less';
 
+import App from 'app/src/components/App';
+import routes from 'app/src/routes';
 import { render } from 'react-dom';
 import { BrowserRouter } from 'react-router-dom';
-
-import App from './components/App';
-import routes from './routes';
 
 // Grab the state from a global variable injected into the server-generated
 // HTML and clean up window after.

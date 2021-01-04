@@ -1,11 +1,10 @@
+import SocketManagerController from 'app/src/components/SocketController';
 import GameManagerController from 'app/src/games/client/GameManagerController';
 import EscapeController from 'app/src/games/escape/client/EscapeController';
 import EscapeGameView from 'app/src/games/escape/client/EscapeRouter';
+import Page from 'app/src/pages/Page';
 import useSetTitle from 'app/src/utils/client/useSetTitle';
 import { useEffect } from 'react';
-
-import SocketManagerController from '../../components/SocketManagerController';
-import Page from '../../pages/Page';
 
 const title = 'Escape | Play';
 

@@ -1,4 +1,4 @@
-import { useSocketManager } from 'app/src/components/SocketManagerContext';
+import { useSocket } from 'app/src/components/SocketContext';
 import { useEscapeGame } from 'app/src/games/escape/client/EscapeContext';
 import EscapeJoinForm from 'app/src/games/escape/client/EscapeJoinForm';
 import { MINIMUM_PLAYERS } from 'app/src/games/escape/EscapeRules';
@@ -8,9 +8,9 @@ declare const DOMAIN_BASE: string;
 
 export default function EscapeLobby(): JSX.Element {
 	const game = useEscapeGame();
-	const socketManager = useSocketManager();
+	const { authSocketManager } = useSocket();
 
-	if (!game || !socketManager.userId) {
+	if (!game || !authSocketManager.userId) {
 		throw new Error('Must connect/join. This should never happen.');
 	}
 
@@ -22,7 +22,9 @@ export default function EscapeLobby(): JSX.Element {
 		await game.start();
 	};
 
-	const userIsJoined = !!(socketManager.userId && game.gameData.players[socketManager.userId]);
+	const userIsJoined = !!(
+		authSocketManager.userId && game.gameData.players[authSocketManager.userId]
+	);
 	const enoughPlayers = Object.keys(game.gameData.players).length >= MINIMUM_PLAYERS;
 	const title = userIsJoined
 		? enoughPlayers

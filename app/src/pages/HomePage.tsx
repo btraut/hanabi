@@ -1,7 +1,6 @@
+import Page from 'app/src/pages/Page';
 import useSetTitle from 'app/src/utils/client/useSetTitle';
 import { Link } from 'react-router-dom';
-
-import Page from './Page';
 
 const title = 'Ten Four Games | Home';
 

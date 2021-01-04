@@ -6,47 +6,37 @@ export enum UserConnectionChange {
 }
 
 export default class UserConnectionListener {
-	private _userConnectionChangeHandler: (userId: string, change: UserConnectionChange) => void;
-
 	private _socketManager: SocketManager<any>;
-	private _socketManagerOnAuthenticateSubscriptionId: number;
-	private _socketManagerOnDisconnectSubscriptionId: number;
+	private _socketManagerOnAuthenticateSubscriptionId: number | null;
+	private _socketManagerOnDisconnectSubscriptionId: number | null;
 
-	constructor(
-		socketManager: SocketManager<any>,
-		userConnectionChangeHandler: (userId: string, change: UserConnectionChange) => void,
-	) {
+	constructor(socketManager: SocketManager<any>) {
 		this._socketManager = socketManager;
-		this._userConnectionChangeHandler = userConnectionChangeHandler;
+	}
 
+	public start(
+		userConnectionChangeHandler: (userId: string, change: UserConnectionChange) => void,
+	): void {
 		this._socketManagerOnAuthenticateSubscriptionId = this._socketManager.onAuthenticate.subscribe(
-			this._handleAuthenticate,
+			({ userId }: { userId: string }): void => {
+				userConnectionChangeHandler(userId, UserConnectionChange.Authenticated);
+			},
 		);
 		this._socketManagerOnDisconnectSubscriptionId = this._socketManager.onDisconnect.subscribe(
-			this._handleDisconnect,
+			({ userId }: { userId: string }): void => {
+				userConnectionChangeHandler(userId, UserConnectionChange.Disconnected);
+			},
 		);
 	}
 
-	public cleanUp(): void {
-		if (this._socketManager === null) {
-			return;
-		}
-
-		if (this._socketManagerOnAuthenticateSubscriptionId) {
+	public stop(): void {
+		if (this._socketManagerOnAuthenticateSubscriptionId !== null) {
 			this._socketManager.onAuthenticate.unsubscribe(
 				this._socketManagerOnAuthenticateSubscriptionId,
 			);
 		}
-		if (this._socketManagerOnDisconnectSubscriptionId) {
+		if (this._socketManagerOnDisconnectSubscriptionId !== null) {
 			this._socketManager.onDisconnect.unsubscribe(this._socketManagerOnDisconnectSubscriptionId);
 		}
 	}
-
-	private _handleAuthenticate = ({ userId }: { userId: string }): void => {
-		this._userConnectionChangeHandler(userId, UserConnectionChange.Authenticated);
-	};
-
-	private _handleDisconnect = ({ userId }: { userId: string }): void => {
-		this._userConnectionChangeHandler(userId, UserConnectionChange.Disconnected);
-	};
 }

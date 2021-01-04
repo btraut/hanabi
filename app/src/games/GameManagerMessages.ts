@@ -1,4 +1,4 @@
-import { SocketMessage } from '../models/SocketMessage';
+import { SocketMessage } from 'app/src/models/SocketMessage';
 
 export const GAME_MANAGER_SCOPE = '__GAME_MANAGER_SCOPE__';
 

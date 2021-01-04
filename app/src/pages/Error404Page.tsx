@@ -1,6 +1,5 @@
+import Page from 'app/src/pages/Page';
 import useSetTitle from 'app/src/utils/client/useSetTitle';
-
-import Page from './Page';
 
 const title = 'Ten Four Games | 404';
 

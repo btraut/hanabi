@@ -32,9 +32,8 @@ export default class EscapeGame extends Game {
 		super(id, code);
 
 		this._socketManager = socketManager;
-		this._socketManagerOnMessageSubscriptionId = socketManager.addScopedMessageHandler(
+		this._socketManagerOnMessageSubscriptionId = socketManager.onMessage.subscribe(
 			this._handleMessage,
-			getScope(ESCAPE_GAME_TITLE, this._id),
 		);
 	}
 
@@ -46,6 +45,10 @@ export default class EscapeGame extends Game {
 	}
 
 	private _handleMessage = (message: EscapeMessage) => {
+		if (message.scope !== getScope(ESCAPE_GAME_TITLE, this._id)) {
+			return;
+		}
+
 		switch (message.type) {
 			case 'RefreshGameDataMessage':
 				this._handleRefreshGameDataMessage(message);

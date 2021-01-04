@@ -2,6 +2,9 @@ import 'cross-fetch/polyfill';
 
 import EscapeGame from 'app/src/games/escape/server/EscapeGame';
 import GameManager from 'app/src/games/server/GameManager';
+import routes from 'app/src/routes';
+import Logger from 'app/src/utils/server/Logger';
+import SocketManager from 'app/src/utils/server/SocketManager';
 import * as bodyParser from 'body-parser';
 import compress from 'compression';
 import cookieParser from 'cookie-parser';
@@ -15,10 +18,6 @@ import * as path from 'path';
 import { matchPath } from 'react-router';
 import * as url from 'url';
 import { v1 as uuidv1 } from 'uuid';
-
-import routes from './routes';
-import Logger from './utils/server/Logger';
-import SocketManager from './utils/server/SocketManager';
 
 // Define globals from webpack.
 declare const DOMAIN_BASE: string;

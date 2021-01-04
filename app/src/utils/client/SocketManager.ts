@@ -1,111 +1,85 @@
-// ClientSocketManager is a singleton utility that handles connections to
-// socket.io. In addition to connection/disconnection, ClientSocketManager will
-// do an authentication handshake with the server to associate this socket.io
-// connection to a user cookie and ultimately his session.
+// SocketManager is a singleton utility that handles connections to socket.io.
 
 import { SocketMessageBase } from 'app/src/models/SocketMessage';
-import Ajax from 'app/src/utils/client/Ajax';
 import PubSub from 'app/src/utils/PubSub';
 import { io, Socket } from 'socket.io-client';
 
-import {
-	AuthenticateSocketMessage,
-	AuthenticateSocketResponseMessage,
-	SOCKET_MANAGER_SCOPE,
-} from '../SocketManagerMessages';
-
-export interface SocketManagerSendOptions {
-	requireAuth?: boolean;
+interface SocketManagerExpectation<MessageType> {
+	resolve: (message: MessageType) => void;
+	reject: (error: string) => void;
+	isCorrectMessage: (message: MessageType) => boolean;
+	timeoutToken: ReturnType<typeof setTimeout>;
 }
 
-type MessageTypeWithAuth<MessageType extends SocketMessageBase> =
-	| MessageType
-	| AuthenticateSocketMessage
-	| AuthenticateSocketResponseMessage;
-
-interface SocketManagerExpectation<MessageType extends SocketMessageBase> {
-	resolve: (message: MessageTypeWithAuth<MessageType>) => void;
-	reject: (error: string) => void;
-	isCorrectMessage: (message: MessageTypeWithAuth<MessageType>) => boolean;
-	timeoutToken: any;
+export enum ConnectionState {
+	Disconnected,
+	Connecting,
+	Connected,
 }
 
 export default class SocketManager<MessageType extends SocketMessageBase> {
+	// Have we connected to the server?
+	private _connectionState = ConnectionState.Disconnected;
+	public get connectionState(): ConnectionState {
+		return this._connectionState;
+	}
+
+	// PubSubs
+	public readonly onConnect = new PubSub<void>();
+	public readonly onDisconnect = new PubSub<void>();
+	public readonly onMessage = new PubSub<MessageType>();
+
+	// Promise for tracking whether or not the user has finished connecting.
+	private _connectPromise: Promise<void> | null;
+	private _connectPromiseResolve: (() => void) | null = null;
+	private _connectPromiseReject: (() => void) | null = null;
+
 	// socket.io Client
-	private _socket?: Socket;
-
-	// Have we connected to the server? You probably want to check for
-	// authenticated instead of this.
-	private _connected = false;
-	public get connected(): boolean {
-		return this._connected;
-	}
-
-	// Connections need authentication after connecting before sending data.
-	private _authenticated = false;
-	public get authenticated(): boolean {
-		return this._authenticated;
-	}
-
-	// When authenticated, the user gets an id.
-	private _userId: string | null = null;
-	public get userId(): string | null {
-		return this._userId;
-	}
+	private _socket: Socket | null = null;
 
 	// When we're expecting a message from the server of a specific type,
 	// we tracking using an "expectation". This way we can use promises to
 	// halt until we receive our expected messages from the server.
-	private _expectations: SocketManagerExpectation<MessageTypeWithAuth<MessageType>>[] = [];
+	private _expectations: SocketManagerExpectation<MessageType>[] = [];
 
-	public _onConnect = new PubSub<void>();
-	public _onAuthenticated = new PubSub<void>();
-	public _onDisconnect = new PubSub<void>();
-	public _onMessage = new PubSub<MessageTypeWithAuth<MessageType>>();
-
-	public get onConnect(): PubSub<void> {
-		return this._onConnect;
-	}
-	public get onAuthenticated(): PubSub<void> {
-		return this._onAuthenticated;
-	}
-	public get onDisconnect(): PubSub<void> {
-		return this._onDisconnect;
-	}
-	public get onMessage(): PubSub<MessageTypeWithAuth<MessageType>> {
-		return this._onMessage;
-	}
-
-	public connect(): void {
-		if (this._socket) {
-			if (!this._socket.connected) {
-				this._socket.connect();
-			}
-		} else {
-			this._socket = io(window.location.origin);
-
-			this._socket.on('connect', this._handleConnect);
-			this._socket.on('message', this._handleMessage);
-			this._socket.on('disconnect', this._handleDisconnect);
+	public async connect(): Promise<void> {
+		if (this._connectionState === ConnectionState.Connected) {
+			return;
 		}
+
+		if (this._connectionState === ConnectionState.Connecting && this._connectPromise) {
+			return this._connectPromise;
+		}
+
+		this._connectionState = ConnectionState.Connecting;
+
+		this._socket = io(window.location.origin);
+
+		this._socket.on('connect', this._handleConnect);
+		this._socket.on('message', this._handleMessage);
+		this._socket.on('disconnect', this._handleDisconnect);
+
+		this._socket.connect();
+
+		this._connectPromise = new Promise<void>((resolve, reject) => {
+			this._connectPromiseResolve = resolve;
+			this._connectPromiseReject = reject;
+		});
+
+		return this._connectPromise;
 	}
 
 	public disconnect(): void {
-		if (this._socket) {
-			this._socket.disconnect();
+		if (this._connectionState === ConnectionState.Disconnected) {
+			return;
 		}
+
+		this._socket?.disconnect();
 	}
 
-	public send(
-		message: MessageTypeWithAuth<MessageType>,
-		{ requireAuth }: SocketManagerSendOptions = { requireAuth: true },
-	): void {
-		if (!this._socket || !this._socket.connected) {
+	public send(message: MessageType): void {
+		if (!this._socket || this._connectionState !== ConnectionState.Connected) {
 			throw new Error('Can’t send a message on a closed socket.io connection.');
-		}
-
-		if (requireAuth && !this._authenticated) {
-			throw new Error('Can’t send a message on unauthenticated socket.io connections.');
 		}
 
 		console.log('socket.io data sent:', message);
@@ -114,15 +88,16 @@ export default class SocketManager<MessageType extends SocketMessageBase> {
 	}
 
 	public async expect(
-		isCorrectMessage: (message: MessageTypeWithAuth<MessageType>) => boolean,
-	): Promise<MessageTypeWithAuth<MessageType>> {
-		return new Promise<MessageTypeWithAuth<MessageType>>((resolve, reject) => {
+		isCorrectMessage: (message: MessageType) => boolean,
+		timeout = 2000,
+	): Promise<MessageType> {
+		return new Promise<MessageType>((resolve, reject) => {
 			const timeoutToken = setTimeout(() => {
 				this._expectations = this._expectations.filter(
 					(expectation) => expectation.resolve !== resolve,
 				);
 				reject('Socket message timed out.');
-			}, 2000);
+			}, timeout);
 
 			this._expectations.push({
 				resolve,
@@ -133,76 +108,35 @@ export default class SocketManager<MessageType extends SocketMessageBase> {
 		});
 	}
 
-	public async expectMessageOfType<T extends MessageTypeWithAuth<MessageType>>(
-		type: string,
-	): Promise<T> {
+	public async expectMessageOfType<T extends MessageType>(type: string): Promise<T> {
 		return this.expect((response) => response.type === type) as Promise<T>;
-	}
-
-	private async _authenticate() {
-		if (this._authenticated) {
-			return;
-		}
-
-		if (!this._socket || !this._socket.connected) {
-			throw new Error('Can’t send a message on a closed socket.io connection.');
-		}
-
-		// Get a token via AJAX (with session cookie).
-		const { token } = await Ajax.get('/api/auth-socket');
-
-		// Authenticate the socket connection by sending the token.
-		this.send(
-			{
-				scope: SOCKET_MANAGER_SCOPE,
-				type: 'AuthenticateSocketMessage',
-				data: token,
-			},
-			{ requireAuth: false },
-		);
-
-		// Wait for a socket response to authentication.
-		const message = await this.expectMessageOfType<AuthenticateSocketResponseMessage>(
-			'AuthenticateSocketResponseMessage',
-		);
-
-		if (message.type === 'AuthenticateSocketResponseMessage') {
-			if (message.data.error) {
-				throw new Error(message.data.error);
-			}
-
-			this._authenticated = true;
-			this._userId = message.data.userId!;
-
-			console.log(`socket.io authenticated, user id: ${this._userId}`);
-
-			// Notify others of the connect. Note that we've already
-			// been connected for a while, but we don't want to notify
-			// externally until our connection has been authenticated.
-			this._onAuthenticated.emit();
-		}
 	}
 
 	private _handleConnect = () => {
 		console.log('socket.io connected');
 
-		this._connected = true;
-		this._onConnect.emit();
+		this._connectionState = ConnectionState.Connected;
 
-		this._authenticate();
+		this.onConnect.emit();
+
+		// Resolve the connection promise.
+		if (this._connectPromiseResolve) {
+			this._connectPromiseResolve();
+		}
+
+		// Clean up the promise callbacks.
+		this._connectPromise = null;
+		this._connectPromiseResolve = null;
+		this._connectPromiseReject = null;
 	};
 
 	private _handleDisconnect = () => {
 		console.log('socket.io disconnected');
 
-		// Reset connection.
-		this._connected = false;
+		// Reset connection state.
+		this._connectionState = ConnectionState.Disconnected;
 
-		// Reset authentication.
-		this._authenticated = false;
-		this._userId = null;
-
-		// Handle expectations.
+		// Reject any remaining expectations.
 		for (const expectation of this._expectations) {
 			clearTimeout(expectation.timeoutToken);
 			expectation.reject('Server disconnected.');
@@ -211,10 +145,23 @@ export default class SocketManager<MessageType extends SocketMessageBase> {
 		this._expectations = [];
 
 		// Notify others of the disconnect.
-		this._onDisconnect.emit();
+		this.onDisconnect.emit();
+
+		// If there's a lingering connection promise, reject it.
+		if (this._connectPromiseReject) {
+			this._connectPromiseReject();
+		}
+
+		// Clean up the promise callbacks.
+		this._connectPromise = null;
+		this._connectPromiseResolve = null;
+		this._connectPromiseReject = null;
+
+		// Destroy the socket.
+		this._socket = null;
 	};
 
-	private _handleMessage = (message: MessageTypeWithAuth<MessageType>) => {
+	private _handleMessage = (message: MessageType) => {
 		console.log('socket.io data recieved:', message);
 
 		// Start tracking the expected messages we've resolved.
@@ -236,23 +183,6 @@ export default class SocketManager<MessageType extends SocketMessageBase> {
 		}
 
 		// Post the message.
-		this._onMessage.emit(message);
+		this.onMessage.emit(message);
 	};
-
-	public addScopedMessageHandler(
-		handler: (message: MessageTypeWithAuth<MessageType>) => void,
-		scope: string,
-	): number {
-		return this.onMessage.subscribe((m) => {
-			if (m.scope !== scope) {
-				return;
-			}
-
-			// At this point, we presume that the scope check has limited the
-			// message type to only those used in this handler. It's possible
-			// that this is not true, but in practice, we should always limit a
-			// specific scope to its associated types.
-			handler(m as any);
-		});
-	}
 }

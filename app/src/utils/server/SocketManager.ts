@@ -1,15 +1,14 @@
+import { SocketMessageBase } from 'app/src/models/SocketMessage';
 import {
 	AuthenticateSocketMessage,
 	AuthenticateSocketResponseMessage,
 	SOCKET_MANAGER_SCOPE,
-} from 'app/src/utils/SocketManagerMessages';
+} from 'app/src/utils/AuthSocketManagerMessages';
+import PubSub from 'app/src/utils/PubSub';
+import Logger from 'app/src/utils/server/Logger';
 import { Server as HTTPServer } from 'http';
 import { Server as SocketServer } from 'socket.io';
 import { v1 as uuidv1 } from 'uuid';
-
-import { SocketMessageBase } from '../../models/SocketMessage';
-import PubSub from '../PubSub';
-import Logger from './Logger';
 
 interface AuthToken {
 	created: Date;
