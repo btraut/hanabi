@@ -37,7 +37,7 @@ export default function SocketManagerController<MessageType extends SocketMessag
 	if (!authSocketManagerRef.current) {
 		authSocketManagerRef.current = new AuthSocketManager(socketManagerRef.current as any);
 
-		authSocketManagerOnAuthenticateSubscriptionId.current = authSocketManagerRef.current.onAuthenticated.subscribe(
+		authSocketManagerOnAuthenticateSubscriptionId.current = authSocketManagerRef.current.onAuthenticate.subscribe(
 			forceRefresh,
 		);
 	}

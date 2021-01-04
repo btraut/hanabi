@@ -14,7 +14,8 @@ import {
 	emptyEscapeGameData,
 	SerialEscapeGameData,
 } from 'app/src/games/escape/server/EscapeGameData';
-import SocketManager from 'app/src/utils/client/SocketManager';
+import AuthSocketManager, { AuthenticationState } from 'app/src/utils/client/AuthSocketManager';
+import SocketManager, { ConnectionState } from 'app/src/utils/client/SocketManager';
 import PubSub from 'app/src/utils/PubSub';
 
 export default class EscapeGame extends Game {
@@ -25,24 +26,63 @@ export default class EscapeGame extends Game {
 		return this._gameData;
 	}
 
-	private _socketManager: SocketManager<EscapeMessage>;
-	private _socketManagerOnMessageSubscriptionId: number | null = null;
+	private _connected = false;
 
-	constructor(id: string, code: string, socketManager: SocketManager<EscapeMessage>) {
+	private _socketManager: SocketManager<EscapeMessage>;
+	private _socketManagerOnMessageSubscriptionId: number;
+	private _socketManagerOnConnectSubscriptionId: number;
+	private _socketManagerOnDisconnectSubscriptionId: number;
+
+	private _authSocketManager: AuthSocketManager;
+	private _socketManagerOnAuthenticateSubscriptionId: number;
+
+	constructor(
+		id: string,
+		code: string,
+		socketManager: SocketManager<EscapeMessage>,
+		authSocketManager: AuthSocketManager,
+	) {
 		super(id, code);
 
 		this._socketManager = socketManager;
+		this._socketManagerOnConnectSubscriptionId = socketManager.onConnect.subscribe(
+			this._updateConnectionStatus,
+		);
+		this._socketManagerOnDisconnectSubscriptionId = socketManager.onDisconnect.subscribe(
+			this._updateConnectionStatus,
+		);
 		this._socketManagerOnMessageSubscriptionId = socketManager.onMessage.subscribe(
 			this._handleMessage,
 		);
+
+		this._authSocketManager = authSocketManager;
+		this._socketManagerOnAuthenticateSubscriptionId = authSocketManager.onAuthenticate.subscribe(
+			this._updateConnectionStatus,
+		);
+
+		this._connected =
+			this._socketManager.connectionState === ConnectionState.Connected &&
+			this._authSocketManager.authenticationState === AuthenticationState.Authenticated;
 	}
 
 	public cleanUp(): void {
-		if (this._socketManagerOnMessageSubscriptionId !== null) {
-			this._socketManager.onMessage.unsubscribe(this._socketManagerOnMessageSubscriptionId);
-			this._socketManagerOnMessageSubscriptionId = null;
-		}
+		this._socketManager.onConnect.unsubscribe(this._socketManagerOnConnectSubscriptionId);
+		this._socketManager.onDisconnect.unsubscribe(this._socketManagerOnDisconnectSubscriptionId);
+		this._socketManager.onMessage.unsubscribe(this._socketManagerOnMessageSubscriptionId);
+		this._authSocketManager.onAuthenticate.unsubscribe(
+			this._socketManagerOnAuthenticateSubscriptionId,
+		);
 	}
+
+	private _updateConnectionStatus = () => {
+		this._connected =
+			this._socketManager.connectionState === ConnectionState.Connected &&
+			this._authSocketManager.authenticationState === AuthenticationState.Authenticated;
+
+		if (this._connected) {
+			this.refreshGameData();
+		}
+	};
 
 	private _handleMessage = (message: EscapeMessage) => {
 		if (message.scope !== getScope(ESCAPE_GAME_TITLE, this._id)) {

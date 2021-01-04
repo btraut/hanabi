@@ -13,7 +13,7 @@ interface Props {
 export default function EscapeController({ children }: Props): JSX.Element {
 	const [game, setGame] = useState<EscapeGame | null>(null);
 	const gameRef = useRef<EscapeGame | null>(null);
-	const { socketManager } = useSocket<EscapeMessage>();
+	const { socketManager, authSocketManager } = useSocket<EscapeMessage>();
 	const gameManager = useGameManager();
 
 	useEffect(() => {
@@ -25,23 +25,23 @@ export default function EscapeController({ children }: Props): JSX.Element {
 
 	const create = useCallback(async () => {
 		const { id: gameId, code } = await gameManager.create(ESCAPE_GAME_TITLE);
-		const newGame = new EscapeGame(gameId, code, socketManager);
+		const newGame = new EscapeGame(gameId, code, socketManager, authSocketManager);
 		await newGame.refreshGameData();
 		setGame(newGame);
 
 		return newGame;
-	}, [gameManager, socketManager]);
+	}, [authSocketManager, gameManager, socketManager]);
 
 	const watch = useCallback(
 		async (code: string) => {
 			const { id: gameId } = await gameManager.watch(code);
-			const newGame = new EscapeGame(gameId, code, socketManager);
+			const newGame = new EscapeGame(gameId, code, socketManager, authSocketManager);
 			await newGame.refreshGameData();
 			setGame(newGame);
 
 			return newGame;
 		},
-		[gameManager, socketManager],
+		[authSocketManager, gameManager, socketManager],
 	);
 
 	const contextValue = useMemo<EscapeContext>(

@@ -33,7 +33,7 @@ export default class AuthSocketManager {
 	}
 
 	// PubSubs
-	public readonly onAuthenticated = new PubSub<void>();
+	public readonly onAuthenticate = new PubSub<void>();
 
 	// Promise for tracking whether or not the user has finished authenticating.
 	private _authenticatePromise: Promise<void> | null;
@@ -107,7 +107,7 @@ export default class AuthSocketManager {
 		// Notify others of the connect. Note that we've already
 		// been connected for a while, but we don't want to notify
 		// externally until our connection has been authenticated.
-		this.onAuthenticated.emit();
+		this.onAuthenticate.emit();
 
 		// Resolve the authentication promise.
 		if (this._authenticatePromiseResolve) {
