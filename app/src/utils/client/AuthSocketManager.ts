@@ -43,13 +43,27 @@ export default class AuthSocketManager {
 	// SocketManager used for all comms.
 	private _socketManager: SocketManager<AuthSocketManagerMessage> | null;
 
+	// Track if the user wants to reconnect after disconnecting.
+	private _keepAlive = true;
+	private _authenticateCalledAtLeastOnce = false;
+
 	constructor(socketManager: SocketManager<AuthSocketManagerMessage>) {
 		this._socketManager = socketManager;
 
+		this._socketManager.onConnect.subscribe(this._handleConnect);
 		this._socketManager.onDisconnect.subscribe(this._handleDisconnect);
 	}
 
-	public async authenticate(): Promise<void> {
+	public async authenticate(keepAlive = true): Promise<void> {
+		if (this._socketManager?.connectionState !== ConnectionState.Connected) {
+			throw new Error('Can’t authenticate on a disconnected socket.');
+		}
+
+		// Save the "keep alive" setting. We do this even if the user is already
+		// connected because it can replace the previous setting.
+		this._keepAlive = keepAlive;
+		this._authenticateCalledAtLeastOnce = true;
+
 		if (this._authenticationState === AuthenticationState.Authenticated) {
 			return;
 		}
@@ -65,10 +79,6 @@ export default class AuthSocketManager {
 			this._authenticatePromiseResolve = resolve;
 			this._authenticatePromiseReject = reject;
 		});
-
-		if (this._socketManager?.connectionState !== ConnectionState.Connected) {
-			throw new Error('Can’t authenticate on a disconnected socket.');
-		}
 
 		// Get a token via AJAX (with session cookie).
 		const { token } = await Ajax.get(AUTH_PATH);
@@ -109,6 +119,14 @@ export default class AuthSocketManager {
 		this._authenticatePromiseResolve = null;
 		this._authenticatePromiseReject = null;
 	}
+
+	private _handleConnect = () => {
+		console.log('connect authasdf!');
+
+		if (this._keepAlive && this._authenticateCalledAtLeastOnce) {
+			this.authenticate(this._keepAlive);
+		}
+	};
 
 	private _handleDisconnect = () => {
 		this._authenticationState = AuthenticationState.Unauthenticated;

@@ -53,11 +53,13 @@ export default class SocketManager<MessageType extends SocketMessageBase> {
 
 		this._connectionState = ConnectionState.Connecting;
 
-		this._socket = io(window.location.origin);
+		if (!this._socket) {
+			this._socket = io(window.location.origin);
 
-		this._socket.on('connect', this._handleConnect);
-		this._socket.on('message', this._handleMessage);
-		this._socket.on('disconnect', this._handleDisconnect);
+			this._socket.on('connect', this._handleConnect);
+			this._socket.on('message', this._handleMessage);
+			this._socket.on('disconnect', this._handleDisconnect);
+		}
 
 		this._socket.connect();
 
@@ -156,9 +158,6 @@ export default class SocketManager<MessageType extends SocketMessageBase> {
 		this._connectPromise = null;
 		this._connectPromiseResolve = null;
 		this._connectPromiseReject = null;
-
-		// Destroy the socket.
-		this._socket = null;
 	};
 
 	private _handleMessage = (message: MessageType) => {
