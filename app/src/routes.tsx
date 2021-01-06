@@ -1,4 +1,5 @@
 import EscapePage from 'app/src/games/escape/EscapePage';
+import HanabiPage from 'app/src/games/hanabi/HanabiPage';
 import Error404Page from 'app/src/pages/Error404Page';
 import HomePage from 'app/src/pages/HomePage';
 import Page from 'app/src/pages/Page';
@@ -17,6 +18,10 @@ const routes: AsyncRouteProps[] = [
 	{
 		path: '/escape',
 		component: EscapePage,
+	},
+	{
+		path: '/hanabi',
+		component: HanabiPage,
 	},
 	{
 		component: Error404Page,

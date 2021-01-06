@@ -13,7 +13,6 @@ export const emptyEscapeGameData: SerialEscapeGameData = {
 
 export default class EscapeGameData {
 	public stage = EscapeStage.Open;
-	public map: string[][][] = [];
 	public players: { [id: string]: EscapePlayer } = {};
 
 	public serialize(): SerialEscapeGameData {

@@ -17,6 +17,11 @@ const HomePage: Page = () => {
 							Escape – virtual escape room
 						</Link>
 					</li>
+					<li className="HomePage-Game">
+						<Link to="/hanabi" className="HomePage-GameLink">
+							Hanabi
+						</Link>
+					</li>
 				</ul>
 			</div>
 		</div>
