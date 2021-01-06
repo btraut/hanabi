@@ -1,12 +1,18 @@
 import {
 	generateHanabiGameData,
 	generatePlayer,
+	generateRandomDeck,
+	HANABI_DEFAULT_TILE_POSITIONS,
 	HANABI_GAME_TITLE,
+	HANABI_MIN_PLAYERS,
+	HANABI_TILES_IN_HAND,
 	HanabiGameData,
+	HanabiRuleSet,
 	HanabiStage,
 } from 'app/src/games/hanabi/HanabiGameData';
 import {
 	AddPlayerMessage,
+	ChangeGameSettingsMessage,
 	DiscardTileMessage,
 	getScope,
 	GiveClueMessage,
@@ -78,6 +84,9 @@ export default class HanabiGame extends Game {
 				break;
 			case 'RemovePlayerMessage':
 				this._handleRemovePlayerMessage(message, userId);
+				break;
+			case 'ChangeGameSettingsMessage':
+				this._handleChangeGameSettingsMessage(message, userId);
 				break;
 			case 'StartGameMessage':
 				this._handleStartGameMessage(message, userId);
@@ -199,8 +208,62 @@ export default class HanabiGame extends Game {
 		this._update();
 	}
 
+	private _handleChangeGameSettingsMessage(
+		message: ChangeGameSettingsMessage,
+		userId: string,
+	): void {
+		// Basic validation:
+		if (this._stage !== HanabiStage.Setup) {
+			this._sendMessage(userId, {
+				type: 'StartGameResponseMessage',
+				data: {
+					error: 'Cannot change game settings after it has started.',
+				},
+			});
+			return;
+		}
+
+		if (!this._gameData.players[userId]) {
+			this._sendMessage(userId, {
+				type: 'StartGameResponseMessage',
+				data: {
+					error: 'Only players can change game settings.',
+				},
+			});
+			return;
+		}
+
+		// Settings specific validation:
+		if (typeof message.data.ruleSet === 'number') {
+			if (
+				![HanabiRuleSet.Basic, HanabiRuleSet.PurpleDecoy, HanabiRuleSet.PurpleDistinct].includes(
+					message.data.ruleSet,
+				)
+			) {
+				this._sendMessage(userId, {
+					type: 'StartGameResponseMessage',
+					data: {
+						error: 'Invalid rules set.',
+					},
+				});
+				return;
+			}
+
+			this._gameData.ruleSet = message.data.ruleSet;
+		}
+
+		// Send the updated state to all players/watchers.
+		this._sendMessage(this._getAllPlayerAndWatcherIds(), {
+			type: 'RefreshGameDataMessage',
+			data: this._gameData,
+		});
+
+		// Touch the games last updated time.
+		this._update();
+	}
+
 	private _handleStartGameMessage(_message: StartGameMessage, userId: string): void {
-		// Error if already started.
+		// Validate that the game is ready.
 		if (this._stage !== HanabiStage.Setup) {
 			this._sendMessage(userId, {
 				type: 'StartGameResponseMessage',
@@ -211,8 +274,43 @@ export default class HanabiGame extends Game {
 			return;
 		}
 
+		if (Object.keys(this._gameData.players).length < HANABI_MIN_PLAYERS) {
+			this._sendMessage(userId, {
+				type: 'StartGameResponseMessage',
+				data: {
+					error: 'Not enough players to play.',
+				},
+			});
+			return;
+		}
+
+		if (!this._gameData.players[userId]) {
+			this._sendMessage(userId, {
+				type: 'StartGameResponseMessage',
+				data: {
+					error: 'Only players can start the game.',
+				},
+			});
+			return;
+		}
+
 		// Start the game!
 		this._gameData.stage = HanabiStage.Playing;
+
+		// Generate a fresh deck and randomize the tiles.
+		const players = Object.values(this._gameData.players);
+		const tiles = generateRandomDeck(this._gameData.ruleSet !== HanabiRuleSet.Basic);
+		const tilesInHand = HANABI_TILES_IN_HAND[players.length];
+
+		for (const player of players) {
+			for (let i = 0; i < tilesInHand; i += 1) {
+				const tile = tiles.pop()!;
+				player.tileLocations.push({
+					position: HANABI_DEFAULT_TILE_POSITIONS[i],
+					tile,
+				});
+			}
+		}
 
 		// Send success message.
 		this._sendMessage(userId, {
@@ -246,7 +344,7 @@ export default class HanabiGame extends Game {
 		return null;
 	}
 
-	private _handlePlayTileMessage(_message: PlayTileMessage, userId: string): void {
+	private _handlePlayTileMessage(message: PlayTileMessage, userId: string): void {
 		const gameActionError = this._validateGameAction(userId);
 		if (gameActionError) {
 			this._sendMessage(userId, {
@@ -255,6 +353,81 @@ export default class HanabiGame extends Game {
 			});
 			return;
 		}
+
+		const tile = this._gameData.players[userId].tileLocations
+			.map((l) => l.tile)
+			.find((t) => t.id === message.data.id);
+
+		if (!tile) {
+			this._sendMessage(userId, {
+				type: 'PlayTileResponseMessage',
+				data: { error: 'That tile isn’t in your hand!' },
+			});
+			return;
+		}
+
+		// Remove the tile from the player.
+		this._gameData.players[userId].tileLocations = this._gameData.players[
+			userId
+		].tileLocations.filter((l) => l.tile.id !== tile.id);
+
+		// Check if the tile is valid.
+		const duplicate = this._gameData.playedTiles.find(
+			(t) => t.color === tile.color && t.number === tile.number,
+		);
+		const prevNumberInSequenceExists =
+			tile.number === 1 &&
+			this._gameData.playedTiles.find(
+				(t) => t.color === tile.color && t.number === tile.number - 1,
+			);
+
+		if (duplicate || !prevNumberInSequenceExists) {
+			if (this._gameData.lives === 0) {
+				this._gameData.stage = HanabiStage.Finished;
+			} else {
+				this._gameData.lives -= 1;
+			}
+
+			this._gameData.discardedTiles.push(tile);
+		} else {
+			this._gameData.playedTiles.push(tile);
+		}
+
+		// Pick up another tile if available.
+		if (this._gameData.remainingTiles.length) {
+			const newTile = this._gameData.remainingTiles.pop()!;
+			this._gameData.players[userId].tileLocations.push({
+				tile: newTile,
+				position: { x: 0, y: 0 },
+			});
+		}
+
+		// Detect if the game has been won.
+		const maxPlayedTiles = this._gameData.ruleSet === HanabiRuleSet.Basic ? 25 : 30;
+		if (maxPlayedTiles) {
+			this._gameData.stage = HanabiStage.Finished;
+		}
+
+		// TODO: Detect if the game is over due to shot clock running out.
+
+		// TODO: Detect if the game is over due to the wrong tile being discarded.
+
+		// TODO: Advance the turn.
+
+		// Send success message.
+		this._sendMessage(userId, {
+			type: 'PlayTileResponseMessage',
+			data: {},
+		});
+
+		// Send the updated state to all players/watchers.
+		this._sendMessage(this._getAllPlayerAndWatcherIds(), {
+			type: 'RefreshGameDataMessage',
+			data: this._gameData,
+		});
+
+		// Touch the games last updated time.
+		this._update();
 	}
 
 	private _handleDiscardTileMessage(_message: DiscardTileMessage, userId: string): void {
@@ -266,6 +439,8 @@ export default class HanabiGame extends Game {
 			});
 			return;
 		}
+
+		// TODO
 	}
 
 	private _handleGiveClueMessage(_message: GiveClueMessage, userId: string): void {
@@ -277,6 +452,8 @@ export default class HanabiGame extends Game {
 			});
 			return;
 		}
+
+		// TODO
 	}
 
 	private _handleMoveTileMessage(_message: MoveTileMessage, _userId: string): void {

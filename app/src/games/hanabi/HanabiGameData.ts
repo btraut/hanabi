@@ -2,9 +2,26 @@ import { v1 as uuidv1 } from 'uuid';
 
 export const HANABI_GAME_TITLE = 'hanabi';
 
-export const HANABI_MIN = 2;
+export const HANABI_MIN_PLAYERS = 2;
+export const HANABI_MAX_PLAYERS = 5;
+
 export const HANABI_MAX_CLUES = 8;
 export const HANABI_LIVES = 2;
+
+export const HANABI_TILES_IN_HAND: { [numPlayers: number]: number } = {
+	'2': 5,
+	'3': 5,
+	'4': 4,
+	'5': 4,
+};
+
+export const HANABI_DEFAULT_TILE_POSITIONS: { [tileNumber: number]: Position } = [
+	{ x: 0, y: 0 },
+	{ x: 20, y: 0 },
+	{ x: 40, y: 0 },
+	{ x: 60, y: 0 },
+	{ x: 80, y: 0 },
+];
 
 export enum HanabiStage {
 	Setup,

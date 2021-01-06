@@ -1,7 +1,7 @@
 import { useSocket } from 'app/src/components/SocketContext';
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
 import HanabiJoinForm from 'app/src/games/hanabi/client/HanabiJoinForm';
-import { HANABI_MIN } from 'app/src/games/hanabi/HanabiGameData';
+import { HANABI_MIN_PLAYERS } from 'app/src/games/hanabi/HanabiGameData';
 import classnames from 'classnames';
 
 declare const DOMAIN_BASE: string;
@@ -23,7 +23,7 @@ export default function HanabiLobby(): JSX.Element {
 	};
 
 	const userIsJoined = !!(userId && game.gameData.players[userId]);
-	const enoughPlayers = Object.keys(game.gameData.players).length >= HANABI_MIN;
+	const enoughPlayers = Object.keys(game.gameData.players).length >= HANABI_MIN_PLAYERS;
 	const title = userIsJoined
 		? enoughPlayers
 			? 'Ready to get started?'

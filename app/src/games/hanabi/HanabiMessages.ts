@@ -1,5 +1,6 @@
 import {
 	HanabiGameData,
+	HanabiRuleSet,
 	HanabiTileColor,
 	HanabiTileNumber,
 } from 'app/src/games/hanabi/HanabiGameData';
@@ -27,6 +28,15 @@ export type RemovePlayerResponseMessage = SocketMessage<
 >;
 
 // State Management
+export type ChangeGameSettingsMessage = SocketMessage<
+	'ChangeGameSettingsMessage',
+	{ ruleSet?: HanabiRuleSet }
+>;
+export type ChangeGameSettingsResponseMessage = SocketMessage<
+	'ChangeGameSettingsResponseMessage',
+	{ error?: string }
+>;
+
 export type StartGameMessage = SocketMessage<'StartGameMessage', void>;
 export type StartGameResponseMessage = SocketMessage<
 	'StartGameResponseMessage',
@@ -59,6 +69,8 @@ export type HanabiMessage =
 	| AddPlayerResponseMessage
 	| RemovePlayerMessage
 	| RemovePlayerResponseMessage
+	| ChangeGameSettingsMessage
+	| ChangeGameSettingsResponseMessage
 	| StartGameMessage
 	| StartGameResponseMessage
 	| PlayTileMessage
