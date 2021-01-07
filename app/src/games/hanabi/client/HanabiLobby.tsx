@@ -31,24 +31,26 @@ export default function HanabiLobby(): JSX.Element {
 
 	return (
 		<>
-			<p className="max-w-screen-md bg-gray-400 font-bold text-lg text-center">
+			<p className="max-w-screen-md mb-10 bg-gray-400 font-bold text-lg text-center">
 				<a className="inline-block px-5 py-3 text-blue-700 hover:text-blue-800" href={link}>
 					{link}
 				</a>
 			</p>
-			<ul className="my-8 flex justify-center">
-				{players.map((player) => (
-					<li
-						className={classnames('m-4 mw-30', {
-							'opacity-40': !player.connected,
-						})}
-						key={player.id}
-					>
-						<img className="block w-30 h-30 mb-4" src="/images/user-white.svg" />
-						<div className="text-lg font-bold truncate text-white text-center">{player.name}</div>
-					</li>
-				))}
-			</ul>
+			{players.length > 0 && (
+				<ul className="mb-10 flex justify-center">
+					{players.map((player) => (
+						<li
+							className={classnames('m-4 mw-30', {
+								'opacity-40': !player.connected,
+							})}
+							key={player.id}
+						>
+							<img className="block w-30 h-30 mb-4" src="/images/user-white.svg" />
+							<div className="text-lg font-bold truncate text-white text-center">{player.name}</div>
+						</li>
+					))}
+				</ul>
+			)}
 			{userIsJoined ? (
 				<div className="flex justify-center">
 					<div className="mx-2">

@@ -3,7 +3,7 @@ import { v1 as uuidv1 } from 'uuid';
 
 export const HANABI_GAME_TITLE = 'hanabi';
 
-export const HANABI_MIN_PLAYERS = 2;
+export const HANABI_MIN_PLAYERS = 1;
 export const HANABI_MAX_PLAYERS = 5;
 
 export const HANABI_MAX_CLUES = 8;
@@ -12,6 +12,7 @@ export const HANABI_LIVES = 2;
 export const HANABI_MAX_POSITION = { x: 1000, y: 500 };
 
 export const HANABI_TILES_IN_HAND: { [numPlayers: number]: number } = {
+	'1': 5,
 	'2': 5,
 	'3': 5,
 	'4': 4,
