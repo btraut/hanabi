@@ -7,7 +7,7 @@ export default function HanabiRouter(): JSX.Element {
 	return (
 		<div className="Hanabi-View">
 			<div className="Hanabi-Container">
-				<h1 className="Hanabi-Title">Hanabi!</h1>
+				<h1 className="Hanabi-Title">Hanabi</h1>
 				<Switch>
 					<Route path="/hanabi/join" exact>
 						<HanabiWatchForm />

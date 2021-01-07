@@ -55,11 +55,14 @@ export type DiscardTileResponseMessage = SocketMessage<
 
 export type GiveClueMessage = SocketMessage<
 	'GiveClueMessage',
-	{ to: string; colorClue?: HanabiTileColor; numberClue?: HanabiTileNumber }
+	{ to: string; color?: HanabiTileColor; number?: HanabiTileNumber }
 >;
 export type GiveClueResponseMessage = SocketMessage<'GiveClueResponseMessage', { error?: string }>;
 
-export type MoveTileMessage = SocketMessage<'MoveTileMessage', { x: number; y: number }>;
+export type MoveTileMessage = SocketMessage<
+	'MoveTileMessage',
+	{ id: string; x: number; y: number }
+>;
 export type MoveTileResponseMessage = SocketMessage<'MoveTileResponseMessage', { error?: string }>;
 
 export type HanabiMessage =
