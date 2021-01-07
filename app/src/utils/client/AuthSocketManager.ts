@@ -121,8 +121,6 @@ export default class AuthSocketManager {
 	}
 
 	private _handleConnect = () => {
-		console.log('connect authasdf!');
-
 		if (this._keepAlive && this._authenticateCalledAtLeastOnce) {
 			this.authenticate(this._keepAlive);
 		}

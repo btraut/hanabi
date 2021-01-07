@@ -26,7 +26,7 @@ export default function HanabiMainMenu(): JSX.Element {
 
 	return (
 		<>
-			<p className="Hanabi-Description">Hanabi is a virtual hanabi room meant for 4-8 players.</p>
+			<p className="Hanabi-Description">Hanabi is a cooperative puzzle game for 2-5 players.</p>
 			<div className="Hanabi-GameActions">
 				<button className="Hanabi-GameAction" onClick={hostButtonHandler}>
 					Host

@@ -1,6 +1,7 @@
 import 'cross-fetch/polyfill';
 
 import EscapeGame from 'app/src/games/escape/server/EscapeGame';
+import HanabiServer from 'app/src/games/hanabi/server/HanabiServer';
 import GameManager from 'app/src/games/server/GameManager';
 import routes from 'app/src/routes';
 import Logger from 'app/src/utils/server/Logger';
@@ -163,6 +164,7 @@ try {
 
 		// Add games.
 		gameManager.addGameFactory(EscapeGame.title, EscapeGame.factory);
+		gameManager.addGameFactory(HanabiServer.title, HanabiServer.factory);
 
 		// Notify!
 		Logger.info(

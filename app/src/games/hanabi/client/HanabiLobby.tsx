@@ -35,7 +35,9 @@ export default function HanabiLobby(): JSX.Element {
 		<>
 			<h1 className="Hanabi-Subtitle">{title}</h1>
 			<p className="Hanabi-Description">
-				<a href={link}>{link}</a>
+				<a className="Hanabi-GameLink" href={link}>
+					{link}
+				</a>
 			</p>
 			<ul className="Hanabi-PlayersContainer">
 				{Object.values(game.gameData.players).map((player) => (

@@ -13,13 +13,14 @@ import { useParams } from 'react-router';
 
 export default function HanabiLoadGameView(): JSX.Element | null {
 	const hanabiContext = useHanabiContext();
-	const { authSocketManager } = useSocket();
+	const { authSocketManager, socketManager } = useSocket();
 
 	const { code = '' } = useParams<{ code?: string }>();
 	const loadGameHandler = useCallback(async () => {
+		await socketManager.connect();
 		await authSocketManager.authenticate();
 		await hanabiContext.watch(code);
-	}, [authSocketManager, code, hanabiContext]);
+	}, [authSocketManager, code, hanabiContext, socketManager]);
 
 	return (
 		<EnsureGameLoaded
