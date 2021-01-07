@@ -27,7 +27,7 @@ module.exports = {
 		'prettier/@typescript-eslint',
 		'prettier',
 	],
-	ignorePatterns: ['.eslintrc.js', 'postcss.config.js'],
+	ignorePatterns: ['.eslintrc.js', 'postcss.config.js', 'tailwind.config.js'],
 	rules: {
 		'react-hooks/rules-of-hooks': 'error',
 		'react-hooks/exhaustive-deps': 'warn',

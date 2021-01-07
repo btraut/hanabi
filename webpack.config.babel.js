@@ -85,7 +85,7 @@ const clientConfig = {
 			...baseModuleRules,
 			{
 				test: /\.(le|c)ss$/,
-				use: [MiniCssExtractPlugin.loader, 'css-loader', 'postcss-loader', 'less-loader'],
+				use: [MiniCssExtractPlugin.loader, 'css-loader', 'postcss-loader'],
 			},
 		],
 	},
@@ -95,10 +95,9 @@ const clientConfig = {
 				process.env.NODE_ENV === 'development' ? './css/main-[fullhash].css' : './css/main.css',
 		}),
 		new StyleLintPlugin({
-			context: SOURCE_PATH + '/less/',
-			files: '**/*.less',
+			context: SOURCE_PATH + '/css/',
+			files: '**/*.css',
 			failOnError: false,
-			syntax: 'less',
 		}),
 		new HtmlWebpackPlugin({
 			template: SOURCE_PATH + '/index.html',

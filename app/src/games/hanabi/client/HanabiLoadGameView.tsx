@@ -26,7 +26,7 @@ export default function HanabiLoadGameView(): JSX.Element | null {
 		<EnsureGameLoaded
 			game={hanabiContext.game}
 			redirectUrl="/hanabi"
-			fallback={<h1 className="Hanabi-Subtitle">Loading…</h1>}
+			fallback={<h1 className="text-3xl italic text-white">Loading…</h1>}
 			loadGameHandler={loadGameHandler}
 		>
 			<HanabiGameView />

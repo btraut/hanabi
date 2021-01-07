@@ -4,7 +4,7 @@ an online games platform
 
 ## Development environment
 
-Components are built using [TypeScript](https://www.typescriptlang.org/) and [webpack](https://webpack.github.io/). All styles are written using [LESS](http://lesscss.org/).
+Components are built using [TypeScript](https://www.typescriptlang.org/) and [webpack](https://webpack.github.io/).
 
 ### Pre-Installation
 

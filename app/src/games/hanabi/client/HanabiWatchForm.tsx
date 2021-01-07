@@ -1,5 +1,7 @@
 import { useHanabiContext } from 'app/src/games/hanabi/client/HanabiContext';
-import { FormEvent, useRef, useState } from 'react';
+import HanabiMenuButton from 'app/src/games/hanabi/client/HanabiMenuButton';
+import HanabiTextInput from 'app/src/games/hanabi/client/HanabiTextInput';
+import { ChangeEvent, FormEvent, useCallback, useState } from 'react';
 import { useHistory } from 'react-router';
 
 export default function HanabiWatchForm(): JSX.Element {
@@ -8,14 +10,17 @@ export default function HanabiWatchForm(): JSX.Element {
 
 	const [watchGameError, setWatchGameError] = useState('');
 
-	const codeInputRef = useRef<HTMLInputElement | null>(null);
+	const [codeValue, setCodeValue] = useState('');
+	const handleCodeInputChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+		setCodeValue(event.target.value);
+	}, []);
 
 	const handleWatchGameSubmit = async (event: FormEvent) => {
 		event.preventDefault();
 
-		if (codeInputRef.current?.value) {
+		if (codeValue) {
 			try {
-				const watchedGame = await hanabiContext.watch(codeInputRef.current?.value);
+				const watchedGame = await hanabiContext.watch(codeValue);
 				history.push(`/hanabi/${watchedGame.id}`);
 			} catch (error) {
 				setWatchGameError(error?.message || '');
@@ -25,23 +30,25 @@ export default function HanabiWatchForm(): JSX.Element {
 
 	return (
 		<>
-			{watchGameError && <p className="Hanabi-ErrorText">{watchGameError}</p>}
-			<form className="Hanabi-Form" onSubmit={handleWatchGameSubmit}>
-				<div className="Hanabi-FormContainer">
-					<label className="Hanabi-TextEntryLabel" htmlFor="HanabiGameWatchForm-Code">
+			{watchGameError && (
+				<p className="text-lg font-bold bg-red-900 text-white px-2 py-1">{watchGameError}</p>
+			)}
+			<form onSubmit={handleWatchGameSubmit}>
+				<div className="mb-10 grid grid-cols-form gap-4 items-center w-full">
+					<label
+						className="text-white font-bold text-2xl justify-end"
+						htmlFor="HanabiGameWatchForm-Code"
+					>
 						Code:
 					</label>
-					<input
-						className="Hanabi-TextEntryInput"
+					<HanabiTextInput
 						id="HanabiGameWatchForm-Code"
-						ref={codeInputRef}
-						type="text"
-						autoCorrect="off"
-						autoCapitalize="none"
+						value={codeValue}
+						onChange={handleCodeInputChange}
 					/>
 				</div>
-				<div className="Hanabi-FormButtons">
-					<input className="Hanabi-GameAction" type="submit" value="Join" />
+				<div className="flex justify-center">
+					<HanabiMenuButton label="Join" />
 				</div>
 			</form>
 		</>

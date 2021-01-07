@@ -13,10 +13,10 @@ export default function HanabiGameView(): JSX.Element | null {
 	}
 
 	return (
-		<div className="Hanabi-PlayerView">
+		<div className="flex flex-col items-center">
 			{game.gameData.stage === HanabiStage.Setup && <HanabiLobby />}
-			{game.gameData.stage === HanabiStage.Playing ||
-				(game.gameData.stage === HanabiStage.Finished && <HanabiBoard />)}
+			{(game.gameData.stage === HanabiStage.Playing ||
+				game.gameData.stage === HanabiStage.Finished) && <HanabiBoard />}
 		</div>
 	);
 }

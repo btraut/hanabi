@@ -1,6 +1,5 @@
 import 'cross-fetch/polyfill';
-import 'normalize.css';
-import 'app/less/main.less';
+import 'tailwindcss/tailwind.css';
 
 import App from 'app/src/components/App';
 import routes from 'app/src/routes';

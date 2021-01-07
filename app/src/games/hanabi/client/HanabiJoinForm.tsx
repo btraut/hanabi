@@ -1,19 +1,24 @@
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
-import { FormEvent, useRef, useState } from 'react';
+import HanabiMenuButton from 'app/src/games/hanabi/client/HanabiMenuButton';
+import HanabiTextInput from 'app/src/games/hanabi/client/HanabiTextInput';
+import { ChangeEvent, FormEvent, useCallback, useState } from 'react';
 
 export default function HanabiJoinForm(): JSX.Element {
 	const game = useHanabiGame();
 
 	const [addPlayerError, setAddPlayerError] = useState('');
 
-	const nameInputRef = useRef<HTMLInputElement | null>(null);
+	const [nameValue, setNameValue] = useState('');
+	const handleNameInputChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+		setNameValue(event.target.value);
+	}, []);
 
 	const handleAddPlayerSubmit = async (event: FormEvent) => {
 		event.preventDefault();
 
-		if (game && nameInputRef.current?.value) {
+		if (game && nameValue) {
 			try {
-				await game.join(nameInputRef.current?.value);
+				await game.join(nameValue);
 			} catch (error) {
 				setAddPlayerError(error?.message || '');
 			}
@@ -22,23 +27,25 @@ export default function HanabiJoinForm(): JSX.Element {
 
 	return (
 		<>
-			{addPlayerError && <p className="Hanabi-ErrorText">{addPlayerError}</p>}
-			<form className="Hanabi-Form" onSubmit={handleAddPlayerSubmit}>
-				<div className="Hanabi-FormContainer">
-					<label className="Hanabi-TextEntryLabel" htmlFor="HanabiJoinForm-Name">
+			{addPlayerError && (
+				<p className="text-lg font-bold bg-red-900 text-white px-2 py-1">{addPlayerError}</p>
+			)}
+			<form onSubmit={handleAddPlayerSubmit}>
+				<div className="mb-10 grid grid-cols-form gap-4 items-center w-full">
+					<label
+						className="text-white font-bold text-2xl justify-end"
+						htmlFor="HanabiJoinForm-Name"
+					>
 						Name:
 					</label>
-					<input
-						className="Hanabi-TextEntryInput"
+					<HanabiTextInput
 						id="HanabiJoinForm-Name"
-						ref={nameInputRef}
-						type="text"
-						autoCorrect="off"
-						autoCapitalize="none"
+						value={nameValue}
+						onChange={handleNameInputChange}
 					/>
 				</div>
-				<div className="Hanabi-FormButtons">
-					<input className="Hanabi-GameAction" type="submit" value="Join" />
+				<div className="flex justify-center">
+					<HanabiMenuButton label="Join" />
 				</div>
 			</form>
 		</>

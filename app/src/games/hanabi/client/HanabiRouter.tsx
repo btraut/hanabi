@@ -5,21 +5,19 @@ import { Route, Switch } from 'react-router-dom';
 
 export default function HanabiRouter(): JSX.Element {
 	return (
-		<div className="Hanabi-View">
-			<div className="Hanabi-Container">
-				<h1 className="Hanabi-Title">Hanabi</h1>
-				<Switch>
-					<Route path="/hanabi/join" exact>
-						<HanabiWatchForm />
-					</Route>
-					<Route path="/hanabi/:code" exact>
-						<HanabiLoadGameView />
-					</Route>
-					<Route path="/hanabi" exact>
-						<HanabiMainMenu />
-					</Route>
-				</Switch>
-			</div>
+		<div className="w-screen min-h-screen flex flex-col justify-center items-center p-20">
+			<h1 className="mb-10 text-8xl italic text-white text-center text-shadow">Hanabi</h1>
+			<Switch>
+				<Route path="/hanabi/join" exact>
+					<HanabiWatchForm />
+				</Route>
+				<Route path="/hanabi/:code" exact>
+					<HanabiLoadGameView />
+				</Route>
+				<Route path="/hanabi" exact>
+					<HanabiMainMenu />
+				</Route>
+			</Switch>
 		</div>
 	);
 }

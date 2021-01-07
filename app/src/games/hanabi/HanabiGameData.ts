@@ -1,3 +1,4 @@
+import { shuffle } from 'app/src/utils/shuffle';
 import { v1 as uuidv1 } from 'uuid';
 
 export const HANABI_GAME_TITLE = 'hanabi';
@@ -19,29 +20,29 @@ export const HANABI_TILES_IN_HAND: { [numPlayers: number]: number } = {
 
 export const HANABI_DEFAULT_TILE_POSITIONS: { [tileNumber: number]: Position } = [
 	{ x: 0, y: 0 },
-	{ x: 20, y: 0 },
-	{ x: 40, y: 0 },
-	{ x: 60, y: 0 },
-	{ x: 80, y: 0 },
+	{ x: 50, y: 0 },
+	{ x: 100, y: 0 },
+	{ x: 150, y: 0 },
+	{ x: 200, y: 0 },
 ];
 
 export enum HanabiStage {
-	Setup,
-	Playing,
-	Finished,
+	Setup = 'Setup',
+	Playing = 'Playing',
+	Finished = 'Finished',
 }
 
 export enum HanabiFinishedReason {
-	Won,
-	DiscardedFatalTile,
-	OutOfTurns,
-	OutOfLives,
+	Won = 'Won',
+	DiscardedFatalTile = 'DiscardedFatalTile',
+	OutOfTurns = 'OutOfTurns',
+	OutOfLives = 'OutOfLives',
 }
 
 export enum HanabiRuleSet {
-	Basic,
-	PurpleDistinct,
-	PurpleDecoy,
+	Basic = 'Basic',
+	PurpleDistinct = 'PurpleDistinct',
+	PurpleDecoy = 'PurpleDecoy',
 }
 
 export type HanabiTileColor = 'red' | 'blue' | 'green' | 'yellow' | 'white' | 'purple';
@@ -72,9 +73,9 @@ export interface HanabiPlayer {
 }
 
 export enum HanabiGameActionType {
-	Play,
-	Discard,
-	GiveClue,
+	Play = 'Play',
+	Discard = 'Discard',
+	GiveClue = 'GiveClue',
 }
 
 export interface HanabiGameActionPlay {
@@ -144,26 +145,6 @@ export function generatePlayer(data: Partial<HanabiPlayer> = {}): HanabiPlayer {
 	};
 }
 
-function shuffleInPlace<T>(array: T[]): T[] {
-	let currentIndex = array.length;
-	let temporaryValue;
-	let randomIndex;
-
-	// While there remain elements to shuffle...
-	while (0 !== currentIndex) {
-		// pick a remaining element...
-		randomIndex = Math.floor(Math.random() * currentIndex);
-		currentIndex -= 1;
-
-		// and swap it with the current element.
-		temporaryValue = array[currentIndex];
-		array[currentIndex] = array[randomIndex];
-		array[randomIndex] = temporaryValue;
-	}
-
-	return array;
-}
-
 export function generateRandomDeck(includePurple = false): HanabiTile[] {
 	const tiles: HanabiTile[] = [];
 
@@ -184,7 +165,5 @@ export function generateRandomDeck(includePurple = false): HanabiTile[] {
 		}
 	}
 
-	shuffleInPlace(tiles);
-
-	return tiles;
+	return shuffle(tiles);
 }

@@ -32,6 +32,7 @@ import UserConnectionListener, {
 	UserConnectionChange,
 } from 'app/src/games/server/UserConnectionListener';
 import ServerSocketManager from 'app/src/utils/server/SocketManager';
+import { shuffle } from 'app/src/utils/shuffle';
 
 // https://davidgomes.com/pick-omit-over-union-types-in-typescript/
 type DistributiveOmit<T, K extends keyof T> = T extends unknown ? Omit<T, K> : never;
@@ -313,6 +314,10 @@ export default class HanabiGame extends Game {
 				});
 			}
 		}
+
+		// Set up turn order.
+		this._gameData.turnOrder = players.map((p) => p.id);
+		shuffle(this._gameData.turnOrder);
 
 		// Send success message.
 		this._sendMessage(userId, {
