@@ -1,7 +1,6 @@
 import 'cross-fetch/polyfill';
 
-import EscapeGame from 'app/src/games/escape/server/EscapeGame';
-import HanabiServer from 'app/src/games/hanabi/server/HanabiServer';
+import HanabiGameFactory from 'app/src/games/hanabi/server/HanabiGameFactory';
 import GameManager from 'app/src/games/server/GameManager';
 import routes from 'app/src/routes';
 import Logger from 'app/src/utils/server/Logger';
@@ -163,8 +162,11 @@ try {
 		setInterval(() => gameManager.prune(), 1000 * 60 * 10);
 
 		// Add games.
-		gameManager.addGameFactory(EscapeGame.title, EscapeGame.factory);
-		gameManager.addGameFactory(HanabiServer.title, HanabiServer.factory);
+		// gameManager.addGameFactory(EscapeGame.title, EscapeGame.factory);
+		gameManager.addGameFactory(new HanabiGameFactory());
+
+		// Restore existing games.
+		await gameManager.restoreGames();
 
 		// Notify!
 		Logger.info(

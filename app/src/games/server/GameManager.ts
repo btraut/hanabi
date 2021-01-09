@@ -1,8 +1,10 @@
 import { GAME_MANAGER_SCOPE, GameManagerMessage } from 'app/src/games/GameManagerMessages';
 import Game from 'app/src/games/server/Game';
+import GameFactory from 'app/src/games/server/GameFactory';
 import SocketManager from 'app/src/utils/server/SocketManager';
+import { existsSync, promises } from 'fs';
 
-type GameFactory = (creatorId: string, socketManager: SocketManager<any>) => Game;
+declare const SAVED_GAMES_PATH: string;
 
 export default class GameManager {
 	private _gameFactories: { [title: string]: GameFactory } = {};
@@ -25,12 +27,89 @@ export default class GameManager {
 		}
 	}
 
-	public addGameFactory(title: string, factory: GameFactory): void {
-		this._gameFactories[title] = factory;
+	public addGameFactory(factory: GameFactory): void {
+		this._gameFactories[factory.title] = factory;
 	}
 
 	public removeGameFactory(title: string): void {
 		delete this._gameFactories[title];
+	}
+
+	public async restoreGames(): Promise<void> {
+		const gameData = await this._readSavedGameData();
+
+		for (const gameName in gameData) {
+			if (!this._gameFactories[gameName]) {
+				throw new Error(`No factory for game "${gameName}"`);
+			}
+
+			for (const gameFileData of gameData[gameName]) {
+				const game = this._gameFactories[gameName].hydrate(gameFileData, this._socketManager);
+				game.saveGameDelegate = this;
+				this._games[game.id] = game;
+
+				console.log(`Restoring ${gameName} game ${game.id}.`);
+			}
+		}
+	}
+
+	private async _readSavedGameData(): Promise<{ [gameName: string]: string[] }> {
+		const { lstat, readdir, readFile } = promises;
+
+		const gameData: { [gameName: string]: string[] } = {};
+		const gameDirs = await readdir(SAVED_GAMES_PATH);
+
+		for (const gameName of gameDirs) {
+			const stat = await lstat(`${SAVED_GAMES_PATH}/${gameName}`);
+
+			if (!stat.isDirectory()) {
+				throw new Error('Only dirs expected in saved games folder.');
+			}
+
+			gameData[gameName] = [];
+
+			const gameFiles = await readdir(`${SAVED_GAMES_PATH}/${gameName}`);
+
+			for (const gameFile of gameFiles) {
+				const gameFileData = await readFile(`${SAVED_GAMES_PATH}/${gameName}/${gameFile}`, 'utf8');
+				gameData[gameName].push(gameFileData);
+			}
+		}
+
+		return gameData;
+	}
+
+	public async saveGames(): Promise<void> {
+		await Promise.all(Object.values(this._games).map(this.saveGame));
+	}
+
+	public async saveGame(game: Game): Promise<void> {
+		const { writeFile, mkdir } = promises;
+
+		const serialized = game.serialize();
+		const path = `${SAVED_GAMES_PATH}/${game.title}/${game.id}`;
+
+		if (!existsSync(SAVED_GAMES_PATH)) {
+			await mkdir(SAVED_GAMES_PATH);
+		}
+
+		if (!existsSync(`${SAVED_GAMES_PATH}/${game.title}`)) {
+			await mkdir(`${SAVED_GAMES_PATH}/${game.title}`);
+		}
+
+		if (serialized !== null) {
+			await writeFile(path, serialized);
+		}
+	}
+
+	public async deleteGame(game: Game): Promise<void> {
+		const { rm } = promises;
+
+		const path = `${SAVED_GAMES_PATH}/${game.title}/${game.id}`;
+
+		if (!existsSync(path)) {
+			await rm(path);
+		}
 	}
 
 	private _createGame(title: string, watch: boolean, userId: string) {
@@ -45,7 +124,8 @@ export default class GameManager {
 		}
 
 		// Make the game.
-		const game = this._gameFactories[title](userId, this._socketManager);
+		const game = this._gameFactories[title].create(userId, this._socketManager);
+		game.saveGameDelegate = this;
 		this._games[game.id] = game;
 
 		// Add the watcher.
@@ -89,6 +169,7 @@ export default class GameManager {
 
 	public _removeGame(id: string): void {
 		this._games[id].cleanUp();
+		this.deleteGame(this._games[id]);
 		delete this._games[id];
 	}
 

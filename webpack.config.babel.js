@@ -138,6 +138,7 @@ const serverConfig = {
 			PORT: JSON.stringify(process.env.PORT),
 			ENV_PATH: JSON.stringify('../../.env'),
 			PUBLIC_ASSETS_PATH: JSON.stringify('../client'),
+			SAVED_GAMES_PATH: JSON.stringify(BUILD_PATH + '/saved-games'),
 			VIEWS_PATH: JSON.stringify('./views'),
 		}),
 	],

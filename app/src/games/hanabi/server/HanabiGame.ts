@@ -26,7 +26,7 @@ import {
 	RemovePlayerMessage,
 	StartGameMessage,
 } from 'app/src/games/hanabi/HanabiMessages';
-import Game from 'app/src/games/server/Game';
+import Game, { GameSerialized } from 'app/src/games/server/Game';
 import GameMessenger from 'app/src/games/server/GameMessenger';
 import UserConnectionListener, {
 	UserConnectionChange,
@@ -37,14 +37,13 @@ import { shuffle } from 'app/src/utils/shuffle';
 // https://davidgomes.com/pick-omit-over-union-types-in-typescript/
 type DistributiveOmit<T, K extends keyof T> = T extends unknown ? Omit<T, K> : never;
 
-export default class HanabiGame extends Game {
-	public static title = HANABI_GAME_TITLE;
+export interface HanabiGameSerialized extends GameSerialized {
+	data: HanabiGameData;
+}
 
-	public static factory(
-		userId: string,
-		socketManager: ServerSocketManager<HanabiMessage>,
-	): HanabiGame {
-		return new HanabiGame(userId, socketManager);
+export default class HanabiGame extends Game {
+	get title(): string {
+		return HANABI_GAME_TITLE;
 	}
 
 	private _gameData: HanabiGameData = generateHanabiGameData();
@@ -52,8 +51,20 @@ export default class HanabiGame extends Game {
 	private _messenger: GameMessenger<HanabiMessage>;
 	private _userConnectionListener: UserConnectionListener;
 
-	constructor(userId: string, socketManager: ServerSocketManager<HanabiMessage>) {
-		super(userId);
+	constructor(
+		creatorIdOrData: string | HanabiGameSerialized,
+		socketManager: ServerSocketManager<HanabiMessage>,
+	) {
+		super(typeof creatorIdOrData === 'string' ? creatorIdOrData : creatorIdOrData.creatorId);
+
+		if (typeof creatorIdOrData !== 'string') {
+			this._id = creatorIdOrData.id;
+			this._code = creatorIdOrData.code;
+			this._creatorId = creatorIdOrData.creatorId;
+			this._created = new Date(creatorIdOrData.created);
+			this._updated = new Date(creatorIdOrData.updated);
+			this._gameData = creatorIdOrData.data;
+		}
 
 		this._messenger = new GameMessenger(socketManager, getScope(HANABI_GAME_TITLE, this.id));
 		this._messenger.connect(this._handleMessage);
@@ -65,6 +76,15 @@ export default class HanabiGame extends Game {
 	public cleanUp(): void {
 		this._messenger.disconnect();
 		this._userConnectionListener.stop();
+	}
+
+	public serialize(): string | null {
+		const baseSerialized = this._getBaseData();
+		const serialized: HanabiGameSerialized = {
+			...baseSerialized,
+			data: this._gameData,
+		};
+		return JSON.stringify(serialized);
 	}
 
 	private _getAllPlayerAndWatcherIds(): string[] {
