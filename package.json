@@ -5,10 +5,8 @@
 		"clean": "rimraf ./.build",
 		"build": "webpack",
 		"watch": "nodemon --watch webpack.config.babel.js --exec \"webpack -w\"",
-		"lint": "yarn run eslint && yarn run stylelint",
 		"eslint": "eslint . --ext .js,.jsx,.ts,.tsx",
 		"eslint-fix": "eslint . --fix --ext .js,.jsx,.ts,.tsx",
-		"stylelint": "stylelint --config ./.stylelintrc **/*.css",
 		"start": "nodemon --watch .build .build/server/server.js"
 	},
 	"dependencies": {
@@ -90,9 +88,6 @@
 		"postcss-loader": "^4.1.0",
 		"rimraf": "^3.0.2",
 		"style-loader": "^2.0.0",
-		"stylelint": "^13.8.0",
-		"stylelint-config-standard": "^20.0.0",
-		"stylelint-webpack-plugin": "^2.1.1",
 		"tailwindcss": "^2.0.2",
 		"tailwindcss-typography": "^3.1.0",
 		"ts-loader": "^8.0.12",

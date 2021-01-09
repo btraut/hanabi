@@ -7,7 +7,6 @@ import dotenv from 'dotenv';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import path from 'path';
-import StyleLintPlugin from 'stylelint-webpack-plugin';
 import webpack from 'webpack';
 import nodeExternals from 'webpack-node-externals';
 
@@ -93,11 +92,6 @@ const clientConfig = {
 		new MiniCssExtractPlugin({
 			filename:
 				process.env.NODE_ENV === 'development' ? './css/main-[fullhash].css' : './css/main.css',
-		}),
-		new StyleLintPlugin({
-			context: SOURCE_PATH + '/css/',
-			files: '**/*.css',
-			failOnError: false,
 		}),
 		new HtmlWebpackPlugin({
 			template: SOURCE_PATH + '/index.html',

@@ -31,11 +31,13 @@ export default function HanabiLobby(): JSX.Element {
 
 	return (
 		<>
-			<p className="max-w-screen-md mb-10 bg-gray-400 font-bold text-lg text-center">
-				<a className="inline-block px-5 py-3 text-blue-700 hover:text-blue-800" href={link}>
-					{link}
-				</a>
-			</p>
+			{userIsJoined && (
+				<p className="max-w-screen-md mb-10 bg-gray-400 font-bold text-lg text-center">
+					<a className="inline-block px-5 py-3 text-blue-700 hover:text-blue-800" href={link}>
+						{link}
+					</a>
+				</p>
+			)}
 			{players.length > 0 && (
 				<ul className="mb-10 flex justify-center">
 					{players.map((player) => (
