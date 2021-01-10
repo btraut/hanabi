@@ -10,32 +10,33 @@ import path from 'path';
 import webpack, { Configuration } from 'webpack';
 import nodeExternals from 'webpack-node-externals';
 
-// Load environment variables from .env file.
-dotenv.config({ path: path.resolve(__dirname, './.env') });
-
-const isDevelopment = process.env.NODE_ENV === 'development';
-
 // Define config consts.
-const SOURCE_PATH = __dirname + '/app';
-const BUILD_PATH = __dirname + '/.build';
-const CLIENT_BUILD_PATH = BUILD_PATH + '/client';
-const SERVER_BUILD_PATH = BUILD_PATH + '/server';
+const ROOT_PATH = __dirname;
+const APP_PATH = path.resolve(ROOT_PATH, 'app');
+const BUILD_PATH = path.resolve(ROOT_PATH, '.build');
+const CLIENT_BUILD_PATH = path.resolve(BUILD_PATH, 'client');
+const SERVER_BUILD_PATH = path.resolve(BUILD_PATH, 'server');
 
 const baseConfig: Partial<Configuration> = {
-	context: SOURCE_PATH,
+	context: ROOT_PATH,
 	devtool: 'source-map',
 	mode: process.env.NODE_ENV as 'development' | 'production',
 	resolve: {
 		extensions: ['.ts', '.tsx', '.js'],
-		modules: [__dirname + '/node_modules', __dirname],
+		modules: [path.resolve(ROOT_PATH, 'node_modules'), ROOT_PATH],
 	},
 };
+
+// Load environment variables from .env file.
+dotenv.config({ path: path.resolve(ROOT_PATH, '.env') });
+
+const isDevelopment = process.env.NODE_ENV === 'development';
 
 const clientConfig: Configuration = {
 	...baseConfig,
 
 	entry: {
-		client: './src/client.tsx',
+		client: path.resolve(APP_PATH, 'src/client.tsx'),
 	},
 	output: {
 		path: CLIENT_BUILD_PATH,
@@ -88,10 +89,10 @@ const clientConfig: Configuration = {
 	},
 	plugins: [
 		new MiniCssExtractPlugin({
-			filename: isDevelopment ? './css/main-[fullhash].css' : './css/main.css',
+			filename: isDevelopment ? 'css/main-[fullhash].css' : 'css/main.css',
 		}),
 		new HtmlWebpackPlugin({
-			template: SOURCE_PATH + '/index.html',
+			template: path.resolve(APP_PATH, 'index.html'),
 			filename: '../server/views/index.html',
 			inject: true,
 			minify: {
@@ -105,7 +106,8 @@ const clientConfig: Configuration = {
 		new CopyWebpackPlugin({
 			patterns: [
 				{
-					from: `${SOURCE_PATH}/images/**/*`,
+					context: APP_PATH,
+					from: 'images/**/*',
 					to: CLIENT_BUILD_PATH,
 				},
 			],
@@ -117,7 +119,7 @@ const serverConfig: Configuration = {
 	...baseConfig,
 
 	entry: {
-		server: './src/server.tsx',
+		server: path.resolve(APP_PATH, 'src/server.tsx'),
 	},
 	output: {
 		path: SERVER_BUILD_PATH,
@@ -145,10 +147,10 @@ const serverConfig: Configuration = {
 		new webpack.DefinePlugin({
 			DOMAIN_BASE: JSON.stringify(process.env.DOMAIN_BASE),
 			PORT: JSON.stringify(process.env.PORT),
-			ENV_PATH: JSON.stringify('../../.env'),
-			PUBLIC_ASSETS_PATH: JSON.stringify('../client'),
-			SAVED_GAMES_PATH: JSON.stringify(BUILD_PATH + '/saved-games'),
-			VIEWS_PATH: JSON.stringify('./views'),
+			ENV_PATH: JSON.stringify(path.resolve(ROOT_PATH, '.env')),
+			PUBLIC_ASSETS_PATH: JSON.stringify(CLIENT_BUILD_PATH),
+			SAVED_GAMES_PATH: JSON.stringify(path.resolve(SERVER_BUILD_PATH, 'saved-games')),
+			VIEWS_PATH: JSON.stringify(path.resolve(SERVER_BUILD_PATH, 'views')),
 		}),
 	],
 	node: {

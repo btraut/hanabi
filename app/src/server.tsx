@@ -14,7 +14,6 @@ import express from 'express';
 import * as http from 'http';
 import methodOverride from 'method-override';
 import morgan from 'morgan';
-import * as path from 'path';
 // import { matchPath } from 'react-router';
 import * as url from 'url';
 import { v1 as uuidv1 } from 'uuid';
@@ -37,7 +36,7 @@ try {
 		});
 
 		// Load environment variables from .env file.
-		dotenv.config({ path: path.resolve(__dirname, ENV_PATH) });
+		dotenv.config({ path: ENV_PATH });
 
 		// Enable logs.
 		Logger.init();
@@ -49,7 +48,7 @@ try {
 		app.enable('strict routing');
 		app.enable('trust proxy');
 		app.set('port', process.env.PORT || 3000);
-		app.set('views', path.resolve(__dirname, VIEWS_PATH));
+		app.set('views', VIEWS_PATH);
 		app.engine('html', ejs.renderFile);
 		app.set('view engine', 'html');
 		app.use(compress());
@@ -74,7 +73,7 @@ try {
 		}
 
 		// Handle statics.
-		app.use(express.static(path.resolve(__dirname, PUBLIC_ASSETS_PATH), { maxAge: 31557600000 }));
+		app.use(express.static(PUBLIC_ASSETS_PATH, { maxAge: 31557600000 }));
 
 		// Handle cookies.
 		app.use(cookieParser(process.env.SESSION_COOKIE_SECRET!));
