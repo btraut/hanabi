@@ -3,11 +3,13 @@ import {
 	generateHanabiGameData,
 	HANABI_GAME_TITLE,
 	HanabiGameData,
+	Position,
 } from 'app/src/games/hanabi/HanabiGameData';
 import {
 	AddPlayerResponseMessage,
 	getScope,
 	HanabiMessage,
+	MoveTileResponseMessage,
 	RefreshGameDataMessage,
 	RemovePlayerResponseMessage,
 	StartGameResponseMessage,
@@ -171,6 +173,39 @@ export default class HanabiGame extends Game {
 
 		if (startGameResponseMessage.data.error) {
 			throw new Error(startGameResponseMessage.data.error);
+		}
+
+		// After responding to our initial message, the server will also send a
+		// RefreshGameData message. We'll handle that in a separate handler.
+	}
+
+	public async moveTile(userId: string, tileId: string, newPosition: Position): Promise<void> {
+		const tileLocation = this._gameData.players[userId].tileLocations.find(
+			(tl) => tl.tile.id === tileId,
+		);
+
+		if (!tileLocation) {
+			throw new Error('Invalid player or tile id.');
+		}
+
+		tileLocation.position = { ...newPosition };
+
+		// Emit an early onUpdate. We'll update again after we get a response
+		// from the server, but we want to optimistically move the tile now.
+		this.onUpdate.emit();
+
+		this._socketManager.send({
+			scope: getScope(HANABI_GAME_TITLE, this._id),
+			type: 'MoveTileMessage',
+			data: { id: tileId, position: newPosition },
+		});
+
+		const moveTileResponseMessage = await this._socketManager.expectMessageOfType<MoveTileResponseMessage>(
+			'MoveTileResponseMessage',
+		);
+
+		if (moveTileResponseMessage.data.error) {
+			throw new Error(moveTileResponseMessage.data.error);
 		}
 
 		// After responding to our initial message, the server will also send a

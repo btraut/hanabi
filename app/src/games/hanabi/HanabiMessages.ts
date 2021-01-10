@@ -3,6 +3,7 @@ import {
 	HanabiRuleSet,
 	HanabiTileColor,
 	HanabiTileNumber,
+	Position,
 } from 'app/src/games/hanabi/HanabiGameData';
 import { SocketMessage } from 'app/src/models/SocketMessage';
 
@@ -59,10 +60,7 @@ export type GiveClueMessage = SocketMessage<
 >;
 export type GiveClueResponseMessage = SocketMessage<'GiveClueResponseMessage', { error?: string }>;
 
-export type MoveTileMessage = SocketMessage<
-	'MoveTileMessage',
-	{ id: string; x: number; y: number }
->;
+export type MoveTileMessage = SocketMessage<'MoveTileMessage', { id: string; position: Position }>;
 export type MoveTileResponseMessage = SocketMessage<'MoveTileResponseMessage', { error?: string }>;
 
 export type HanabiMessage =

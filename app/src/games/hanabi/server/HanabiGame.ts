@@ -676,9 +676,14 @@ export default class HanabiGame extends Game {
 			return;
 		}
 
-		const { x, y } = message.data;
+		const { position } = message.data;
 
-		if (x > HANABI_MAX_POSITION.x || y > HANABI_MAX_POSITION.y || x < 0 || y < 0) {
+		if (
+			position.x > HANABI_MAX_POSITION.x ||
+			position.y > HANABI_MAX_POSITION.y ||
+			position.x < 0 ||
+			position.y < 0
+		) {
 			this._sendMessage(userId, {
 				type: 'MoveTileResponseMessage',
 				data: { error: 'Invalid position.' },
@@ -686,11 +691,11 @@ export default class HanabiGame extends Game {
 		}
 
 		// Move the tile.
-		tileLocation.position = { x, y };
+		tileLocation.position = position;
 
 		// Send success message.
 		this._sendMessage(userId, {
-			type: 'PlayTileResponseMessage',
+			type: 'MoveTileResponseMessage',
 			data: {},
 		});
 

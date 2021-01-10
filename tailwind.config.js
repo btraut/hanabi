@@ -42,7 +42,7 @@ module.exports = {
 				tiles: '500px',
 			},
 			height: {
-				tiles: '300px',
+				tiles: '120px',
 			},
 		},
 	},
