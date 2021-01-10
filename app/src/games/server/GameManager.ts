@@ -57,6 +57,11 @@ export default class GameManager {
 		const { lstat, readdir, readFile } = promises;
 
 		const gameData: { [gameName: string]: string[] } = {};
+
+		if (!existsSync(SAVED_GAMES_PATH)) {
+			return gameData;
+		}
+
 		const gameDirs = await readdir(SAVED_GAMES_PATH);
 
 		for (const gameName of gameDirs) {

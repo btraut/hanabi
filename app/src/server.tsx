@@ -2,7 +2,7 @@ import 'cross-fetch/polyfill';
 
 import HanabiGameFactory from 'app/src/games/hanabi/server/HanabiGameFactory';
 import GameManager from 'app/src/games/server/GameManager';
-import routes from 'app/src/routes';
+// import routes from 'app/src/routes';
 import Logger from 'app/src/utils/server/Logger';
 import SocketManager from 'app/src/utils/server/SocketManager';
 import * as bodyParser from 'body-parser';
@@ -15,7 +15,7 @@ import * as http from 'http';
 import methodOverride from 'method-override';
 import morgan from 'morgan';
 import * as path from 'path';
-import { matchPath } from 'react-router';
+// import { matchPath } from 'react-router';
 import * as url from 'url';
 import { v1 as uuidv1 } from 'uuid';
 
@@ -99,25 +99,25 @@ try {
 		});
 
 		// Render the client.
-		app.get('*', async (req: express.Request, res: express.Response) => {
+		app.get('*', async (_req: express.Request, res: express.Response) => {
 			// Match url to path.
-			const matchedRoute = routes.find(
-				(route) => !!matchPath(req.url, { path: route.path, exact: true }),
-			);
+			// const matchedRoute = routes.find(
+			// 	(route) => !!matchPath(req.url, { path: route.path, exact: true }),
+			// );
 
 			// Call custom preload method.
-			if (matchedRoute && matchedRoute.component && matchedRoute.component.preload) {
-				await matchedRoute.component.preload();
-			}
+			// if (matchedRoute && matchedRoute.component && matchedRoute.component.preload) {
+			// 	await matchedRoute.component.preload();
+			// }
 
 			// Figure out the page title.
-			let title = 'Ten Four Games';
-			if (matchedRoute && matchedRoute.component && matchedRoute.component.title) {
-				title =
-					typeof matchedRoute.component.title === 'string'
-						? matchedRoute.component.title
-						: await matchedRoute.component.title();
-			}
+			// let title = 'Ten Four Games';
+			// if (matchedRoute && matchedRoute.component && matchedRoute.component.title) {
+			// 	title =
+			// 		typeof matchedRoute.component.title === 'string'
+			// 			? matchedRoute.component.title
+			// 			: await matchedRoute.component.title();
+			// }
 
 			// Initialize a context obj to pass-by-ref into StaticRouter. Unfortunately
 			// there are no types for this.
@@ -139,7 +139,7 @@ try {
 
 			// Create the response via pug view.
 			return res.render('index.html', {
-				title,
+				title: 'Ten Four Games', // title,
 				content: '', // markup,
 				preloadedState: {}, // store.getState(),
 			});

@@ -10,7 +10,7 @@ const HomePage: Page = () => {
 	return (
 		<div className="HomePage">
 			<div className="HomePage-Container">
-				<h1 className="HomePage-Title">Ten Four</h1>
+				<h1 className="HomePage-Title">Ten Four Games</h1>
 				<ul className="HomePage-Games">
 					<li className="HomePage-Game">
 						<Link to="/escape" className="HomePage-GameLink">
