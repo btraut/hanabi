@@ -222,7 +222,7 @@ export default class HanabiGame extends Game {
 		});
 
 		// Send the updated state to all players/watchers.
-		this._sendMessage(this._getAllPlayerAndWatcherIds(), {
+		this._sendMessage([userId, ...this._getAllPlayerAndWatcherIds()], {
 			type: 'RefreshGameDataMessage',
 			data: this._gameData,
 		});
