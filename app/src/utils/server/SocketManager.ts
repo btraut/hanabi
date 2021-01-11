@@ -88,9 +88,15 @@ export default class ServerSocketManager<MessageType extends SocketMessageBase> 
 		delete this._authenticatedUsers[socketId];
 
 		// Remove the socket from the user's list.
-		this._authenticatedSockets[socketId] = this._authenticatedSockets[userId].filter(
-			(id) => id !== socketId,
-		);
+		if (this._authenticatedSockets[socketId]) {
+			this._authenticatedSockets[socketId] = this._authenticatedSockets[userId].filter(
+				(id) => id !== socketId,
+			);
+
+			if (this._authenticatedSockets[socketId].length === 0) {
+				delete this._authenticatedSockets[socketId];
+			}
+		}
 
 		this._onDisconnect.emit({ userId });
 	};
