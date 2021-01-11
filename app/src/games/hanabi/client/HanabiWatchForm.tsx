@@ -31,7 +31,7 @@ export default function HanabiWatchForm(): JSX.Element {
 	return (
 		<>
 			{watchGameError && (
-				<p className="text-lg font-bold bg-red-900 text-white px-2 py-1">{watchGameError}</p>
+				<p className="mb-10 text-lg font-bold bg-red-900 text-white px-2 py-1">{watchGameError}</p>
 			)}
 			<form onSubmit={handleWatchGameSubmit}>
 				<div className="mb-10 grid grid-cols-form gap-4 items-center w-full">
