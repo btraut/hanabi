@@ -25,6 +25,7 @@ export default class ServerSocketManager<MessageType extends SocketMessageBase> 
 	private _server: SocketServer;
 
 	private _authenticatedUsers: { [socketId: string]: string } = {};
+	private _authenticatedSockets: { [userId: string]: string[] } = {};
 
 	public _onConnect = new PubSub<{ socketId: string }>();
 	public _onAuthenticate = new PubSub<{ userId: string }>();
@@ -86,6 +87,11 @@ export default class ServerSocketManager<MessageType extends SocketMessageBase> 
 		const userId = this._authenticatedUsers[socketId];
 		delete this._authenticatedUsers[socketId];
 
+		// Remove the socket from the user's list.
+		this._authenticatedSockets[socketId] = this._authenticatedSockets[userId].filter(
+			(id) => id !== socketId,
+		);
+
 		this._onDisconnect.emit({ userId });
 	};
 
@@ -94,7 +100,7 @@ export default class ServerSocketManager<MessageType extends SocketMessageBase> 
 
 		// Capture all SocketManager messages. Emit the rest.
 		if (message.scope === SOCKET_MANAGER_SCOPE) {
-			this._handleSocketManagerMessate(socketId, message);
+			this._handleSocketManagerMessage(socketId, message);
 		} else {
 			if (this._authenticatedUsers[socketId]) {
 				this._onMessage.emit({ userId: this._authenticatedUsers[socketId], message });
@@ -102,7 +108,7 @@ export default class ServerSocketManager<MessageType extends SocketMessageBase> 
 		}
 	};
 
-	private _handleSocketManagerMessate(socketId: string, message: MessageTypeWithAuth<MessageType>) {
+	private _handleSocketManagerMessage(socketId: string, message: MessageTypeWithAuth<MessageType>) {
 		switch (message.type) {
 			case 'AuthenticateSocketMessage':
 				this._handleAuthenticateMessage(socketId, message as AuthenticateSocketMessage);
@@ -117,19 +123,8 @@ export default class ServerSocketManager<MessageType extends SocketMessageBase> 
 	public send(userIdOrIds: string | readonly string[], message: MessageType): void {
 		const userIds = typeof userIdOrIds === 'string' ? [userIdOrIds] : userIdOrIds;
 
-		const authenticatedSockets = Object.keys(this._authenticatedUsers).reduce<{
-			[userId: string]: string[];
-		}>((sockets, socketId) => {
-			const userId = this._authenticatedUsers[socketId];
-			if (!sockets[userId]) {
-				sockets[userId] = [];
-			}
-			sockets[userId].push(socketId);
-			return sockets;
-		}, {});
-
 		for (const userId of userIds) {
-			const socketIds = authenticatedSockets[userId];
+			const socketIds = this._authenticatedSockets[userId];
 
 			if (socketIds && socketIds.length > 0) {
 				console.log(`Sending message(s) to ${userId}:`, message);
@@ -165,6 +160,12 @@ export default class ServerSocketManager<MessageType extends SocketMessageBase> 
 			const userId = this._tokens[token].userId;
 			delete this._tokens[token];
 			this._authenticatedUsers[socketId] = userId;
+
+			if (!this._authenticatedSockets[userId]) {
+				this._authenticatedSockets[userId] = [];
+			}
+
+			this._authenticatedSockets[userId].push(socketId);
 
 			this._onAuthenticate.emit({ userId });
 

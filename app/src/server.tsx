@@ -81,7 +81,7 @@ try {
 			// Check if the user has a cookie.
 			const sessionCookie = req.cookies && req.cookies[SESSION_COOKIE_NAME];
 			if (!sessionCookie) {
-				res.cookie(SESSION_COOKIE_NAME, uuidv1(), { maxAge: 900000 });
+				res.cookie(SESSION_COOKIE_NAME, uuidv1(), { expires: new Date(253402300000000) });
 			}
 
 			next();
