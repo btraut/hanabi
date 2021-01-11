@@ -12,16 +12,18 @@ export default function HanabiBoard(): JSX.Element {
 	}
 
 	return (
-		<div>
+		<div className="grid grid-flow-col gap-x-10">
+			<div>
+				{game.gameData.turnOrder.map((id, index) => (
+					<div
+						className={index < game.gameData.turnOrder.length - 1 ? 'mb-10' : ''}
+						key={`player-${id}`}
+					>
+						<HanabiPlayerTiles id={id} />
+					</div>
+				))}
+			</div>
 			<HanabiPlayedTiles />
-			{game.gameData.turnOrder.map((id, index) => (
-				<div
-					className={index < game.gameData.turnOrder.length - 1 ? 'mb-10' : ''}
-					key={`Player-${id}`}
-				>
-					<HanabiPlayerTiles id={id} />
-				</div>
-			))}
 		</div>
 	);
 }

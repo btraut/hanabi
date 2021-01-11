@@ -56,6 +56,15 @@ export interface HanabiTile {
 	number: HanabiTileNumber;
 }
 
+export const tileColorClasses = {
+	red: 'text-red-500',
+	blue: 'text-blue-500',
+	green: 'text-green-500',
+	yellow: 'text-yellow-500',
+	white: 'text-white',
+	purple: 'text-purple-500',
+};
+
 export interface Position {
 	x: number;
 	y: number;

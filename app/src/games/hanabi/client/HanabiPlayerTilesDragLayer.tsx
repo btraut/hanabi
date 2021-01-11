@@ -44,7 +44,7 @@ export default function HanabiPlayerTilesDragLayer(): JSX.Element | null {
 				className="absolute"
 				style={{ top: topClamped, left: leftClamped }}
 			>
-				<HanabiTileView tile={tileLocation.tile} hidden />
+				<HanabiTileView color={tileLocation.tile.color} number={tileLocation.tile.number} hidden />
 			</div>
 		);
 	}

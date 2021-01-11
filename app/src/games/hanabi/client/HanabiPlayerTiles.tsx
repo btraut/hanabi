@@ -73,7 +73,11 @@ export default function HanabiPlayerTiles({ id }: Props): JSX.Element {
 							{ownTiles ? (
 								<HanabiDraggableTileView tile={tileLocation.tile} hidden={ownTiles} />
 							) : (
-								<HanabiTileView tile={tileLocation.tile} hidden={ownTiles} />
+								<HanabiTileView
+									color={tileLocation.tile.color}
+									number={tileLocation.tile.number}
+									hidden={ownTiles}
+								/>
 							)}
 						</div>
 					))}

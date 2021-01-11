@@ -30,11 +30,11 @@ export default function HanabiDraggableTileView({ tile, hidden = false }: Props)
 	return (
 		<div
 			ref={dragRef}
-			className={classnames('cursor-move', {
+			className={classnames({
 				hidden: isDragging,
 			})}
 		>
-			<HanabiTileView tile={tile} hidden={hidden} />
+			<HanabiTileView color={tile.color} number={tile.number} hidden={hidden} draggable />
 		</div>
 	);
 }

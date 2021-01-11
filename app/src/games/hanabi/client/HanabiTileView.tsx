@@ -1,29 +1,35 @@
-import { HanabiTile } from 'app/src/games/hanabi/HanabiGameData';
+import {
+	HanabiTileColor,
+	HanabiTileNumber,
+	tileColorClasses,
+} from 'app/src/games/hanabi/HanabiGameData';
 import classnames from 'classnames';
 
 interface Props {
-	tile: HanabiTile;
+	color: HanabiTileColor;
+	number: HanabiTileNumber;
 	hidden?: boolean;
+	draggable?: boolean;
 }
 
-const colorClasses = {
-	red: 'text-red-500',
-	blue: 'text-blue-500',
-	green: 'text-green-500',
-	yellow: 'text-yellow-500',
-	white: 'text-white',
-	purple: 'text-purple-500',
-};
-
-export default function HanabiTileView({ tile, hidden = false }: Props): JSX.Element {
+export default function HanabiTileView({
+	color,
+	number,
+	hidden = false,
+	draggable = false,
+}: Props): JSX.Element {
 	return (
 		<div
 			className={classnames([
 				'bg-black rounded-lg text-3xl font-bold w-10 h-12 flex items-center justify-center select-none',
-				colorClasses[tile.color],
+				tileColorClasses[color],
+				{
+					'cursor-default': !draggable,
+					'cursor-move': draggable,
+				},
 			])}
 		>
-			{hidden ? '' : String(tile.number)}
+			{hidden ? '' : String(number)}
 		</div>
 	);
 }
