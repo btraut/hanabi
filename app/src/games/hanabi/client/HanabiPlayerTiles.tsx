@@ -1,6 +1,13 @@
 import { useSocket } from 'app/src/components/SocketContext';
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
-import { hanabiDragTypes, HanabiTileDragItem } from 'app/src/games/hanabi/client/HanabiDragTypes';
+import HanabiDraggableTileView from 'app/src/games/hanabi/client/HanabiDraggableTileView';
+import {
+	CONTAINER_SIZE,
+	hanabiDragTypes,
+	HanabiTileDragItem,
+	TILE_SIZE,
+} from 'app/src/games/hanabi/client/HanabiDragTypes';
+import HanabiPlayerTilesDragLayer from 'app/src/games/hanabi/client/HanabiPlayerTilesDragLayer';
 import HanabiTileView from 'app/src/games/hanabi/client/HanabiTileView';
 import classnames from 'classnames';
 import { useDrop } from 'react-dnd';
@@ -31,8 +38,10 @@ export default function HanabiPlayerTiles({ id }: Props): JSX.Element {
 			const left = Math.round(origintalPosition.x + delta.x);
 			const top = Math.round(origintalPosition.y + delta.y);
 
-			console.log('moving', item.id, left, top);
-			game.moveTile(userId, item.id, { x: left, y: top });
+			const leftClamped = Math.min(Math.max(left, 0), CONTAINER_SIZE.width - TILE_SIZE.width);
+			const topClamped = Math.min(Math.max(top, 0), CONTAINER_SIZE.height - TILE_SIZE.height);
+
+			game.moveTile(userId, item.id, { x: leftClamped, y: topClamped });
 
 			return undefined;
 		},
@@ -52,15 +61,20 @@ export default function HanabiPlayerTiles({ id }: Props): JSX.Element {
 				{game.gameData.players[id].name}
 				{thisPlayersTurn && <>{': Your turn!'}</>}
 			</p>
-			<div className="w-tiles h-tiles border-4 border-solid border-black bg-white p-5">
-				<div className="relative">
+			<div className="border-4 border-solid border-black bg-white">
+				<div className="w-tiles h-tiles relative">
+					{ownTiles && <HanabiPlayerTilesDragLayer />}
 					{game.gameData.players[id].tileLocations.map((tileLocation) => (
 						<div
 							key={`TileContainer-${tileLocation.tile.id}`}
 							className="absolute"
 							style={{ top: tileLocation.position.y, left: tileLocation.position.x }}
 						>
-							<HanabiTileView tile={tileLocation.tile} hidden={ownTiles} draggable={ownTiles} />
+							{ownTiles ? (
+								<HanabiDraggableTileView tile={tileLocation.tile} hidden={ownTiles} />
+							) : (
+								<HanabiTileView tile={tileLocation.tile} hidden={ownTiles} />
+							)}
 						</div>
 					))}
 				</div>

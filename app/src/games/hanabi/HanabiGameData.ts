@@ -20,11 +20,11 @@ export const HANABI_TILES_IN_HAND: { [numPlayers: number]: number } = {
 };
 
 export const HANABI_DEFAULT_TILE_POSITIONS: { [tileNumber: number]: Position } = [
-	{ x: 0, y: 0 },
-	{ x: 50, y: 0 },
-	{ x: 100, y: 0 },
-	{ x: 150, y: 0 },
-	{ x: 200, y: 0 },
+	{ x: 10, y: 10 },
+	{ x: 60, y: 10 },
+	{ x: 110, y: 10 },
+	{ x: 160, y: 10 },
+	{ x: 210, y: 10 },
 ];
 
 export enum HanabiStage {

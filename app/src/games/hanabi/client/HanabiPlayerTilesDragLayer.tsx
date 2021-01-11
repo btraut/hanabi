@@ -1,0 +1,55 @@
+import { useSocket } from 'app/src/components/SocketContext';
+import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
+import {
+	CONTAINER_SIZE,
+	hanabiDragTypes,
+	TILE_SIZE,
+} from 'app/src/games/hanabi/client/HanabiDragTypes';
+import HanabiTileView from 'app/src/games/hanabi/client/HanabiTileView';
+import { useDragLayer } from 'react-dnd';
+
+export default function HanabiPlayerTilesDragLayer(): JSX.Element | null {
+	const { userId } = useSocket();
+	const game = useHanabiGame();
+
+	if (!game || !userId) {
+		throw new Error('Must connect/join. This should never happen.');
+	}
+
+	const { itemType, isDragging, item, differenceFromInitialOffset } = useDragLayer((monitor) => ({
+		item: monitor.getItem(),
+		itemType: monitor.getItemType(),
+		differenceFromInitialOffset: monitor.getDifferenceFromInitialOffset(),
+		isDragging: monitor.isDragging(),
+	}));
+
+	let tileContainer: JSX.Element | null = null;
+
+	if (itemType === hanabiDragTypes.TILE && item && differenceFromInitialOffset) {
+		const tileLocation = game.gameData.players[userId].tileLocations.find(
+			(l) => l.tile.id === item.id,
+		)!;
+
+		const origintalPosition = tileLocation.position;
+
+		const left = Math.round(origintalPosition.x + differenceFromInitialOffset.x);
+		const top = Math.round(origintalPosition.y + differenceFromInitialOffset.y);
+
+		const leftClamped = Math.min(Math.max(left, 0), CONTAINER_SIZE.width - TILE_SIZE.width);
+		const topClamped = Math.min(Math.max(top, 0), CONTAINER_SIZE.height - TILE_SIZE.height);
+
+		tileContainer = (
+			<div
+				key={`TileContainer-${tileLocation.tile.id}`}
+				className="absolute"
+				style={{ top: topClamped, left: leftClamped }}
+			>
+				<HanabiTileView tile={tileLocation.tile} hidden />
+			</div>
+		);
+	}
+
+	return isDragging ? (
+		<div className="absolute inset-0 pointer-events-none w-tiles h-tiles">{tileContainer}</div>
+	) : null;
+}
