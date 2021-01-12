@@ -70,12 +70,24 @@ export default function HanabiBoard(): JSX.Element {
 		[showMenuForTile],
 	);
 	useEffect(() => {
-		document.body.addEventListener('mousedown', handleBodyClick, true);
+		if (showMenuForTile) {
+			document.body.addEventListener('mousedown', handleBodyClick, true);
+		}
 
 		return () => {
-			document.body.removeEventListener('mousedown', handleBodyClick, true);
+			if (showMenuForTile) {
+				document.body.removeEventListener('mousedown', handleBodyClick, true);
+			}
 		};
-	}, [handleBodyClick]);
+	}, [handleBodyClick, showMenuForTile]);
+
+	const handleAction = useCallback(
+		(action: 'discard' | 'play' | 'color' | 'number', tile: HanabiTile) => {
+			console.log(action, tile);
+			setShowMenuForTile(null);
+		},
+		[],
+	);
 
 	return (
 		<div className="grid grid-flow-col gap-x-10">
@@ -101,6 +113,7 @@ export default function HanabiBoard(): JSX.Element {
 					coords={showMenuForTile.coords}
 					tile={showMenuForTile.tile}
 					ownTile={showMenuForTile.ownTile}
+					onAction={handleAction}
 				/>
 			)}
 		</div>

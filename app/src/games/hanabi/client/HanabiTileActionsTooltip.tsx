@@ -6,9 +6,15 @@ interface Props {
 	tile: HanabiTile;
 	coords: { left: number; top: number };
 	ownTile?: boolean;
+	onAction: (action: 'discard' | 'play' | 'color' | 'number', tile: HanabiTile) => void;
 }
 
-export default function HanabiTileActionsTooltip({ tile, ownTile, coords }: Props): JSX.Element {
+export default function HanabiTileActionsTooltip({
+	tile,
+	ownTile,
+	coords,
+	onAction,
+}: Props): JSX.Element {
 	return (
 		<Portal>
 			<div
@@ -19,7 +25,14 @@ export default function HanabiTileActionsTooltip({ tile, ownTile, coords }: Prop
 				<div className="bg-gray-900 rounded-lg py-2 px-3 text-white">
 					{ownTile ? (
 						<div className="grid grid-flow-col gap-x-3 items-center">
-							<div className="font-bold text-xl">Discard</div>
+							<button
+								className="font-bold text-xl"
+								onClick={() => {
+									onAction('discard', tile);
+								}}
+							>
+								Discard
+							</button>
 							<div
 								className="border-solid h-6"
 								style={{
@@ -29,15 +42,25 @@ export default function HanabiTileActionsTooltip({ tile, ownTile, coords }: Prop
 									borderLeftColor: '#777',
 								}}
 							/>
-							<div className="font-bold text-xl">Play</div>
+							<button
+								className="font-bold text-xl"
+								onClick={() => {
+									onAction('play', tile);
+								}}
+							>
+								Play
+							</button>
 						</div>
 					) : (
 						<div className="grid grid-flow-col gap-x-3 items-center">
-							<div
+							<button
 								className={classnames(
 									'w-6 h-6 rounded-full border-solid border-black border-4',
 									tileBackgroundClasses[tile.color],
 								)}
+								onClick={() => {
+									onAction('color', tile);
+								}}
 							/>
 							<div
 								className="border-solid h-6"
@@ -48,7 +71,14 @@ export default function HanabiTileActionsTooltip({ tile, ownTile, coords }: Prop
 									borderLeftColor: '#777',
 								}}
 							/>
-							<div className="font-bold text-xl">{tile.number}</div>
+							<button
+								className="font-bold text-xl"
+								onClick={() => {
+									onAction('number', tile);
+								}}
+							>
+								{tile.number}
+							</button>
 						</div>
 					)}
 				</div>
