@@ -54,8 +54,11 @@ export default function HanabiPlayedTiles(): JSX.Element {
 								>
 									<div className="transform rotate-90 absolute">
 										<HanabiTileView
-											color={color}
-											number={number}
+											tile={{
+												id: '',
+												color,
+												number,
+											}}
 											placeholder={
 												greatestPlayedForEachColor[color] === null ||
 												number > (greatestPlayedForEachColor[color] || 0)
@@ -68,11 +71,7 @@ export default function HanabiPlayedTiles(): JSX.Element {
 						{discardedTiles.length > 0 && (
 							<div className="grid grid-flow-col justify-start gap-x-1">
 								{discardedTiles.map((tile) => (
-									<HanabiTileView
-										key={`discarded-${tile.id}`}
-										color={tile.color}
-										number={tile.number}
-									/>
+									<HanabiTileView key={`discarded-${tile.id}`} tile={tile} />
 								))}
 							</div>
 						)}

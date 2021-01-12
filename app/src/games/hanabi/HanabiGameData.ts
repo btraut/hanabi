@@ -65,6 +65,15 @@ export const tileColorClasses = {
 	purple: 'text-purple-500',
 };
 
+export const tileBackgroundClasses = {
+	red: 'bg-red-500',
+	blue: 'bg-blue-500',
+	green: 'bg-green-500',
+	yellow: 'bg-yellow-500',
+	white: 'bg-white',
+	purple: 'bg-purple-500',
+};
+
 export interface Position {
 	x: number;
 	y: number;

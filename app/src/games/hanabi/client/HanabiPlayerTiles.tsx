@@ -1,6 +1,5 @@
 import { useSocket } from 'app/src/components/SocketContext';
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
-import HanabiDraggableTileView from 'app/src/games/hanabi/client/HanabiDraggableTileView';
 import {
 	CONTAINER_SIZE,
 	hanabiDragTypes,
@@ -9,14 +8,20 @@ import {
 } from 'app/src/games/hanabi/client/HanabiDragTypes';
 import HanabiPlayerTilesDragLayer from 'app/src/games/hanabi/client/HanabiPlayerTilesDragLayer';
 import HanabiTileView from 'app/src/games/hanabi/client/HanabiTileView';
+import { HanabiTile } from 'app/src/games/hanabi/HanabiGameData';
 import classnames from 'classnames';
 import { useDrop } from 'react-dnd';
 
 interface Props {
 	id: string;
+	onTileClick?: (
+		event: React.MouseEvent<HTMLDivElement>,
+		tile: HanabiTile,
+		ownTile: boolean,
+	) => void;
 }
 
-export default function HanabiPlayerTiles({ id }: Props): JSX.Element {
+export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Element {
 	const { userId } = useSocket();
 	const game = useHanabiGame();
 
@@ -58,8 +63,7 @@ export default function HanabiPlayerTiles({ id }: Props): JSX.Element {
 					},
 				])}
 			>
-				{game.gameData.players[id].name}
-				{thisPlayersTurn && <>{': Your turn!'}</>}
+				{`${game.gameData.players[id].name}${thisPlayersTurn ? ': Your turn!' : ''}`}
 			</p>
 			<div className="border-4 border-solid border-black bg-white">
 				<div className="w-tiles h-tiles relative">
@@ -70,15 +74,12 @@ export default function HanabiPlayerTiles({ id }: Props): JSX.Element {
 							className="absolute"
 							style={{ top: tileLocation.position.y, left: tileLocation.position.x }}
 						>
-							{ownTiles ? (
-								<HanabiDraggableTileView tile={tileLocation.tile} hidden={ownTiles} />
-							) : (
-								<HanabiTileView
-									color={tileLocation.tile.color}
-									number={tileLocation.tile.number}
-									hidden={ownTiles}
-								/>
-							)}
+							<HanabiTileView
+								onClick={onTileClick}
+								tile={tileLocation.tile}
+								ownTile={ownTiles}
+								draggable={ownTiles}
+							/>
 						</div>
 					))}
 				</div>

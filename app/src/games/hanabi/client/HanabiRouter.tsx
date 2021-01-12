@@ -37,6 +37,7 @@ export default function HanabiRouter(): JSX.Element {
 					<HanabiMainMenu />
 				</Route>
 			</Switch>
+			<div id="portal" />
 		</div>
 	);
 }
