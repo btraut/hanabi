@@ -1,6 +1,5 @@
 import { useSocket } from 'app/src/components/SocketContext';
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
-import HanabiTilePlaceholderView from 'app/src/games/hanabi/client/HanabiTilePlaceholderView';
 import HanabiTileView from 'app/src/games/hanabi/client/HanabiTileView';
 import {
 	HanabiRuleSet,
@@ -38,26 +37,48 @@ export default function HanabiPlayedTiles(): JSX.Element {
 	}
 
 	return (
-		<div className="">
-			<p className="text-xl text-white pl-2">Board:</p>
-			<div className="border-4 border-solid border-black bg-white p-4 grid grid-flow-row gap-y-2">
-				{colors.map((color) => {
-					return (
-						<div key={`container-${color}`} className="-mx-0.5 flex">
+		<div className="grid grid-flow-row justify-start gap-y-2">
+			{colors.map((color) => {
+				const discardedTiles = game.gameData.discardedTiles.filter((t) => t.color === color);
+
+				return (
+					<div
+						key={`container-${color}`}
+						className="grid grid-flow-col gap-x-4 h-12 justify-start items-center"
+					>
+						<div className="grid grid-flow-col justify-start gap-x-1">
 							{TILE_NUMBERS.map((number) => (
-								<div key={`tile-played-${color}-${number}`} className="mx-0.5">
-									{greatestPlayedForEachColor[color] !== null &&
-									number <= (greatestPlayedForEachColor[color] || 0) ? (
-										<HanabiTileView color={color} number={number} />
-									) : (
-										<HanabiTilePlaceholderView number={number} color={color} />
-									)}
+								<div
+									key={`tile-played-${color}-${number}`}
+									className="w-12 h-10 relative flex items-center justify-center"
+								>
+									<div className="transform rotate-90 absolute">
+										<HanabiTileView
+											color={color}
+											number={number}
+											placeholder={
+												greatestPlayedForEachColor[color] === null ||
+												number > (greatestPlayedForEachColor[color] || 0)
+											}
+										/>
+									</div>
 								</div>
 							))}
 						</div>
-					);
-				})}
-			</div>
+						{discardedTiles.length > 0 && (
+							<div className="grid grid-flow-col justify-start gap-x-1">
+								{discardedTiles.map((tile) => (
+									<HanabiTileView
+										key={`discarded-${tile.id}`}
+										color={tile.color}
+										number={tile.number}
+									/>
+								))}
+							</div>
+						)}
+					</div>
+				);
+			})}
 		</div>
 	);
 }

@@ -8,6 +8,7 @@ import classnames from 'classnames';
 interface Props {
 	color: HanabiTileColor;
 	number: HanabiTileNumber;
+	placeholder?: boolean;
 	hidden?: boolean;
 	draggable?: boolean;
 }
@@ -15,6 +16,7 @@ interface Props {
 export default function HanabiTileView({
 	color,
 	number,
+	placeholder = false,
 	hidden = false,
 	draggable = false,
 }: Props): JSX.Element {
@@ -26,6 +28,7 @@ export default function HanabiTileView({
 				{
 					'cursor-default': !draggable,
 					'cursor-move': draggable,
+					'opacity-20': placeholder,
 				},
 			])}
 		>

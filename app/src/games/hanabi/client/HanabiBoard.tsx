@@ -1,5 +1,7 @@
 import { useSocket } from 'app/src/components/SocketContext';
+import HanabiClues from 'app/src/games/hanabi/client/HanabiClues';
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
+import HanabiLives from 'app/src/games/hanabi/client/HanabiLives';
 import HanabiPlayedTiles from 'app/src/games/hanabi/client/HanabiPlayedTiles';
 import HanabiPlayerTiles from 'app/src/games/hanabi/client/HanabiPlayerTiles';
 
@@ -23,7 +25,16 @@ export default function HanabiBoard(): JSX.Element {
 					</div>
 				))}
 			</div>
-			<HanabiPlayedTiles />
+			<div>
+				<p className="text-xl text-white pl-2">Board:</p>
+				<div className="border-4 border-solid border-black bg-white p-4 grid grid-flow-row gap-y-4">
+					<HanabiClues />
+					<HanabiPlayedTiles />
+					<div className="py-1">
+						<HanabiLives />
+					</div>
+				</div>
+			</div>
 		</div>
 	);
 }
