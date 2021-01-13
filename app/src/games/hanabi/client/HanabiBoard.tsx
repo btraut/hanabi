@@ -53,10 +53,37 @@ export default function HanabiBoard(): JSX.Element {
 
 	const handleActionsTooltipAction = useCallback(
 		(action: 'discard' | 'play' | 'color' | 'number', tile: HanabiTile) => {
-			console.log(action, tile);
+			let tileOwner: string | null = null;
+
+			for (const playerId in game.gameData.players) {
+				if (game.gameData.players[playerId].tileLocations.find((tl) => tl.tile.id === tile.id)) {
+					tileOwner = playerId;
+					break;
+				}
+			}
+
+			if (!tileOwner) {
+				throw new Error('Invalid tile. No owner found.');
+			}
+
+			switch (action) {
+				case 'discard':
+					game.discardTile(tile);
+					break;
+				case 'play':
+					game.playTile(tile);
+					break;
+				case 'color':
+					game.giveColorClue(tileOwner, tile.color);
+					break;
+				case 'number':
+					game.giveNumberClue(tileOwner, tile.number);
+					break;
+			}
+
 			setShowMenuForTile(null);
 		},
-		[],
+		[game],
 	);
 
 	const handleActionsTooltipOnClose = useCallback(() => {

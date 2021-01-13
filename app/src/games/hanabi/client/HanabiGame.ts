@@ -3,13 +3,19 @@ import {
 	generateHanabiGameData,
 	HANABI_GAME_TITLE,
 	HanabiGameData,
+	HanabiTile,
+	HanabiTileColor,
+	HanabiTileNumber,
 	Position,
 } from 'app/src/games/hanabi/HanabiGameData';
 import {
 	AddPlayerResponseMessage,
+	DiscardTileResponseMessage,
 	getScope,
+	GiveClueResponseMessage,
 	HanabiMessage,
 	MoveTileResponseMessage,
+	PlayTileResponseMessage,
 	RefreshGameDataMessage,
 	RemovePlayerResponseMessage,
 	StartGameResponseMessage,
@@ -17,6 +23,9 @@ import {
 import AuthSocketManager, { AuthenticationState } from 'app/src/utils/client/AuthSocketManager';
 import SocketManager, { ConnectionState } from 'app/src/utils/client/SocketManager';
 import PubSub from 'app/src/utils/PubSub';
+
+// https://davidgomes.com/pick-omit-over-union-types-in-typescript/
+type DistributiveOmit<T, K extends keyof T> = T extends unknown ? Omit<T, K> : never;
 
 export default class HanabiGame extends Game {
 	public onUpdate = new PubSub<void>();
@@ -84,6 +93,13 @@ export default class HanabiGame extends Game {
 		}
 	};
 
+	private _sendMessage(message: DistributiveOmit<HanabiMessage, 'scope'>) {
+		this._socketManager.send({
+			...message,
+			scope: getScope(HANABI_GAME_TITLE, this._id),
+		});
+	}
+
 	private _handleMessage = (message: HanabiMessage) => {
 		if (message.scope !== getScope(HANABI_GAME_TITLE, this._id)) {
 			return;
@@ -111,8 +127,7 @@ export default class HanabiGame extends Game {
 	}
 
 	public async refreshGameData(): Promise<void> {
-		this._socketManager.send({
-			scope: getScope(HANABI_GAME_TITLE, this._id),
+		this._sendMessage({
 			type: 'GetGameDataMessage',
 			data: undefined,
 		});
@@ -123,8 +138,7 @@ export default class HanabiGame extends Game {
 	}
 
 	public async join(name: string): Promise<void> {
-		this._socketManager.send({
-			scope: getScope(HANABI_GAME_TITLE, this._id),
+		this._sendMessage({
 			type: 'AddPlayerMessage',
 			data: { name },
 		});
@@ -142,8 +156,7 @@ export default class HanabiGame extends Game {
 	}
 
 	public async leave(): Promise<void> {
-		this._socketManager.send({
-			scope: getScope(HANABI_GAME_TITLE, this._id),
+		this._sendMessage({
 			type: 'RemovePlayerMessage',
 			data: {},
 		});
@@ -161,8 +174,7 @@ export default class HanabiGame extends Game {
 	}
 
 	public async start(): Promise<void> {
-		this._socketManager.send({
-			scope: getScope(HANABI_GAME_TITLE, this._id),
+		this._sendMessage({
 			type: 'StartGameMessage',
 			data: undefined,
 		});
@@ -194,8 +206,7 @@ export default class HanabiGame extends Game {
 		// from the server, but we want to optimistically move the tile now.
 		this.onUpdate.emit();
 
-		this._socketManager.send({
-			scope: getScope(HANABI_GAME_TITLE, this._id),
+		this._sendMessage({
 			type: 'MoveTileMessage',
 			data: { id: tileId, position: newPosition },
 		});
@@ -206,6 +217,78 @@ export default class HanabiGame extends Game {
 
 		if (moveTileResponseMessage.data.error) {
 			throw new Error(moveTileResponseMessage.data.error);
+		}
+
+		// After responding to our initial message, the server will also send a
+		// RefreshGameData message. We'll handle that in a separate handler.
+	}
+
+	public async discardTile(tile: HanabiTile): Promise<void> {
+		this._sendMessage({
+			type: 'DiscardTileMessage',
+			data: { id: tile.id },
+		});
+
+		const discardTileResponseMessage = await this._socketManager.expectMessageOfType<DiscardTileResponseMessage>(
+			'DiscardTileResponseMessage',
+		);
+
+		if (discardTileResponseMessage.data.error) {
+			throw new Error(discardTileResponseMessage.data.error);
+		}
+
+		// After responding to our initial message, the server will also send a
+		// RefreshGameData message. We'll handle that in a separate handler.
+	}
+
+	public async playTile(tile: HanabiTile): Promise<void> {
+		this._sendMessage({
+			type: 'PlayTileMessage',
+			data: { id: tile.id },
+		});
+
+		const playTileResponseMessage = await this._socketManager.expectMessageOfType<PlayTileResponseMessage>(
+			'PlayTileResponseMessage',
+		);
+
+		if (playTileResponseMessage.data.error) {
+			throw new Error(playTileResponseMessage.data.error);
+		}
+
+		// After responding to our initial message, the server will also send a
+		// RefreshGameData message. We'll handle that in a separate handler.
+	}
+
+	public async giveColorClue(to: string, color: HanabiTileColor): Promise<void> {
+		this._sendMessage({
+			type: 'GiveClueMessage',
+			data: { to, color },
+		});
+
+		const giveClueResponseMessage = await this._socketManager.expectMessageOfType<GiveClueResponseMessage>(
+			'GiveClueResponseMessage',
+		);
+
+		if (giveClueResponseMessage.data.error) {
+			throw new Error(giveClueResponseMessage.data.error);
+		}
+
+		// After responding to our initial message, the server will also send a
+		// RefreshGameData message. We'll handle that in a separate handler.
+	}
+
+	public async giveNumberClue(to: string, number: HanabiTileNumber): Promise<void> {
+		this._sendMessage({
+			type: 'GiveClueMessage',
+			data: { to, number },
+		});
+
+		const giveClueResponseMessage = await this._socketManager.expectMessageOfType<GiveClueResponseMessage>(
+			'GiveClueResponseMessage',
+		);
+
+		if (giveClueResponseMessage.data.error) {
+			throw new Error(giveClueResponseMessage.data.error);
 		}
 
 		// After responding to our initial message, the server will also send a

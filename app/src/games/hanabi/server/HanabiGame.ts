@@ -613,6 +613,27 @@ export default class HanabiGame extends Game {
 			return;
 		}
 
+		// Make sure the clue is for a single number or color.
+		if (message.data.color !== undefined && message.data.number !== undefined) {
+			this._sendMessage(userId, {
+				type: 'GiveClueResponseMessage',
+				data: { error: 'Can only give a clue for a single number or color at a time.' },
+			});
+			return;
+		}
+		if (message.data.color === undefined && message.data.number === undefined) {
+			this._sendMessage(userId, {
+				type: 'GiveClueResponseMessage',
+				data: { error: 'Clues must contain a number or color.' },
+			});
+			return;
+		}
+
+		const actionType =
+			message.data.color === undefined
+				? HanabiGameActionType.GiveNumberClue
+				: HanabiGameActionType.GiveColorClue;
+
 		// Make sure there's a clue to spare.
 		if (this._gameData.clues === 0) {
 			this._sendMessage(userId, {
@@ -627,7 +648,7 @@ export default class HanabiGame extends Game {
 		// Record the action.
 		this._gameData.actions.push({
 			playerId: userId,
-			action: HanabiGameActionType.GiveClue,
+			action: actionType,
 			recipientId: message.data.to,
 			color: message.data.color,
 			number: message.data.number,

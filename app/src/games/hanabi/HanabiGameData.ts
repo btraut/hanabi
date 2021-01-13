@@ -94,7 +94,8 @@ export interface HanabiPlayer {
 export enum HanabiGameActionType {
 	Play = 'Play',
 	Discard = 'Discard',
-	GiveClue = 'GiveClue',
+	GiveColorClue = 'GiveColorClue',
+	GiveNumberClue = 'GiveNumberClue',
 }
 
 export interface HanabiGameActionPlay {
@@ -110,7 +111,7 @@ export interface HanabiGameActionDiscard {
 
 export interface HanabiGameActionGiveClue {
 	playerId: string;
-	action: HanabiGameActionType.GiveClue;
+	action: HanabiGameActionType.GiveNumberClue | HanabiGameActionType.GiveColorClue;
 	recipientId: string;
 	color?: HanabiTileColor;
 	number?: HanabiTileNumber;

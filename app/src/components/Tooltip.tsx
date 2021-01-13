@@ -1,4 +1,3 @@
-import classnames from 'classnames';
 import { useCallback, useEffect, useRef } from 'react';
 
 interface Props {
@@ -40,10 +39,11 @@ export default function Tooltip({ onClose, children, top, left }: Props): JSX.El
 	return (
 		<div
 			ref={tooltipRef}
-			className={classnames('absolute', {
+			style={{
 				top,
 				left,
-			})}
+			}}
+			className="absolute transform -translate-y-full -translate-x-1/2"
 		>
 			{children}
 		</div>

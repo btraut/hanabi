@@ -21,7 +21,7 @@ export default function HanabiTileActionsTooltip({
 	return (
 		<Portal>
 			<Tooltip onClose={onClose} top={coords.top} left={coords.left}>
-				<div className="transform -translate-y-full -translate-x-1/2 pb-0.5">
+				<div className="pb-0.5">
 					<div className="bg-gray-900 rounded-lg py-2 px-3 text-white">
 						{ownTile ? (
 							<div className="grid grid-flow-col gap-x-3 items-center">
