@@ -335,6 +335,8 @@ export default class HanabiGame extends Game {
 			}
 		}
 
+		this._gameData.remainingTiles = tiles;
+
 		// Set up turn order.
 		this._gameData.turnOrder = players.map((p) => p.id);
 		shuffle(this._gameData.turnOrder);
@@ -376,7 +378,7 @@ export default class HanabiGame extends Game {
 		if (
 			this._gameData.remainingTiles.find((t) => t.color === tile.color && t.number === tile.number)
 		) {
-			return true;
+			return false;
 		}
 
 		// Check players' hands for a copy.
@@ -386,12 +388,12 @@ export default class HanabiGame extends Game {
 					.map((l) => l.tile)
 					.find((t) => t.color === tile.color && t.number === tile.number)
 			) {
-				return true;
+				return false;
 			}
 		}
 
 		// No copy left in play. Game is failed.
-		return false;
+		return true;
 	}
 
 	private _handlePlayTileMessage(message: PlayTileMessage, userId: string): void {
@@ -541,6 +543,9 @@ export default class HanabiGame extends Game {
 		this._gameData.players[userId].tileLocations = this._gameData.players[
 			userId
 		].tileLocations.filter((l) => l.tile.id !== tile.id);
+
+		// Add the tile to discarded tiles.
+		this._gameData.discardedTiles.push(tile);
 
 		// Pick up another tile if available.
 		if (this._gameData.remainingTiles.length) {
