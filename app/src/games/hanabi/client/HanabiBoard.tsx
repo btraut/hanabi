@@ -6,7 +6,7 @@ import HanabiPlayedTiles from 'app/src/games/hanabi/client/HanabiPlayedTiles';
 import HanabiPlayerTiles from 'app/src/games/hanabi/client/HanabiPlayerTiles';
 import HanabiTileActionsTooltip from 'app/src/games/hanabi/client/HanabiTileActionsTooltip';
 import { HanabiTile } from 'app/src/games/hanabi/HanabiGameData';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 function rotateArrayToItem<T>(arr: T[], item: T): T[] {
 	const itemIndex = arr.indexOf(item);
@@ -51,43 +51,17 @@ export default function HanabiBoard(): JSX.Element {
 		[],
 	);
 
-	const handleBodyClick = useCallback(
-		(event: MouseEvent) => {
-			let isTooltip = false;
-			let ele: any = event.target;
-			while (ele && ele.hasAttribute) {
-				if (ele.hasAttribute('data-tooltip')) {
-					isTooltip = true;
-					break;
-				}
-				ele = ele.parentNode;
-			}
-
-			if (showMenuForTile && !isTooltip) {
-				setShowMenuForTile(null);
-			}
-		},
-		[showMenuForTile],
-	);
-	useEffect(() => {
-		if (showMenuForTile) {
-			document.body.addEventListener('mousedown', handleBodyClick, true);
-		}
-
-		return () => {
-			if (showMenuForTile) {
-				document.body.removeEventListener('mousedown', handleBodyClick, true);
-			}
-		};
-	}, [handleBodyClick, showMenuForTile]);
-
-	const handleAction = useCallback(
+	const handleActionsTooltipAction = useCallback(
 		(action: 'discard' | 'play' | 'color' | 'number', tile: HanabiTile) => {
 			console.log(action, tile);
 			setShowMenuForTile(null);
 		},
 		[],
 	);
+
+	const handleActionsTooltipOnClose = useCallback(() => {
+		setShowMenuForTile(null);
+	}, []);
 
 	return (
 		<div className="grid grid-flow-col gap-x-10">
@@ -113,7 +87,8 @@ export default function HanabiBoard(): JSX.Element {
 					coords={showMenuForTile.coords}
 					tile={showMenuForTile.tile}
 					ownTile={showMenuForTile.ownTile}
-					onAction={handleAction}
+					onAction={handleActionsTooltipAction}
+					onClose={handleActionsTooltipOnClose}
 				/>
 			)}
 		</div>
