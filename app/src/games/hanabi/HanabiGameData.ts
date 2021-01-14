@@ -9,7 +9,18 @@ export const HANABI_MAX_PLAYERS = 5;
 export const HANABI_MAX_CLUES = 8;
 export const HANABI_LIVES = 2;
 
-export const HANABI_MAX_POSITION = { x: 1000, y: 500 };
+export interface Size {
+	width: number;
+	height: number;
+}
+
+export interface Position {
+	x: number;
+	y: number;
+}
+
+export const HANABI_BOARD_SIZE: Size = { width: 500, height: 120 };
+export const HANABI_TILE_SIZE: Size = { width: 40, height: 48 };
 
 export const HANABI_TILES_IN_HAND: { [numPlayers: number]: number } = {
 	'1': 5,
@@ -73,11 +84,6 @@ export const tileBackgroundClasses = {
 	white: 'bg-white',
 	purple: 'bg-purple-500',
 };
-
-export interface Position {
-	x: number;
-	y: number;
-}
 
 export interface HanabiTileLocation {
 	tile: HanabiTile;

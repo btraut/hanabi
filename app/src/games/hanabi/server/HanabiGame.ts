@@ -2,10 +2,11 @@ import {
 	generateHanabiGameData,
 	generatePlayer,
 	generateRandomDeck,
+	HANABI_BOARD_SIZE,
 	HANABI_DEFAULT_TILE_POSITIONS,
 	HANABI_GAME_TITLE,
-	HANABI_MAX_POSITION,
 	HANABI_MIN_PLAYERS,
+	HANABI_TILE_SIZE,
 	HANABI_TILES_IN_HAND,
 	HanabiFinishedReason,
 	HanabiGameActionType,
@@ -13,6 +14,9 @@ import {
 	HanabiRuleSet,
 	HanabiStage,
 	HanabiTile,
+	HanabiTileLocation,
+	Position,
+	Size,
 } from 'app/src/games/hanabi/HanabiGameData';
 import {
 	AddPlayerMessage,
@@ -31,14 +35,40 @@ import GameMessenger from 'app/src/games/server/GameMessenger';
 import UserConnectionListener, {
 	UserConnectionChange,
 } from 'app/src/games/server/UserConnectionListener';
+import DistributiveOmit from 'app/src/utils/DistributiveOmit';
 import ServerSocketManager from 'app/src/utils/server/SocketManager';
 import { shuffle } from 'app/src/utils/shuffle';
 
-// https://davidgomes.com/pick-omit-over-union-types-in-typescript/
-type DistributiveOmit<T, K extends keyof T> = T extends unknown ? Omit<T, K> : never;
-
 export interface HanabiGameSerialized extends GameSerialized {
 	data: HanabiGameData;
+}
+
+function findBlankSpaceForTile(
+	_boardSize: Size,
+	_tileLocations: HanabiTileLocation[],
+	startPosition: Position = { x: 10, y: 10 },
+): Position {
+	// TODO
+
+	// let currentX = startPosition.x;
+	// let currentY = startPosition.y;
+	// let needsTesting = true;
+
+	// while (needsTesting) {
+	// 	let conflicting = false;
+
+	// 	for (const tileLocation of tileLocations) {
+	// 		if (tileLocation.position.) {
+
+	// 		}
+	// 	}
+
+	// 	needsTesting = conflicting;
+	// }
+
+	// return {x: currentX, y: currentY};
+
+	return startPosition;
 }
 
 export default class HanabiGame extends Game {
@@ -428,7 +458,10 @@ export default class HanabiGame extends Game {
 			const newTile = this._gameData.remainingTiles.pop()!;
 			this._gameData.players[userId].tileLocations.push({
 				tile: newTile,
-				position: { x: 0, y: 0 },
+				position: findBlankSpaceForTile(
+					HANABI_BOARD_SIZE,
+					this._gameData.players[userId].tileLocations,
+				),
 			});
 		}
 
@@ -552,7 +585,10 @@ export default class HanabiGame extends Game {
 			const newTile = this._gameData.remainingTiles.pop()!;
 			this._gameData.players[userId].tileLocations.push({
 				tile: newTile,
-				position: { x: 0, y: 0 },
+				position: findBlankSpaceForTile(
+					HANABI_BOARD_SIZE,
+					this._gameData.players[userId].tileLocations,
+				),
 			});
 		}
 
@@ -705,8 +741,8 @@ export default class HanabiGame extends Game {
 		const { position } = message.data;
 
 		if (
-			position.x > HANABI_MAX_POSITION.x ||
-			position.y > HANABI_MAX_POSITION.y ||
+			position.x > HANABI_BOARD_SIZE.width - HANABI_TILE_SIZE.width ||
+			position.y > HANABI_BOARD_SIZE.height - HANABI_TILE_SIZE.height ||
 			position.x < 0 ||
 			position.y < 0
 		) {

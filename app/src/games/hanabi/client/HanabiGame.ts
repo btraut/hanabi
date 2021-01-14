@@ -22,10 +22,8 @@ import {
 } from 'app/src/games/hanabi/HanabiMessages';
 import AuthSocketManager, { AuthenticationState } from 'app/src/utils/client/AuthSocketManager';
 import SocketManager, { ConnectionState } from 'app/src/utils/client/SocketManager';
+import DistributiveOmit from 'app/src/utils/DistributiveOmit';
 import PubSub from 'app/src/utils/PubSub';
-
-// https://davidgomes.com/pick-omit-over-union-types-in-typescript/
-type DistributiveOmit<T, K extends keyof T> = T extends unknown ? Omit<T, K> : never;
 
 export default class HanabiGame extends Game {
 	public onUpdate = new PubSub<void>();

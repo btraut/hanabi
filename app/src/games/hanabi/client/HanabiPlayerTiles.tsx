@@ -8,8 +8,7 @@ import {
 } from 'app/src/games/hanabi/client/HanabiDragTypes';
 import HanabiPlayerTilesDragLayer from 'app/src/games/hanabi/client/HanabiPlayerTilesDragLayer';
 import HanabiTileView from 'app/src/games/hanabi/client/HanabiTileView';
-import { HanabiTile } from 'app/src/games/hanabi/HanabiGameData';
-import classnames from 'classnames';
+import { HANABI_BOARD_SIZE, HanabiTile } from 'app/src/games/hanabi/HanabiGameData';
 import { useDrop } from 'react-dnd';
 
 interface Props {
@@ -30,7 +29,7 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 	}
 
 	const ownTiles = id === userId;
-	const thisPlayersTurn = game.gameData.turnOrder[0] === id;
+	const ownTurn = game.gameData.finishedReason === null && game.gameData.turnOrder[0] === id;
 
 	const [, dropRef] = useDrop<HanabiTileDragItem, void, void>({
 		accept: hanabiDragTypes.TILE,
@@ -54,19 +53,15 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 
 	return (
 		<div ref={dropRef}>
-			<p
-				className={classnames([
-					'text-xl text-white pl-2',
-					{
-						italic: thisPlayersTurn,
-						'text-yellow-300': thisPlayersTurn,
-					},
-				])}
-			>
-				{`${game.gameData.players[id].name}${thisPlayersTurn ? ': Your turn!' : ''}`}
-			</p>
+			{ownTurn ? (
+				<p className="text-xl text-yellow-300 pl-2 italic">
+					{`${game.gameData.players[id].name}: Your turn!`}
+				</p>
+			) : (
+				<p className="text-xl text-white pl-2">{game.gameData.players[id].name}</p>
+			)}
 			<div className="border-4 border-solid border-black bg-white">
-				<div className="w-tiles h-tiles relative">
+				<div style={HANABI_BOARD_SIZE} className="relative">
 					{ownTiles && <HanabiPlayerTilesDragLayer />}
 					{game.gameData.players[id].tileLocations.map((tileLocation) => (
 						<div
@@ -78,7 +73,7 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 								onClick={onTileClick}
 								tile={tileLocation.tile}
 								ownTile={ownTiles}
-								draggable={ownTiles}
+								draggable={game.gameData.finishedReason === null && ownTiles}
 							/>
 						</div>
 					))}

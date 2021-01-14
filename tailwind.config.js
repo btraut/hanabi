@@ -38,11 +38,8 @@ module.exports = {
 			gridTemplateColumns: {
 				form: 'auto 1fr',
 			},
-			width: {
-				tiles: '500px',
-			},
-			height: {
-				tiles: '120px',
+			boxShadow: {
+				dark: '0 0 50px -20px black',
 			},
 		},
 	},

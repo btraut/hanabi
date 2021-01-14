@@ -1,6 +1,7 @@
 import { useSocket } from 'app/src/components/SocketContext';
 import HanabiClues from 'app/src/games/hanabi/client/HanabiClues';
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
+import HanabiGameOverPopup from 'app/src/games/hanabi/client/HanabiGameOverPopup';
 import HanabiLives from 'app/src/games/hanabi/client/HanabiLives';
 import HanabiPlayedTiles from 'app/src/games/hanabi/client/HanabiPlayedTiles';
 import HanabiPlayerTiles from 'app/src/games/hanabi/client/HanabiPlayerTiles';
@@ -91,11 +92,14 @@ export default function HanabiBoard(): JSX.Element {
 	}, []);
 
 	return (
-		<div className="grid grid-flow-col gap-x-10">
+		<div className="grid grid-flow-col gap-x-10 relative">
 			<div>
 				{game.gameData.turnOrder.map((id, index) => (
 					<div className={index < turnOrder.length - 1 ? 'mb-10' : ''} key={`player-${id}`}>
-						<HanabiPlayerTiles id={id} onTileClick={handleTileClick} />
+						<HanabiPlayerTiles
+							id={id}
+							onTileClick={game.gameData.finishedReason === null ? handleTileClick : undefined}
+						/>
 					</div>
 				))}
 			</div>
@@ -117,6 +121,9 @@ export default function HanabiBoard(): JSX.Element {
 					onAction={handleActionsTooltipAction}
 					onClose={handleActionsTooltipOnClose}
 				/>
+			)}
+			{game.gameData.finishedReason && (
+				<HanabiGameOverPopup finishedReason={game.gameData.finishedReason} />
 			)}
 		</div>
 	);

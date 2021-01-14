@@ -1,5 +1,9 @@
 import { hanabiDragTypes, HanabiTileDragItem } from 'app/src/games/hanabi/client/HanabiDragTypes';
-import { HanabiTile, tileColorClasses } from 'app/src/games/hanabi/HanabiGameData';
+import {
+	HANABI_TILE_SIZE,
+	HanabiTile,
+	tileColorClasses,
+} from 'app/src/games/hanabi/HanabiGameData';
 import classnames from 'classnames';
 import { useEffect } from 'react';
 import { useDrag } from 'react-dnd';
@@ -41,8 +45,9 @@ export default function HanabiTileView({
 	return (
 		<div
 			ref={dragRef}
+			style={HANABI_TILE_SIZE}
 			className={classnames([
-				'bg-black rounded-lg text-3xl font-bold w-10 h-12 flex items-center justify-center select-none',
+				'bg-black rounded-lg text-3xl font-bold flex items-center justify-center select-none',
 				tileColorClasses[tile.color],
 				cursor,
 				{
