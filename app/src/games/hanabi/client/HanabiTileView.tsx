@@ -5,7 +5,7 @@ import {
 	tileColorClasses,
 } from 'app/src/games/hanabi/HanabiGameData';
 import classnames from 'classnames';
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useDrag } from 'react-dnd';
 import { getEmptyImage } from 'react-dnd-html5-backend';
 
@@ -13,6 +13,7 @@ interface Props {
 	tile: HanabiTile;
 	ownTile?: boolean;
 	draggable?: boolean;
+	showBorder?: boolean;
 	onClick?: (event: React.MouseEvent<HTMLDivElement>, tile: HanabiTile, ownTile: boolean) => void;
 	placeholder?: boolean;
 }
@@ -42,8 +43,19 @@ export default function HanabiTileView({
 
 	const cursor = draggable ? 'cursor-move' : onClick ? 'cursor-pointer' : 'cursor-default';
 
+	const handleClick = useCallback(
+		(event) => {
+			if (onClick) {
+				onClick(event, tile, ownTile);
+			}
+		},
+		[onClick, ownTile, tile],
+	);
+
+	const Comp = onClick ? 'button' : 'div';
+
 	return (
-		<div
+		<Comp
 			ref={dragRef}
 			style={HANABI_TILE_SIZE}
 			className={classnames([
@@ -55,13 +67,9 @@ export default function HanabiTileView({
 					'opacity-20': placeholder,
 				},
 			])}
-			onClick={(event) => {
-				if (onClick) {
-					onClick(event, tile, ownTile);
-				}
-			}}
+			onClick={onClick ? handleClick : undefined}
 		>
 			{ownTile ? '' : String(tile.number)}
-		</div>
+		</Comp>
 	);
 }

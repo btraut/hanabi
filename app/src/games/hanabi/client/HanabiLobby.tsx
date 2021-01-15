@@ -42,7 +42,7 @@ export default function HanabiLobby(): JSX.Element {
 				<ul className="mb-10 flex justify-center">
 					{players.map((player) => (
 						<li
-							className={classnames('m-4 mw-30', {
+							className={classnames('m-4 mw-30 flex flex-col items-center', {
 								'opacity-40': !player.connected,
 							})}
 							key={player.id}

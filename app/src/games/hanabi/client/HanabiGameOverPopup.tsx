@@ -37,14 +37,16 @@ export default function HanabiGameOverPopup(): JSX.Element | null {
 
 	return (
 		<HanabiPopup background={finishedReason === HanabiFinishedReason.Won ? 'green' : 'red'}>
-			<h1 className="italic text-4xl text-white font-normal text-center mb-2">
-				{GAME_OVER_TITLES[finishedReason]}
-			</h1>
-			<p className="italic text-2xl text-white font-normal text-center mb-8">
-				{GAME_OVER_MESSAGES[finishedReason]}
-			</p>
-			<div className="flex justify-center">
-				<HanabiMenuButton label="New Game" onClick={handleNewGameClick} />
+			<div style={{ width: 480 }}>
+				<h1 className="italic text-4xl text-white font-normal text-center mb-2">
+					{GAME_OVER_TITLES[finishedReason]}
+				</h1>
+				<p className="italic text-2xl text-white font-normal text-center mb-8">
+					{GAME_OVER_MESSAGES[finishedReason]}
+				</p>
+				<div className="flex justify-center">
+					<HanabiMenuButton label="New Game" onClick={handleNewGameClick} />
+				</div>
 			</div>
 		</HanabiPopup>
 	);

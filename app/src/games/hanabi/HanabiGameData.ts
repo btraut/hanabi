@@ -7,7 +7,7 @@ export const HANABI_MIN_PLAYERS = 1;
 export const HANABI_MAX_PLAYERS = 5;
 
 export const HANABI_MAX_CLUES = 8;
-export const HANABI_LIVES = 2;
+export const HANABI_MAX_LIVES = 3;
 
 export interface Size {
 	width: number;
@@ -107,20 +107,27 @@ export enum HanabiGameActionType {
 }
 
 export interface HanabiGameActionPlay {
+	id: string;
 	playerId: string;
-	action: HanabiGameActionType.Play;
+	type: HanabiGameActionType.Play;
+	tile: HanabiTile;
+	remainingLives: number;
 	valid: boolean;
 }
 
 export interface HanabiGameActionDiscard {
+	id: string;
 	playerId: string;
-	action: HanabiGameActionType.Discard;
+	type: HanabiGameActionType.Discard;
+	tile: HanabiTile;
 }
 
 export interface HanabiGameActionGiveClue {
+	id: string;
 	playerId: string;
-	action: HanabiGameActionType.GiveNumberClue | HanabiGameActionType.GiveColorClue;
+	type: HanabiGameActionType.GiveNumberClue | HanabiGameActionType.GiveColorClue;
 	recipientId: string;
+	tiles: HanabiTile[];
 	color?: HanabiTileColor;
 	number?: HanabiTileNumber;
 }
@@ -156,7 +163,7 @@ export function generateHanabiGameData(data: Partial<HanabiGameData> = {}): Hana
 		playedTiles: [],
 		discardedTiles: [],
 		clues: HANABI_MAX_CLUES,
-		lives: HANABI_LIVES,
+		lives: HANABI_MAX_LIVES,
 		ruleSet: HanabiRuleSet.Basic,
 		actions: [],
 		...data,

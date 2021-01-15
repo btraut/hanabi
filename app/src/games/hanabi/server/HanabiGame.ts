@@ -37,6 +37,7 @@ import UserConnectionListener, {
 import DistributiveOmit from 'app/src/utils/DistributiveOmit';
 import ServerSocketManager from 'app/src/utils/server/SocketManager';
 import { shuffle } from 'app/src/utils/shuffle';
+import { v1 as uuidv1 } from 'uuid';
 
 export interface HanabiGameSerialized extends GameSerialized {
 	data: HanabiGameData;
@@ -454,11 +455,11 @@ export default class HanabiGame extends Game {
 				this._gameData.clues += 1;
 			}
 		} else {
+			this._gameData.lives -= 1;
+
 			if (this._gameData.lives === 0) {
 				this._gameData.stage = HanabiStage.Finished;
 				this._gameData.finishedReason = HanabiFinishedReason.OutOfLives;
-			} else {
-				this._gameData.lives -= 1;
 			}
 
 			this._gameData.discardedTiles.push(tile);
@@ -490,7 +491,7 @@ export default class HanabiGame extends Game {
 
 		// Detect if the game has been won.
 		const maxPlayedTiles = this._gameData.ruleSet === HanabiRuleSet.Basic ? 25 : 30;
-		if (maxPlayedTiles) {
+		if (this._gameData.playedTiles.length === maxPlayedTiles) {
 			this._gameData.stage = HanabiStage.Finished;
 			this._gameData.finishedReason = HanabiFinishedReason.Won;
 		}
@@ -500,9 +501,12 @@ export default class HanabiGame extends Game {
 
 		// Record the action.
 		this._gameData.actions.push({
+			id: uuidv1(),
 			playerId: userId,
-			action: HanabiGameActionType.Play,
+			type: HanabiGameActionType.Play,
+			tile,
 			valid: tileIsValid,
+			remainingLives: this._gameData.lives,
 		});
 
 		// Send success message.
@@ -592,8 +596,10 @@ export default class HanabiGame extends Game {
 
 		// Record the action.
 		this._gameData.actions.push({
+			id: uuidv1(),
 			playerId: userId,
-			action: HanabiGameActionType.Discard,
+			type: HanabiGameActionType.Discard,
+			tile,
 		});
 
 		// Send success message.
@@ -638,6 +644,29 @@ export default class HanabiGame extends Game {
 			return;
 		}
 
+		const recipient = this._gameData.players[message.data.to];
+		if (!recipient) {
+			this._sendMessage(userId, {
+				type: 'GiveClueResponseMessage',
+				data: { error: 'Invalid player!' },
+			});
+			return;
+		}
+
+		const selectedTiles = recipient.tileLocations
+			.map((tl) => tl.tile)
+			.filter((t) =>
+				message.data.color ? t.color === message.data.color : t.number === message.data.number,
+			);
+
+		if (selectedTiles.length === 0) {
+			this._sendMessage(userId, {
+				type: 'GiveClueResponseMessage',
+				data: { error: 'Clues must select at least 1 tile.' },
+			});
+			return;
+		}
+
 		const actionType =
 			message.data.color === undefined
 				? HanabiGameActionType.GiveNumberClue
@@ -656,12 +685,17 @@ export default class HanabiGame extends Game {
 
 		// Record the action.
 		this._gameData.actions.push({
+			id: uuidv1(),
 			playerId: userId,
-			action: actionType,
+			type: actionType,
 			recipientId: message.data.to,
 			color: message.data.color,
 			number: message.data.number,
+			tiles: selectedTiles,
 		});
+
+		// Advance the turn.
+		this._gameData.turnOrder.push(this._gameData.turnOrder.shift()!);
 
 		// Send success message.
 		this._sendMessage(userId, {
