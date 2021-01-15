@@ -44,6 +44,12 @@ export type StartGameResponseMessage = SocketMessage<
 	{ error?: string }
 >;
 
+export type ResetGameMessage = SocketMessage<'ResetGameMessage', void>;
+export type ResetGameResponseMessage = SocketMessage<
+	'ResetGameResponseMessage',
+	{ error?: string; data?: HanabiGameData }
+>;
+
 // Game Actions
 export type PlayTileMessage = SocketMessage<'PlayTileMessage', { id: string }>;
 export type PlayTileResponseMessage = SocketMessage<'PlayTileResponseMessage', { error?: string }>;
@@ -74,6 +80,8 @@ export type HanabiMessage =
 	| ChangeGameSettingsResponseMessage
 	| StartGameMessage
 	| StartGameResponseMessage
+	| ResetGameMessage
+	| ResetGameResponseMessage
 	| PlayTileMessage
 	| PlayTileResponseMessage
 	| DiscardTileMessage

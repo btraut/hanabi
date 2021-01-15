@@ -122,9 +122,7 @@ export default function HanabiBoard(): JSX.Element {
 					onClose={handleActionsTooltipOnClose}
 				/>
 			)}
-			{game.gameData.finishedReason && (
-				<HanabiGameOverPopup finishedReason={game.gameData.finishedReason} />
-			)}
+			{game.gameData.finishedReason && <HanabiGameOverPopup />}
 		</div>
 	);
 }

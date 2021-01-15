@@ -25,6 +25,7 @@ import {
 	MoveTileMessage,
 	PlayTileMessage,
 	RemovePlayerMessage,
+	ResetGameMessage,
 	StartGameMessage,
 } from 'app/src/games/hanabi/HanabiMessages';
 import { findBlankSpaceForTile } from 'app/src/games/hanabi/HanabiTileUtils';
@@ -125,6 +126,9 @@ export default class HanabiGame extends Game {
 				break;
 			case 'MoveTileMessage':
 				this._handleMoveTileMessage(message, userId);
+				break;
+			case 'ResetGameMessage':
+				this._handleResetGameMessage(message, userId);
 				break;
 		}
 	};
@@ -729,6 +733,34 @@ export default class HanabiGame extends Game {
 		this._sendMessage(this._getAllPlayerAndWatcherIds(), {
 			type: 'RefreshGameDataMessage',
 			data: this._gameData,
+		});
+
+		// Touch the games last updated time.
+		this._update();
+	}
+
+	private _handleResetGameMessage(_message: ResetGameMessage, userId: string): void {
+		if (!this._gameData.players[userId]) {
+			this._sendMessage(userId, {
+				type: 'ResetGameResponseMessage',
+				data: { error: 'Only players can reset the game.' },
+			});
+		}
+
+		// Generate a new game.
+		this._gameData = generateHanabiGameData({
+			players: this._gameData.players,
+			ruleSet: this._gameData.ruleSet,
+		});
+
+		for (const player of Object.values(this._gameData.players)) {
+			player.tileLocations = [];
+		}
+
+		// Send the updated state to all players/watchers.
+		this._sendMessage(this._getAllPlayerAndWatcherIds(), {
+			type: 'ResetGameResponseMessage',
+			data: { data: this._gameData },
 		});
 
 		// Touch the games last updated time.

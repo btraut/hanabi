@@ -1,4 +1,3 @@
-import { Size } from 'app/src/games/escape/Movement';
 import {
 	HANABI_TILE_SIZE,
 	HanabiTileLocation,

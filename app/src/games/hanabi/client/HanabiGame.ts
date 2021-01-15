@@ -18,6 +18,7 @@ import {
 	PlayTileResponseMessage,
 	RefreshGameDataMessage,
 	RemovePlayerResponseMessage,
+	ResetGameResponseMessage,
 	StartGameResponseMessage,
 } from 'app/src/games/hanabi/HanabiMessages';
 import AuthSocketManager, { AuthenticationState } from 'app/src/utils/client/AuthSocketManager';
@@ -187,6 +188,29 @@ export default class HanabiGame extends Game {
 
 		// After responding to our initial message, the server will also send a
 		// RefreshGameData message. We'll handle that in a separate handler.
+	}
+
+	public async reset(): Promise<void> {
+		this._sendMessage({
+			type: 'ResetGameMessage',
+			data: undefined,
+		});
+
+		const resetGameResponseMessage = await this._socketManager.expectMessageOfType<ResetGameResponseMessage>(
+			'ResetGameResponseMessage',
+		);
+
+		if (resetGameResponseMessage.data.error) {
+			throw new Error(resetGameResponseMessage.data.error);
+		}
+
+		if (!resetGameResponseMessage.data.data) {
+			throw new Error('Missing game data.');
+		}
+
+		this._gameData = resetGameResponseMessage.data.data;
+
+		this.onUpdate.emit();
 	}
 
 	public async moveTile(userId: string, tileId: string, newPosition: Position): Promise<void> {
