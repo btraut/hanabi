@@ -19,6 +19,8 @@ export interface Position {
 	y: number;
 }
 
+export interface Rect extends Size, Position {}
+
 export const HANABI_BOARD_SIZE: Size = { width: 500, height: 120 };
 export const HANABI_TILE_SIZE: Size = { width: 40, height: 48 };
 

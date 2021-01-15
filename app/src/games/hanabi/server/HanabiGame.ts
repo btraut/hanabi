@@ -14,9 +14,6 @@ import {
 	HanabiRuleSet,
 	HanabiStage,
 	HanabiTile,
-	HanabiTileLocation,
-	Position,
-	Size,
 } from 'app/src/games/hanabi/HanabiGameData';
 import {
 	AddPlayerMessage,
@@ -30,6 +27,7 @@ import {
 	RemovePlayerMessage,
 	StartGameMessage,
 } from 'app/src/games/hanabi/HanabiMessages';
+import { findBlankSpaceForTile } from 'app/src/games/hanabi/HanabiTileUtils';
 import Game, { GameSerialized } from 'app/src/games/server/Game';
 import GameMessenger from 'app/src/games/server/GameMessenger';
 import UserConnectionListener, {
@@ -41,34 +39,6 @@ import { shuffle } from 'app/src/utils/shuffle';
 
 export interface HanabiGameSerialized extends GameSerialized {
 	data: HanabiGameData;
-}
-
-function findBlankSpaceForTile(
-	_boardSize: Size,
-	_tileLocations: HanabiTileLocation[],
-	startPosition: Position = { x: 10, y: 10 },
-): Position {
-	// TODO
-
-	// let currentX = startPosition.x;
-	// let currentY = startPosition.y;
-	// let needsTesting = true;
-
-	// while (needsTesting) {
-	// 	let conflicting = false;
-
-	// 	for (const tileLocation of tileLocations) {
-	// 		if (tileLocation.position.) {
-
-	// 		}
-	// 	}
-
-	// 	needsTesting = conflicting;
-	// }
-
-	// return {x: currentX, y: currentY};
-
-	return startPosition;
 }
 
 export default class HanabiGame extends Game {
@@ -458,10 +428,7 @@ export default class HanabiGame extends Game {
 			const newTile = this._gameData.remainingTiles.pop()!;
 			this._gameData.players[userId].tileLocations.push({
 				tile: newTile,
-				position: findBlankSpaceForTile(
-					HANABI_BOARD_SIZE,
-					this._gameData.players[userId].tileLocations,
-				),
+				position: findBlankSpaceForTile(this._gameData.players[userId].tileLocations),
 			});
 		}
 
@@ -585,10 +552,7 @@ export default class HanabiGame extends Game {
 			const newTile = this._gameData.remainingTiles.pop()!;
 			this._gameData.players[userId].tileLocations.push({
 				tile: newTile,
-				position: findBlankSpaceForTile(
-					HANABI_BOARD_SIZE,
-					this._gameData.players[userId].tileLocations,
-				),
+				position: findBlankSpaceForTile(this._gameData.players[userId].tileLocations),
 			});
 		}
 
