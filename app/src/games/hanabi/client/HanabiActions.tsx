@@ -1,12 +1,6 @@
 import { useSocket } from 'app/src/components/SocketContext';
+import HanabiAction from 'app/src/games/hanabi/client/HanabiAction';
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
-import HanabiLives from 'app/src/games/hanabi/client/HanabiLives';
-import HanabiTileView from 'app/src/games/hanabi/client/HanabiTileView';
-import {
-	HANABI_MAX_LIVES,
-	HanabiGameActionType,
-	tileBackgroundClasses,
-} from 'app/src/games/hanabi/HanabiGameData';
 import classnames from 'classnames';
 
 export default function HanabiActions(): JSX.Element {
@@ -25,90 +19,14 @@ export default function HanabiActions(): JSX.Element {
 				<p className="italic text-lg color-gray-600 p-4">No actions yet!</p>
 			)}
 			{actionsReversed.map((action, index) => {
-				const player = game.gameData.players[action.playerId];
-				let actionContent: JSX.Element | null = null;
-
-				if (action.type === HanabiGameActionType.Play) {
-					if (action.valid) {
-						actionContent = (
-							<>
-								<span className="align-middle">
-									<span className="font-bold">{player.name}</span> played
-								</span>
-								<div className="inline-block align-middle mx-2">
-									<HanabiTileView tile={action.tile} />
-								</div>
-							</>
-						);
-					} else {
-						actionContent = (
-							<>
-								<span className="align-middle">
-									<span className="font-bold">{player.name}</span> played
-								</span>
-								<div className="inline-block align-middle mx-2">
-									<HanabiTileView tile={action.tile} />
-								</div>
-								<span className="align-middle">but it was invalid and was discarded:</span>
-								<div className="inline-block align-middle mx-2">
-									<HanabiLives lives={action.remainingLives} maxLives={HANABI_MAX_LIVES} />
-								</div>
-							</>
-						);
-					}
-				} else if (action.type === HanabiGameActionType.Discard) {
-					actionContent = (
-						<>
-							<span className="align-middle">
-								<span className="font-bold">{player.name}</span> discarded
-							</span>
-							<div className="inline-block align-middle mx-2">
-								<HanabiTileView tile={action.tile} />
-							</div>
-						</>
-					);
-				} else if (
-					action.type === HanabiGameActionType.GiveColorClue ||
-					action.type === HanabiGameActionType.GiveNumberClue
-				) {
-					const recipient = game.gameData.players[action.recipientId];
-
-					const clue =
-						action.type === HanabiGameActionType.GiveColorClue ? (
-							<div
-								className={classnames(
-									'inline-block align-middle w-6 h-6 rounded-full border-black border-4 mx-1.5',
-									tileBackgroundClasses[action.color!],
-								)}
-							/>
-						) : (
-							<span className="align-middle">
-								{' '}
-								<span className="font-bold">{action.number!}</span>
-								{action.tiles.length === 1 ? '' : 's'}
-							</span>
-						);
-
-					actionContent = (
-						<>
-							<span className="align-middle">
-								<span className="font-bold">{player.name}</span> →{' '}
-								<span className="font-bold">{recipient.name}</span>: {action.tiles.length}{' '}
-								{action.tiles.length === 1 ? 'tile is a' : 'tiles are'}
-							</span>
-							{clue}
-						</>
-					);
-				}
-
 				return (
 					<div
-						className={classnames('border-solid border-gray-600 p-4 text-lg', {
+						className={classnames('border-solid border-gray-600 cursor-zoom-in', {
 							'border-t-2': index !== 0,
 						})}
 						key={action.id}
 					>
-						{actionContent}
+						<HanabiAction action={action} />
 					</div>
 				);
 			})}

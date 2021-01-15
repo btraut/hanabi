@@ -6,6 +6,7 @@ import {
 	HanabiTileDragItem,
 	TILE_SIZE,
 } from 'app/src/games/hanabi/client/HanabiDragTypes';
+import { useHanabiHighlightTileContext } from 'app/src/games/hanabi/client/HanabiHighlightTileContext';
 import HanabiPlayerTilesDragLayer from 'app/src/games/hanabi/client/HanabiPlayerTilesDragLayer';
 import HanabiTileView from 'app/src/games/hanabi/client/HanabiTileView';
 import { HANABI_BOARD_SIZE, HanabiTile } from 'app/src/games/hanabi/HanabiGameData';
@@ -27,6 +28,8 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 	if (!game || !userId) {
 		throw new Error('Must connect/join. This should never happen.');
 	}
+
+	const { highlightedTiles } = useHanabiHighlightTileContext();
 
 	const ownTiles = id === userId;
 	const ownTurn = game.gameData.turnOrder[0] === userId;
@@ -82,6 +85,7 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 								tile={tileLocation.tile}
 								ownTile={ownTiles}
 								draggable={game.gameData.finishedReason === null && ownTiles}
+								showBorder={highlightedTiles.has(tileLocation.tile.id)}
 							/>
 						</div>
 					))}

@@ -24,6 +24,7 @@ export default function HanabiTileView({
 	placeholder = false,
 	ownTile = false,
 	draggable = false,
+	showBorder = false,
 }: Props): JSX.Element {
 	const [{ isDragging }, dragRef, preview] = useDrag<
 		HanabiTileDragItem,
@@ -65,6 +66,7 @@ export default function HanabiTileView({
 				{
 					hidden: isDragging,
 					'opacity-20': placeholder,
+					'marquee-border': showBorder,
 				},
 			])}
 			onClick={onClick ? handleClick : undefined}

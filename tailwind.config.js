@@ -41,6 +41,9 @@ module.exports = {
 			boxShadow: {
 				dark: '0 0 50px -20px black',
 			},
+			cursor: {
+				'zoom-in': 'zoom-in',
+			},
 		},
 	},
 	variants: {

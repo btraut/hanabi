@@ -1,6 +1,7 @@
 import { hanabiDragTypes } from 'app/src/games/hanabi/client/HanabiDragTypes';
 import HanabiLoadGameView from 'app/src/games/hanabi/client/HanabiLoadGameView';
 import HanabiMainMenu from 'app/src/games/hanabi/client/HanabiMainMenu';
+import HanabiStyles from 'app/src/games/hanabi/client/HanabiStyles';
 import HanabiWatchForm from 'app/src/games/hanabi/client/HanabiWatchForm';
 import { useDrop } from 'react-dnd';
 import { Route, Switch } from 'react-router-dom';
@@ -37,6 +38,7 @@ export default function HanabiRouter(): JSX.Element {
 					<HanabiMainMenu />
 				</Route>
 			</Switch>
+			<HanabiStyles />
 			<div id="portal" />
 		</div>
 	);

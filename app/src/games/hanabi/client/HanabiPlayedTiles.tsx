@@ -1,5 +1,6 @@
 import { useSocket } from 'app/src/components/SocketContext';
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
+import { useHanabiHighlightTileContext } from 'app/src/games/hanabi/client/HanabiHighlightTileContext';
 import HanabiTileView from 'app/src/games/hanabi/client/HanabiTileView';
 import {
 	HanabiRuleSet,
@@ -16,6 +17,8 @@ export default function HanabiPlayedTiles(): JSX.Element {
 	if (!game || !userId) {
 		throw new Error('Must connect/join. This should never happen.');
 	}
+
+	const { highlightedTiles } = useHanabiHighlightTileContext();
 
 	const colors: HanabiTileColor[] = ['red', 'blue', 'green', 'yellow', 'white'];
 	if (game.gameData.ruleSet !== HanabiRuleSet.Basic) {
@@ -71,7 +74,11 @@ export default function HanabiPlayedTiles(): JSX.Element {
 						{discardedTiles.length > 0 && (
 							<div className="grid grid-flow-col justify-start gap-x-1">
 								{discardedTiles.map((tile) => (
-									<HanabiTileView key={`discarded-${tile.id}`} tile={tile} />
+									<HanabiTileView
+										key={`discarded-${tile.id}`}
+										tile={tile}
+										showBorder={highlightedTiles.has(tile.id)}
+									/>
 								))}
 							</div>
 						)}
