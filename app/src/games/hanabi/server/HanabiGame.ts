@@ -442,7 +442,7 @@ export default class HanabiGame extends Game {
 			(t) => t.color === tile.color && t.number === tile.number,
 		);
 		const prevNumberInSequenceExists = !!(
-			tile.number === 1 &&
+			tile.number === 1 ||
 			this._gameData.playedTiles.find((t) => t.color === tile.color && t.number === tile.number - 1)
 		);
 

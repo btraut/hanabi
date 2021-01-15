@@ -20,6 +20,8 @@ export default function HanabiPlayedTiles(): JSX.Element {
 
 	const { highlightedTiles } = useHanabiHighlightTileContext();
 
+	console.log({ highlightedTiles });
+
 	const colors: HanabiTileColor[] = ['red', 'blue', 'green', 'yellow', 'white'];
 	if (game.gameData.ruleSet !== HanabiRuleSet.Basic) {
 		colors.push('purple');
@@ -50,26 +52,34 @@ export default function HanabiPlayedTiles(): JSX.Element {
 						className="grid grid-flow-col gap-x-4 h-12 justify-start items-center"
 					>
 						<div className="grid grid-flow-col justify-start gap-x-1">
-							{TILE_NUMBERS.map((number) => (
-								<div
-									key={`tile-played-${color}-${number}`}
-									className="w-12 h-10 relative flex items-center justify-center"
-								>
-									<div className="transform rotate-90 absolute">
-										<HanabiTileView
-											tile={{
-												id: '',
-												color,
-												number,
-											}}
-											placeholder={
-												greatestPlayedForEachColor[color] === null ||
-												number > (greatestPlayedForEachColor[color] || 0)
-											}
-										/>
+							{TILE_NUMBERS.map((number) => {
+								const playedTile = game.gameData.playedTiles.find(
+									(t) => t.color === color && t.number === number,
+								);
+
+								return (
+									<div
+										key={`tile-played-${color}-${number}`}
+										className="w-12 h-10 relative flex items-center justify-center"
+									>
+										<div className="transform rotate-90 absolute">
+											<HanabiTileView
+												tile={
+													playedTile
+														? playedTile
+														: {
+																id: '',
+																color,
+																number,
+														  }
+												}
+												showBorder={playedTile && highlightedTiles.has(playedTile.id)}
+												placeholder={!playedTile}
+											/>
+										</div>
 									</div>
-								</div>
-							))}
+								);
+							})}
 						</div>
 						{discardedTiles.length > 0 && (
 							<div className="grid grid-flow-col justify-start gap-x-1">
