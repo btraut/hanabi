@@ -53,6 +53,8 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 		},
 	});
 
+	const enableOnClick = ownTurn && onTileClick && (ownTiles || game.gameData.clues > 0);
+
 	return (
 		<div ref={dropRef}>
 			{thisPlayersTurn && ownTurn && (
@@ -66,7 +68,7 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 			{!thisPlayersTurn && (
 				<p className="text-xl text-white pl-2">{game.gameData.players[id].name}</p>
 			)}
-			<div className="border-4 border-solid border-black bg-white">
+			<div className="border-4 border-black bg-white">
 				<div style={HANABI_BOARD_SIZE} className="relative">
 					{ownTiles && <HanabiPlayerTilesDragLayer />}
 					{game.gameData.players[id].tileLocations.map((tileLocation) => (
@@ -76,7 +78,7 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 							style={{ top: tileLocation.position.y, left: tileLocation.position.x }}
 						>
 							<HanabiTileView
-								onClick={ownTurn ? onTileClick : undefined}
+								onClick={enableOnClick ? onTileClick : undefined}
 								tile={tileLocation.tile}
 								ownTile={ownTiles}
 								draggable={game.gameData.finishedReason === null && ownTiles}

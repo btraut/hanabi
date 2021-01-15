@@ -55,7 +55,7 @@ export default function HanabiTileActionsTooltip({
 							<div className="grid grid-flow-col gap-x-3 items-center">
 								<button
 									className={classnames(
-										'w-6 h-6 rounded-full border-solid border-black border-4',
+										'w-6 h-6 rounded-full border-black border-4',
 										tileBackgroundClasses[tile.color],
 									)}
 									onClick={() => {
@@ -91,7 +91,7 @@ export default function HanabiTileActionsTooltip({
 								borderLeftWidth: 12,
 								borderRightWidth: 12,
 							}}
-							className="border-gray-900 border-solid"
+							className="border-gray-900"
 						/>
 					</div>
 				</div>

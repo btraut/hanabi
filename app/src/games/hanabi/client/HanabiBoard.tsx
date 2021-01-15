@@ -107,7 +107,7 @@ export default function HanabiBoard(): JSX.Element {
 			<div className="grid grid-flow-row gap-y-10">
 				<div>
 					<p className="text-xl text-white pl-2">Board:</p>
-					<div className="border-4 border-solid border-black bg-white p-4 grid grid-flow-row gap-y-4">
+					<div className="border-4 border-black bg-white p-4 grid grid-flow-row gap-y-4">
 						<HanabiClues />
 						<HanabiPlayedTiles />
 						<div className="py-1">
@@ -117,7 +117,10 @@ export default function HanabiBoard(): JSX.Element {
 				</div>
 				<div>
 					<p className="text-xl text-white pl-2">Actions:</p>
-					<div className="border-4 border-solid border-black bg-white grid grid-flow-row gap-y-4">
+					<div
+						style={{ maxHeight: 300 }}
+						className="border-4 border-black bg-white grid grid-flow-row gap-y-4 overflow-y-auto"
+					>
 						<HanabiActions />
 					</div>
 				</div>

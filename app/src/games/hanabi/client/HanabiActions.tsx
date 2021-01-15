@@ -32,10 +32,10 @@ export default function HanabiActions(): JSX.Element {
 					if (action.valid) {
 						actionContent = (
 							<>
-								<span>
+								<span className="align-middle">
 									<span className="font-bold">{player.name}</span> played
 								</span>
-								<div className="inline-block mx-2">
+								<div className="inline-block align-middle mx-2">
 									<HanabiTileView tile={action.tile} />
 								</div>
 							</>
@@ -43,13 +43,13 @@ export default function HanabiActions(): JSX.Element {
 					} else {
 						actionContent = (
 							<>
-								<span>
+								<span className="align-middle">
 									<span className="font-bold">{player.name}</span> played
 								</span>
 								<div className="inline-block align-middle mx-2">
 									<HanabiTileView tile={action.tile} />
 								</div>
-								<span>but it was invalid and was discarded:</span>
+								<span className="align-middle">but it was invalid and was discarded:</span>
 								<div className="inline-block align-middle mx-2">
 									<HanabiLives lives={action.remainingLives} maxLives={HANABI_MAX_LIVES} />
 								</div>
@@ -59,7 +59,7 @@ export default function HanabiActions(): JSX.Element {
 				} else if (action.type === HanabiGameActionType.Discard) {
 					actionContent = (
 						<>
-							<span>
+							<span className="align-middle">
 								<span className="font-bold">{player.name}</span> discarded
 							</span>
 							<div className="inline-block align-middle mx-2">
@@ -77,12 +77,13 @@ export default function HanabiActions(): JSX.Element {
 						action.type === HanabiGameActionType.GiveColorClue ? (
 							<div
 								className={classnames(
-									'inline-block align-middle w-6 h-6 rounded-full border-solid border-black border-4 mx-1',
+									'inline-block align-middle w-6 h-6 rounded-full border-black border-4 mx-1.5',
 									tileBackgroundClasses[action.color!],
 								)}
 							/>
 						) : (
-							<span className="inline-block mx-1">
+							<span className="align-middle">
+								{' '}
 								<span className="font-bold">{action.number!}</span>
 								{action.tiles.length === 1 ? '' : 's'}
 							</span>
@@ -90,8 +91,8 @@ export default function HanabiActions(): JSX.Element {
 
 					actionContent = (
 						<>
-							<span>
-								<span className="font-bold">{player.name}</span> gave a clue to{' '}
+							<span className="align-middle">
+								<span className="font-bold">{player.name}</span> →{' '}
 								<span className="font-bold">{recipient.name}</span>: {action.tiles.length}{' '}
 								{action.tiles.length === 1 ? 'tile is a' : 'tiles are'}
 							</span>

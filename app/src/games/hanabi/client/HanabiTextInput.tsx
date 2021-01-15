@@ -9,7 +9,7 @@ interface Props {
 export default function HanabiTextInput({ onChange, value, id }: Props): JSX.Element {
 	return (
 		<input
-			className="block px-3 py-2 bg-gray-900 border-6 border-solid border-white text-white w-full font-bold text-2xl"
+			className="block px-3 py-2 bg-gray-900 border-6 border-white text-white w-full font-bold text-2xl"
 			id={id}
 			type="text"
 			autoCorrect="off"
