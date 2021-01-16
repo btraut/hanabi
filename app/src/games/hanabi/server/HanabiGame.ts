@@ -379,6 +379,13 @@ export default class HanabiGame extends Game {
 	}
 
 	private _discardedTileIsFatal(tile: HanabiTile): boolean {
+		// Check if the tile has already been played.
+		if (
+			this._gameData.playedTiles.find((t) => t.color === tile.color && t.number === tile.number)
+		) {
+			return false;
+		}
+
 		// Check remaining tiles for a copy.
 		if (
 			this._gameData.remainingTiles.find((t) => t.color === tile.color && t.number === tile.number)

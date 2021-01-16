@@ -1,10 +1,8 @@
 import { useSocket } from 'app/src/components/SocketContext';
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
 import { useHanabiHighlightTileContext } from 'app/src/games/hanabi/client/HanabiHighlightTileContext';
-import HanabiLives from 'app/src/games/hanabi/client/HanabiLives';
 import HanabiTileView from 'app/src/games/hanabi/client/HanabiTileView';
 import {
-	HANABI_MAX_LIVES,
 	HanabiGameAction,
 	HanabiGameActionType,
 	tileBackgroundClasses,
@@ -65,14 +63,10 @@ export default function HanabiAction({ action }: Props): JSX.Element {
 			actionContent = (
 				<>
 					<span className="align-middle">
-						<span className="font-bold">{player.name}</span> played
+						<span className="font-bold">{player.name}</span> tried, but failed to play
 					</span>
 					<div className="inline-block align-middle mx-2">
 						<HanabiTileView tile={action.tile} />
-					</div>
-					<span className="align-middle">but it was invalid and was discarded:</span>
-					<div className="inline-block align-middle mx-2">
-						<HanabiLives lives={action.remainingLives} maxLives={HANABI_MAX_LIVES} />
 					</div>
 				</>
 			);

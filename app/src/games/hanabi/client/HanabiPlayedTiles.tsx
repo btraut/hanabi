@@ -20,8 +20,6 @@ export default function HanabiPlayedTiles(): JSX.Element {
 
 	const { highlightedTiles } = useHanabiHighlightTileContext();
 
-	console.log({ highlightedTiles });
-
 	const colors: HanabiTileColor[] = ['red', 'blue', 'green', 'yellow', 'white'];
 	if (game.gameData.ruleSet !== HanabiRuleSet.Basic) {
 		colors.push('purple');
