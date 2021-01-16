@@ -52,14 +52,14 @@ export default function HanabiMainMenu(): JSX.Element {
 		<div className="grid grid-flow-row gap-10">
 			<div className="grid grid-flow-row gap-4">
 				<div className="grid grid-flow-col gap-2 justify-center content-center">
-					<HanabiTileView tile={generateRandomTile()} />
-					<HanabiTileView tile={generateRandomTile()} />
-					<HanabiTileView tile={generateRandomTile()} />
-					<HanabiTileView tile={generateRandomTile()} />
-					<HanabiTileView tile={generateRandomTile()} />
-					<HanabiTileView tile={generateRandomTile()} />
-					<HanabiTileView tile={generateRandomTile()} />
-					<HanabiTileView tile={generateRandomTile()} />
+					<HanabiTileView tile={generateRandomTile()} shadow={false} />
+					<HanabiTileView tile={generateRandomTile()} shadow={false} />
+					<HanabiTileView tile={generateRandomTile()} shadow={false} />
+					<HanabiTileView tile={generateRandomTile()} shadow={false} />
+					<HanabiTileView tile={generateRandomTile()} shadow={false} />
+					<HanabiTileView tile={generateRandomTile()} shadow={false} />
+					<HanabiTileView tile={generateRandomTile()} shadow={false} />
+					<HanabiTileView tile={generateRandomTile()} shadow={false} />
 				</div>
 				<div className="text-lg font-bold text-center px-5 py-3 rounded-xl bg-white text-black">
 					Hanabi is a cooperative puzzle game for 2-5 players.
