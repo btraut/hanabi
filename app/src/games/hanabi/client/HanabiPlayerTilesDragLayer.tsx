@@ -44,8 +44,10 @@ export default function HanabiPlayerTilesDragLayer(): JSX.Element | null {
 		tileContainer = (
 			<div
 				key={`TileContainer-${tileLocation.tile.id}`}
-				className="absolute"
-				style={{ top: topClamped, left: leftClamped }}
+				className="absolute top-0 left-0"
+				style={{
+					transform: `translate(${leftClamped}px, ${topClamped}px)`,
+				}}
 			>
 				<HanabiTileView tile={tileLocation.tile} ownTile />
 			</div>
@@ -53,6 +55,6 @@ export default function HanabiPlayerTilesDragLayer(): JSX.Element | null {
 	}
 
 	return isDragging ? (
-		<div className="absolute inset-0 pointer-events-none w-tiles h-tiles">{tileContainer}</div>
+		<div className="absolute inset-0 pointer-events-none">{tileContainer}</div>
 	) : null;
 }

@@ -118,7 +118,9 @@ export default function HanabiBoard(): JSX.Element {
 								}}
 							>
 								<HanabiPlayerAvatar player={game.gameData.players[id]} size="sm" />
-								{thisPlayersTurn && <p className="text-white italic">Your turn!</p>}
+								{thisPlayersTurn && (
+									<p className="text-white italic whitespace-nowrap">Your turn!</p>
+								)}
 							</div>
 							<HanabiPlayerTiles
 								id={id}
@@ -136,7 +138,10 @@ export default function HanabiBoard(): JSX.Element {
 				<div className="border-4 border-black bg-white rounded-xl p-4">
 					<HanabiPlayedTiles />
 				</div>
-				<div className="border-4 border-black bg-white rounded-xl" style={{ maxHeight: 300 }}>
+				<div
+					className="border-4 border-black bg-white rounded-xl overflow-y-auto"
+					style={{ maxHeight: 300 }}
+				>
 					<HanabiActions />
 				</div>
 			</div>

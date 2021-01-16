@@ -9,7 +9,7 @@ import {
 	HANABI_TILE_SIZE,
 	HanabiTile,
 } from 'app/src/games/hanabi/HanabiGameData';
-// import classnames from 'classnames';
+import classnames from 'classnames';
 import { useDrop } from 'react-dnd';
 
 interface Props {
@@ -67,27 +67,18 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 
 	return (
 		<div ref={dropRef}>
-			<div className="border-4 border-black bg-white rounded-xl">
+			<div className="border-4 border-black bg-white rounded-xl p-0.5">
 				<div style={HANABI_BOARD_SIZE} className="relative">
-					{/* <p
-						className={classnames('font-bold text-8xl absolute', {
-							'text-gray-300': !thisPlayersTurn,
-							'text-red-200': thisPlayersTurn,
-						})}
-						style={{
-							left: 4,
-							bottom: 0,
-							pointerEvents: 'none',
-						}}
-					>
-						{player.name}
-					</p> */}
 					{ownTiles && <HanabiPlayerTilesDragLayer />}
 					{player.tileLocations.map((tileLocation) => (
 						<div
 							key={`TileContainer-${tileLocation.tile.id}`}
-							className="absolute"
-							style={{ top: tileLocation.position.y, left: tileLocation.position.x }}
+							className={classnames('absolute top-0 left-0', {
+								'duration-100': !ownTiles,
+							})}
+							style={{
+								transform: `translate(${tileLocation.position.x}px, ${tileLocation.position.y}px)`,
+							}}
 						>
 							<HanabiTileView
 								onClick={enableOnClick ? onTileClick : undefined}
