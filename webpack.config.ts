@@ -65,13 +65,13 @@ const clientConfig: Configuration = {
 				],
 			},
 			{
-				test: /\.(woff|woff2|ttf|eot)$/,
+				test: /\.(woff|woff2|ttf|eot|wav)$/,
 				use: [
 					{
 						loader: 'file-loader',
 						options: {
 							name: '[path][name].[ext]',
-							publicPath: '../',
+							context: APP_PATH,
 						},
 					},
 				],
