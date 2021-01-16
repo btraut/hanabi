@@ -39,7 +39,7 @@ export default function HanabiWatchForm(): JSX.Element {
 						className="text-white font-bold text-2xl justify-end"
 						htmlFor="HanabiGameWatchForm-Code"
 					>
-						Code:
+						Game Code:
 					</label>
 					<HanabiTextInput
 						id="HanabiGameWatchForm-Code"

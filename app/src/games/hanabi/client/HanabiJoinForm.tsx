@@ -36,7 +36,7 @@ export default function HanabiJoinForm(): JSX.Element {
 						className="text-white font-bold text-2xl justify-end"
 						htmlFor="HanabiJoinForm-Name"
 					>
-						Name:
+						Your Name:
 					</label>
 					<HanabiTextInput
 						id="HanabiJoinForm-Name"
