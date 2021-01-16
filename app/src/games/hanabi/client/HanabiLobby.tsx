@@ -2,8 +2,8 @@ import { useSocket } from 'app/src/components/SocketContext';
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
 import HanabiJoinForm from 'app/src/games/hanabi/client/HanabiJoinForm';
 import HanabiMenuButton from 'app/src/games/hanabi/client/HanabiMenuButton';
+import HanabiPlayerAvatar from 'app/src/games/hanabi/client/HanabiPlayerAvatar';
 import { HANABI_MIN_PLAYERS } from 'app/src/games/hanabi/HanabiGameData';
-import classnames from 'classnames';
 
 declare const DOMAIN_BASE: string;
 
@@ -30,45 +30,33 @@ export default function HanabiLobby(): JSX.Element {
 	const players = Object.values(game.gameData.players);
 
 	return (
-		<>
+		<div className="grid grid-flow-row gap-y-10">
 			{userIsJoined && (
-				<p className="max-w-screen-md mb-10 bg-gray-400 font-bold text-lg text-center">
+				<p className="max-w-screen-md bg-gray-400 font-bold text-lg text-center">
 					<a className="inline-block px-5 py-3 text-blue-700 hover:text-blue-800" href={link}>
 						{link}
 					</a>
 				</p>
 			)}
 			{players.length > 0 && (
-				<ul className="mb-10 flex justify-center">
+				<div className="grid grid-flow-col gap-x-4 justify-center">
 					{players.map((player) => (
-						<li
-							className={classnames('m-4 mw-30 flex flex-col items-center', {
-								'opacity-40': !player.connected,
-							})}
-							key={player.id}
-						>
-							<img className="block w-30 h-30 mb-4" src="/images/user-white.svg" />
-							<div className="text-lg font-bold truncate text-white text-center">{player.name}</div>
-						</li>
+						<HanabiPlayerAvatar key={player.id} player={player} />
 					))}
-				</ul>
+				</div>
 			)}
 			{userIsJoined ? (
-				<div className="flex justify-center">
-					<div className="mx-2">
-						<HanabiMenuButton label="Leave" onClick={handleLeaveClick} />
-					</div>
-					<div className="mx-2">
-						<HanabiMenuButton
-							label="Start Game"
-							onClick={handleStartClick}
-							disabled={!enoughPlayers}
-						/>
-					</div>
+				<div className="grid grid-flow-col gap-x-4 justify-center">
+					<HanabiMenuButton label="Leave" onClick={handleLeaveClick} />
+					<HanabiMenuButton
+						label="Start Game"
+						onClick={handleStartClick}
+						disabled={!enoughPlayers}
+					/>
 				</div>
 			) : (
 				<HanabiJoinForm />
 			)}
-		</>
+		</div>
 	);
 }

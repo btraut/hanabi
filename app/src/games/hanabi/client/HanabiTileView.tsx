@@ -13,7 +13,7 @@ interface Props {
 	tile: HanabiTile;
 	ownTile?: boolean;
 	draggable?: boolean;
-	showBorder?: boolean;
+	highlight?: boolean;
 	onClick?: (event: React.MouseEvent<HTMLDivElement>, tile: HanabiTile, ownTile: boolean) => void;
 	placeholder?: boolean;
 }
@@ -24,7 +24,7 @@ export default function HanabiTileView({
 	placeholder = false,
 	ownTile = false,
 	draggable = false,
-	showBorder = false,
+	highlight = false,
 }: Props): JSX.Element {
 	const [{ isDragging }, dragRef, preview] = useDrag<
 		HanabiTileDragItem,
@@ -66,7 +66,7 @@ export default function HanabiTileView({
 				{
 					hidden: isDragging,
 					'opacity-20': placeholder,
-					'marquee-border': showBorder,
+					'marquee-border': highlight,
 				},
 			])}
 			onClick={onClick ? handleClick : undefined}

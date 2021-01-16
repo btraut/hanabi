@@ -5,10 +5,11 @@ import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
 import HanabiGameOverPopup from 'app/src/games/hanabi/client/HanabiGameOverPopup';
 import HanabiLives from 'app/src/games/hanabi/client/HanabiLives';
 import HanabiPlayedTiles from 'app/src/games/hanabi/client/HanabiPlayedTiles';
+import HanabiPlayerAvatar from 'app/src/games/hanabi/client/HanabiPlayerAvatar';
 import HanabiPlayerTiles from 'app/src/games/hanabi/client/HanabiPlayerTiles';
 import HanabiTileActionsTooltip from 'app/src/games/hanabi/client/HanabiTileActionsTooltip';
 import { HANABI_MAX_LIVES, HanabiTile } from 'app/src/games/hanabi/HanabiGameData';
-import { useCallback, useState } from 'react';
+import { Fragment, useCallback, useState } from 'react';
 
 function rotateArrayToItem<T>(arr: T[], item: T): T[] {
 	const itemIndex = arr.indexOf(item);
@@ -94,35 +95,42 @@ export default function HanabiBoard(): JSX.Element {
 
 	return (
 		<div className="grid grid-flow-col gap-x-10 relative">
-			<div className="grid grid-flow-row gap-y-10 content-start">
-				{turnOrder.map((id) => (
-					<div key={`player-${id}`}>
-						<HanabiPlayerTiles
-							id={id}
-							onTileClick={game.gameData.finishedReason === null ? handleTileClick : undefined}
-						/>
-					</div>
-				))}
+			<div
+				className="grid gap-x-6 gap-y-10 content-start items-center"
+				style={{ gridTemplateColumns: 'auto auto' }}
+			>
+				{turnOrder.map((id) => {
+					const thisPlayersTurn =
+						game.gameData.finishedReason === null && game.gameData.turnOrder[0] === id;
+
+					return (
+						<Fragment key={`player-${id}`}>
+							<HanabiPlayerAvatar
+								player={game.gameData.players[id]}
+								size="sm"
+								color={thisPlayersTurn ? 'yellow' : 'white'}
+							/>
+							<HanabiPlayerTiles
+								id={id}
+								onTileClick={game.gameData.finishedReason === null ? handleTileClick : undefined}
+							/>
+						</Fragment>
+					);
+				})}
 			</div>
 			<div className="grid grid-flow-row gap-y-10">
-				<div>
-					<p className="text-xl text-white pl-2">Board:</p>
-					<div className="border-4 border-black bg-white p-4 grid grid-flow-row gap-y-4">
-						<HanabiClues />
-						<HanabiPlayedTiles />
-						<div className="py-1">
-							<HanabiLives lives={game.gameData.lives} maxLives={HANABI_MAX_LIVES} />
-						</div>
+				<div className="border-4 border-black bg-white p-4 grid grid-flow-row gap-y-4">
+					<HanabiClues />
+					<HanabiPlayedTiles />
+					<div className="py-1">
+						<HanabiLives lives={game.gameData.lives} maxLives={HANABI_MAX_LIVES} />
 					</div>
 				</div>
-				<div>
-					<p className="text-xl text-white pl-2">Actions:</p>
-					<div
-						style={{ maxHeight: 300 }}
-						className="border-4 border-black bg-white grid grid-flow-row gap-y-4 overflow-y-auto"
-					>
-						<HanabiActions />
-					</div>
+				<div
+					style={{ maxHeight: 300 }}
+					className="border-4 border-black bg-white grid grid-flow-row gap-y-4 overflow-y-auto"
+				>
+					<HanabiActions />
 				</div>
 			</div>
 			{showMenuForTile && (

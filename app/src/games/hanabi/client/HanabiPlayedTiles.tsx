@@ -71,7 +71,7 @@ export default function HanabiPlayedTiles(): JSX.Element {
 																number,
 														  }
 												}
-												showBorder={playedTile && highlightedTiles.has(playedTile.id)}
+												highlight={playedTile && highlightedTiles.has(playedTile.id)}
 												placeholder={!playedTile}
 											/>
 										</div>
@@ -85,7 +85,7 @@ export default function HanabiPlayedTiles(): JSX.Element {
 									<HanabiTileView
 										key={`discarded-${tile.id}`}
 										tile={tile}
-										showBorder={highlightedTiles.has(tile.id)}
+										highlight={highlightedTiles.has(tile.id)}
 									/>
 								))}
 							</div>

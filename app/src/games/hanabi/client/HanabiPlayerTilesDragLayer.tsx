@@ -1,11 +1,8 @@
 import { useSocket } from 'app/src/components/SocketContext';
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
-import {
-	CONTAINER_SIZE,
-	hanabiDragTypes,
-	TILE_SIZE,
-} from 'app/src/games/hanabi/client/HanabiDragTypes';
+import { hanabiDragTypes } from 'app/src/games/hanabi/client/HanabiDragTypes';
 import HanabiTileView from 'app/src/games/hanabi/client/HanabiTileView';
+import { HANABI_BOARD_SIZE, HANABI_TILE_SIZE } from 'app/src/games/hanabi/HanabiGameData';
 import { useDragLayer } from 'react-dnd';
 
 export default function HanabiPlayerTilesDragLayer(): JSX.Element | null {
@@ -35,8 +32,14 @@ export default function HanabiPlayerTilesDragLayer(): JSX.Element | null {
 		const left = Math.round(origintalPosition.x + differenceFromInitialOffset.x);
 		const top = Math.round(origintalPosition.y + differenceFromInitialOffset.y);
 
-		const leftClamped = Math.min(Math.max(left, 0), CONTAINER_SIZE.width - TILE_SIZE.width);
-		const topClamped = Math.min(Math.max(top, 0), CONTAINER_SIZE.height - TILE_SIZE.height);
+		const leftClamped = Math.min(
+			Math.max(left, 0),
+			HANABI_BOARD_SIZE.width - HANABI_TILE_SIZE.width,
+		);
+		const topClamped = Math.min(
+			Math.max(top, 0),
+			HANABI_BOARD_SIZE.height - HANABI_TILE_SIZE.height,
+		);
 
 		tileContainer = (
 			<div
