@@ -60,7 +60,7 @@ export default function HanabiTileView({
 			ref={dragRef}
 			style={HANABI_TILE_SIZE}
 			className={classnames([
-				'bg-black rounded-lg text-3xl font-bold flex items-center justify-center select-none focus:outline-none focus:ring focus:border-blue-800',
+				'bg-black rounded-lg text-3xl font-bold flex items-center justify-center select-none shadow-light focus:outline-none focus:ring focus:border-blue-800',
 				tileColorClasses[tile.color],
 				cursor,
 				{
