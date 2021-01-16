@@ -23,15 +23,15 @@ export default function HanabiPlayerAvatar({
 			)}
 			key={player.id}
 		>
-			<User color={color} size={size === 'lg' ? 102 : 72} />
-			<div
+			<User color={color} size={size === 'lg' ? 102 : 48} />
+			<p
 				className="text-lg font-bold truncate text-center"
 				style={{
 					color,
 				}}
 			>
 				{player.name}
-			</div>
+			</p>
 		</div>
 	);
 }

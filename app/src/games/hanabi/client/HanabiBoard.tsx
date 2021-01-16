@@ -9,6 +9,7 @@ import HanabiPlayerAvatar from 'app/src/games/hanabi/client/HanabiPlayerAvatar';
 import HanabiPlayerTiles from 'app/src/games/hanabi/client/HanabiPlayerTiles';
 import HanabiTileActionsTooltip from 'app/src/games/hanabi/client/HanabiTileActionsTooltip';
 import { HANABI_MAX_LIVES, HanabiTile } from 'app/src/games/hanabi/HanabiGameData';
+import classnames from 'classnames';
 import { Fragment, useCallback, useState } from 'react';
 
 function rotateArrayToItem<T>(arr: T[], item: T): T[] {
@@ -94,9 +95,9 @@ export default function HanabiBoard(): JSX.Element {
 	}, []);
 
 	return (
-		<div className="grid grid-flow-col gap-x-10 relative">
+		<div className="grid grid-flow-col gap-x-6 relative">
 			<div
-				className="grid gap-x-6 gap-y-10 content-start items-center"
+				className="grid gap-y-6 content-start items-start"
 				style={{ gridTemplateColumns: 'auto auto' }}
 			>
 				{turnOrder.map((id) => {
@@ -105,11 +106,20 @@ export default function HanabiBoard(): JSX.Element {
 
 					return (
 						<Fragment key={`player-${id}`}>
-							<HanabiPlayerAvatar
-								player={game.gameData.players[id]}
-								size="sm"
-								color={thisPlayersTurn ? 'yellow' : 'white'}
-							/>
+							<div
+								className={classnames('my-4 p-3 border-black border-4', {
+									'bg-gray-800': !thisPlayersTurn,
+									'bg-red-900': thisPlayersTurn,
+								})}
+								style={{
+									borderTopLeftRadius: '0.75rem',
+									borderBottomLeftRadius: '0.75rem',
+									borderRightWidth: 0,
+								}}
+							>
+								<HanabiPlayerAvatar player={game.gameData.players[id]} size="sm" />
+								{thisPlayersTurn && <p className="text-white italic">Your turn!</p>}
+							</div>
 							<HanabiPlayerTiles
 								id={id}
 								onTileClick={game.gameData.finishedReason === null ? handleTileClick : undefined}
@@ -118,18 +128,15 @@ export default function HanabiBoard(): JSX.Element {
 					);
 				})}
 			</div>
-			<div className="grid grid-flow-row gap-y-10">
-				<div className="border-4 border-black bg-white p-4 grid grid-flow-row gap-y-4">
+			<div className="grid grid-flow-row gap-y-6">
+				<div className="border-4 border-black bg-white rounded-xl p-4 grid grid-flow-col gap-x-4 items-center">
 					<HanabiClues />
-					<HanabiPlayedTiles />
-					<div className="py-1">
-						<HanabiLives lives={game.gameData.lives} maxLives={HANABI_MAX_LIVES} />
-					</div>
+					<HanabiLives lives={game.gameData.lives} maxLives={HANABI_MAX_LIVES} />
 				</div>
-				<div
-					style={{ maxHeight: 300 }}
-					className="border-4 border-black bg-white grid grid-flow-row gap-y-4 overflow-y-auto"
-				>
+				<div className="border-4 border-black bg-white rounded-xl p-4">
+					<HanabiPlayedTiles />
+				</div>
+				<div className="border-4 border-black bg-white rounded-xl" style={{ maxHeight: 300 }}>
 					<HanabiActions />
 				</div>
 			</div>

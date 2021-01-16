@@ -5,5 +5,5 @@ interface Props {
 }
 
 export default function HanabiLife({ placeholder = false }: Props): JSX.Element {
-	return <Heart color={placeholder ? '#cccccc' : '#ff0000'} size={28} />;
+	return <Heart color={placeholder ? '#cccccc' : '#ff0000'} size={30} />;
 }

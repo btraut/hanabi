@@ -67,18 +67,7 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 
 	return (
 		<div ref={dropRef}>
-			{/* {thisPlayersTurn && ownTurn && (
-				<p className="text-xl text-yellow-300 pl-2 italic">
-					{`${player.name}: Your turn!`}
-				</p>
-			)}
-			{thisPlayersTurn && !ownTurn && (
-				<p className="text-xl text-yellow-300 pl-2 italic">{player.name}</p>
-			)}
-			{!thisPlayersTurn && (
-				<p className="text-xl text-white pl-2">{player.name}</p>
-			)} */}
-			<div className="border-4 border-black bg-white">
+			<div className="border-4 border-black bg-white rounded-xl">
 				<div style={HANABI_BOARD_SIZE} className="relative">
 					{/* <p
 						className={classnames('font-bold text-8xl absolute', {
