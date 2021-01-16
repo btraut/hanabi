@@ -5,7 +5,7 @@ import {
 	tileColorClasses,
 } from 'app/src/games/hanabi/HanabiGameData';
 import classnames from 'classnames';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useDrag } from 'react-dnd';
 import { getEmptyImage } from 'react-dnd-html5-backend';
 
@@ -17,6 +17,7 @@ interface Props {
 	onClick?: (event: React.MouseEvent<HTMLDivElement>, tile: HanabiTile, ownTile: boolean) => void;
 	placeholder?: boolean;
 	shadow?: boolean;
+	enableNewAnimation?: boolean;
 }
 
 export default function HanabiTileView({
@@ -27,7 +28,22 @@ export default function HanabiTileView({
 	draggable = false,
 	highlight = false,
 	shadow = true,
+	enableNewAnimation = false,
 }: Props): JSX.Element {
+	// Keep track of whether we should show the "new tile" animation. If this
+	// becomes disabled after mounting but before stopping the animation, stop
+	// it automatically.
+	const [showNewAnimation, setShowNewAnimation] = useState(enableNewAnimation);
+	useEffect(() => {
+		if (showNewAnimation && !enableNewAnimation) {
+			setShowNewAnimation(false);
+		}
+	}, [enableNewAnimation, showNewAnimation]);
+	const handleMouseDown = useCallback(() => {
+		setShowNewAnimation(false);
+	}, []);
+
+	// Handle drag support.
 	const [{ isDragging }, dragRef, preview] = useDrag<
 		HanabiTileDragItem,
 		void,
@@ -40,6 +56,10 @@ export default function HanabiTileView({
 		}),
 	});
 
+	// By default, HTML5 drag APIs will screenshot the draggable and show a
+	// ghosted version of that screenshot as the user drags it around. Instead,
+	// we're going to override that screenshot with an empty image and we'll
+	// render and update our own ghosted tile in the drag layer.
 	useEffect(() => {
 		preview(getEmptyImage());
 	}, [preview]);
@@ -62,19 +82,32 @@ export default function HanabiTileView({
 			ref={dragRef}
 			style={HANABI_TILE_SIZE}
 			className={classnames([
-				'bg-black rounded-lg text-3xl font-bold flex items-center justify-center select-none focus:outline-none focus:ring focus:border-blue-800',
-				tileColorClasses[tile.color],
+				'bg-black rounded-lg flex items-center justify-center select-none relative focus:outline-none focus:ring focus:border-blue-800',
 				cursor,
 				{
 					hidden: isDragging,
 					'opacity-20': placeholder,
 					'marquee-border': highlight,
 					'shadow-light': shadow,
+					shake: showNewAnimation,
 				},
 			])}
 			onClick={onClick ? handleClick : undefined}
+			onMouseDown={handleMouseDown}
 		>
-			{ownTile ? '' : String(tile.number)}
+			{!ownTile && (
+				<div
+					className={classnames(
+						'text-3xl font-bold pointer-events-none',
+						tileColorClasses[tile.color],
+					)}
+				>
+					{tile.number}
+				</div>
+			)}
+			{showNewAnimation && (
+				<div className="text-white font-bold transform -rotate-45 pointer-events-none">New</div>
+			)}
 		</Comp>
 	);
 }

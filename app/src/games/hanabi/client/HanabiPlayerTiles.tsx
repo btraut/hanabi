@@ -33,8 +33,8 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 
 	const ownTiles = id === userId;
 	const ownTurn = game.gameData.turnOrder[0] === userId;
-	// const thisPlayersTurn =
-	// 	game.gameData.finishedReason === null && game.gameData.turnOrder[0] === id;
+	const anyTileHasBeenPlayedOrDiscarded =
+		game.gameData.discardedTiles.length > 0 || game.gameData.playedTiles.length > 0;
 
 	const [, dropRef] = useDrop<HanabiTileDragItem, void, void>({
 		accept: hanabiDragTypes.TILE,
@@ -69,8 +69,7 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 		<div ref={dropRef}>
 			<div className="border-4 border-black bg-white rounded-xl p-0.5">
 				<div style={HANABI_BOARD_SIZE} className="relative">
-					{ownTiles && <HanabiPlayerTilesDragLayer />}
-					{player.tileLocations.map((tileLocation) => (
+					{player.tileLocations.map((tileLocation, index) => (
 						<div
 							key={`TileContainer-${tileLocation.tile.id}`}
 							className={classnames('absolute top-0 left-0', {
@@ -86,9 +85,15 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 								ownTile={ownTiles}
 								draggable={game.gameData.finishedReason === null && ownTiles}
 								highlight={highlightedTiles.has(tileLocation.tile.id)}
+								enableNewAnimation={
+									index === player.tileLocations.length - 1 &&
+									ownTiles &&
+									anyTileHasBeenPlayedOrDiscarded
+								}
 							/>
 						</div>
 					))}
+					{ownTiles && <HanabiPlayerTilesDragLayer />}
 				</div>
 			</div>
 		</div>
