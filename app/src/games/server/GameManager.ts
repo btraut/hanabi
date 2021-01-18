@@ -68,7 +68,7 @@ export default class GameManager {
 			const stat = await lstat(`${SAVED_GAMES_PATH}/${gameName}`);
 
 			if (!stat.isDirectory()) {
-				throw new Error('Only dirs expected in saved games folder.');
+				continue;
 			}
 
 			gameData[gameName] = [];
@@ -112,7 +112,7 @@ export default class GameManager {
 
 		const path = `${SAVED_GAMES_PATH}/${game.title}/${game.id}`;
 
-		if (!existsSync(path)) {
+		if (existsSync(path)) {
 			await rm(path);
 		}
 	}

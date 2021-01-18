@@ -153,12 +153,14 @@ try {
 
 		// Start a socket manager.
 		const socketManager = new SocketManager<any>(server);
-		setInterval(() => socketManager.prune(), 1000 * 60);
 		socketManager.start();
+
+		// Prune old socket connections.
+		socketManager.prune();
+		setInterval(() => socketManager.prune(), 1000 * 60);
 
 		// Start a game manager.
 		const gameManager = new GameManager(socketManager);
-		setInterval(() => gameManager.prune(), 1000 * 60 * 10);
 
 		// Add games.
 		// gameManager.addGameFactory(EscapeGame.title, EscapeGame.factory);
@@ -166,6 +168,10 @@ try {
 
 		// Restore existing games.
 		await gameManager.restoreGames();
+
+		// Prune old games.
+		gameManager.prune();
+		setInterval(() => gameManager.prune(), 1000 * 60);
 
 		// Notify!
 		Logger.info(

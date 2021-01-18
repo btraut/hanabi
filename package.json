@@ -9,6 +9,9 @@
 		"eslint-fix": "eslint . --fix --ext .js,.jsx,.ts,.tsx",
 		"start": "nodemon --watch .build .build/server/server.js"
 	},
+	"engines": {
+		"node": ">=14.14.0"
+	},
 	"dependencies": {
 		"body-parser": "^1.19.0",
 		"classnames": "^2.2.6",
