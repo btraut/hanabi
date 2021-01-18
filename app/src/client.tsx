@@ -1,5 +1,8 @@
 import 'cross-fetch/polyfill';
 import 'tailwindcss/tailwind.css';
+import 'app/images/favicon-16x16.png';
+import 'app/images/favicon-32x32.png';
+import 'app/images/favicon.ico';
 
 import App from 'app/src/components/App';
 import routes from 'app/src/routes';

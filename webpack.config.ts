@@ -2,7 +2,7 @@
 
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 
-import CopyWebpackPlugin from 'copy-webpack-plugin';
+import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import dotenv from 'dotenv';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
@@ -52,13 +52,13 @@ const clientConfig: Configuration = {
 				loader: 'eslint-loader',
 			},
 			{
-				test: /\.(png|jpg|jpeg|gif|svg)$/,
+				test: /\.(png|jpg|jpeg|gif|svg|ico)$/,
 				use: [
 					{
 						loader: 'file-loader',
 						options: {
 							name: '[path][name].[ext]',
-							publicPath: '../',
+							context: APP_PATH,
 						},
 					},
 					'image-webpack-loader',
@@ -103,15 +103,7 @@ const clientConfig: Configuration = {
 			DOMAIN_BASE: JSON.stringify(process.env.DOMAIN_BASE),
 			NODE_ENV: JSON.stringify(process.env.NODE_ENV),
 		}),
-		new CopyWebpackPlugin({
-			patterns: [
-				{
-					context: APP_PATH,
-					from: 'images/**/*',
-					to: CLIENT_BUILD_PATH,
-				},
-			],
-		}),
+		new CleanWebpackPlugin(),
 	].filter(Boolean),
 };
 
@@ -152,6 +144,7 @@ const serverConfig: Configuration = {
 			SAVED_GAMES_PATH: JSON.stringify(path.resolve(SERVER_BUILD_PATH, 'saved-games')),
 			VIEWS_PATH: JSON.stringify(path.resolve(SERVER_BUILD_PATH, 'views')),
 		}),
+		new CleanWebpackPlugin(),
 	],
 	node: {
 		__dirname: false,
