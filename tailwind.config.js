@@ -40,7 +40,7 @@ module.exports = {
 			},
 			boxShadow: {
 				dark: '0 0 50px -20px black',
-				light: '0 0 0 1px rgba(255, 255, 255, 0.4)',
+				light: '0 0 0 1px white',
 			},
 			cursor: {
 				'zoom-in': 'zoom-in',

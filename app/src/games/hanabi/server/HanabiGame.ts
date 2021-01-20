@@ -764,6 +764,16 @@ export default class HanabiGame extends Game {
 		// Move the tile.
 		tileLocation.position = position;
 
+		// Update the zIndex.
+		tileLocation.tile.zIndex =
+			this._gameData.players[userId].tileLocations.reduce((maxZIndex, tl) => {
+				if (tl.tile.zIndex > maxZIndex) {
+					return tl.tile.zIndex;
+				}
+
+				return maxZIndex;
+			}, 0) + 1;
+
 		// Send success message.
 		this._sendMessage(userId, {
 			type: 'MoveTileResponseMessage',

@@ -63,6 +63,7 @@ export default function HanabiPlayedTiles(): JSX.Element {
 																id: '',
 																color,
 																number,
+																zIndex: 0,
 														  }
 												}
 												highlight={playedTile && highlightedTiles.has(playedTile.id)}

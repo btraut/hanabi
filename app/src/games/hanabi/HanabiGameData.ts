@@ -67,6 +67,7 @@ export interface HanabiTile {
 	id: string;
 	color: HanabiTileColor;
 	number: HanabiTileNumber;
+	zIndex: number;
 }
 
 export const tileColorClasses = {
@@ -196,6 +197,7 @@ export function generateRandomDeck(includePurple = false): HanabiTile[] {
 				id: uuidv4(),
 				color,
 				number,
+				zIndex: 0,
 			});
 		}
 	}
@@ -203,4 +205,4 @@ export function generateRandomDeck(includePurple = false): HanabiTile[] {
 	return shuffle(tiles);
 }
 
-export const HANABI_BLANK_TILE: HanabiTile = { id: '', number: 1, color: 'red' };
+export const HANABI_BLANK_TILE: HanabiTile = { id: '', number: 1, color: 'red', zIndex: 0 };

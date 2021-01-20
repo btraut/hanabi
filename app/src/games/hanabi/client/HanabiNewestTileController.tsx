@@ -29,17 +29,10 @@ export default function HanabiNewestTileController({ children }: Props): JSX.Ele
 			return;
 		}
 
-		console.log(
-			'handleUpdate',
-			newTiles[newTiles.length - 1],
-			previousTiles[previousTiles.length - 1],
-		);
-
 		if (
 			newTiles[newTiles.length - 1].id !== previousTiles[previousTiles.length - 1].id &&
 			previousGameData.stage === HanabiStage.Playing
 		) {
-			console.log('handleUpdate committed!', newTiles[newTiles.length - 1].id);
 			setNewestTileId(newTiles[newTiles.length - 1].id);
 		}
 	}, [game, userId]);

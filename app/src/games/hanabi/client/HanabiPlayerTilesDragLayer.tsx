@@ -47,6 +47,7 @@ export default function HanabiPlayerTilesDragLayer(): JSX.Element | null {
 				className="absolute top-0 left-0"
 				style={{
 					transform: `translate(${leftClamped}px, ${topClamped}px)`,
+					zIndex: 1000000,
 				}}
 			>
 				<HanabiTileView tile={HANABI_BLANK_TILE} ownTile />

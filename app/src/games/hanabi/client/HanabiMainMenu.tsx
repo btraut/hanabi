@@ -13,6 +13,7 @@ function generateRandomTile(): HanabiTile {
 		id: '',
 		number: (Math.floor(Math.random() * 5) + 1) as HanabiTileNumber,
 		color: randomColorChoices[Math.floor(Math.random() * randomColorChoices.length)],
+		zIndex: 0,
 	};
 }
 
