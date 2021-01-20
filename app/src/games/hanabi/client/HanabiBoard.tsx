@@ -1,4 +1,4 @@
-import { useSocket } from 'app/src/components/SocketContext';
+import { useUserId } from 'app/src/components/SocketContext';
 import HanabiActions from 'app/src/games/hanabi/client/HanabiActions';
 import HanabiClues from 'app/src/games/hanabi/client/HanabiClues';
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
@@ -23,12 +23,8 @@ function rotateArrayToItem<T>(arr: T[], item: T): T[] {
 }
 
 export default function HanabiBoard(): JSX.Element {
-	const { userId } = useSocket();
+	const userId = useUserId();
 	const game = useHanabiGame();
-
-	if (!game || !userId) {
-		throw new Error('Must connect/join. This should never happen.');
-	}
 
 	const turnOrder = rotateArrayToItem(game.gameData.turnOrder, userId);
 

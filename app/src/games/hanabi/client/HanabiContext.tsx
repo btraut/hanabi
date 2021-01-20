@@ -14,27 +14,32 @@ export function useHanabiContext(): HanabiContext {
 	const contextValue = useContext(context);
 
 	if (contextValue === null) {
-		throw new Error('useHanabiContext must be used within a HanabiContextProvider');
+		throw new Error('useHanabiContext must be used within a HanabiContextProvider.');
 	}
 
 	return contextValue;
 }
 
-export function useHanabiGame(refreshOnUpdate = true): HanabiGame | null {
+export function useHanabiGame(): HanabiGame {
 	const contextValue = useContext(context);
 
 	if (contextValue === null) {
-		throw new Error('useHanabiGame must be used within a HanabiContextProvider');
+		throw new Error('useHanabiGame must be used within a HanabiContextProvider.');
 	}
 
-	const game = contextValue.game;
+	const { game } = contextValue;
+
+	if (!game) {
+		throw new Error('useHanabiGame expects a game to be loaded in context.');
+	}
+
 	const gameOnUpdateSubscriptionIdRef = useRef<number | null>(null);
 
 	const forceRefresh = useForceRefresh();
 
 	// We need to update components whenever the game updates its state.
 	useEffect(() => {
-		if (game && refreshOnUpdate) {
+		if (game) {
 			gameOnUpdateSubscriptionIdRef.current = game.onUpdate.subscribe(forceRefresh);
 		}
 
@@ -44,7 +49,7 @@ export function useHanabiGame(refreshOnUpdate = true): HanabiGame | null {
 				gameOnUpdateSubscriptionIdRef.current = null;
 			}
 		};
-	}, [forceRefresh, game, refreshOnUpdate]);
+	}, [forceRefresh, game]);
 
 	return game;
 }

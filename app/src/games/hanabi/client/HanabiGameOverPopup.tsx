@@ -1,4 +1,3 @@
-import { useSocket } from 'app/src/components/SocketContext';
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
 import HanabiMenuButton from 'app/src/games/hanabi/client/HanabiMenuButton';
 import HanabiPopup from 'app/src/games/hanabi/client/HanabiPopup';
@@ -20,12 +19,7 @@ const GAME_OVER_MESSAGES: { [key in HanabiFinishedReason]: string } = {
 };
 
 export default function HanabiGameOverPopup(): JSX.Element | null {
-	const { userId } = useSocket();
 	const game = useHanabiGame();
-
-	if (!game || !userId) {
-		throw new Error('Must connect/join. This should never happen.');
-	}
 
 	const handleNewGameClick = useCallback(async () => game.reset(), [game]);
 

@@ -1,10 +1,10 @@
-import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
+import { useHanabiContext } from 'app/src/games/hanabi/client/HanabiContext';
 import HanabiMenuButton from 'app/src/games/hanabi/client/HanabiMenuButton';
 import HanabiTextInput from 'app/src/games/hanabi/client/HanabiTextInput';
 import { ChangeEvent, FormEvent, useCallback, useState } from 'react';
 
 export default function HanabiJoinForm(): JSX.Element {
-	const game = useHanabiGame();
+	const { game } = useHanabiContext();
 
 	const [addPlayerError, setAddPlayerError] = useState('');
 

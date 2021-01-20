@@ -13,14 +13,30 @@ interface SocketContext<MessageType extends SocketMessageBase> {
 
 const context = createContext<SocketContext<any> | null>(null);
 
-export function useSocket<MessageType extends SocketMessageBase>(): SocketContext<MessageType> {
+export function useSocket<MessageType extends SocketMessageBase>(
+	requireUserId = false,
+): SocketContext<MessageType> {
 	const contextValue = useContext(context);
 
 	if (contextValue === null) {
 		throw new Error('useSocket must be used within a SocketContextProvider');
 	}
 
+	if (requireUserId && !contextValue.userId) {
+		throw new Error('No userId specified on socket.');
+	}
+
 	return contextValue;
+}
+
+export function useUserId(): string {
+	const { userId } = useSocket();
+
+	if (!userId) {
+		throw new Error('Must connect/join. This should never happen.');
+	}
+
+	return userId;
 }
 
 export const SocketContextConsumer = context.Consumer;

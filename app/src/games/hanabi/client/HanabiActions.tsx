@@ -1,4 +1,4 @@
-import { useSocket } from 'app/src/components/SocketContext';
+import { useUserId } from 'app/src/components/SocketContext';
 import HanabiAction from 'app/src/games/hanabi/client/HanabiAction';
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
 import { useHanabiSoundsContext } from 'app/src/games/hanabi/client/HanabiSoundsContext';
@@ -8,12 +8,8 @@ import classnames from 'classnames';
 import { useEffect } from 'react';
 
 export default function HanabiActions(): JSX.Element {
-	const { userId } = useSocket();
+	const userId = useUserId();
 	const game = useHanabiGame();
-
-	if (!game || !userId) {
-		throw new Error('Must connect/join. This should never happen.');
-	}
 
 	const hanabiSounds = useHanabiSoundsContext();
 

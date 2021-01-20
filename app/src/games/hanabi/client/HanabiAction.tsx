@@ -1,4 +1,3 @@
-import { useSocket } from 'app/src/components/SocketContext';
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
 import { useHanabiHighlightTileContext } from 'app/src/games/hanabi/client/HanabiHighlightTileContext';
 import HanabiTileView from 'app/src/games/hanabi/client/HanabiTileView';
@@ -15,12 +14,7 @@ interface Props {
 }
 
 export default function HanabiAction({ action }: Props): JSX.Element {
-	const { userId } = useSocket();
 	const game = useHanabiGame();
-
-	if (!game || !userId) {
-		throw new Error('Must connect/join. This should never happen.');
-	}
 
 	const { highlightTiles } = useHanabiHighlightTileContext();
 

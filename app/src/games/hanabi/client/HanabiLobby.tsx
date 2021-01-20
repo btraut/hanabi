@@ -1,4 +1,4 @@
-import { useSocket } from 'app/src/components/SocketContext';
+import { useUserId } from 'app/src/components/SocketContext';
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
 import HanabiJoinForm from 'app/src/games/hanabi/client/HanabiJoinForm';
 import HanabiMenuButton from 'app/src/games/hanabi/client/HanabiMenuButton';
@@ -10,11 +10,7 @@ declare const DOMAIN_BASE: string;
 
 export default function HanabiLobby(): JSX.Element {
 	const game = useHanabiGame();
-	const { userId } = useSocket();
-
-	if (!game || !userId) {
-		throw new Error('Must connect/join. This should never happen.');
-	}
+	const userId = useUserId();
 
 	const handleLeaveClick = async () => {
 		await game.leave();

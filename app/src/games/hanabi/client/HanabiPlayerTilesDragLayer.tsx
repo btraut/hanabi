@@ -1,4 +1,4 @@
-import { useSocket } from 'app/src/components/SocketContext';
+import { useUserId } from 'app/src/components/SocketContext';
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
 import { hanabiDragTypes } from 'app/src/games/hanabi/client/HanabiDragTypes';
 import HanabiTileView from 'app/src/games/hanabi/client/HanabiTileView';
@@ -6,12 +6,8 @@ import { HANABI_BOARD_SIZE, HANABI_TILE_SIZE } from 'app/src/games/hanabi/Hanabi
 import { useDragLayer } from 'react-dnd';
 
 export default function HanabiPlayerTilesDragLayer(): JSX.Element | null {
-	const { userId } = useSocket();
+	const userId = useUserId();
 	const game = useHanabiGame();
-
-	if (!game || !userId) {
-		throw new Error('Must connect/join. This should never happen.');
-	}
 
 	const { itemType, isDragging, item, differenceFromInitialOffset } = useDragLayer((monitor) => ({
 		item: monitor.getItem(),
