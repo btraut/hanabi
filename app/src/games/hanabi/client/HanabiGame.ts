@@ -222,10 +222,21 @@ export default class HanabiGame extends Game {
 			throw new Error('Invalid player or tile id.');
 		}
 
+		// Move the tile. Normally, we'd rely on the backend for all updates,
+		// but we'll move it optimistically and wait for the server to catch up
+		// later.
 		tileLocation.position = { ...newPosition };
+		tileLocation.tile.zIndex =
+			this._gameData.players[userId].tileLocations.reduce((maxZIndex, tl) => {
+				if (tl.tile.zIndex > maxZIndex) {
+					return tl.tile.zIndex;
+				}
 
-		// Emit an early onUpdate. We'll update again after we get a response
-		// from the server, but we want to optimistically move the tile now.
+				return maxZIndex;
+			}, 0) + 1;
+
+		// Emit an early onUpdate so clients update with the moved tile. We'll
+		// update again after the server response.
 		this.onUpdate.emit();
 
 		this._sendMessage({

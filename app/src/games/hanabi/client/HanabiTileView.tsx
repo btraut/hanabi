@@ -29,7 +29,7 @@ export default function HanabiTileView({
 	highlight = false,
 	shadow = true,
 	enableNewAnimation = false,
-}: Props): JSX.Element {
+}: Props): JSX.Element | null {
 	// Keep track of whether we should show the "new tile" animation. If this
 	// becomes disabled after mounting but before stopping the animation, stop
 	// it automatically.
@@ -79,6 +79,10 @@ export default function HanabiTileView({
 
 	const Comp = onClick ? 'button' : 'div';
 
+	if (isDragging) {
+		return null;
+	}
+
 	return (
 		<Comp
 			ref={dragRef}
@@ -87,7 +91,6 @@ export default function HanabiTileView({
 				'bg-black rounded-lg flex items-center justify-center select-none relative focus:outline-none focus:ring focus:border-blue-800',
 				cursor,
 				{
-					hidden: isDragging,
 					'opacity-20': placeholder,
 					'marquee-border': highlight,
 					'shadow-light': shadow,
