@@ -16,7 +16,7 @@ import methodOverride from 'method-override';
 import morgan from 'morgan';
 // import { matchPath } from 'react-router';
 import * as url from 'url';
-import { v1 as uuidv1 } from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 
 // Define globals from webpack.
 declare const DOMAIN_BASE: string;
@@ -81,7 +81,7 @@ try {
 			// Check if the user has a cookie.
 			const sessionCookie = req.cookies && req.cookies[SESSION_COOKIE_NAME];
 			if (!sessionCookie) {
-				res.cookie(SESSION_COOKIE_NAME, uuidv1(), { expires: new Date(253402300000000) });
+				res.cookie(SESSION_COOKIE_NAME, uuidv4(), { expires: new Date(253402300000000) });
 			}
 
 			next();

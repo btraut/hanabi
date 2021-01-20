@@ -1,5 +1,5 @@
 import { shuffle } from 'app/src/utils/shuffle';
-import { v1 as uuidv1 } from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 
 export const HANABI_GAME_TITLE = 'hanabi';
 
@@ -173,7 +173,7 @@ export function generateHanabiGameData(data: Partial<HanabiGameData> = {}): Hana
 export function generatePlayer(data: Partial<HanabiPlayer> = {}): HanabiPlayer {
 	return {
 		connected: true,
-		id: uuidv1(),
+		id: uuidv4(),
 		name: '',
 		tileLocations: [],
 		...data,
@@ -193,7 +193,7 @@ export function generateRandomDeck(includePurple = false): HanabiTile[] {
 	for (const color of colors) {
 		for (const number of numbers) {
 			tiles.push({
-				id: uuidv1(),
+				id: uuidv4(),
 				color,
 				number,
 			});
@@ -202,3 +202,5 @@ export function generateRandomDeck(includePurple = false): HanabiTile[] {
 
 	return shuffle(tiles);
 }
+
+export const HANABI_BLANK_TILE: HanabiTile = { id: '', number: 1, color: 'red' };

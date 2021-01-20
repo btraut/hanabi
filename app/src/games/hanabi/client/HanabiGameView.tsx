@@ -2,6 +2,7 @@ import HanabiBoard from 'app/src/games/hanabi/client/HanabiBoard';
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
 import HanabiHighlightTileController from 'app/src/games/hanabi/client/HanabiHighlightTileController';
 import HanabiLobby from 'app/src/games/hanabi/client/HanabiLobby';
+import HanabiNewestTileController from 'app/src/games/hanabi/client/HanabiNewestTileController';
 import HanabiSoundsController from 'app/src/games/hanabi/client/HanabiSoundsController';
 import { HanabiStage } from 'app/src/games/hanabi/HanabiGameData';
 
@@ -14,9 +15,11 @@ export default function HanabiGameView(): JSX.Element | null {
 			{(game.gameData.stage === HanabiStage.Playing ||
 				game.gameData.stage === HanabiStage.Finished) && (
 				<HanabiHighlightTileController>
-					<HanabiSoundsController>
-						<HanabiBoard />
-					</HanabiSoundsController>
+					<HanabiNewestTileController>
+						<HanabiSoundsController>
+							<HanabiBoard />
+						</HanabiSoundsController>
+					</HanabiNewestTileController>
 				</HanabiHighlightTileController>
 			)}
 		</div>

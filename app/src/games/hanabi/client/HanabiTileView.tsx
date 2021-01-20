@@ -34,11 +34,13 @@ export default function HanabiTileView({
 	// becomes disabled after mounting but before stopping the animation, stop
 	// it automatically.
 	const [showNewAnimation, setShowNewAnimation] = useState(enableNewAnimation);
+
 	useEffect(() => {
-		if (showNewAnimation && !enableNewAnimation) {
-			setShowNewAnimation(false);
+		if (enableNewAnimation) {
+			setShowNewAnimation(enableNewAnimation);
 		}
-	}, [enableNewAnimation, showNewAnimation]);
+	}, [enableNewAnimation]);
+
 	const handleMouseDown = useCallback(() => {
 		setShowNewAnimation(false);
 	}, []);

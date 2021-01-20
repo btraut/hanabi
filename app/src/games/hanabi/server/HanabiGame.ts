@@ -37,7 +37,7 @@ import UserConnectionListener, {
 import DistributiveOmit from 'app/src/utils/DistributiveOmit';
 import ServerSocketManager from 'app/src/utils/server/SocketManager';
 import { shuffle } from 'app/src/utils/shuffle';
-import { v1 as uuidv1 } from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 
 export interface HanabiGameSerialized extends GameSerialized {
 	data: HanabiGameData;
@@ -508,7 +508,7 @@ export default class HanabiGame extends Game {
 
 		// Record the action.
 		this._gameData.actions.push({
-			id: uuidv1(),
+			id: uuidv4(),
 			playerId: userId,
 			type: HanabiGameActionType.Play,
 			tile,
@@ -603,7 +603,7 @@ export default class HanabiGame extends Game {
 
 		// Record the action.
 		this._gameData.actions.push({
-			id: uuidv1(),
+			id: uuidv4(),
 			playerId: userId,
 			type: HanabiGameActionType.Discard,
 			tile,
@@ -692,7 +692,7 @@ export default class HanabiGame extends Game {
 
 		// Record the action.
 		this._gameData.actions.push({
-			id: uuidv1(),
+			id: uuidv4(),
 			playerId: userId,
 			type: actionType,
 			recipientId: message.data.to,

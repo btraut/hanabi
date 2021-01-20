@@ -8,7 +8,7 @@ import PubSub from 'app/src/utils/PubSub';
 import Logger from 'app/src/utils/server/Logger';
 import { Server as HTTPServer } from 'http';
 import { Server as SocketServer } from 'socket.io';
-import { v1 as uuidv1 } from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 
 interface AuthToken {
 	created: Date;
@@ -55,7 +55,7 @@ export default class ServerSocketManager<MessageType extends SocketMessageBase> 
 	}
 
 	public addTokenForUser(userId: string): string {
-		const token = uuidv1().substr(0, 6);
+		const token = uuidv4().substr(0, 6);
 		this._tokens[token] = { token, userId, created: new Date() };
 		return token;
 	}

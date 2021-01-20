@@ -1,5 +1,5 @@
 import { SaveGameDelegate } from 'app/src/games/server/SaveGameDelegate';
-import { v1 as uuidv1 } from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 
 const CODE_GENERATION_ALPHABET = '23456789abdegjkmnpqrvwxyz';
 const CODE_GENERATION_LENGTH = 4;
@@ -52,7 +52,7 @@ export default class Game {
 	constructor(creatorId: string) {
 		this._creatorId = creatorId;
 
-		this._id = uuidv1();
+		this._id = uuidv4();
 		this._code = this._generateCode();
 	}
 

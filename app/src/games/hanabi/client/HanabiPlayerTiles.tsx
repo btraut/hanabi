@@ -2,6 +2,7 @@ import { useUserId } from 'app/src/components/SocketContext';
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
 import { hanabiDragTypes, HanabiTileDragItem } from 'app/src/games/hanabi/client/HanabiDragTypes';
 import { useHanabiHighlightTileContext } from 'app/src/games/hanabi/client/HanabiHighlightTileContext';
+import { useNewestTile } from 'app/src/games/hanabi/client/HanabiNewestTileContext';
 import HanabiPlayerTilesDragLayer from 'app/src/games/hanabi/client/HanabiPlayerTilesDragLayer';
 import HanabiTileView from 'app/src/games/hanabi/client/HanabiTileView';
 import {
@@ -26,11 +27,10 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 	const game = useHanabiGame();
 
 	const { highlightedTiles } = useHanabiHighlightTileContext();
+	const newestTileId = useNewestTile();
 
 	const ownTiles = id === userId;
 	const ownTurn = game.gameData.turnOrder[0] === userId;
-	const anyTileHasBeenPlayedOrDiscarded =
-		game.gameData.discardedTiles.length > 0 || game.gameData.playedTiles.length > 0;
 
 	const [, dropRef] = useDrop<HanabiTileDragItem, void, void>({
 		accept: hanabiDragTypes.TILE,
@@ -65,7 +65,7 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 		<div ref={dropRef}>
 			<div className="border-4 border-black bg-white rounded-xl p-0.5">
 				<div style={HANABI_BOARD_SIZE} className="relative">
-					{player.tileLocations.map((tileLocation, index) => (
+					{player.tileLocations.map((tileLocation) => (
 						<div
 							key={`TileContainer-${tileLocation.tile.id}`}
 							className={classnames('absolute top-0 left-0', {
@@ -81,11 +81,7 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 								ownTile={ownTiles}
 								draggable={game.gameData.finishedReason === null && ownTiles}
 								highlight={highlightedTiles.has(tileLocation.tile.id)}
-								enableNewAnimation={
-									index === player.tileLocations.length - 1 &&
-									ownTiles &&
-									anyTileHasBeenPlayedOrDiscarded
-								}
+								enableNewAnimation={tileLocation.tile.id === newestTileId}
 							/>
 						</div>
 					))}

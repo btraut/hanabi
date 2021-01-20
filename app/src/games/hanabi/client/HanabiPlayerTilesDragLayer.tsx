@@ -2,7 +2,11 @@ import { useUserId } from 'app/src/components/SocketContext';
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
 import { hanabiDragTypes } from 'app/src/games/hanabi/client/HanabiDragTypes';
 import HanabiTileView from 'app/src/games/hanabi/client/HanabiTileView';
-import { HANABI_BOARD_SIZE, HANABI_TILE_SIZE } from 'app/src/games/hanabi/HanabiGameData';
+import {
+	HANABI_BLANK_TILE,
+	HANABI_BOARD_SIZE,
+	HANABI_TILE_SIZE,
+} from 'app/src/games/hanabi/HanabiGameData';
 import { useDragLayer } from 'react-dnd';
 
 export default function HanabiPlayerTilesDragLayer(): JSX.Element | null {
@@ -45,7 +49,7 @@ export default function HanabiPlayerTilesDragLayer(): JSX.Element | null {
 					transform: `translate(${leftClamped}px, ${topClamped}px)`,
 				}}
 			>
-				<HanabiTileView tile={tileLocation.tile} ownTile />
+				<HanabiTileView tile={HANABI_BLANK_TILE} ownTile />
 			</div>
 		);
 	}
