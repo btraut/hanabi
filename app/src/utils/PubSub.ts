@@ -23,8 +23,8 @@ export default class PubSub<T> {
 	}
 
 	public emit(data?: T): void {
-		for (const nonce in this._subscriptions) {
-			this._subscriptions[nonce].apply(this, data ? [data] : []);
+		for (const subscription of Object.values(this._subscriptions)) {
+			subscription.apply(this, data ? [data] : []);
 		}
 	}
 }
