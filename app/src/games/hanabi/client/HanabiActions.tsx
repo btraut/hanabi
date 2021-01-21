@@ -18,7 +18,7 @@ export default function HanabiActions(): JSX.Element {
 	return (
 		<div>
 			{actionsReversed.length === 0 && (
-				<p className="italic text-lg color-gray-600 p-4">No actions yet!</p>
+				<p className="italic text-md text-gray-700 p-4">No actions yet!</p>
 			)}
 			{actionsReversed.map((action, index) => {
 				return (
@@ -34,8 +34,10 @@ export default function HanabiActions(): JSX.Element {
 				);
 			})}
 			{hiddenActions ? (
-				<div className="italic text-lg color-gray-600 p-4 border-t-2">
-					{hiddenActions === 1 ? '1 more action' : `${hiddenActions} more actions`}
+				<div className="italic text-md text-gray-700 p-4 border-gray-600 border-t-2">
+					{hiddenActions === 1
+						? '1 previous action hidden'
+						: `${hiddenActions} previous actions hidden`}
 				</div>
 			) : null}
 		</div>

@@ -7,6 +7,7 @@ import HanabiLives from 'app/src/games/hanabi/client/HanabiLives';
 import HanabiPlayedTiles from 'app/src/games/hanabi/client/HanabiPlayedTiles';
 import HanabiPlayerAvatar from 'app/src/games/hanabi/client/HanabiPlayerAvatar';
 import HanabiPlayerTiles from 'app/src/games/hanabi/client/HanabiPlayerTiles';
+import HanabiRemainingTiles from 'app/src/games/hanabi/client/HanabiRemainingTiles';
 import HanabiTileActionsTooltip from 'app/src/games/hanabi/client/HanabiTileActionsTooltip';
 import { HANABI_MAX_LIVES, HanabiTile } from 'app/src/games/hanabi/HanabiGameData';
 import classnames from 'classnames';
@@ -131,8 +132,9 @@ export default function HanabiBoard(): JSX.Element {
 					<HanabiClues />
 					<HanabiLives lives={game.gameData.lives} maxLives={HANABI_MAX_LIVES} />
 				</div>
-				<div className="border-4 border-black bg-white rounded-xl p-4">
+				<div className="border-4 border-black bg-white rounded-xl p-4 grid grid-flow-row gap-y-6">
 					<HanabiPlayedTiles />
+					<HanabiRemainingTiles />
 				</div>
 				<div
 					className="border-4 border-black bg-white rounded-xl overflow-y-auto"
