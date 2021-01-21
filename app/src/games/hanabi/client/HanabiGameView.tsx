@@ -16,9 +16,8 @@ export default function HanabiGameView(): JSX.Element | null {
 				game.gameData.stage === HanabiStage.Finished) && (
 				<HanabiHighlightTileController>
 					<HanabiNewestTileController>
-						<HanabiSoundsController>
-							<HanabiBoard />
-						</HanabiSoundsController>
+						<HanabiBoard />
+						<HanabiSoundsController />
 					</HanabiNewestTileController>
 				</HanabiHighlightTileController>
 			)}

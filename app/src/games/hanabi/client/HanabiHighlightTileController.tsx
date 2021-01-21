@@ -2,7 +2,7 @@ import { HanabiHighlightTileContextProvider } from 'app/src/games/hanabi/client/
 import { useMemo, useState } from 'react';
 
 interface Props {
-	readonly children: JSX.Element;
+	readonly children: JSX.Element | JSX.Element[] | null;
 }
 
 export default function HanabiHighlightTileController({ children }: Props): JSX.Element {

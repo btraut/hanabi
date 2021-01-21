@@ -2,7 +2,6 @@
 
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 
-import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import dotenv from 'dotenv';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
@@ -103,7 +102,6 @@ const clientConfig: Configuration = {
 			DOMAIN_BASE: JSON.stringify(process.env.DOMAIN_BASE),
 			NODE_ENV: JSON.stringify(process.env.NODE_ENV),
 		}),
-		new CleanWebpackPlugin(),
 	].filter(Boolean),
 };
 
@@ -144,7 +142,6 @@ const serverConfig: Configuration = {
 			SAVED_GAMES_PATH: JSON.stringify(path.resolve(SERVER_BUILD_PATH, 'saved-games')),
 			VIEWS_PATH: JSON.stringify(path.resolve(SERVER_BUILD_PATH, 'views')),
 		}),
-		new CleanWebpackPlugin(),
 	],
 	node: {
 		__dirname: false,

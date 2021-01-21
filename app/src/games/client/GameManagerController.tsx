@@ -5,7 +5,7 @@ import { GameManagerMessage } from 'app/src/games/GameManagerMessages';
 import { useRef } from 'react';
 
 interface Props {
-	readonly children: JSX.Element;
+	readonly children: JSX.Element | JSX.Element[] | null;
 }
 
 export default function GameManagerController({ children }: Props): JSX.Element {

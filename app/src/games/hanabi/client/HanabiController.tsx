@@ -7,7 +7,7 @@ import { HanabiMessage } from 'app/src/games/hanabi/HanabiMessages';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 interface Props {
-	readonly children: JSX.Element;
+	readonly children: JSX.Element | JSX.Element[] | null;
 }
 
 export default function HanabiController({ children }: Props): JSX.Element {

@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef } from 'react';
 
 interface Props {
-	top: number;
-	left: number;
-	onClose: () => void;
-	children: JSX.Element;
+	readonly top: number;
+	readonly left: number;
+	readonly onClose: () => void;
+	readonly children: JSX.Element | JSX.Element[] | null;
 }
 
 export default function Tooltip({ onClose, children, top, left }: Props): JSX.Element {

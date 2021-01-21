@@ -59,6 +59,11 @@ export enum HanabiRuleSet {
 	PurpleDecoy = 'PurpleDecoy',
 }
 
+export enum HanabiShowActionsLimit {
+	ShowAll = 'ShowAll',
+	ShowLast = 'ShowLast',
+}
+
 export type HanabiTileColor = 'red' | 'blue' | 'green' | 'yellow' | 'white' | 'purple';
 
 export type HanabiTileNumber = 1 | 2 | 3 | 4 | 5;
@@ -151,6 +156,7 @@ export interface HanabiGameData {
 	clues: number;
 	lives: number;
 	actions: HanabiGameAction[];
+	showActionsLimit: HanabiShowActionsLimit;
 }
 
 export function generateHanabiGameData(data: Partial<HanabiGameData> = {}): HanabiGameData {
@@ -167,6 +173,7 @@ export function generateHanabiGameData(data: Partial<HanabiGameData> = {}): Hana
 		lives: HANABI_MAX_LIVES,
 		ruleSet: HanabiRuleSet.Basic,
 		actions: [],
+		showActionsLimit: HanabiShowActionsLimit.ShowLast,
 		...data,
 	};
 }

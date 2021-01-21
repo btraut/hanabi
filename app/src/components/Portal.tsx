@@ -2,8 +2,8 @@ import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
 interface Props {
-	rootId?: string;
-	children: JSX.Element;
+	readonly rootId?: string;
+	readonly children: JSX.Element | JSX.Element[] | null;
 }
 
 export default function Portal({ rootId = 'portal', children }: Props): React.ReactPortal {

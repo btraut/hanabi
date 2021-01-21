@@ -5,7 +5,7 @@ import { HanabiGameData, HanabiStage } from 'app/src/games/hanabi/HanabiGameData
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface Props {
-	readonly children: JSX.Element;
+	readonly children: JSX.Element | JSX.Element[] | null;
 }
 
 export default function HanabiNewestTileController({ children }: Props): JSX.Element {

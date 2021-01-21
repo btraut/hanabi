@@ -1,8 +1,8 @@
 import classnames from 'classnames';
 
 interface Props {
-	children: JSX.Element | JSX.Element[] | string;
-	background?: 'red' | 'green' | 'gray';
+	readonly children: JSX.Element | JSX.Element[] | string;
+	readonly background?: 'red' | 'green' | 'gray';
 }
 
 const BACKGROUND_CLASS = {

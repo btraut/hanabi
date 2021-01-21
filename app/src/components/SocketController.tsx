@@ -7,7 +7,7 @@ import useForceRefresh from 'app/src/utils/client/useForceRefresh';
 import { useMemo, useRef } from 'react';
 
 interface Props {
-	children: JSX.Element;
+	readonly children: JSX.Element | JSX.Element[] | null;
 }
 
 export default function SocketManagerController<MessageType extends SocketMessageBase>({

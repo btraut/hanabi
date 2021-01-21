@@ -64,7 +64,7 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 	return (
 		<div ref={dropRef}>
 			<div className="border-4 border-black bg-white rounded-xl p-0.5">
-				<div style={HANABI_BOARD_SIZE} className="relative">
+				<div style={HANABI_BOARD_SIZE} className="relative z-0">
 					{player.tileLocations.map((tileLocation) => (
 						<div
 							key={`TileContainer-${tileLocation.tile.id}`}

@@ -2,32 +2,58 @@ import 'app/sounds/hanabi/right.wav';
 import 'app/sounds/hanabi/wrong.wav';
 import 'app/sounds/hanabi/beep.wav';
 
-import { HanabiSoundsContextProvider } from 'app/src/games/hanabi/client/HanabiSoundsContext';
-import { useMemo, useRef } from 'react';
+import { useUserId } from 'app/src/components/SocketContext';
+import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
+import { HanabiGameActionType } from 'app/src/games/hanabi/HanabiGameData';
+import useValueChanged from 'app/src/utils/client/useValueChanged';
+import { useEffect, useRef } from 'react';
 
-interface Props {
-	readonly children: JSX.Element;
+function playAudio(ele: HTMLAudioElement) {
+	try {
+		ele.play();
+	} catch (error) {
+		console.log('Cannot play audio clip: ', error);
+	}
 }
 
-export default function HanabiSoundsController({ children }: Props): JSX.Element {
+export default function HanabiSoundsController(): null {
 	const rightRef = useRef(new Audio('/sounds/hanabi/right.wav'));
 	const wrongRef = useRef(new Audio('/sounds/hanabi/wrong.wav'));
 	const beepRef = useRef(new Audio('/sounds/hanabi/beep.wav'));
 
-	const contextValue = useMemo(
-		() => ({
-			playRight: () => {
-				rightRef.current.play();
-			},
-			playWrong: () => {
-				wrongRef.current.play();
-			},
-			playBeep: () => {
-				beepRef.current.play();
-			},
-		}),
-		[],
-	);
+	const userId = useUserId();
+	const game = useHanabiGame();
 
-	return <HanabiSoundsContextProvider value={contextValue}>{children}</HanabiSoundsContextProvider>;
+	const newestAction = game.gameData.actions.length
+		? game.gameData.actions[game.gameData.actions.length - 1]
+		: null;
+
+	const actionsChanged = useValueChanged(game.gameData.actions.length);
+	console.log({ actionsChanged });
+
+	useEffect(() => {
+		if (!actionsChanged) {
+			return;
+		}
+
+		if (!newestAction) {
+			return;
+		}
+
+		if (newestAction.type === HanabiGameActionType.Play) {
+			if (newestAction.valid) {
+				playAudio(rightRef.current);
+			} else {
+				playAudio(wrongRef.current);
+			}
+		} else if (
+			newestAction.type === HanabiGameActionType.Discard ||
+			newestAction.type === HanabiGameActionType.GiveColorClue ||
+			newestAction.type === HanabiGameActionType.GiveNumberClue
+		) {
+			playAudio(beepRef.current);
+		}
+	}, [actionsChanged, newestAction, userId]);
+
+	return null;
 }

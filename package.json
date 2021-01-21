@@ -79,7 +79,6 @@
 		"babel-loader": "^8.2.2",
 		"babel-plugin-transform-object-rest-spread": "^6.26.0",
 		"babel-preset-env": "^1.7.0",
-		"clean-webpack-plugin": "^3.0.0",
 		"css-loader": "^5.0.1",
 		"eslint": "^7.16.0",
 		"eslint-config-prettier": "^7.1.0",

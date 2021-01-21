@@ -1,45 +1,19 @@
-import { useUserId } from 'app/src/components/SocketContext';
 import HanabiAction from 'app/src/games/hanabi/client/HanabiAction';
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
-import { useHanabiSoundsContext } from 'app/src/games/hanabi/client/HanabiSoundsContext';
-import { HanabiGameActionType } from 'app/src/games/hanabi/HanabiGameData';
-import useValueChanged from 'app/src/utils/client/useValueChanged';
+import { HanabiShowActionsLimit } from 'app/src/games/hanabi/HanabiGameData';
 import classnames from 'classnames';
-import { useEffect } from 'react';
 
 export default function HanabiActions(): JSX.Element {
-	const userId = useUserId();
 	const game = useHanabiGame();
 
-	const hanabiSounds = useHanabiSoundsContext();
-
-	const actionsReversed = [...game.gameData.actions].reverse();
-	const newestAction = actionsReversed[0];
-
-	const actionsChanged = useValueChanged(game.gameData.actions.length);
-	useEffect(() => {
-		if (!actionsChanged) {
-			return;
-		}
-
-		if (!newestAction || newestAction.playerId === userId) {
-			return;
-		}
-
-		if (newestAction.type === HanabiGameActionType.Play) {
-			if (newestAction.valid) {
-				hanabiSounds.playRight();
-			} else {
-				hanabiSounds.playWrong();
-			}
-		} else if (
-			newestAction.type === HanabiGameActionType.Discard ||
-			newestAction.type === HanabiGameActionType.GiveColorClue ||
-			newestAction.type === HanabiGameActionType.GiveNumberClue
-		) {
-			hanabiSounds.playBeep();
-		}
-	}, [actionsChanged, hanabiSounds, newestAction, userId]);
+	const totalPlayers = Object.keys(game.gameData.players).length;
+	const hiddenActions =
+		game.gameData.showActionsLimit === HanabiShowActionsLimit.ShowLast &&
+		game.gameData.actions.length > totalPlayers
+			? game.gameData.actions.length - totalPlayers
+			: 0;
+	const actionsLimited = game.gameData.actions.slice(hiddenActions);
+	const actionsReversed = actionsLimited.reverse();
 
 	return (
 		<div>
@@ -51,6 +25,7 @@ export default function HanabiActions(): JSX.Element {
 					<div
 						className={classnames('border-solid border-gray-600 cursor-zoom-in', {
 							'border-t-2': index !== 0,
+							'bg-gray-200': index % 2 === 1,
 						})}
 						key={action.id}
 					>
@@ -58,6 +33,11 @@ export default function HanabiActions(): JSX.Element {
 					</div>
 				);
 			})}
+			{hiddenActions ? (
+				<div className="italic text-lg color-gray-600 p-4 border-t-2">
+					{hiddenActions === 1 ? '1 more action' : `${hiddenActions} more actions`}
+				</div>
+			) : null}
 		</div>
 	);
 }
