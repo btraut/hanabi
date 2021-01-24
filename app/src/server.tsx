@@ -14,6 +14,7 @@ import express from 'express';
 import * as http from 'http';
 import methodOverride from 'method-override';
 import morgan from 'morgan';
+import ngrok from 'ngrok';
 // import { matchPath } from 'react-router';
 import * as url from 'url';
 import { v4 as uuidv4 } from 'uuid';
@@ -173,24 +174,20 @@ try {
 		gameManager.prune();
 		setInterval(() => gameManager.prune(), 1000 * 60);
 
+		// URLs.
+		const port = app.get('port');
+		const localUrl = `http://localhost:${port}`;
+		const ngrokUrl = await ngrok.connect({ addr: port, authtoken: process.env.NGROK_AUTH_TOKEN });
+
 		// Notify!
-		Logger.info(
-			'' +
-				'\n\n' +
-				'———————————————————————————————————————————————————————————————————' +
-				'\n' +
-				' Ten Four Games' +
-				'\n' +
-				` http://localhost:${app.get('port')}/` +
-				'\n' +
-				' ' +
-				'\n' +
-				` Listening for requests in ${process.env.NODE_ENV} mode.` +
-				'\n' +
-				'———————————————————————————————————————————————————————————————————' +
-				'\n' +
-				'',
-		);
+		Logger.info(`
+———————————————————————————————————————————————————————————————————
+ Ten Four Games
+ ${localUrl}
+ ${ngrokUrl}
+ Listening for requests in ${process.env.NODE_ENV} mode.
+———————————————————————————————————————————————————————————————————
+`);
 	})();
 } catch (error) {
 	Logger.error('There was an error starting up the server.', [error, error.stack]);
