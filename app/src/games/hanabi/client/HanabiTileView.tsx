@@ -1,5 +1,6 @@
 import { hanabiDragTypes, HanabiTileDragItem } from 'app/src/games/hanabi/client/HanabiDragTypes';
 import {
+	HANABI_BLANK_TILE,
 	HANABI_TILE_SIZE,
 	HanabiTile,
 	tileColorClasses,
@@ -10,21 +11,21 @@ import { useDrag } from 'react-dnd';
 import { getEmptyImage } from 'react-dnd-html5-backend';
 
 interface Props {
-	tile: HanabiTile;
-	ownTile?: boolean;
+	tile?: HanabiTile;
+	hidden?: boolean;
 	draggable?: boolean;
 	highlight?: boolean;
-	onClick?: (event: React.MouseEvent<HTMLDivElement>, tile: HanabiTile, ownTile: boolean) => void;
+	onClick?: (event: React.MouseEvent<HTMLDivElement>, tile: HanabiTile) => void;
 	placeholder?: boolean;
 	shadow?: boolean;
 	enableNewAnimation?: boolean;
 }
 
 export default function HanabiTileView({
-	tile,
+	tile = HANABI_BLANK_TILE,
 	onClick,
 	placeholder = false,
-	ownTile = false,
+	hidden = false,
 	draggable = false,
 	highlight = false,
 	shadow = true,
@@ -71,10 +72,10 @@ export default function HanabiTileView({
 	const handleClick = useCallback(
 		(event) => {
 			if (onClick) {
-				onClick(event, tile, ownTile);
+				onClick(event, tile);
 			}
 		},
-		[onClick, ownTile, tile],
+		[onClick, tile],
 	);
 
 	const Comp = onClick ? 'button' : 'div';
@@ -100,7 +101,7 @@ export default function HanabiTileView({
 			onClick={onClick ? handleClick : undefined}
 			onMouseDown={handleMouseDown}
 		>
-			{!ownTile && (
+			{!hidden && (
 				<div
 					className={classnames(
 						'text-3xl font-bold pointer-events-none',

@@ -3,17 +3,22 @@ import Tooltip from 'app/src/components/Tooltip';
 import { HanabiTile, tileBackgroundClasses } from 'app/src/games/hanabi/HanabiGameData';
 import classnames from 'classnames';
 
+export enum HanabiTileActionsTooltipOptions {
+	Own = 'Own',
+	OtherPlayer = 'OtherPlayer',
+}
+
 interface Props {
 	tile: HanabiTile;
 	coords: { left: number; top: number };
-	ownTile?: boolean;
+	options: HanabiTileActionsTooltipOptions;
 	onAction: (action: 'discard' | 'play' | 'color' | 'number', tile: HanabiTile) => void;
 	onClose: () => void;
 }
 
 export default function HanabiTileActionsTooltip({
 	tile,
-	ownTile,
+	options,
 	coords,
 	onAction,
 	onClose,
@@ -23,7 +28,7 @@ export default function HanabiTileActionsTooltip({
 			<Tooltip onClose={onClose} top={coords.top} left={coords.left}>
 				<div className="pb-0.5">
 					<div className="bg-gray-900 rounded-lg py-2 px-3 text-white">
-						{ownTile ? (
+						{options === HanabiTileActionsTooltipOptions.Own && (
 							<div className="grid grid-flow-col gap-x-3 items-center">
 								<button
 									className="font-bold text-xl"
@@ -51,7 +56,8 @@ export default function HanabiTileActionsTooltip({
 									Play
 								</button>
 							</div>
-						) : (
+						)}
+						{options === HanabiTileActionsTooltipOptions.OtherPlayer && (
 							<div className="grid grid-flow-col gap-x-3 items-center">
 								<button
 									className={classnames(

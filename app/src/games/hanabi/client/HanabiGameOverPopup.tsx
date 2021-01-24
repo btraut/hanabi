@@ -1,8 +1,8 @@
+import { useUserId } from 'app/src/components/SocketContext';
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
 import HanabiMenuButton from 'app/src/games/hanabi/client/HanabiMenuButton';
 import HanabiPopup from 'app/src/games/hanabi/client/HanabiPopup';
 import { HanabiFinishedReason } from 'app/src/games/hanabi/HanabiGameData';
-import { useCallback } from 'react';
 
 const GAME_OVER_TITLES: { [key in HanabiFinishedReason]: string } = {
 	Won: 'Congratulations!',
@@ -18,13 +18,15 @@ const GAME_OVER_MESSAGES: { [key in HanabiFinishedReason]: string } = {
 	OutOfLives: 'You ran out of lives.',
 };
 
-export default function HanabiGameOverPopup(): JSX.Element | null {
-	const game = useHanabiGame();
+interface Props {
+	onClose?: () => void;
+}
 
-	const handleNewGameClick = useCallback(async () => game.reset(), [game]);
+export default function HanabiGameOverPopup({ onClose }: Props): JSX.Element | null {
+	const game = useHanabiGame();
+	const userId = useUserId();
 
 	const { finishedReason } = game.gameData;
-
 	if (finishedReason === null) {
 		return null;
 	}
@@ -38,8 +40,20 @@ export default function HanabiGameOverPopup(): JSX.Element | null {
 				<p className="italic text-2xl text-white font-normal text-center mb-8">
 					{GAME_OVER_MESSAGES[finishedReason]}
 				</p>
-				<div className="flex justify-center">
-					<HanabiMenuButton label="New Game" onClick={handleNewGameClick} />
+				<div className="grid grid-flow-col gap-x-4 justify-center">
+					{onClose && <HanabiMenuButton label="Show Tiles" onClick={onClose} />}
+					{game.gameData.players[userId] && (
+						<HanabiMenuButton
+							label="New Game"
+							onClick={() => {
+								if (onClose) {
+									onClose();
+								}
+
+								game.reset();
+							}}
+						/>
+					)}
 				</div>
 			</div>
 		</HanabiPopup>

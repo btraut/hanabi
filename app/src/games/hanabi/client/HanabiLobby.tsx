@@ -4,7 +4,7 @@ import HanabiJoinForm from 'app/src/games/hanabi/client/HanabiJoinForm';
 import HanabiMenuButton from 'app/src/games/hanabi/client/HanabiMenuButton';
 import HanabiPlayerAvatar from 'app/src/games/hanabi/client/HanabiPlayerAvatar';
 import { HANABI_MIN_PLAYERS } from 'app/src/games/hanabi/HanabiGameData';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 declare const DOMAIN_BASE: string;
 
@@ -21,6 +21,7 @@ export default function HanabiLobby(): JSX.Element {
 	};
 
 	const [showCopiedButton, setShowCopiedButton] = useState(false);
+	const showCopiedButtonTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
 	const handleLinkClick = () => {
 		const textArea = document.createElement('textarea');
 		textArea.style.width = '1px';
@@ -34,6 +35,13 @@ export default function HanabiLobby(): JSX.Element {
 		document.body.removeChild(textArea);
 
 		setShowCopiedButton(true);
+
+		if (!showCopiedButtonTimeoutRef.current) {
+			showCopiedButtonTimeoutRef.current = setTimeout(() => {
+				setShowCopiedButton(false);
+			}, 3000);
+			showCopiedButtonTimeoutRef.current = undefined;
+		}
 	};
 
 	const userIsJoined = !!(userId && game.gameData.players[userId]);
@@ -46,19 +54,18 @@ export default function HanabiLobby(): JSX.Element {
 	return (
 		<div className="grid grid-flow-row gap-y-10">
 			{userIsJoined && (
-				<div className="max-w-screen-md bg-gray-300 text-lg text-center grid grid-flow-col overflow-hidden rounded-lg">
-					<button onClick={handleLinkClick} className="outline-none">
-						<span className="inline-block px-5 py-3 font-bold text-blue-700 hover:text-blue-800">
-							{link}
-						</span>
-					</button>
-					{showCopiedButton && (
-						<div className="text-white font-bold bg-gray-800 px-5 py-3">Copied!</div>
-					)}
-				</div>
+				<button
+					onClick={handleLinkClick}
+					className="outline-none grid grid-flow-col items-center max-w-screen-md bg-gray-300 overflow-hidden rounded-lg font-bold text-blue-700 hover:text-blue-800 text-lg"
+				>
+					<div className="inline-block px-5 text-center">{link}</div>
+					<div className="text-white bg-gray-800 px-5 py-3 w-28">
+						{showCopiedButton ? 'Copied!' : 'Copy'}
+					</div>
+				</button>
 			)}
 			{players.length > 0 && (
-				<div className="grid grid-flow-col gap-x-4 justify-center">
+				<div className="grid grid-flow-col gap-x-6 justify-center">
 					{players.map((player) => (
 						<HanabiPlayerAvatar key={player.id} player={player} />
 					))}

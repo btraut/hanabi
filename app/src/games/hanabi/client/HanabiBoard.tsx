@@ -8,10 +8,13 @@ import HanabiPlayedTiles from 'app/src/games/hanabi/client/HanabiPlayedTiles';
 import HanabiPlayerAvatar from 'app/src/games/hanabi/client/HanabiPlayerAvatar';
 import HanabiPlayerTiles from 'app/src/games/hanabi/client/HanabiPlayerTiles';
 import HanabiRemainingTiles from 'app/src/games/hanabi/client/HanabiRemainingTiles';
-import HanabiTileActionsTooltip from 'app/src/games/hanabi/client/HanabiTileActionsTooltip';
+import HanabiTileActionsTooltip, {
+	HanabiTileActionsTooltipOptions,
+} from 'app/src/games/hanabi/client/HanabiTileActionsTooltip';
 import { HANABI_MAX_LIVES, HanabiTile } from 'app/src/games/hanabi/HanabiGameData';
+import useValueChanged from 'app/src/utils/client/useValueChanged';
 import classnames from 'classnames';
-import { Fragment, useCallback, useState } from 'react';
+import { Fragment, useCallback, useEffect, useState } from 'react';
 
 function rotateArrayToItem<T>(arr: T[], item: T): T[] {
 	const itemIndex = arr.indexOf(item);
@@ -24,32 +27,37 @@ function rotateArrayToItem<T>(arr: T[], item: T): T[] {
 }
 
 export default function HanabiBoard(): JSX.Element {
-	const userId = useUserId();
 	const game = useHanabiGame();
+	const userId = useUserId();
 
 	const turnOrder = rotateArrayToItem(game.gameData.turnOrder, userId);
 
 	const [showMenuForTile, setShowMenuForTile] = useState<{
 		tile: HanabiTile;
-		ownTile: boolean;
+		options: HanabiTileActionsTooltipOptions;
 		coords: {
 			top: number;
 			left: number;
 		};
 	} | null>(null);
 	const handleTileClick = useCallback(
-		(event: React.MouseEvent<HTMLDivElement>, tile: HanabiTile, ownTile: boolean) => {
+		(event: React.MouseEvent<HTMLDivElement>, tile: HanabiTile) => {
 			const rect = (event.target as any).getBoundingClientRect();
+			const ownTile = !!game.gameData.players[userId].tileLocations.find(
+				(tl) => tl.tile.id === tile.id,
+			);
 			setShowMenuForTile({
 				tile,
-				ownTile,
+				options: ownTile
+					? HanabiTileActionsTooltipOptions.Own
+					: HanabiTileActionsTooltipOptions.OtherPlayer,
 				coords: {
 					left: rect.x + rect.width / 2,
 					top: rect.y + window.scrollY,
 				},
 			});
 		},
-		[],
+		[game, userId],
 	);
 
 	const handleActionsTooltipAction = useCallback(
@@ -90,6 +98,14 @@ export default function HanabiBoard(): JSX.Element {
 	const handleActionsTooltipOnClose = useCallback(() => {
 		setShowMenuForTile(null);
 	}, []);
+
+	const [showGameOverPopup, setShowGameOverPopup] = useState(!!game.gameData.finishedReason);
+	const gameFinishedReasonChanged = useValueChanged(game.gameData.finishedReason);
+	useEffect(() => {
+		if (gameFinishedReasonChanged) {
+			setShowGameOverPopup(!!game.gameData.finishedReason);
+		}
+	}, [gameFinishedReasonChanged, game.gameData.finishedReason]);
 
 	return (
 		<div className="grid grid-flow-col gap-x-6 relative">
@@ -147,12 +163,18 @@ export default function HanabiBoard(): JSX.Element {
 				<HanabiTileActionsTooltip
 					coords={showMenuForTile.coords}
 					tile={showMenuForTile.tile}
-					ownTile={showMenuForTile.ownTile}
+					options={showMenuForTile.options}
 					onAction={handleActionsTooltipAction}
 					onClose={handleActionsTooltipOnClose}
 				/>
 			)}
-			{game.gameData.finishedReason && <HanabiGameOverPopup />}
+			{showGameOverPopup && (
+				<HanabiGameOverPopup
+					onClose={() => {
+						setShowGameOverPopup(false);
+					}}
+				/>
+			)}
 		</div>
 	);
 }

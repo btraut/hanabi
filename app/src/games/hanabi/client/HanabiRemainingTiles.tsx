@@ -7,7 +7,11 @@ export default function HanabiRemainingTiles(): JSX.Element {
 	return (
 		<div className="grid grid-cols-12 gap-1">
 			{game.gameData.remainingTiles.map((tile, index) => (
-				<HanabiTileView key={`remaining-${index}`} tile={tile} ownTile />
+				<HanabiTileView
+					key={`remaining-${index}`}
+					tile={tile}
+					hidden={game.gameData.finishedReason === null}
+				/>
 			))}
 		</div>
 	);

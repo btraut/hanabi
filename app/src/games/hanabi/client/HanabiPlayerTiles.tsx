@@ -15,16 +15,12 @@ import { useDrop } from 'react-dnd';
 
 interface Props {
 	id: string;
-	onTileClick?: (
-		event: React.MouseEvent<HTMLDivElement>,
-		tile: HanabiTile,
-		ownTile: boolean,
-	) => void;
+	onTileClick?: (event: React.MouseEvent<HTMLDivElement>, tile: HanabiTile) => void;
 }
 
 export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Element {
-	const userId = useUserId();
 	const game = useHanabiGame();
+	const userId = useUserId();
 
 	const { highlightedTiles } = useHanabiHighlightTileContext();
 	const newestTileId = useNewestTile();
@@ -79,14 +75,14 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 							<HanabiTileView
 								onClick={enableOnClick ? onTileClick : undefined}
 								tile={tileLocation.tile}
-								ownTile={ownTiles}
+								hidden={game.gameData.finishedReason === null && ownTiles}
 								draggable={game.gameData.finishedReason === null && ownTiles}
 								highlight={highlightedTiles.has(tileLocation.tile.id)}
 								enableNewAnimation={tileLocation.tile.id === newestTileId}
 							/>
 						</div>
 					))}
-					{ownTiles && <HanabiPlayerTilesDragLayer />}
+					{game.gameData.finishedReason === null && ownTiles && <HanabiPlayerTilesDragLayer />}
 				</div>
 			</div>
 		</div>

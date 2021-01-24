@@ -7,11 +7,11 @@ export default function HanabiActions(): JSX.Element {
 	const game = useHanabiGame();
 
 	const totalPlayers = Object.keys(game.gameData.players).length;
-	const hiddenActions =
+	const hideActions =
+		game.gameData.finishedReason === null &&
 		game.gameData.showActionsLimit === HanabiShowActionsLimit.ShowLast &&
-		game.gameData.actions.length > totalPlayers
-			? game.gameData.actions.length - totalPlayers
-			: 0;
+		game.gameData.actions.length > totalPlayers;
+	const hiddenActions = hideActions ? game.gameData.actions.length - totalPlayers : 0;
 	const actionsLimited = game.gameData.actions.slice(hiddenActions);
 	const actionsReversed = actionsLimited.reverse();
 
