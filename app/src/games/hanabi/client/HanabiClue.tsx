@@ -2,20 +2,28 @@ import Clock from 'app/src/games/hanabi/client/icons/clock';
 import classnames from 'classnames';
 
 interface Props {
+	size?: number;
 	placeholder?: boolean;
+	hideIcon?: boolean;
 }
 
-export default function HanabiClue({ placeholder = false }: Props): JSX.Element {
+export default function HanabiClue({
+	placeholder = false,
+	size = 48,
+	hideIcon = false,
+}: Props): JSX.Element {
 	return (
 		<div
 			className={classnames([
-				'bg-blue-900 rounded-full flex items-center justify-center w-12 h-12',
+				'rounded-full flex items-center justify-center shadow-light',
 				{
-					'opacity-20': placeholder,
+					'bg-blue-900': !placeholder,
+					'bg-gray-300': placeholder,
 				},
 			])}
+			style={{ width: size, height: size }}
 		>
-			<Clock color="rgb(252, 211, 77)" size={30} />
+			{!hideIcon && <Clock color="rgb(252, 211, 77)" size={Math.floor((5 * size) / 8)} />}
 		</div>
 	);
 }

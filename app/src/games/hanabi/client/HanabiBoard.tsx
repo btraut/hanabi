@@ -11,7 +11,7 @@ import HanabiRemainingTiles from 'app/src/games/hanabi/client/HanabiRemainingTil
 import HanabiTileActionsTooltip, {
 	HanabiTileActionsTooltipOptions,
 } from 'app/src/games/hanabi/client/HanabiTileActionsTooltip';
-import { HANABI_MAX_LIVES, HanabiTile } from 'app/src/games/hanabi/HanabiGameData';
+import { HanabiTile } from 'app/src/games/hanabi/HanabiGameData';
 import useValueChanged from 'app/src/utils/client/useValueChanged';
 import classnames from 'classnames';
 import { Fragment, useCallback, useEffect, useState } from 'react';
@@ -144,13 +144,13 @@ export default function HanabiBoard(): JSX.Element {
 				})}
 			</div>
 			<div className="grid grid-flow-row gap-y-6">
-				<div className="border-4 border-black bg-white rounded-xl p-4 grid grid-flow-col gap-x-4 items-center">
+				<div className="border-4 border-black bg-white rounded-xl p-4 grid grid-flow-col gap-x-4 justify-start items-center">
+					<HanabiRemainingTiles />
 					<HanabiClues />
-					<HanabiLives lives={game.gameData.lives} maxLives={HANABI_MAX_LIVES} />
+					<HanabiLives />
 				</div>
 				<div className="border-4 border-black bg-white rounded-xl p-4 grid grid-flow-row gap-y-6">
 					<HanabiPlayedTiles />
-					<HanabiRemainingTiles />
 				</div>
 				<div
 					className="border-4 border-black bg-white rounded-xl overflow-y-auto"

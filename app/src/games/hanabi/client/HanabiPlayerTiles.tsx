@@ -27,6 +27,7 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 
 	const ownTiles = id === userId;
 	const ownTurn = game.gameData.turnOrder[0] === userId;
+	const thisPlayersTurn = game.gameData.turnOrder[0] === id;
 
 	const [, dropRef] = useDrop<HanabiTileDragItem, void, void>({
 		accept: hanabiDragTypes.TILE,
@@ -59,7 +60,12 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 
 	return (
 		<div ref={dropRef}>
-			<div className="border-4 border-black bg-white rounded-xl p-0.5">
+			<div
+				className={classnames('border-4 border-black rounded-xl p-0.5', {
+					'bg-red-100': thisPlayersTurn,
+					'bg-white': !thisPlayersTurn,
+				})}
+			>
 				<div style={HANABI_BOARD_SIZE} className="relative z-0">
 					{player.tileLocations.map((tileLocation) => (
 						<div
