@@ -1,10 +1,11 @@
+import { useBreakpointContext } from 'app/src/components/BreakpointContext';
 import { useUserId } from 'app/src/components/SocketContext';
 import HanabiActions from 'app/src/games/hanabi/client/HanabiActions';
 import HanabiClues from 'app/src/games/hanabi/client/HanabiClues';
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
 import HanabiGameOverPopup from 'app/src/games/hanabi/client/HanabiGameOverPopup';
 import HanabiLives from 'app/src/games/hanabi/client/HanabiLives';
-import HanabiPlayedTiles from 'app/src/games/hanabi/client/HanabiPlayedTiles';
+import HanabiPlayedTiles, { PlayedTileSize } from 'app/src/games/hanabi/client/HanabiPlayedTiles';
 import HanabiPlayerAvatar from 'app/src/games/hanabi/client/HanabiPlayerAvatar';
 import HanabiPlayerTiles from 'app/src/games/hanabi/client/HanabiPlayerTiles';
 import HanabiRemainingTiles from 'app/src/games/hanabi/client/HanabiRemainingTiles';
@@ -109,8 +110,10 @@ export default function HanabiBoard(): JSX.Element {
 		}
 	}, [gameFinishedReasonChanged, game.gameData.finishedReason]);
 
+	const breakpoints = useBreakpointContext();
+
 	return (
-		<div className="grid grid-flow-col gap-x-6 relative">
+		<div className="grid grid-flow-row lg:grid-flow-col gap-6 relative">
 			<div
 				className="grid gap-y-6 content-start items-start"
 				style={{ gridTemplateColumns: 'auto auto' }}
@@ -146,13 +149,15 @@ export default function HanabiBoard(): JSX.Element {
 				})}
 			</div>
 			<div className="grid grid-flow-row gap-y-6">
-				<div className="border-4 border-black bg-white rounded-xl p-4 grid grid-flow-col gap-x-4 justify-start items-center">
+				<div className="border-4 border-black bg-white rounded-xl p-4 grid grid-flow-row xl:grid-flow-col gap-2 xl:gap-4 justify-start items-center">
 					<HanabiRemainingTiles />
 					<HanabiClues />
 					<HanabiLives />
 				</div>
 				<div className="border-4 border-black bg-white rounded-xl p-4 grid grid-flow-row gap-y-6">
-					<HanabiPlayedTiles />
+					<HanabiPlayedTiles
+						size={breakpoints.xl ? PlayedTileSize.Regular : PlayedTileSize.Small}
+					/>
 				</div>
 				<div
 					className="border-4 border-black bg-white rounded-xl overflow-y-auto"
@@ -161,6 +166,8 @@ export default function HanabiBoard(): JSX.Element {
 					<HanabiActions />
 				</div>
 			</div>
+
+			{/* Popups */}
 			{showMenuForTile && (
 				<HanabiTileActionsTooltip
 					coords={showMenuForTile.coords}

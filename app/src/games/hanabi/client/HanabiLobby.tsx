@@ -52,7 +52,8 @@ export default function HanabiLobby(): JSX.Element {
 	const players = Object.values(game.gameData.players);
 
 	return (
-		<div className="grid grid-flow-row gap-y-10">
+		<div className="w-screen min-h-screen p-20 grid grid-flow-row gap-10 content-center justify-center">
+			<h1 className="mb-10 text-8xl italic text-white text-center text-shadow">Hanabi</h1>
 			{userIsJoined && (
 				<button
 					onClick={handleLinkClick}

@@ -48,8 +48,9 @@ export default function HanabiMainMenu(): JSX.Element {
 	});
 
 	return (
-		<div className="grid grid-flow-row gap-10">
+		<div className="w-screen min-h-screen p-20 grid grid-flow-row gap-10 content-center justify-center">
 			<div className="grid grid-flow-row gap-4">
+				<h1 className="mb-10 text-8xl italic text-white text-center text-shadow">Hanabi</h1>
 				<div className="grid grid-flow-col gap-2 justify-center content-center">
 					<HanabiTileView {...generateRandomTile()} border={false} />
 					<HanabiTileView {...generateRandomTile()} border={false} />

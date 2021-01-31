@@ -59,10 +59,10 @@ export default function HanabiInteractiveTileView({
 	const [showNewAnimation, setShowNewAnimation] = useState(enableNewAnimation);
 
 	useEffect(() => {
-		if (enableNewAnimation) {
+		if (enableNewAnimation !== showNewAnimation) {
 			setShowNewAnimation(enableNewAnimation);
 		}
-	}, [enableNewAnimation]);
+	}, [enableNewAnimation, showNewAnimation]);
 
 	const handleMouseDown = useCallback(() => {
 		setShowNewAnimation(false);
@@ -109,7 +109,7 @@ export default function HanabiInteractiveTileView({
 			ref={dragRef}
 			style={size === TileViewSize.Regular ? HANABI_TILE_SIZE : HANABI_TILE_SIZE_SMALL}
 			className={classnames([
-				'relative focus:outline-none focus:ring focus:border-blue-800',
+				'relative rounded-lg focus:outline-none focus:ring focus:border-blue-800',
 				cursor,
 				{
 					shake: showNewAnimation,

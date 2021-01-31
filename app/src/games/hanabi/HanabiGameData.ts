@@ -174,7 +174,7 @@ export function generateHanabiGameData(data: Partial<HanabiGameData> = {}): Hana
 		lives: HANABI_MAX_LIVES,
 		ruleSet: HanabiRuleSet.Basic,
 		actions: [],
-		showActionsLimit: HanabiShowActionsLimit.ShowLast,
+		showActionsLimit: HanabiShowActionsLimit.ShowAll,
 		...data,
 	};
 }

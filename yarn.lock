@@ -8436,6 +8436,11 @@ table@^6.0.4:
     slice-ansi "^4.0.0"
     string-width "^4.2.0"
 
+tailbreak@^0.2.1:
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/tailbreak/-/tailbreak-0.2.1.tgz#9ad708132d54c09f90871b83ba8bcbdd7f9f8657"
+  integrity sha512-KTPOslnQmBSUNqgqKfBdKVLBlPkdFZxZZ87wegWFaVDL5VnNTUa6hx52ZTkxX+Buv5rizXMInfgVHXU2qg72Yw==
+
 tailwindcss-typography@^3.1.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/tailwindcss-typography/-/tailwindcss-typography-3.1.0.tgz#b60690d97a53b0d94eab286cd02f68d6d30e2d3d"

@@ -21,7 +21,7 @@ export default function HanabiWatchForm(): JSX.Element {
 		if (codeValue) {
 			try {
 				const watchedGame = await hanabiContext.watch(codeValue);
-				history.push(`/hanabi/${watchedGame.id}`);
+				history.push(`/hanabi/${watchedGame.code}`);
 			} catch (error) {
 				setWatchGameError(error?.message || '');
 			}
@@ -29,7 +29,8 @@ export default function HanabiWatchForm(): JSX.Element {
 	};
 
 	return (
-		<>
+		<div className="w-screen min-h-screen p-20 grid grid-flow-row gap-10 content-center justify-center">
+			<h1 className="mb-10 text-8xl italic text-white text-center text-shadow">Hanabi</h1>
 			{watchGameError && (
 				<p className="mb-10 text-lg font-bold bg-red-900 text-white px-2 py-1">{watchGameError}</p>
 			)}
@@ -51,6 +52,6 @@ export default function HanabiWatchForm(): JSX.Element {
 					<HanabiMenuButton label="Join" />
 				</div>
 			</form>
-		</>
+		</div>
 	);
 }

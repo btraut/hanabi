@@ -1,7 +1,9 @@
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
 import { useHanabiHighlightTileContext } from 'app/src/games/hanabi/client/HanabiHighlightTileContext';
-import HanabiTileView from 'app/src/games/hanabi/client/HanabiTileView';
+import HanabiTileView, { TileViewSize } from 'app/src/games/hanabi/client/HanabiTileView';
 import {
+	HANABI_TILE_SIZE,
+	HANABI_TILE_SIZE_SMALL,
 	HanabiRuleSet,
 	HanabiTileColor,
 	HanabiTileNumber,
@@ -10,10 +12,22 @@ import classnames from 'classnames';
 
 const TILE_NUMBERS: HanabiTileNumber[] = [1, 2, 3, 4, 5];
 
-export default function HanabiPlayedTiles(): JSX.Element {
+export enum PlayedTileSize {
+	Regular = 'Regular',
+	Small = 'Small',
+}
+
+interface Props {
+	readonly size?: PlayedTileSize;
+}
+
+export default function HanabiPlayedTiles({ size = PlayedTileSize.Regular }: Props): JSX.Element {
 	const game = useHanabiGame();
 
 	const { highlightedTiles } = useHanabiHighlightTileContext();
+
+	const tileViewSize = size === PlayedTileSize.Regular ? TileViewSize.Regular : TileViewSize.Small;
+	const tileSize = size === PlayedTileSize.Regular ? HANABI_TILE_SIZE : HANABI_TILE_SIZE_SMALL;
 
 	const colors: HanabiTileColor[] = ['red', 'blue', 'green', 'yellow', 'white'];
 	if (game.gameData.ruleSet !== HanabiRuleSet.Basic) {
@@ -42,7 +56,8 @@ export default function HanabiPlayedTiles(): JSX.Element {
 				return (
 					<div
 						key={`container-${color}`}
-						className="grid grid-flow-col gap-x-4 h-12 justify-start items-center"
+						className="grid grid-flow-col gap-x-4 justify-start items-center"
+						style={{ height: tileSize.height }}
 					>
 						<div className="grid grid-flow-col justify-start gap-x-1">
 							{TILE_NUMBERS.map((number) => {
@@ -53,7 +68,8 @@ export default function HanabiPlayedTiles(): JSX.Element {
 								return (
 									<div
 										key={`tile-played-${color}-${number}`}
-										className="w-12 h-10 relative flex items-center justify-center"
+										className="relative flex items-center justify-center"
+										style={{ width: tileSize.height, height: tileSize.width }}
 									>
 										<div className="transform rotate-90 absolute">
 											<div
@@ -66,6 +82,7 @@ export default function HanabiPlayedTiles(): JSX.Element {
 													color={color}
 													number={number}
 													highlight={playedTile && highlightedTiles.has(playedTile.id)}
+													size={tileViewSize}
 												/>
 											</div>
 										</div>
@@ -82,6 +99,7 @@ export default function HanabiPlayedTiles(): JSX.Element {
 										number={tile.number}
 										key={`discarded-${tile.id}`}
 										highlight={highlightedTiles.has(tile.id)}
+										size={tileViewSize}
 									/>
 								))}
 							</div>

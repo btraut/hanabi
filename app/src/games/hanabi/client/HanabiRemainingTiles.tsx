@@ -14,7 +14,7 @@ export default function HanabiRemainingTiles(): JSX.Element {
 	return (
 		<div className="grid justify-start gap-1 relative grid-flow-col">
 			<div
-				className="absolute inset-0 flex justify-center items-center text-white text-l"
+				className="absolute inset-0 flex justify-center items-center text-white text-lg"
 				style={{ ...HANABI_TILE_SIZE_SMALL, zIndex: visibleRemainingTiles + 1 }}
 			>
 				{remainingTiles}

@@ -36,6 +36,7 @@
 		"react-router-dom": "^5.2.0",
 		"socket.io": "^3.0.4",
 		"socket.io-client": "^3.0.4",
+		"tailbreak": "^0.2.1",
 		"tslib": "^2.0.3",
 		"uuid": "^8.3.2",
 		"winston": "^3.3.3"

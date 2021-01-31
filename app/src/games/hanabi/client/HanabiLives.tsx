@@ -9,7 +9,7 @@ export default function HanabiLives(): JSX.Element {
 	const remainingLives = game.gameData.lives;
 
 	return (
-		<div className="grid grid-flow-col gap-0.5">
+		<div className="grid grid-flow-col gap-0.5 justify-start">
 			{new Array(HANABI_MAX_LIVES).fill('').map((_, index) => (
 				<div
 					key={`clue-${index}`}
