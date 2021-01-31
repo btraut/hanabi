@@ -123,7 +123,11 @@ export default function HanabiAction({ action }: Props): JSX.Element {
 	}
 
 	return (
-		<div className="text-lg p-4" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+		<div
+			className="text-md xl:text-lg p-4"
+			onMouseEnter={handleMouseEnter}
+			onMouseLeave={handleMouseLeave}
+		>
 			{actionContent}
 		</div>
 	);

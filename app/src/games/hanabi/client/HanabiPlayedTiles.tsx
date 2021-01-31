@@ -49,17 +49,17 @@ export default function HanabiPlayedTiles({ size = PlayedTileSize.Regular }: Pro
 	}
 
 	return (
-		<div className="grid grid-flow-row justify-start gap-y-2">
+		<div className="grid grid-flow-row justify-start gap-1 xl:gap-2">
 			{colors.map((color) => {
 				const discardedTiles = game.gameData.discardedTiles.filter((t) => t.color === color);
 
 				return (
 					<div
 						key={`container-${color}`}
-						className="grid grid-flow-col gap-x-4 justify-start items-center"
+						className="grid grid-flow-col gap-3 xl:gap-4 justify-start items-center"
 						style={{ height: tileSize.height }}
 					>
-						<div className="grid grid-flow-col justify-start gap-x-1">
+						<div className="grid grid-flow-col justify-start gap-0.5 xl:gap-1">
 							{TILE_NUMBERS.map((number) => {
 								const playedTile = game.gameData.playedTiles.find(
 									(t) => t.color === color && t.number === number,
@@ -91,7 +91,7 @@ export default function HanabiPlayedTiles({ size = PlayedTileSize.Regular }: Pro
 							})}
 						</div>
 						{discardedTiles.length > 0 && (
-							<div className="grid grid-flow-col justify-start gap-x-1">
+							<div className="grid grid-flow-col justify-start gap-0.5 xl:gap-1">
 								{discardedTiles.map((tile) => (
 									<HanabiTileView
 										id={tile.id}
