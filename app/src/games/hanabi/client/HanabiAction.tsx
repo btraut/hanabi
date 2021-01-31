@@ -1,6 +1,6 @@
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
 import { useHanabiHighlightTileContext } from 'app/src/games/hanabi/client/HanabiHighlightTileContext';
-import HanabiTileView from 'app/src/games/hanabi/client/HanabiTileView';
+import HanabiTileView, { TileViewSize } from 'app/src/games/hanabi/client/HanabiTileView';
 import {
 	HanabiGameAction,
 	HanabiGameActionType,
@@ -49,7 +49,11 @@ export default function HanabiAction({ action }: Props): JSX.Element {
 						<span className="font-bold">{player.name}</span> played
 					</span>
 					<div className="inline-block align-middle mx-2">
-						<HanabiTileView tile={action.tile} />
+						<HanabiTileView
+							color={action.tile.color}
+							number={action.tile.number}
+							size={TileViewSize.Small}
+						/>
 					</div>
 				</>
 			);
@@ -60,7 +64,11 @@ export default function HanabiAction({ action }: Props): JSX.Element {
 						<span className="font-bold">{player.name}</span> tried, but failed to play
 					</span>
 					<div className="inline-block align-middle mx-2">
-						<HanabiTileView tile={action.tile} />
+						<HanabiTileView
+							color={action.tile.color}
+							number={action.tile.number}
+							size={TileViewSize.Small}
+						/>
 					</div>
 				</>
 			);
@@ -72,7 +80,11 @@ export default function HanabiAction({ action }: Props): JSX.Element {
 					<span className="font-bold">{player.name}</span> discarded
 				</span>
 				<div className="inline-block align-middle mx-2">
-					<HanabiTileView tile={action.tile} />
+					<HanabiTileView
+						color={action.tile.color}
+						number={action.tile.number}
+						size={TileViewSize.Small}
+					/>
 				</div>
 			</>
 		);

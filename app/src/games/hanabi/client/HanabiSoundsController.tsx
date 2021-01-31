@@ -17,9 +17,19 @@ function playAudio(ele: HTMLAudioElement) {
 }
 
 export default function HanabiSoundsController(): null {
-	const rightRef = useRef(new Audio('/sounds/hanabi/right.wav'));
-	const wrongRef = useRef(new Audio('/sounds/hanabi/wrong.wav'));
-	const beepRef = useRef(new Audio('/sounds/hanabi/beep.wav'));
+	const rightRef = useRef<HTMLAudioElement | null>();
+	const wrongRef = useRef<HTMLAudioElement | null>();
+	const beepRef = useRef<HTMLAudioElement | null>();
+
+	if (!rightRef.current) {
+		rightRef.current = new Audio('/sounds/hanabi/right.wav');
+	}
+	if (!wrongRef.current) {
+		wrongRef.current = new Audio('/sounds/hanabi/wrong.wav');
+	}
+	if (!beepRef.current) {
+		beepRef.current = new Audio('/sounds/hanabi/beep.wav');
+	}
 
 	const userId = useUserId();
 	const game = useHanabiGame();
@@ -42,16 +52,16 @@ export default function HanabiSoundsController(): null {
 
 		if (newestAction.type === HanabiGameActionType.Play) {
 			if (newestAction.valid) {
-				playAudio(rightRef.current);
+				playAudio(rightRef.current!);
 			} else {
-				playAudio(wrongRef.current);
+				playAudio(wrongRef.current!);
 			}
 		} else if (
 			newestAction.type === HanabiGameActionType.Discard ||
 			newestAction.type === HanabiGameActionType.GiveColorClue ||
 			newestAction.type === HanabiGameActionType.GiveNumberClue
 		) {
-			playAudio(beepRef.current);
+			playAudio(beepRef.current!);
 		}
 	}, [actionsChanged, newestAction, userId]);
 

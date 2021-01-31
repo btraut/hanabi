@@ -3,7 +3,11 @@ import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
 import { HanabiShowActionsLimit } from 'app/src/games/hanabi/HanabiGameData';
 import classnames from 'classnames';
 
-export default function HanabiActions(): JSX.Element {
+interface Props {
+	collapseHiddenActions?: boolean;
+}
+
+export default function HanabiActions({ collapseHiddenActions = false }: Props): JSX.Element {
 	const game = useHanabiGame();
 
 	const totalPlayers = Object.keys(game.gameData.players).length;
@@ -33,7 +37,7 @@ export default function HanabiActions(): JSX.Element {
 					</div>
 				);
 			})}
-			{hiddenActions ? (
+			{hiddenActions && collapseHiddenActions ? (
 				<div className="italic text-md text-gray-700 p-4 border-gray-600 border-t-2">
 					{hiddenActions === 1
 						? '1 previous action hidden'

@@ -40,12 +40,14 @@ export default function HanabiBoard(): JSX.Element {
 			left: number;
 		};
 	} | null>(null);
+
 	const handleTileClick = useCallback(
 		(event: React.MouseEvent<HTMLDivElement>, tile: HanabiTile) => {
 			const rect = (event.target as any).getBoundingClientRect();
 			const ownTile = !!game.gameData.players[userId].tileLocations.find(
 				(tl) => tl.tile.id === tile.id,
 			);
+
 			setShowMenuForTile({
 				tile,
 				options: ownTile

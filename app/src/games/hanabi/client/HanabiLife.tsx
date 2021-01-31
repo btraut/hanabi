@@ -1,29 +1,14 @@
 import Heart from 'app/src/games/hanabi/client/icons/Heart';
-import classnames from 'classnames';
 
-interface Props {
-	size?: number;
-	placeholder?: boolean;
-	hideIcon?: boolean;
-}
+const LIFE_SIZE = 32;
 
-export default function HanabiLife({
-	placeholder = false,
-	size = 48,
-	hideIcon = false,
-}: Props): JSX.Element {
+export default function HanabiLife(): JSX.Element {
 	return (
 		<div
-			className={classnames([
-				'rounded-full flex items-center justify-center shadow-light',
-				{
-					'bg-red-700': !placeholder,
-					'bg-gray-300': placeholder,
-				},
-			])}
-			style={{ width: size, height: size }}
+			className="rounded-full flex items-center justify-center shadow-light bg-red-700"
+			style={{ width: LIFE_SIZE, height: LIFE_SIZE }}
 		>
-			{!hideIcon && <Heart color="white" size={Math.floor((5 * size) / 8)} />}
+			<Heart color="white" size={Math.floor(LIFE_SIZE / 2)} />
 		</div>
 	);
 }

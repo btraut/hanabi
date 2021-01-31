@@ -6,6 +6,7 @@ import {
 	HanabiTileColor,
 	HanabiTileNumber,
 } from 'app/src/games/hanabi/HanabiGameData';
+import classnames from 'classnames';
 
 const TILE_NUMBERS: HanabiTileNumber[] = [1, 2, 3, 4, 5];
 
@@ -55,20 +56,18 @@ export default function HanabiPlayedTiles(): JSX.Element {
 										className="w-12 h-10 relative flex items-center justify-center"
 									>
 										<div className="transform rotate-90 absolute">
-											<HanabiTileView
-												tile={
-													playedTile
-														? playedTile
-														: {
-																id: '',
-																color,
-																number,
-																zIndex: 0,
-														  }
-												}
-												highlight={playedTile && highlightedTiles.has(playedTile.id)}
-												placeholder={!playedTile}
-											/>
+											<div
+												className={classnames({
+													'opacity-20': !playedTile,
+												})}
+											>
+												<HanabiTileView
+													id={playedTile ? playedTile.id : undefined}
+													color={color}
+													number={number}
+													highlight={playedTile && highlightedTiles.has(playedTile.id)}
+												/>
+											</div>
 										</div>
 									</div>
 								);
@@ -78,8 +77,10 @@ export default function HanabiPlayedTiles(): JSX.Element {
 							<div className="grid grid-flow-col justify-start gap-x-1">
 								{discardedTiles.map((tile) => (
 									<HanabiTileView
+										id={tile.id}
+										color={tile.color}
+										number={tile.number}
 										key={`discarded-${tile.id}`}
-										tile={tile}
 										highlight={highlightedTiles.has(tile.id)}
 									/>
 								))}

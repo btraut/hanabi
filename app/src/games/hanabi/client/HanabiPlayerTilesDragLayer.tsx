@@ -46,7 +46,7 @@ export default function HanabiPlayerTilesDragLayer(): JSX.Element | null {
 					zIndex: 1000000,
 				}}
 			>
-				<HanabiTileView hidden />
+				<HanabiTileView />
 			</div>
 		);
 	}

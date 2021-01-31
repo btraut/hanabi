@@ -2,9 +2,9 @@ import { useUserId } from 'app/src/components/SocketContext';
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
 import { hanabiDragTypes, HanabiTileDragItem } from 'app/src/games/hanabi/client/HanabiDragTypes';
 import { useHanabiHighlightTileContext } from 'app/src/games/hanabi/client/HanabiHighlightTileContext';
+import HanabiInteractiveTileView from 'app/src/games/hanabi/client/HanabiInteractiveTileView';
 import { useNewestTile } from 'app/src/games/hanabi/client/HanabiNewestTileContext';
 import HanabiPlayerTilesDragLayer from 'app/src/games/hanabi/client/HanabiPlayerTilesDragLayer';
-import HanabiTileView from 'app/src/games/hanabi/client/HanabiTileView';
 import {
 	HANABI_BOARD_SIZE,
 	HANABI_TILE_SIZE,
@@ -78,10 +78,10 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 								zIndex: tileLocation.tile.zIndex,
 							}}
 						>
-							<HanabiTileView
-								onClick={enableOnClick ? onTileClick : undefined}
+							<HanabiInteractiveTileView
 								tile={tileLocation.tile}
 								hidden={game.gameData.finishedReason === null && ownTiles}
+								onClick={enableOnClick ? onTileClick : undefined}
 								draggable={game.gameData.finishedReason === null && ownTiles}
 								highlight={highlightedTiles.has(tileLocation.tile.id)}
 								enableNewAnimation={tileLocation.tile.id === newestTileId}
