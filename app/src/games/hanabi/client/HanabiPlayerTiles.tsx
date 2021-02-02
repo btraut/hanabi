@@ -57,6 +57,7 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 
 	const player = game.gameData.players[id];
 	const enableOnClick = ownTurn && onTileClick && (ownTiles || game.gameData.clues > 0);
+	const gameStillPlaying = game.gameData.finishedReason === null;
 
 	return (
 		<div ref={dropRef}>
@@ -80,15 +81,15 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 						>
 							<HanabiInteractiveTileView
 								tile={tileLocation.tile}
-								hidden={game.gameData.finishedReason === null && ownTiles}
+								hidden={gameStillPlaying && ownTiles}
 								onClick={enableOnClick ? onTileClick : undefined}
-								draggable={game.gameData.finishedReason === null && ownTiles}
+								draggable={gameStillPlaying && ownTiles}
 								highlight={highlightedTiles.has(tileLocation.tile.id)}
-								enableNewAnimation={tileLocation.tile.id === newestTileId}
+								enableNewAnimation={gameStillPlaying && tileLocation.tile.id === newestTileId}
 							/>
 						</div>
 					))}
-					{game.gameData.finishedReason === null && ownTiles && <HanabiPlayerTilesDragLayer />}
+					{gameStillPlaying && ownTiles && <HanabiPlayerTilesDragLayer />}
 				</div>
 			</div>
 		</div>
