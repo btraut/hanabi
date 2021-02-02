@@ -13,6 +13,8 @@ interface Props {
 	action: HanabiGameAction;
 }
 
+const ENGLISH_NUMBERS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six'];
+
 export default function HanabiAction({ action }: Props): JSX.Element {
 	const game = useHanabiGame();
 
@@ -114,7 +116,8 @@ export default function HanabiAction({ action }: Props): JSX.Element {
 			<>
 				<span className="align-middle">
 					<span className="font-bold">{player.name}</span> →{' '}
-					<span className="font-bold">{recipient.name}</span>: {action.tiles.length}{' '}
+					<span className="font-bold">{recipient.name}</span>:{' '}
+					{ENGLISH_NUMBERS[action.tiles.length]}{' '}
 					{action.tiles.length === 1 ? 'tile is a' : 'tiles are'}
 				</span>
 				{clue}
