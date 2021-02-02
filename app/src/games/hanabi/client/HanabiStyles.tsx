@@ -10,7 +10,7 @@ export default function HanabiStyles(): JSX.Element {
 		background-position: left 15px top, right 15px bottom, left bottom 15px, right top 15px;
 	}
 }
-.marquee-border {
+.marquee-highlight {
 	background-image:
 		linear-gradient(90deg, yellow 50%, transparent 50%),
 		linear-gradient(90deg, yellow 50%, transparent 50%),

@@ -41,7 +41,7 @@ export default function HanabiTileView({
 			className={classnames([
 				'bg-black rounded-lg flex items-center justify-center select-none relative',
 				{
-					'marquee-border': highlight,
+					'marquee-highlight': highlight,
 					'shadow-light': border,
 				},
 			])}
