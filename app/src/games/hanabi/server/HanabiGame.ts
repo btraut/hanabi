@@ -343,8 +343,7 @@ export default class HanabiGame extends Game {
 		this._gameData.remainingTiles = tiles;
 
 		// Set up turn order.
-		this._gameData.turnOrder = players.map((p) => p.id);
-		shuffle(this._gameData.turnOrder);
+		this._gameData.turnOrder = shuffle(players.map((p) => p.id));
 
 		// Send success message.
 		this._sendMessage(userId, {
