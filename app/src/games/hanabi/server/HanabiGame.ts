@@ -689,6 +689,20 @@ export default class HanabiGame extends Game {
 		// Decrement clue count.
 		this._gameData.clues -= 1;
 
+		// If the shot clock was started, advance it.
+		if (this._gameData.remainingTurns !== null) {
+			this._gameData.remainingTurns -= 1;
+
+			// If it runs out, game over.
+			if (this._gameData.remainingTurns === 0) {
+				this._gameData.stage = HanabiStage.Finished;
+				this._gameData.finishedReason = HanabiFinishedReason.OutOfTurns;
+			}
+		}
+
+		// Advance the turn.
+		this._gameData.turnOrder.push(this._gameData.turnOrder.shift()!);
+
 		// Record the action.
 		this._gameData.actions.push({
 			id: uuidv4(),
@@ -699,9 +713,6 @@ export default class HanabiGame extends Game {
 			number: message.data.number,
 			tiles: selectedTiles,
 		});
-
-		// Advance the turn.
-		this._gameData.turnOrder.push(this._gameData.turnOrder.shift()!);
 
 		// Send success message.
 		this._sendMessage(userId, {
