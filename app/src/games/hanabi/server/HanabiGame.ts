@@ -345,6 +345,13 @@ export default class HanabiGame extends Game {
 		// Set up turn order.
 		this._gameData.turnOrder = shuffle(players.map((p) => p.id));
 
+		// Record the action.
+		this._gameData.actions.push({
+			id: uuidv4(),
+			type: HanabiGameActionType.GameStarted,
+			startingPlayerId: this._gameData.turnOrder[0],
+		});
+
 		// Send success message.
 		this._sendMessage(userId, {
 			type: 'StartGameResponseMessage',

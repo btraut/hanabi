@@ -111,38 +111,78 @@ export enum HanabiGameActionType {
 	Discard = 'Discard',
 	GiveColorClue = 'GiveColorClue',
 	GiveNumberClue = 'GiveNumberClue',
+	ShotClockStarted = 'ShotClockStarted',
+	ShotClockTickedDown = 'ShotClockTickedDown',
+	GameStarted = 'GameStarted',
+	GameFinished = 'GameFinished',
+	Chat = 'Chat',
 }
 
-export interface HanabiGameActionPlay {
+export interface HanabiGameActionBase<Type> {
 	id: string;
+	type: Type;
+}
+
+export interface HanabiGameActionPlay extends HanabiGameActionBase<HanabiGameActionType.Play> {
 	playerId: string;
-	type: HanabiGameActionType.Play;
 	tile: HanabiTile;
 	remainingLives: number;
 	valid: boolean;
 }
 
-export interface HanabiGameActionDiscard {
-	id: string;
+export interface HanabiGameActionDiscard
+	extends HanabiGameActionBase<HanabiGameActionType.Discard> {
 	playerId: string;
-	type: HanabiGameActionType.Discard;
 	tile: HanabiTile;
 }
 
-export interface HanabiGameActionGiveClue {
-	id: string;
+export interface HanabiGameActionGiveClue
+	extends HanabiGameActionBase<
+		HanabiGameActionType.GiveNumberClue | HanabiGameActionType.GiveColorClue
+	> {
 	playerId: string;
-	type: HanabiGameActionType.GiveNumberClue | HanabiGameActionType.GiveColorClue;
 	recipientId: string;
 	tiles: HanabiTile[];
 	color?: HanabiTileColor;
 	number?: HanabiTileNumber;
 }
 
+export interface HanabiGameActionGameStarted
+	extends HanabiGameActionBase<HanabiGameActionType.GameStarted> {
+	startingPlayerId: string;
+}
+
+export interface HanabiGameActionGameFinished
+	extends HanabiGameActionBase<HanabiGameActionType.GameFinished> {
+	finishedReason: HanabiFinishedReason;
+}
+
+export interface HanabiGameActionShotClockStarted
+	extends HanabiGameActionBase<HanabiGameActionType.ShotClockStarted> {
+	playerId: string;
+	remainingTurns: number;
+}
+
+export interface HanabiGameActionShotClockTickedDown
+	extends HanabiGameActionBase<HanabiGameActionType.ShotClockTickedDown> {
+	playerId: string;
+	remainingTurns: number;
+}
+
+export interface HanabiGameActionChat extends HanabiGameActionBase<HanabiGameActionType.Chat> {
+	playerId: string;
+	message: string;
+}
+
 export type HanabiGameAction =
 	| HanabiGameActionPlay
 	| HanabiGameActionDiscard
-	| HanabiGameActionGiveClue;
+	| HanabiGameActionGiveClue
+	| HanabiGameActionGameStarted
+	| HanabiGameActionGameFinished
+	| HanabiGameActionShotClockStarted
+	| HanabiGameActionShotClockTickedDown
+	| HanabiGameActionChat;
 
 export interface HanabiGameData {
 	stage: HanabiStage;
