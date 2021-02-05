@@ -176,7 +176,13 @@ try {
 		// URLs.
 		const port = app.get('port');
 		const localUrl = `http://localhost:${port}`;
-		const ngrokUrl = await ngrok.connect({ addr: port, authtoken: process.env.NGROK_AUTH_TOKEN });
+		let ngrokUrl;
+
+		try {
+			ngrokUrl = await ngrok.connect({ addr: port, authtoken: process.env.NGROK_AUTH_TOKEN });
+		} catch (error) {
+			console.log(error);
+		}
 
 		// Notify!
 		Logger.info(`
