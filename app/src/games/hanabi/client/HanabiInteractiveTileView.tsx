@@ -101,8 +101,10 @@ export default function HanabiInteractiveTileView({
 		return null;
 	}
 
+	const Comp = onClick ? 'button' : 'div';
+
 	return (
-		<button
+		<Comp
 			ref={dragRef}
 			style={size === TileViewSize.Regular ? HANABI_TILE_SIZE : HANABI_TILE_SIZE_SMALL}
 			className={classnames([
@@ -126,6 +128,6 @@ export default function HanabiInteractiveTileView({
 					New
 				</div>
 			)}
-		</button>
+		</Comp>
 	);
 }
