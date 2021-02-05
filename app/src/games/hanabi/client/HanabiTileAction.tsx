@@ -1,7 +1,5 @@
-import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
 import { useHanabiHighlightContext } from 'app/src/games/hanabi/client/HanabiHighlightContext';
 import HanabiTileActionBody from 'app/src/games/hanabi/client/HanabiTileActionBody';
-import HanabiTileView, { TileViewSize } from 'app/src/games/hanabi/client/HanabiTileView';
 import Eye from 'app/src/games/hanabi/client/icons/Eye';
 import EyeOff from 'app/src/games/hanabi/client/icons/EyeOff';
 import {
@@ -9,7 +7,6 @@ import {
 	HanabiGameActionGiveClue,
 	HanabiGameActionPlay,
 	HanabiGameActionType,
-	tileBackgroundClasses,
 } from 'app/src/games/hanabi/HanabiGameData';
 import classnames from 'classnames';
 import { useState } from 'react';
@@ -18,11 +15,7 @@ interface Props {
 	action: HanabiGameActionPlay | HanabiGameActionDiscard | HanabiGameActionGiveClue;
 }
 
-const ENGLISH_NUMBERS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six'];
-
 export default function HanabiTileAction({ action }: Props): JSX.Element {
-	const game = useHanabiGame();
-
 	const [hovering, setHovering] = useState(false);
 
 	const { highlightTiles, highlightAction, highlightedAction } = useHanabiHighlightContext();

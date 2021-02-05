@@ -39,9 +39,7 @@ export default function HanabiLatestClue(): JSX.Element | null {
 		if (latestTileActionId !== latestDisplayAction) {
 			setLatestDisplayAction(latestTileActionId);
 
-			if (latestTileActionIsMine) {
-				setShowAction(false);
-			} else {
+			if (!latestTileActionIsMine) {
 				setShowAction(true);
 			}
 		}
@@ -58,11 +56,11 @@ export default function HanabiLatestClue(): JSX.Element | null {
 	}
 
 	return (
-		<div className="border-4 border-black bg-blue-100 rounded-xl p-4 flex justify-between items-center mb-6">
+		<div className="border-4 border-black bg-blue-100 rounded-xl px-4 flex justify-between items-center text-md xl:text-lg mb-6">
 			<span>
 				<HanabiTileActionBody action={latestTileAction} />
 			</span>
-			<button onClick={handleClose}>
+			<button onClick={handleClose} className="p-4 -mx-4">
 				<X size={20} />
 			</button>
 		</div>

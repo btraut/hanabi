@@ -15,7 +15,7 @@ interface Props {
 
 const ENGLISH_NUMBERS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six'];
 
-export default function HanabiTileActionBody({ action }: Props): JSX.Element {
+export default function HanabiTileActionBody({ action }: Props): JSX.Element | null {
 	const game = useHanabiGame();
 	const player = game.gameData.players[action.playerId];
 

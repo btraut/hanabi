@@ -10,15 +10,27 @@ interface Props {
 export default function HanabiGameFinishedAction({ action }: Props): JSX.Element {
 	switch (action.finishedReason) {
 		case HanabiFinishedReason.Won:
-			return <div className="text-md xl:text-lg p-4">Congratulations! You win!</div>;
+			return (
+				<div className="text-md xl:text-lg p-4">
+					<span className="font-bold">Congratulations! You win!</span>
+				</div>
+			);
 		case HanabiFinishedReason.OutOfTurns:
-			return <div className="text-md xl:text-lg p-4">The game is over. You ran out of turns.</div>;
+			return (
+				<div className="text-md xl:text-lg p-4">
+					<span className="font-bold">Game over!</span> You ran out of turns.
+				</div>
+			);
 		case HanabiFinishedReason.OutOfLives:
-			return <div className="text-md xl:text-lg p-4">The game is over. You ran out of lives.</div>;
+			return (
+				<div className="text-md xl:text-lg p-4">
+					<span className="font-bold">Game over!</span> You ran out of lives.
+				</div>
+			);
 		case HanabiFinishedReason.DiscardedFatalTile:
 			return (
 				<div className="text-md xl:text-lg p-4">
-					The game is over. You discarded a tile necessary to completing the game.
+					<span className="font-bold">Game over!</span> You discarded a necessary tile.
 				</div>
 			);
 	}

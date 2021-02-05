@@ -47,7 +47,7 @@ export default function HanabiLobby(): JSX.Element {
 	const userIsJoined = !!(userId && game.gameData.players[userId]);
 	const enoughPlayers = Object.keys(game.gameData.players).length >= HANABI_MIN_PLAYERS;
 	const domainBase = typeof window === 'undefined' ? DOMAIN_BASE : window.location.origin;
-	const link = `${domainBase}/hanabi/${game.code}`;
+	const link = `${domainBase}/${game.code}`;
 
 	const players = Object.values(game.gameData.players);
 
