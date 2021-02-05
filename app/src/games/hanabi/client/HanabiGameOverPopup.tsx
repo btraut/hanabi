@@ -41,7 +41,6 @@ export default function HanabiGameOverPopup({ onClose }: Props): JSX.Element | n
 					{GAME_OVER_MESSAGES[finishedReason]}
 				</p>
 				<div className="grid grid-flow-col gap-x-4 justify-center">
-					{onClose && <HanabiMenuButton label="Show Tiles" onClick={onClose} />}
 					{game.gameData.players[userId] && (
 						<HanabiMenuButton
 							label="New Game"
@@ -54,6 +53,7 @@ export default function HanabiGameOverPopup({ onClose }: Props): JSX.Element | n
 							}}
 						/>
 					)}
+					<HanabiMenuButton label="Close" onClick={onClose} />
 				</div>
 			</div>
 		</HanabiPopup>

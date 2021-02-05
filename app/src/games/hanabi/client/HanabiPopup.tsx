@@ -1,8 +1,15 @@
+import Portal from 'app/src/components/Portal';
+import X from 'app/src/games/hanabi/client/icons/X';
 import classnames from 'classnames';
+import { useEffect, useRef } from 'react';
+import FocusLock from 'react-focus-lock';
 
 interface Props {
 	readonly children: JSX.Element | JSX.Element[] | string;
 	readonly background?: 'red' | 'green' | 'gray';
+	readonly onClose?: () => void;
+	readonly closeButton?: boolean;
+	readonly backgroundWash?: boolean;
 }
 
 const BACKGROUND_CLASS = {
@@ -11,17 +18,44 @@ const BACKGROUND_CLASS = {
 	gray: 'bg-gray-800',
 };
 
-export default function HanabiPopup({ children, background = 'gray' }: Props): JSX.Element {
+export default function HanabiPopup({
+	children,
+	background = 'gray',
+	closeButton = false,
+	backgroundWash = false,
+	onClose,
+}: Props): JSX.Element {
+	const containerRef = useRef<HTMLDivElement | null>(null);
+
+	useEffect(() => {
+		if (containerRef.current) {
+			containerRef.current.focus();
+		}
+	}, []);
+
 	return (
-		<div className="absolute mt-24 w-full flex justify-center">
-			<div
-				className={classnames(
-					'border-solid border-black border-2 px-8 py-6 shadow-dark',
-					BACKGROUND_CLASS[background],
-				)}
-			>
-				{children}
-			</div>
-		</div>
+		<Portal>
+			<FocusLock>
+				<div
+					className="absolute inset-0 w-full flex items-center justify-center"
+					style={{ backgroundColor: backgroundWash ? 'rgba(0, 0, 0, 0.4)' : '' }}
+					ref={containerRef}
+				>
+					<div
+						className={classnames(
+							'border-solid border-black border-2 px-8 py-6 shadow-dark relative',
+							BACKGROUND_CLASS[background],
+						)}
+					>
+						{closeButton && onClose && (
+							<button className="absolute right-0 top-0 p-2 m-2" onClick={onClose}>
+								<X color="white" size={20} />
+							</button>
+						)}
+						{children}
+					</div>
+				</div>
+			</FocusLock>
+		</Portal>
 	);
 }
