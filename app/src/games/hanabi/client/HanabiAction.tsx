@@ -1,4 +1,7 @@
+import HanabiGameFinishedAction from 'app/src/games/hanabi/client/HanabiGameFinishedAction';
 import HanabiGameStartedAction from 'app/src/games/hanabi/client/HanabiGameStartedAction';
+import HanabiShotClockStartedAction from 'app/src/games/hanabi/client/HanabiShotClockStartedAction';
+import HanabiShotClockTickedDownAction from 'app/src/games/hanabi/client/HanabiShotClockTickedDownAction';
 import HanabiTileAction from 'app/src/games/hanabi/client/HanabiTileAction';
 import { HanabiGameAction, HanabiGameActionType } from 'app/src/games/hanabi/HanabiGameData';
 
@@ -18,6 +21,12 @@ export default function HanabiAction({ action }: Props): JSX.Element | null {
 			return <HanabiTileAction action={action} />;
 		case HanabiGameActionType.GameStarted:
 			return <HanabiGameStartedAction action={action} />;
+		case HanabiGameActionType.GameFinished:
+			return <HanabiGameFinishedAction action={action} />;
+		case HanabiGameActionType.ShotClockStarted:
+			return <HanabiShotClockStartedAction action={action} />;
+		case HanabiGameActionType.ShotClockTickedDown:
+			return <HanabiShotClockTickedDownAction action={action} />;
 	}
 
 	return null;

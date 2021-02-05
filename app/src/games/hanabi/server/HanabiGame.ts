@@ -484,12 +484,30 @@ export default class HanabiGame extends Game {
 			this._gameData.finishedReason = HanabiFinishedReason.DiscardedFatalTile;
 		}
 
+		// Record the action.
+		this._gameData.actions.push({
+			id: uuidv4(),
+			playerId: userId,
+			type: HanabiGameActionType.Play,
+			tile,
+			valid: tileIsValid,
+			remainingLives: this._gameData.lives,
+		});
+
 		// If there's no longer any remaining tiles, start the shot clock.
 		if (this._gameData.remainingTurns === null) {
 			// Did we run out of tiles?
 			if (this._gameData.remainingTiles.length === 0) {
 				// Start the shot clock.
 				this._gameData.remainingTurns = Object.keys(this._gameData.players).length;
+
+				// Notify the user.
+				this._gameData.actions.push({
+					id: uuidv4(),
+					playerId: userId,
+					type: HanabiGameActionType.ShotClockStarted,
+					remainingTurns: this._gameData.remainingTurns,
+				});
 			}
 		} else {
 			// Advance the shot clock.
@@ -497,8 +515,17 @@ export default class HanabiGame extends Game {
 
 			// If it runs out, game over.
 			if (this._gameData.remainingTurns === 0) {
+				// End the game.
 				this._gameData.stage = HanabiStage.Finished;
 				this._gameData.finishedReason = HanabiFinishedReason.OutOfTurns;
+			} else {
+				// Notify the user.
+				this._gameData.actions.push({
+					id: uuidv4(),
+					playerId: userId,
+					type: HanabiGameActionType.ShotClockTickedDown,
+					remainingTurns: this._gameData.remainingTurns,
+				});
 			}
 		}
 
@@ -509,18 +536,17 @@ export default class HanabiGame extends Game {
 			this._gameData.finishedReason = HanabiFinishedReason.Won;
 		}
 
+		// If the game is over, notify the user.
+		if (this._gameData.finishedReason !== null) {
+			this._gameData.actions.push({
+				id: uuidv4(),
+				type: HanabiGameActionType.GameFinished,
+				finishedReason: this._gameData.finishedReason,
+			});
+		}
+
 		// Advance the turn.
 		this._gameData.turnOrder.push(this._gameData.turnOrder.shift()!);
-
-		// Record the action.
-		this._gameData.actions.push({
-			id: uuidv4(),
-			playerId: userId,
-			type: HanabiGameActionType.Play,
-			tile,
-			valid: tileIsValid,
-			remainingLives: this._gameData.lives,
-		});
 
 		// Send success message.
 		this._sendMessage(userId, {
@@ -577,6 +603,14 @@ export default class HanabiGame extends Game {
 			});
 		}
 
+		// Record the action.
+		this._gameData.actions.push({
+			id: uuidv4(),
+			playerId: userId,
+			type: HanabiGameActionType.Discard,
+			tile,
+		});
+
 		// Detect if the game is over due to the wrong tile being discarded.
 		if (this._discardedTileIsFatal(tile)) {
 			this._gameData.stage = HanabiStage.Finished;
@@ -589,6 +623,14 @@ export default class HanabiGame extends Game {
 			if (this._gameData.remainingTiles.length === 0) {
 				// Start the shot clock.
 				this._gameData.remainingTurns = Object.keys(this._gameData.players).length;
+
+				// Notify the user.
+				this._gameData.actions.push({
+					id: uuidv4(),
+					playerId: userId,
+					type: HanabiGameActionType.ShotClockStarted,
+					remainingTurns: this._gameData.remainingTurns,
+				});
 			}
 		} else {
 			// Advance the shot clock.
@@ -598,6 +640,14 @@ export default class HanabiGame extends Game {
 			if (this._gameData.remainingTurns === 0) {
 				this._gameData.stage = HanabiStage.Finished;
 				this._gameData.finishedReason = HanabiFinishedReason.OutOfTurns;
+			} else {
+				// Notify the user.
+				this._gameData.actions.push({
+					id: uuidv4(),
+					playerId: userId,
+					type: HanabiGameActionType.ShotClockTickedDown,
+					remainingTurns: this._gameData.remainingTurns,
+				});
 			}
 		}
 
@@ -607,13 +657,14 @@ export default class HanabiGame extends Game {
 		// Advance the turn.
 		this._gameData.turnOrder.push(this._gameData.turnOrder.shift()!);
 
-		// Record the action.
-		this._gameData.actions.push({
-			id: uuidv4(),
-			playerId: userId,
-			type: HanabiGameActionType.Discard,
-			tile,
-		});
+		// If the game is over, notify the user.
+		if (this._gameData.finishedReason !== null) {
+			this._gameData.actions.push({
+				id: uuidv4(),
+				type: HanabiGameActionType.GameFinished,
+				finishedReason: this._gameData.finishedReason,
+			});
+		}
 
 		// Send success message.
 		this._sendMessage(userId, {
@@ -696,20 +747,6 @@ export default class HanabiGame extends Game {
 		// Decrement clue count.
 		this._gameData.clues -= 1;
 
-		// If the shot clock was started, advance it.
-		if (this._gameData.remainingTurns !== null) {
-			this._gameData.remainingTurns -= 1;
-
-			// If it runs out, game over.
-			if (this._gameData.remainingTurns === 0) {
-				this._gameData.stage = HanabiStage.Finished;
-				this._gameData.finishedReason = HanabiFinishedReason.OutOfTurns;
-			}
-		}
-
-		// Advance the turn.
-		this._gameData.turnOrder.push(this._gameData.turnOrder.shift()!);
-
 		// Record the action.
 		this._gameData.actions.push({
 			id: uuidv4(),
@@ -720,6 +757,37 @@ export default class HanabiGame extends Game {
 			number: message.data.number,
 			tiles: selectedTiles,
 		});
+
+		// If the shot clock was started, advance it.
+		if (this._gameData.remainingTurns !== null) {
+			this._gameData.remainingTurns -= 1;
+
+			// If it runs out, game over.
+			if (this._gameData.remainingTurns === 0) {
+				this._gameData.stage = HanabiStage.Finished;
+				this._gameData.finishedReason = HanabiFinishedReason.OutOfTurns;
+			} else {
+				// Notify the user.
+				this._gameData.actions.push({
+					id: uuidv4(),
+					playerId: userId,
+					type: HanabiGameActionType.ShotClockTickedDown,
+					remainingTurns: this._gameData.remainingTurns,
+				});
+			}
+		}
+
+		// Advance the turn.
+		this._gameData.turnOrder.push(this._gameData.turnOrder.shift()!);
+
+		// If the game is over, notify the user.
+		if (this._gameData.finishedReason !== null) {
+			this._gameData.actions.push({
+				id: uuidv4(),
+				type: HanabiGameActionType.GameFinished,
+				finishedReason: this._gameData.finishedReason,
+			});
+		}
 
 		// Send success message.
 		this._sendMessage(userId, {
