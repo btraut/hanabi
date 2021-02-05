@@ -129,7 +129,7 @@ export default function HanabiTileAction({ action }: Props): JSX.Element {
 
 	return (
 		<div
-			className="text-md xl:text-lg p-4"
+			className="text-md xl:text-lg p-4 cursor-zoom-in"
 			onMouseEnter={handleMouseEnter}
 			onMouseLeave={handleMouseLeave}
 		>

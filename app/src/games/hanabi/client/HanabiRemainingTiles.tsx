@@ -13,7 +13,7 @@ export default function HanabiRemainingTiles(): JSX.Element {
 	const visibleRemainingTiles = Math.min(remainingTiles, MAX_STACKED_TILES);
 
 	return (
-		<div className="grid justify-start gap-1 relative grid-flow-col z-0">
+		<div className="grid justify-start gap-1 relative grid-flow-col z-0 select-none cursor-default">
 			<div
 				className={classnames('absolute inset-0 flex justify-center items-center text-lg', {
 					'text-white': visibleRemainingTiles,

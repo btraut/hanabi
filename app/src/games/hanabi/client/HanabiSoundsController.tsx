@@ -39,7 +39,6 @@ export default function HanabiSoundsController(): null {
 		: null;
 
 	const actionsChanged = useValueChanged(game.gameData.actions.length);
-	console.log({ actionsChanged });
 
 	useEffect(() => {
 		if (!actionsChanged) {

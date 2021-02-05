@@ -27,7 +27,7 @@ export default function HanabiActions({ collapseHiddenActions = false }: Props):
 			{actionsReversed.map((action, index) => {
 				return (
 					<div
-						className={classnames('border-solid border-gray-600 cursor-zoom-in', {
+						className={classnames('border-solid border-gray-600', {
 							'border-t-2': index !== 0,
 							'bg-gray-200': index % 2 === 1,
 						})}

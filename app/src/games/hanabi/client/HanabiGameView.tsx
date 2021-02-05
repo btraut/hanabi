@@ -1,32 +1,19 @@
 import BreakpointController from 'app/src/components/BreakpointController';
 import HanabiBoard from 'app/src/games/hanabi/client/HanabiBoard';
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
-import { hanabiDragTypes } from 'app/src/games/hanabi/client/HanabiDragTypes';
 import HanabiHeader from 'app/src/games/hanabi/client/HanabiHeader';
 import HanabiHighlightTileController from 'app/src/games/hanabi/client/HanabiHighlightTileController';
 import HanabiLobby from 'app/src/games/hanabi/client/HanabiLobby';
 import HanabiNewestTileController from 'app/src/games/hanabi/client/HanabiNewestTileController';
 import HanabiSoundsController from 'app/src/games/hanabi/client/HanabiSoundsController';
 import HanabiStyles from 'app/src/games/hanabi/client/HanabiStyles';
+import useTileDrop from 'app/src/games/hanabi/client/useTileDrop';
 import { HanabiStage } from 'app/src/games/hanabi/HanabiGameData';
-import { useDrop } from 'react-dnd';
 
 export default function HanabiGameView(): JSX.Element | null {
 	const game = useHanabiGame();
 
-	// The entire screen should be used as a drop target. This is to work around
-	// a limitation of HTML5 drag and drop API where the "return animation" is
-	// played when dropping things outside drop targets.
-	const [, dropRef] = useDrop({
-		accept: [hanabiDragTypes.TILE],
-		drop: (_, monitor) => {
-			if (monitor.getDropResult()) {
-				return;
-			}
-
-			return { handled: false };
-		},
-	});
+	const dropRef = useTileDrop();
 
 	return (
 		<>
