@@ -164,7 +164,6 @@ try {
 		const gameManager = new GameManager(socketManager);
 
 		// Add games.
-		// gameManager.addGameFactory(EscapeGame.title, EscapeGame.factory);
 		gameManager.addGameFactory(new HanabiGameFactory());
 
 		// Restore existing games.

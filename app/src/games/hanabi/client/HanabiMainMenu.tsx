@@ -32,11 +32,11 @@ export default function HanabiMainMenu(): JSX.Element {
 		const { code } = await hanabiContext.create();
 		loadingRef.current = false;
 
-		history.push(`/hanabi/${code}`);
+		history.push(`/${code}`);
 	};
 
 	const watchButtonHandler = () => {
-		history.push('/hanabi/join');
+		history.push('/join');
 	};
 
 	useEffect(() => {

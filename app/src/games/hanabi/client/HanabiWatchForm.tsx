@@ -21,7 +21,7 @@ export default function HanabiWatchForm(): JSX.Element {
 		if (codeValue) {
 			try {
 				const watchedGame = await hanabiContext.watch(codeValue);
-				history.push(`/hanabi/${watchedGame.code}`);
+				history.push(`/${watchedGame.code}`);
 			} catch (error) {
 				setWatchGameError(error?.message || '');
 			}

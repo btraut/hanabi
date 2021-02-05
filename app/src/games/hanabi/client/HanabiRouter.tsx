@@ -7,16 +7,16 @@ import { Route, Switch } from 'react-router-dom';
 export default function HanabiRouter(): JSX.Element {
 	return (
 		<Switch>
-			<Route path="/hanabi/join" exact>
+			<Route path="/" exact>
+				<HanabiMainMenu />
+			</Route>
+			<Route path="/join" exact>
 				<HanabiWatchForm />
 			</Route>
-			<Route path="/hanabi/:code" exact>
+			<Route path="/:code" exact>
 				<HanabiLoadGameView>
 					<HanabiGameView />
 				</HanabiLoadGameView>
-			</Route>
-			<Route path="/hanabi" exact>
-				<HanabiMainMenu />
 			</Route>
 		</Switch>
 	);

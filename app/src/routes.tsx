@@ -1,7 +1,5 @@
-import EscapePage from 'app/src/games/escape/EscapePage';
 import HanabiPage from 'app/src/games/hanabi/HanabiPage';
 import Error404Page from 'app/src/pages/Error404Page';
-import HomePage from 'app/src/pages/HomePage';
 import Page from 'app/src/pages/Page';
 import { RouteProps } from 'react-router';
 
@@ -12,15 +10,6 @@ type AsyncRouteProps = RouteProps & {
 const routes: AsyncRouteProps[] = [
 	{
 		path: '/',
-		component: HomePage,
-		exact: true,
-	},
-	{
-		path: '/escape',
-		component: EscapePage,
-	},
-	{
-		path: '/hanabi',
 		component: HanabiPage,
 	},
 	{
