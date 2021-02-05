@@ -1,5 +1,5 @@
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
-import { useHanabiHighlightTileContext } from 'app/src/games/hanabi/client/HanabiHighlightTileContext';
+import { useHanabiHighlightContext } from 'app/src/games/hanabi/client/HanabiHighlightContext';
 import HanabiTileView, { TileViewSize } from 'app/src/games/hanabi/client/HanabiTileView';
 import {
 	HANABI_TILE_SIZE,
@@ -24,7 +24,7 @@ interface Props {
 export default function HanabiPlayedTiles({ size = PlayedTileSize.Regular }: Props): JSX.Element {
 	const game = useHanabiGame();
 
-	const { highlightedTiles } = useHanabiHighlightTileContext();
+	const { highlightedTiles } = useHanabiHighlightContext();
 
 	const tileViewSize = size === PlayedTileSize.Regular ? TileViewSize.Regular : TileViewSize.Small;
 	const tileSize = size === PlayedTileSize.Regular ? HANABI_TILE_SIZE : HANABI_TILE_SIZE_SMALL;

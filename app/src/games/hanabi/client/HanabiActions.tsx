@@ -1,5 +1,7 @@
 import HanabiAction from 'app/src/games/hanabi/client/HanabiAction';
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
+import useActionHighlighter from 'app/src/games/hanabi/client/useActionHighlighter';
+import useActionSounds from 'app/src/games/hanabi/client/useActionSounds';
 import { HanabiShowActionsLimit } from 'app/src/games/hanabi/HanabiGameData';
 import classnames from 'classnames';
 
@@ -18,6 +20,9 @@ export default function HanabiActions({ collapseHiddenActions = false }: Props):
 	const hiddenActions = hideActions ? game.gameData.actions.length - totalPlayers : 0;
 	const actionsLimited = game.gameData.actions.slice(hiddenActions);
 	const actionsReversed = actionsLimited.reverse();
+
+	useActionHighlighter();
+	useActionSounds();
 
 	return (
 		<div>

@@ -2,10 +2,9 @@ import BreakpointController from 'app/src/components/BreakpointController';
 import HanabiBoard from 'app/src/games/hanabi/client/HanabiBoard';
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
 import HanabiHeader from 'app/src/games/hanabi/client/HanabiHeader';
-import HanabiHighlightTileController from 'app/src/games/hanabi/client/HanabiHighlightTileController';
+import HanabiHighlightTileController from 'app/src/games/hanabi/client/HanabiHighlightController';
 import HanabiLobby from 'app/src/games/hanabi/client/HanabiLobby';
 import HanabiNewestTileController from 'app/src/games/hanabi/client/HanabiNewestTileController';
-import HanabiSoundsController from 'app/src/games/hanabi/client/HanabiSoundsController';
 import HanabiStyles from 'app/src/games/hanabi/client/HanabiStyles';
 import useTileDrop from 'app/src/games/hanabi/client/useTileDrop';
 import { HanabiStage } from 'app/src/games/hanabi/HanabiGameData';
@@ -35,7 +34,6 @@ export default function HanabiGameView(): JSX.Element | null {
 							</div>
 							<HanabiStyles />
 						</BreakpointController>
-						<HanabiSoundsController />
 					</HanabiNewestTileController>
 				</HanabiHighlightTileController>
 			)}

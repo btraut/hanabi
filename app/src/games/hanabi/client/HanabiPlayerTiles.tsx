@@ -1,6 +1,6 @@
 import { useUserId } from 'app/src/components/SocketContext';
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
-import { useHanabiHighlightTileContext } from 'app/src/games/hanabi/client/HanabiHighlightTileContext';
+import { useHanabiHighlightContext } from 'app/src/games/hanabi/client/HanabiHighlightContext';
 import HanabiInteractiveTileView from 'app/src/games/hanabi/client/HanabiInteractiveTileView';
 import { useNewestTile } from 'app/src/games/hanabi/client/HanabiNewestTileContext';
 import HanabiPlayerTilesDragLayer from 'app/src/games/hanabi/client/HanabiPlayerTilesDragLayer';
@@ -16,7 +16,7 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 	const game = useHanabiGame();
 	const userId = useUserId();
 
-	const { highlightedTiles } = useHanabiHighlightTileContext();
+	const { highlightedTiles } = useHanabiHighlightContext();
 	const newestTileId = useNewestTile();
 
 	const ownTiles = id === userId;
