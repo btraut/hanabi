@@ -20,6 +20,7 @@ export default function HanabiLobby(): JSX.Element {
 		await game.start();
 	};
 
+	const copyButtonRef = useRef<HTMLButtonElement | null>(null);
 	const [showCopiedButton, setShowCopiedButton] = useState(false);
 	const showCopiedButtonTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
 	const handleLinkClick = () => {
@@ -42,6 +43,8 @@ export default function HanabiLobby(): JSX.Element {
 			}, 3000);
 			showCopiedButtonTimeoutRef.current = undefined;
 		}
+
+		copyButtonRef.current?.focus();
 	};
 
 	const userIsJoined = !!(userId && game.gameData.players[userId]);
@@ -56,8 +59,9 @@ export default function HanabiLobby(): JSX.Element {
 			<h1 className="mb-10 text-8xl italic text-white text-center text-shadow">Hanabi</h1>
 			{userIsJoined && (
 				<button
-					onClick={handleLinkClick}
 					className="outline-none grid grid-flow-col items-center max-w-screen-md bg-gray-300 overflow-hidden rounded-lg font-bold text-blue-700 hover:text-blue-800 text-lg"
+					onClick={handleLinkClick}
+					ref={copyButtonRef}
 				>
 					<div className="inline-block px-5 text-center">{link}</div>
 					<div className="text-white bg-gray-800 px-5 py-3 w-28">

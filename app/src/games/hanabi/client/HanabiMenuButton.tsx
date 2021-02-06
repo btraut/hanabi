@@ -1,4 +1,4 @@
-import { SyntheticEvent } from 'react';
+import { forwardRef, SyntheticEvent } from 'react';
 
 interface Props {
 	onClick?: (event: SyntheticEvent) => void;
@@ -6,7 +6,7 @@ interface Props {
 	disabled?: boolean;
 }
 
-export default function HanabiMenuButton({ onClick, label, disabled = false }: Props): JSX.Element {
+function HanabiMenuButton({ onClick, label, disabled = false }: Props, ref: any): JSX.Element {
 	let classes =
 		'block px-5 py-3 bg-gray-800 text-center uppercase font-bold rounded-xl border-4 transition-all duration-100';
 
@@ -17,8 +17,10 @@ export default function HanabiMenuButton({ onClick, label, disabled = false }: P
 	}
 
 	return (
-		<button className={classes} onClick={onClick} disabled={disabled}>
+		<button className={classes} onClick={onClick} disabled={disabled} ref={ref}>
 			{label}
 		</button>
 	);
 }
+
+export default forwardRef<HTMLButtonElement, Props>(HanabiMenuButton);

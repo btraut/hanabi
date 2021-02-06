@@ -2,7 +2,7 @@ import { useHanabiContext } from 'app/src/games/hanabi/client/HanabiContext';
 import HanabiLocalStorageManager from 'app/src/games/hanabi/client/HanabiLocalStorageManager';
 import HanabiMenuButton from 'app/src/games/hanabi/client/HanabiMenuButton';
 import HanabiTextInput from 'app/src/games/hanabi/client/HanabiTextInput';
-import { ChangeEvent, FormEvent, useCallback, useState } from 'react';
+import { ChangeEvent, FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 
 export default function HanabiJoinForm(): JSX.Element {
 	const { game } = useHanabiContext();
@@ -29,6 +29,17 @@ export default function HanabiJoinForm(): JSX.Element {
 		}
 	};
 
+	const textInputRef = useRef<HTMLInputElement | null>(null);
+	const joinButtonRef = useRef<HTMLButtonElement | null>(null);
+
+	useEffect(() => {
+		if (!textInputRef.current?.value) {
+			textInputRef.current?.focus();
+		} else {
+			joinButtonRef.current?.focus();
+		}
+	}, []);
+
 	return (
 		<>
 			{addPlayerError && (
@@ -46,10 +57,11 @@ export default function HanabiJoinForm(): JSX.Element {
 						id="HanabiJoinForm-Name"
 						value={nameValue}
 						onChange={handleNameInputChange}
+						ref={textInputRef}
 					/>
 				</div>
 				<div className="flex justify-center">
-					<HanabiMenuButton label="Join" />
+					<HanabiMenuButton label="Join" ref={joinButtonRef} />
 				</div>
 			</form>
 		</>
