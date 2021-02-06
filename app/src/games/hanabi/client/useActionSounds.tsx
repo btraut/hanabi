@@ -12,6 +12,8 @@ import {
 } from 'app/src/games/hanabi/HanabiGameData';
 import { useEffect, useRef } from 'react';
 
+const PLAY_SOUNDS_FOR_ACTING_USER = true;
+
 function playAudio(ele: HTMLAudioElement) {
 	try {
 		ele.play();
@@ -58,7 +60,7 @@ export default function useActionSounds(): void {
 		}
 
 		if (latestTileAction.type === HanabiGameActionType.Play) {
-			if (latestTileAction.playerId !== userId) {
+			if (latestTileAction.playerId !== userId || PLAY_SOUNDS_FOR_ACTING_USER) {
 				if (latestTileAction.valid) {
 					playAudio(rightRef.current!);
 				} else {
@@ -70,7 +72,7 @@ export default function useActionSounds(): void {
 			latestTileAction.type === HanabiGameActionType.GiveColorClue ||
 			latestTileAction.type === HanabiGameActionType.GiveNumberClue
 		) {
-			if (latestTileAction.playerId !== userId) {
+			if (latestTileAction.playerId !== userId || PLAY_SOUNDS_FOR_ACTING_USER) {
 				playAudio(beepRef.current!);
 			}
 		}

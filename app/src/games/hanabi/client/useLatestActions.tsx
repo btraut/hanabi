@@ -15,6 +15,9 @@ export default function useLatestActions(): HanabiGameAction[] {
 		if (actionsLength > latestActionIndex) {
 			setLatestActionIndex(actions.length);
 			setActionsToProcess(actions.slice(latestActionIndex));
+		} else if (actionsLength < latestActionIndex) {
+			setLatestActionIndex(actions.length);
+			setActionsToProcess(actions);
 		}
 	}, [actions, actionsLength, latestActionIndex]);
 

@@ -33,6 +33,7 @@ export default function HanabiTileActionBody({ action }: Props): JSX.Element | n
 							size={TileViewSize.Small}
 						/>
 					</div>
+					{action.tile.number === 5 && 'and created a clue'}
 				</>
 			);
 		} else {
