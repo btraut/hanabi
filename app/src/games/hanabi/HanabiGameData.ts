@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 export const HANABI_GAME_TITLE = 'hanabi';
 
-export const HANABI_MIN_PLAYERS = 1;
+export const HANABI_MIN_PLAYERS = 2;
 export const HANABI_MAX_PLAYERS = 5;
 
 export const HANABI_MAX_CLUES = 8;

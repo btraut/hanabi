@@ -39,6 +39,8 @@ import ServerSocketManager from 'app/src/utils/server/SocketManager';
 import { shuffle } from 'app/src/utils/shuffle';
 import { v4 as uuidv4 } from 'uuid';
 
+declare const NODE_ENV: string;
+
 export interface HanabiGameSerialized extends GameSerialized {
 	data: HanabiGameData;
 }
@@ -302,7 +304,10 @@ export default class HanabiGame extends Game {
 			return;
 		}
 
-		if (Object.keys(this._gameData.players).length < HANABI_MIN_PLAYERS) {
+		if (
+			Object.keys(this._gameData.players).length <
+			(NODE_ENV === 'development' ? 1 : HANABI_MIN_PLAYERS)
+		) {
 			this._sendMessage(userId, {
 				type: 'StartGameResponseMessage',
 				data: {

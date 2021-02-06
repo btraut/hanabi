@@ -136,7 +136,7 @@ const serverConfig: Configuration = {
 	plugins: [
 		new webpack.DefinePlugin({
 			DOMAIN_BASE: JSON.stringify(process.env.DOMAIN_BASE),
-			PORT: JSON.stringify(process.env.PORT),
+			NODE_ENV: JSON.stringify(process.env.NODE_ENV),
 			ENV_PATH: JSON.stringify(path.resolve(ROOT_PATH, '.env')),
 			PUBLIC_ASSETS_PATH: JSON.stringify(CLIENT_BUILD_PATH),
 			SAVED_GAMES_PATH: JSON.stringify(path.resolve(SERVER_BUILD_PATH, 'saved-games')),

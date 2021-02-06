@@ -21,9 +21,10 @@ import { v4 as uuidv4 } from 'uuid';
 
 // Define globals from webpack.
 declare const DOMAIN_BASE: string;
+declare const NODE_ENV: string;
 declare const ENV_PATH: string;
-declare const PUBLIC_ASSETS_PATH: string;
 declare const VIEWS_PATH: string;
+declare const PUBLIC_ASSETS_PATH: string;
 
 const SESSION_COOKIE_NAME = 'SESSION';
 
@@ -77,7 +78,7 @@ try {
 		app.use(express.static(PUBLIC_ASSETS_PATH, { maxAge: 31557600000 }));
 
 		// Handle cookies.
-		app.use(cookieParser(process.env.SESSION_COOKIE_SECRET!));
+		app.use(cookieParser(process.env.SESSION_COOKIE_SECRET));
 		app.use((req, res, next) => {
 			// Check if the user has a cookie.
 			const sessionCookie = req.cookies && req.cookies[SESSION_COOKIE_NAME];
@@ -178,7 +179,7 @@ try {
 		const localUrl = `http://localhost:${port}`;
 		let ngrokUrl;
 
-		if (process.env.NODE_ENV === 'development') {
+		if (NODE_ENV === 'development') {
 			try {
 				ngrokUrl = await ngrok.connect({ addr: port, authtoken: process.env.NGROK_AUTH_TOKEN });
 			} catch (error) {
@@ -192,7 +193,7 @@ try {
  Ten Four Games
  ${localUrl}
  ${ngrokUrl}
- Listening for requests in ${process.env.NODE_ENV} mode.
+ Listening for requests in ${NODE_ENV} mode.
 ———————————————————————————————————————————————————————————————————
 `);
 	})();
