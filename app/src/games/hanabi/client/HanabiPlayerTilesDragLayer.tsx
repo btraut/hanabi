@@ -1,6 +1,7 @@
 import { useUserId } from 'app/src/components/SocketContext';
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
 import { hanabiDragTypes } from 'app/src/games/hanabi/client/HanabiDragTypes';
+import { useHanabiHighlightContext } from 'app/src/games/hanabi/client/HanabiHighlightContext';
 import HanabiTileView from 'app/src/games/hanabi/client/HanabiTileView';
 import { HANABI_BOARD_SIZE, HANABI_TILE_SIZE } from 'app/src/games/hanabi/HanabiGameData';
 import { useDragLayer } from 'react-dnd';
@@ -15,6 +16,8 @@ export default function HanabiPlayerTilesDragLayer(): JSX.Element | null {
 		differenceFromInitialOffset: monitor.getDifferenceFromInitialOffset(),
 		isDragging: monitor.isDragging(),
 	}));
+
+	const { highlightedTiles } = useHanabiHighlightContext();
 
 	let tileContainer: JSX.Element | null = null;
 
@@ -46,7 +49,10 @@ export default function HanabiPlayerTilesDragLayer(): JSX.Element | null {
 					zIndex: 1000000,
 				}}
 			>
-				<HanabiTileView />
+				<HanabiTileView
+					id={tileLocation.tile.id}
+					highlight={highlightedTiles.has(tileLocation.tile.id)}
+				/>
 			</div>
 		);
 	}

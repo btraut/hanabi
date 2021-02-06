@@ -1,7 +1,9 @@
 import Portal from 'app/src/components/Portal';
 import Tooltip from 'app/src/components/Tooltip';
 import { HanabiTile, tileBackgroundClasses } from 'app/src/games/hanabi/HanabiGameData';
+import useFocusVisible from 'app/src/utils/client/useFocusVisible';
 import classnames from 'classnames';
+import { useEffect, useRef } from 'react';
 
 export enum HanabiTileActionsTooltipOptions {
 	Own = 'Own',
@@ -23,18 +25,45 @@ export default function HanabiTileActionsTooltip({
 	onAction,
 	onClose,
 }: Props): JSX.Element {
+	const isFocusVisible = useFocusVisible();
+
+	const firstButtonRef = useRef<HTMLButtonElement | null>(null);
+
+	useEffect(() => {
+		if (firstButtonRef.current) {
+			firstButtonRef.current.focus();
+		}
+	}, []);
+
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.key === 'Escape') {
+				onClose();
+			}
+		};
+
+		document.addEventListener('keydown', handleKeyDown);
+
+		return () => {
+			document.removeEventListener('keydown', handleKeyDown);
+		};
+	}, [onClose]);
+
 	return (
 		<Portal>
 			<Tooltip onClose={onClose} top={coords.top} left={coords.left}>
 				<div className="pb-0.5">
-					<div className="bg-gray-900 rounded-lg py-2 px-3 text-white">
+					<div className="bg-gray-900 rounded-lg py-2 px-3">
 						{options === HanabiTileActionsTooltipOptions.Own && (
 							<div className="grid grid-flow-col gap-x-3 items-center">
 								<button
-									className="font-bold text-xl"
+									className={classnames('font-bold text-xl text-white focus:outline-none', {
+										'focus:text-red-600': isFocusVisible,
+									})}
 									onClick={() => {
 										onAction('discard', tile);
 									}}
+									ref={firstButtonRef}
 								>
 									Discard
 								</button>
@@ -48,7 +77,9 @@ export default function HanabiTileActionsTooltip({
 									}}
 								/>
 								<button
-									className="font-bold text-xl"
+									className={classnames('font-bold text-xl text-white focus:outline-none', {
+										'focus:text-red-600': isFocusVisible,
+									})}
 									onClick={() => {
 										onAction('play', tile);
 									}}
@@ -61,12 +92,16 @@ export default function HanabiTileActionsTooltip({
 							<div className="grid grid-flow-col gap-x-3 items-center">
 								<button
 									className={classnames(
-										'w-6 h-6 rounded-full border-black border-4',
+										'w-6 h-6 rounded-full border-black border-4 text-white focus:outline-none',
+										{
+											'focus:text-red-600': isFocusVisible,
+										},
 										tileBackgroundClasses[tile.color],
 									)}
 									onClick={() => {
 										onAction('color', tile);
 									}}
+									ref={firstButtonRef}
 								/>
 								<div
 									className="border-solid h-6"
@@ -78,7 +113,9 @@ export default function HanabiTileActionsTooltip({
 									}}
 								/>
 								<button
-									className="font-bold text-xl"
+									className={classnames('font-bold text-xl text-white focus:outline-none', {
+										'focus:text-red-600': isFocusVisible,
+									})}
 									onClick={() => {
 										onAction('number', tile);
 									}}

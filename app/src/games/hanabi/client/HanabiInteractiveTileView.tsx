@@ -5,6 +5,7 @@ import {
 	HANABI_TILE_SIZE_SMALL,
 	HanabiTile,
 } from 'app/src/games/hanabi/HanabiGameData';
+import useFocusVisible from 'app/src/utils/client/useFocusVisible';
 import classnames from 'classnames';
 import { useCallback, useEffect, useState } from 'react';
 import { useDrag } from 'react-dnd';
@@ -88,6 +89,8 @@ export default function HanabiInteractiveTileView({
 
 	const cursor = draggable ? 'cursor-move' : onClick ? 'cursor-pointer' : 'cursor-default';
 
+	const isFocusVisible = useFocusVisible();
+
 	const handleClick = useCallback(
 		(event) => {
 			if (onClick) {
@@ -108,9 +111,11 @@ export default function HanabiInteractiveTileView({
 			ref={dragRef}
 			style={size === TileViewSize.Regular ? HANABI_TILE_SIZE : HANABI_TILE_SIZE_SMALL}
 			className={classnames([
-				'relative rounded-lg focus:outline-none focus:ring focus:border-blue-800',
+				'relative rounded-lg focus:outline-none',
 				cursor,
 				{
+					'focus:ring': isFocusVisible,
+					'focus:border-blue-800': isFocusVisible,
 					shake: showNewAnimation,
 				},
 			])}

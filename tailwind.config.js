@@ -46,11 +46,18 @@ module.exports = {
 				'zoom-in': 'zoom-in',
 				'zoom-out': 'zoom-out',
 			},
+			outline: {
+				none: ['none', '0'],
+			},
 		},
 	},
 	variants: {
-		textShadow: ['responsive'],
-		scale: ['active', 'hover', 'group-hover'],
+		extend: {
+			textShadow: ['responsive'],
+			scale: ['active', 'hover', 'group-hover'],
+			borderColor: ['group-focus', 'group-hover'],
+			backgroundColor: ['group-focus', 'group-hover'],
+		},
 	},
 	plugins: [require('tailwindcss-typography')()],
 };

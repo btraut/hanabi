@@ -1,5 +1,5 @@
 import Portal from 'app/src/components/Portal';
-import X from 'app/src/games/hanabi/client/icons/X';
+import HanabiXButton from 'app/src/games/hanabi/client/HanabiXButton';
 import classnames from 'classnames';
 import { useEffect, useRef } from 'react';
 import FocusLock from 'react-focus-lock';
@@ -48,9 +48,9 @@ export default function HanabiPopup({
 						)}
 					>
 						{closeButton && onClose && (
-							<button className="absolute right-0 top-0 p-2 m-2" onClick={onClose}>
-								<X color="white" size={20} />
-							</button>
+							<div className="absolute right-0 top-0 m-2">
+								<HanabiXButton onClick={onClose} />
+							</div>
 						)}
 						{children}
 					</div>
