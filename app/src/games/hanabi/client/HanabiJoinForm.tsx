@@ -1,4 +1,5 @@
 import { useHanabiContext } from 'app/src/games/hanabi/client/HanabiContext';
+import HanabiLocalStorageManager from 'app/src/games/hanabi/client/HanabiLocalStorageManager';
 import HanabiMenuButton from 'app/src/games/hanabi/client/HanabiMenuButton';
 import HanabiTextInput from 'app/src/games/hanabi/client/HanabiTextInput';
 import { ChangeEvent, FormEvent, useCallback, useState } from 'react';
@@ -8,7 +9,9 @@ export default function HanabiJoinForm(): JSX.Element {
 
 	const [addPlayerError, setAddPlayerError] = useState('');
 
-	const [nameValue, setNameValue] = useState('');
+	const [nameValue, setNameValue] = useState(
+		() => HanabiLocalStorageManager.sharedInstance.getUserName() || '',
+	);
 	const handleNameInputChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
 		setNameValue(event.target.value);
 	}, []);
@@ -19,6 +22,7 @@ export default function HanabiJoinForm(): JSX.Element {
 		if (game && nameValue) {
 			try {
 				await game.join(nameValue);
+				HanabiLocalStorageManager.sharedInstance.setUserName(nameValue);
 			} catch (error) {
 				setAddPlayerError(error?.message || '');
 			}
