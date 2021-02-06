@@ -178,10 +178,12 @@ try {
 		const localUrl = `http://localhost:${port}`;
 		let ngrokUrl;
 
-		try {
-			ngrokUrl = await ngrok.connect({ addr: port, authtoken: process.env.NGROK_AUTH_TOKEN });
-		} catch (error) {
-			console.log(error);
+		if (process.env.NODE_ENV === 'development') {
+			try {
+				ngrokUrl = await ngrok.connect({ addr: port, authtoken: process.env.NGROK_AUTH_TOKEN });
+			} catch (error) {
+				console.log(error);
+			}
 		}
 
 		// Notify!
