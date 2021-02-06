@@ -4,10 +4,11 @@
 	"scripts": {
 		"clean": "rimraf ./.build",
 		"build": "webpack",
+		"start": "node .build/server/server.js",
 		"watch": "nodemon --watch webpack.config.ts --exec \"webpack --watch --config webpack.config.ts\"",
+		"restart": "nodemon --watch .build .build/server/server.js",
 		"eslint": "eslint . --ext .js,.jsx,.ts,.tsx",
-		"eslint-fix": "eslint . --fix --ext .js,.jsx,.ts,.tsx",
-		"start": "nodemon --watch .build .build/server/server.js"
+		"eslint-fix": "eslint . --fix --ext .js,.jsx,.ts,.tsx"
 	},
 	"engines": {
 		"node": ">=14.14.0"
