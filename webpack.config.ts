@@ -137,10 +137,15 @@ const serverConfig: Configuration = {
 		new webpack.DefinePlugin({
 			DOMAIN_BASE: JSON.stringify(process.env.DOMAIN_BASE),
 			NODE_ENV: JSON.stringify(process.env.NODE_ENV),
-			ENV_PATH: JSON.stringify(path.resolve(ROOT_PATH, '.env')),
-			PUBLIC_ASSETS_PATH: JSON.stringify(CLIENT_BUILD_PATH),
-			SAVED_GAMES_PATH: JSON.stringify(path.resolve(SERVER_BUILD_PATH, 'saved-games')),
-			VIEWS_PATH: JSON.stringify(path.resolve(SERVER_BUILD_PATH, 'views')),
+
+			// Root, relative to the build (server.js):
+			RELATIVE_ROOT_PATH: JSON.stringify('../../'),
+
+			// Paths, all relative to root:
+			ENV_PATH: JSON.stringify('.env'),
+			PUBLIC_ASSETS_PATH: JSON.stringify('.build/client'),
+			SAVED_GAMES_PATH: JSON.stringify('.build/server/saved-games'),
+			VIEWS_PATH: JSON.stringify('.build/server/views'),
 		}),
 	],
 	node: {

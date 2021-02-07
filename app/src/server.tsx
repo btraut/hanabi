@@ -13,13 +13,15 @@ import express from 'express';
 import * as http from 'http';
 import methodOverride from 'method-override';
 import morgan from 'morgan';
-import ngrok from 'ngrok';
+import path from 'path';
 import * as url from 'url';
 import { v4 as uuidv4 } from 'uuid';
 
 // Define globals from webpack.
 declare const DOMAIN_BASE: string;
 declare const NODE_ENV: string;
+
+declare const RELATIVE_ROOT_PATH: string;
 declare const ENV_PATH: string;
 declare const VIEWS_PATH: string;
 declare const PUBLIC_ASSETS_PATH: string;
@@ -36,8 +38,11 @@ try {
 			process.exit();
 		});
 
+		// Calculate src root based on current dir and relative root path.
+		const ROOT_PATH = path.resolve(__dirname, RELATIVE_ROOT_PATH);
+
 		// Load environment variables from .env file.
-		dotenv.config({ path: ENV_PATH });
+		dotenv.config({ path: path.resolve(ROOT_PATH, ENV_PATH) });
 
 		// Enable logs.
 		Logger.init();
@@ -49,7 +54,7 @@ try {
 		app.enable('strict routing');
 		app.enable('trust proxy');
 		app.set('port', process.env.PORT || 3000);
-		app.set('views', VIEWS_PATH);
+		app.set('views', path.resolve(ROOT_PATH, VIEWS_PATH));
 		app.engine('html', ejs.renderFile);
 		app.set('view engine', 'html');
 		app.use(compress());
@@ -74,7 +79,7 @@ try {
 		}
 
 		// Handle statics.
-		app.use(express.static(PUBLIC_ASSETS_PATH, { maxAge: 31557600000 }));
+		app.use(express.static(path.resolve(ROOT_PATH, PUBLIC_ASSETS_PATH), { maxAge: 31557600000 }));
 
 		// Handle cookies.
 		app.use(cookieParser(process.env.SESSION_COOKIE_SECRET));
@@ -117,7 +122,7 @@ try {
 		setInterval(() => socketManager.prune(), 1000 * 60);
 
 		// Start a game manager.
-		const gameManager = new GameManager(socketManager, SAVED_GAMES_PATH);
+		const gameManager = new GameManager(socketManager, path.resolve(ROOT_PATH, SAVED_GAMES_PATH));
 
 		// Add games.
 		gameManager.addGameFactory(new HanabiGameFactory());
@@ -132,30 +137,12 @@ try {
 		// URLs.
 		const port = app.get('port');
 		const localUrl = `http://localhost:${port}`;
-		let ngrokUrl;
-
-		if (NODE_ENV === 'development') {
-			try {
-				ngrokUrl = await ngrok.connect({ addr: port, authtoken: process.env.NGROK_AUTH_TOKEN });
-			} catch (error) {
-				console.log(error);
-			}
-		}
-
-		const urlsDisplay = ngrokUrl
-			? `
- ${localUrl}
- ${ngrokUrl}
-`
-			: `
- ${localUrl}
-`;
 
 		// Notify!
 		Logger.info(`
 ———————————————————————————————————————————————————————————————————
  Ten Four Games
- ${urlsDisplay}
+ ${localUrl}
  Listening for requests in ${NODE_ENV} mode.
 ———————————————————————————————————————————————————————————————————
 `);
