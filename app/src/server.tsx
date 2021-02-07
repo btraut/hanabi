@@ -2,7 +2,6 @@ import 'cross-fetch/polyfill';
 
 import HanabiGameFactory from 'app/src/games/hanabi/server/HanabiGameFactory';
 import GameManager from 'app/src/games/server/GameManager';
-// import routes from 'app/src/routes';
 import Logger from 'app/src/utils/server/Logger';
 import SocketManager from 'app/src/utils/server/SocketManager';
 import * as bodyParser from 'body-parser';
@@ -15,7 +14,6 @@ import * as http from 'http';
 import methodOverride from 'method-override';
 import morgan from 'morgan';
 import ngrok from 'ngrok';
-// import { matchPath } from 'react-router';
 import * as url from 'url';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -25,6 +23,7 @@ declare const NODE_ENV: string;
 declare const ENV_PATH: string;
 declare const VIEWS_PATH: string;
 declare const PUBLIC_ASSETS_PATH: string;
+declare const SAVED_GAMES_PATH: string;
 
 const SESSION_COOKIE_NAME = 'SESSION';
 
@@ -100,51 +99,7 @@ try {
 		});
 
 		// Render the client.
-		app.get('*', async (_req: express.Request, res: express.Response) => {
-			// Match url to path.
-			// const matchedRoute = routes.find(
-			// 	(route) => !!matchPath(req.url, { path: route.path, exact: true }),
-			// );
-
-			// Call custom preload method.
-			// if (matchedRoute && matchedRoute.component && matchedRoute.component.preload) {
-			// 	await matchedRoute.component.preload();
-			// }
-
-			// Figure out the page title.
-			// let title = 'Ten Four Games';
-			// if (matchedRoute && matchedRoute.component && matchedRoute.component.title) {
-			// 	title =
-			// 		typeof matchedRoute.component.title === 'string'
-			// 			? matchedRoute.component.title
-			// 			: await matchedRoute.component.title();
-			// }
-
-			// Initialize a context obj to pass-by-ref into StaticRouter. Unfortunately
-			// there are no types for this.
-			// const context: any = {};
-
-			// Render markup. Collect the list of modules we've used to render.
-			// const markup = ReactDOMServer.renderToString(
-			// 	<StaticRouter location={req.url} context={context}>
-			// 		<App routes={routes} />
-			// 	</StaticRouter>,
-			// );
-
-			// context.url will contain the URL to redirect to if a <Redirect> was used
-			// if (context.url) {
-			// 	res.writeHead(302, { Location: context.url });
-			// 	res.end();
-			// 	return;
-			// }
-
-			// Create the response via pug view.
-			return res.render('index.html', {
-				title: 'Ten Four Games', // title,
-				content: '', // markup,
-				preloadedState: {}, // store.getState(),
-			});
-		});
+		app.get('*', async (_req: express.Request, res: express.Response) => res.render('index.html'));
 
 		// Create an http server for use in Express and socket.io.
 		const server = http.createServer(app);
@@ -162,7 +117,7 @@ try {
 		setInterval(() => socketManager.prune(), 1000 * 60);
 
 		// Start a game manager.
-		const gameManager = new GameManager(socketManager);
+		const gameManager = new GameManager(socketManager, SAVED_GAMES_PATH);
 
 		// Add games.
 		gameManager.addGameFactory(new HanabiGameFactory());
@@ -187,12 +142,20 @@ try {
 			}
 		}
 
+		const urlsDisplay = ngrokUrl
+			? `
+ ${localUrl}
+ ${ngrokUrl}
+`
+			: `
+ ${localUrl}
+`;
+
 		// Notify!
 		Logger.info(`
 ———————————————————————————————————————————————————————————————————
  Ten Four Games
- ${localUrl}
- ${ngrokUrl}
+ ${urlsDisplay}
  Listening for requests in ${NODE_ENV} mode.
 ———————————————————————————————————————————————————————————————————
 `);

@@ -4,21 +4,22 @@ import GameFactory from 'app/src/games/server/GameFactory';
 import SocketManager from 'app/src/utils/server/SocketManager';
 import { existsSync, promises } from 'fs';
 
-declare const SAVED_GAMES_PATH: string;
-
 export default class GameManager {
 	private _gameFactories: { [title: string]: GameFactory } = {};
 	private _games: { [id: string]: Game } = {};
 
+	private _savedGamesPath: string;
+
 	private _socketManager: SocketManager<GameManagerMessage>;
 	private _socketManagerOnMessageSubscriptionId: number | null = null;
 
-	constructor(socketManager: SocketManager<GameManagerMessage>) {
+	constructor(socketManager: SocketManager<GameManagerMessage>, savedGamesPath: string) {
 		this._socketManager = socketManager;
 		this._socketManagerOnMessageSubscriptionId = socketManager.addScopedMessageHandler(
 			this._handleMessage,
 			GAME_MANAGER_SCOPE,
 		);
+		this._savedGamesPath = savedGamesPath;
 	}
 
 	public cleanUp(): void {
@@ -58,14 +59,14 @@ export default class GameManager {
 
 		const gameData: { [gameName: string]: string[] } = {};
 
-		if (!existsSync(SAVED_GAMES_PATH)) {
+		if (!existsSync(this._savedGamesPath)) {
 			return gameData;
 		}
 
-		const gameDirs = await readdir(SAVED_GAMES_PATH);
+		const gameDirs = await readdir(this._savedGamesPath);
 
 		for (const gameName of gameDirs) {
-			const stat = await lstat(`${SAVED_GAMES_PATH}/${gameName}`);
+			const stat = await lstat(`${this._savedGamesPath}/${gameName}`);
 
 			if (!stat.isDirectory()) {
 				continue;
@@ -73,10 +74,13 @@ export default class GameManager {
 
 			gameData[gameName] = [];
 
-			const gameFiles = await readdir(`${SAVED_GAMES_PATH}/${gameName}`);
+			const gameFiles = await readdir(`${this._savedGamesPath}/${gameName}`);
 
 			for (const gameFile of gameFiles) {
-				const gameFileData = await readFile(`${SAVED_GAMES_PATH}/${gameName}/${gameFile}`, 'utf8');
+				const gameFileData = await readFile(
+					`${this._savedGamesPath}/${gameName}/${gameFile}`,
+					'utf8',
+				);
 				gameData[gameName].push(gameFileData);
 			}
 		}
@@ -92,14 +96,14 @@ export default class GameManager {
 		const { writeFile, mkdir } = promises;
 
 		const serialized = game.serialize();
-		const path = `${SAVED_GAMES_PATH}/${game.title}/${game.id}`;
+		const path = `${this._savedGamesPath}/${game.title}/${game.id}`;
 
-		if (!existsSync(SAVED_GAMES_PATH)) {
-			await mkdir(SAVED_GAMES_PATH);
+		if (!existsSync(this._savedGamesPath)) {
+			await mkdir(this._savedGamesPath);
 		}
 
-		if (!existsSync(`${SAVED_GAMES_PATH}/${game.title}`)) {
-			await mkdir(`${SAVED_GAMES_PATH}/${game.title}`);
+		if (!existsSync(`${this._savedGamesPath}/${game.title}`)) {
+			await mkdir(`${this._savedGamesPath}/${game.title}`);
 		}
 
 		if (serialized !== null) {
@@ -110,7 +114,7 @@ export default class GameManager {
 	public async deleteGame(game: Game): Promise<void> {
 		const { rm } = promises;
 
-		const path = `${SAVED_GAMES_PATH}/${game.title}/${game.id}`;
+		const path = `${this._savedGamesPath}/${game.title}/${game.id}`;
 
 		if (existsSync(path)) {
 			await rm(path);
