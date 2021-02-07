@@ -12,22 +12,19 @@ import classnames from 'classnames';
 
 const TILE_NUMBERS: HanabiTileNumber[] = [1, 2, 3, 4, 5];
 
-export enum PlayedTileSize {
-	Regular = 'Regular',
-	Small = 'Small',
-}
-
 interface Props {
-	readonly size?: PlayedTileSize;
+	readonly tileSize?: TileViewSize;
 }
 
-export default function HanabiPlayedTiles({ size = PlayedTileSize.Regular }: Props): JSX.Element {
+export default function HanabiPlayedTiles({
+	tileSize: tileViewSize = TileViewSize.Regular,
+}: Props): JSX.Element {
 	const game = useHanabiGame();
 
 	const { highlightedTiles } = useHanabiHighlightContext();
 
-	const tileViewSize = size === PlayedTileSize.Regular ? TileViewSize.Regular : TileViewSize.Small;
-	const tileSize = size === PlayedTileSize.Regular ? HANABI_TILE_SIZE : HANABI_TILE_SIZE_SMALL;
+	const tileSize =
+		tileViewSize === TileViewSize.Regular ? HANABI_TILE_SIZE : HANABI_TILE_SIZE_SMALL;
 
 	const colors: HanabiTileColor[] = ['red', 'blue', 'green', 'yellow', 'white'];
 	if (game.gameData.ruleSet !== HanabiRuleSet.Basic) {

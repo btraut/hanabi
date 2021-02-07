@@ -3,15 +3,18 @@ import { useUserId } from 'app/src/components/SocketContext';
 import HanabiActions from 'app/src/games/hanabi/client/HanabiActions';
 import HanabiClues from 'app/src/games/hanabi/client/HanabiClues';
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
+import HanabiDiscardedTilesCollapsed from 'app/src/games/hanabi/client/HanabiDiscardedTilesCollapsed';
 import HanabiGameOverPopup from 'app/src/games/hanabi/client/HanabiGameOverPopup';
 import HanabiLives from 'app/src/games/hanabi/client/HanabiLives';
-import HanabiPlayedTiles, { PlayedTileSize } from 'app/src/games/hanabi/client/HanabiPlayedTiles';
+import HanabiPlayedTiles from 'app/src/games/hanabi/client/HanabiPlayedTiles';
+import HanabiPlayedTilesCollapsed from 'app/src/games/hanabi/client/HanabiPlayedTilesCollapsed';
 import HanabiPlayerAvatar from 'app/src/games/hanabi/client/HanabiPlayerAvatar';
 import HanabiPlayerTiles from 'app/src/games/hanabi/client/HanabiPlayerTiles';
 import HanabiRemainingTiles from 'app/src/games/hanabi/client/HanabiRemainingTiles';
 import HanabiTileActionsTooltip, {
 	HanabiTileActionsTooltipOptions,
 } from 'app/src/games/hanabi/client/HanabiTileActionsTooltip';
+import { TileViewSize } from 'app/src/games/hanabi/client/HanabiTileView';
 import { HanabiTile } from 'app/src/games/hanabi/HanabiGameData';
 import useValueChanged from 'app/src/utils/client/useValueChanged';
 import classnames from 'classnames';
@@ -120,10 +123,23 @@ export default function HanabiBoard(): JSX.Element {
 						'bg-white': game.gameData.actions.length % 2 === 1,
 						'bg-gray-200': game.gameData.actions.length % 2 === 0,
 					})}
-					style={{ height: 160 }}
+					style={{ maxHeight: 160 }}
 				>
 					<HanabiActions />
 				</div>
+
+				{!breakpoints.lg && (
+					<div className="grid grid-flow-row border-4 border-black bg-white rounded-xl p-4 gap-3 mb-6">
+						<div className="grid grid-flow-col gap-2 justify-start">
+							<HanabiRemainingTiles />
+							<HanabiClues />
+							<HanabiLives />
+						</div>
+						<HanabiPlayedTilesCollapsed />
+						{game.gameData.discardedTiles.length > 0 && <HanabiDiscardedTilesCollapsed />}
+					</div>
+				)}
+
 				<div
 					className="grid gap-y-6 content-start items-start"
 					style={{ gridTemplateColumns: 'auto auto' }}
@@ -162,18 +178,20 @@ export default function HanabiBoard(): JSX.Element {
 					})}
 				</div>
 			</div>
-			<div className="grid grid-flow-row gap-y-6 content-start">
-				<div className="border-4 border-black bg-white rounded-xl p-4 grid grid-flow-row xl:grid-flow-col gap-2 xl:gap-4 justify-start items-center">
-					<HanabiRemainingTiles />
-					<HanabiClues />
-					<HanabiLives />
+			{breakpoints.lg && (
+				<div className="grid grid-flow-row gap-y-6 content-start">
+					<div className="border-4 border-black bg-white rounded-xl p-4 grid grid-flow-row xl:grid-flow-col gap-2 xl:gap-4 justify-start items-center">
+						<HanabiRemainingTiles />
+						<HanabiClues />
+						<HanabiLives />
+					</div>
+					<div className="border-4 border-black bg-white rounded-xl p-4 grid grid-flow-row gap-y-6">
+						<HanabiPlayedTiles
+							tileSize={breakpoints.xl ? TileViewSize.Regular : TileViewSize.Small}
+						/>
+					</div>
 				</div>
-				<div className="border-4 border-black bg-white rounded-xl p-4 grid grid-flow-row gap-y-6">
-					<HanabiPlayedTiles
-						size={breakpoints.xl ? PlayedTileSize.Regular : PlayedTileSize.Small}
-					/>
-				</div>
-			</div>
+			)}
 
 			{/* Popups */}
 			{showMenuForTile && (

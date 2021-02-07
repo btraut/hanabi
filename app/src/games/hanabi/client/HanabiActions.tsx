@@ -17,7 +17,8 @@ export default function HanabiActions(): JSX.Element {
 			{actionsReversed.map((action, index) => {
 				return (
 					<div
-						className={classnames('border-solid border-gray-600 border-b-2', {
+						className={classnames('border-solid border-gray-600', {
+							'border-t-2': index !== 0,
 							'bg-white': index % 2 === 1,
 							'bg-gray-200': index % 2 === 0,
 						})}
