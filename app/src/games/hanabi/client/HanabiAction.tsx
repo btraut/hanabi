@@ -1,8 +1,8 @@
-import HanabiGameFinishedAction from 'app/src/games/hanabi/client/HanabiGameFinishedAction';
-import HanabiGameStartedAction from 'app/src/games/hanabi/client/HanabiGameStartedAction';
-import HanabiShotClockStartedAction from 'app/src/games/hanabi/client/HanabiShotClockStartedAction';
-import HanabiShotClockTickedDownAction from 'app/src/games/hanabi/client/HanabiShotClockTickedDownAction';
-import HanabiTileAction from 'app/src/games/hanabi/client/HanabiTileAction';
+import HanabiGameFinishedAction from 'app/src/games/hanabi/client/actions/HanabiGameFinishedAction';
+import HanabiGameStartedAction from 'app/src/games/hanabi/client/actions/HanabiGameStartedAction';
+import HanabiShotClockStartedAction from 'app/src/games/hanabi/client/actions/HanabiShotClockStartedAction';
+import HanabiShotClockTickedDownAction from 'app/src/games/hanabi/client/actions/HanabiShotClockTickedDownAction';
+import HanabiTileAction from 'app/src/games/hanabi/client/actions/HanabiTileAction';
 import { HanabiGameAction, HanabiGameActionType } from 'app/src/games/hanabi/HanabiGameData';
 
 interface Props {

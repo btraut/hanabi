@@ -9,6 +9,8 @@ import {
 } from 'app/src/games/hanabi/HanabiGameData';
 import { useEffect } from 'react';
 
+const HIGHLIGHT_FOR_ACTING_USER = true;
+
 export default function useActionHighlighter(): void {
 	const userId = useUserId();
 
@@ -38,7 +40,7 @@ export default function useActionHighlighter(): void {
 			latestTileAction.type === HanabiGameActionType.Play ||
 			latestTileAction.type === HanabiGameActionType.Discard
 		) {
-			if (latestTileAction.playerId === userId) {
+			if (latestTileAction.playerId === userId && !HIGHLIGHT_FOR_ACTING_USER) {
 				// Clear highlights.
 				highlightAction(null);
 				highlightTiles(new Set());
@@ -53,7 +55,7 @@ export default function useActionHighlighter(): void {
 			latestTileAction.type === HanabiGameActionType.GiveColorClue ||
 			latestTileAction.type === HanabiGameActionType.GiveNumberClue
 		) {
-			if (latestTileAction.playerId === userId) {
+			if (latestTileAction.playerId === userId && !HIGHLIGHT_FOR_ACTING_USER) {
 				// Clear highlights.
 				highlightAction(null);
 				highlightTiles(new Set());

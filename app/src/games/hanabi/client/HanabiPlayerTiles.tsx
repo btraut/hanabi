@@ -21,7 +21,6 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 
 	const ownTiles = id === userId;
 	const ownTurn = game.gameData.turnOrder[0] === userId;
-	const thisPlayersTurn = game.gameData.turnOrder[0] === id;
 
 	const player = game.gameData.players[id];
 	const enableOnClick = ownTurn && onTileClick && (ownTiles || game.gameData.clues > 0);
@@ -29,12 +28,7 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 
 	return (
 		<div>
-			<div
-				className={classnames('border-4 border-black rounded-xl p-0.5', {
-					'bg-red-100': thisPlayersTurn,
-					'bg-white': !thisPlayersTurn,
-				})}
-			>
+			<div className={classnames('border-4 border-black rounded-xl p-0.5 bg-white')}>
 				<div style={HANABI_BOARD_SIZE} className="relative z-0">
 					{player.tileLocations.map((tileLocation) => (
 						<div

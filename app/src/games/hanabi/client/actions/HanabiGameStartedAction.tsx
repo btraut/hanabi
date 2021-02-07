@@ -11,7 +11,7 @@ export default function HanabiGameStartedAction({ action }: Props): JSX.Element 
 	const player = game.gameData.players[action.startingPlayerId];
 
 	return (
-		<div className="text-md xl:text-lg p-4">
+		<div className="text-md p-3">
 			The game has begun! <span className="font-bold">{player.name}</span> goes first.
 		</div>
 	);

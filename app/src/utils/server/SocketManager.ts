@@ -102,7 +102,8 @@ export default class ServerSocketManager<MessageType extends SocketMessageBase> 
 	};
 
 	private _handleMessage = (socketId: string, message: MessageTypeWithAuth<MessageType>) => {
-		Logger.debug(`socket.io data recieved: ${JSON.stringify(message)}`);
+		// Logger.debug(`socket.io data recieved: ${JSON.stringify(message)}`);
+		Logger.debug(`socket.io data recieved: ${message.type}`);
 
 		// Capture all SocketManager messages. Emit the rest.
 		if (message.scope === SOCKET_MANAGER_SCOPE) {
@@ -133,7 +134,8 @@ export default class ServerSocketManager<MessageType extends SocketMessageBase> 
 			const socketIds = this._authenticatedSockets[userId];
 
 			if (socketIds && socketIds.length > 0) {
-				console.log(`Sending message(s) to ${userId}:`, message);
+				// console.log(`Sending message(s) to ${userId}:`, message);
+				console.log(`Sending message(s) to ${userId}:`, message.type);
 
 				for (const socketId of socketIds) {
 					this._send(socketId, message);

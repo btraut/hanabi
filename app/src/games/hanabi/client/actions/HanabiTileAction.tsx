@@ -1,5 +1,5 @@
+import HanabiTileActionBody from 'app/src/games/hanabi/client/actions/HanabiTileActionBody';
 import { useHanabiHighlightContext } from 'app/src/games/hanabi/client/HanabiHighlightContext';
-import HanabiTileActionBody from 'app/src/games/hanabi/client/HanabiTileActionBody';
 import Eye from 'app/src/games/hanabi/client/icons/Eye';
 import EyeOff from 'app/src/games/hanabi/client/icons/EyeOff';
 import {
@@ -49,7 +49,7 @@ export default function HanabiTileAction({ action }: Props): JSX.Element {
 	return (
 		<button
 			className={classnames(
-				'text-md xl:text-lg p-4 flex justify-between items-center w-full focus:outline-none',
+				'text-md p-3 flex justify-between items-center w-full focus:outline-none',
 				{
 					'cursor-zoom-in': !thisActionHighlighted,
 					'cursor-zoom-out': thisActionHighlighted,

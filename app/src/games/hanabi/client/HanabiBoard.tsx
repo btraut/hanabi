@@ -4,7 +4,6 @@ import HanabiActions from 'app/src/games/hanabi/client/HanabiActions';
 import HanabiClues from 'app/src/games/hanabi/client/HanabiClues';
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
 import HanabiGameOverPopup from 'app/src/games/hanabi/client/HanabiGameOverPopup';
-import HanabiLatestClue from 'app/src/games/hanabi/client/HanabiLatestClue';
 import HanabiLives from 'app/src/games/hanabi/client/HanabiLives';
 import HanabiPlayedTiles, { PlayedTileSize } from 'app/src/games/hanabi/client/HanabiPlayedTiles';
 import HanabiPlayerAvatar from 'app/src/games/hanabi/client/HanabiPlayerAvatar';
@@ -116,21 +115,29 @@ export default function HanabiBoard(): JSX.Element {
 	return (
 		<div className="grid grid-flow-row lg:grid-flow-col gap-6 relative">
 			<div>
-				<HanabiLatestClue />
+				<div
+					className={classnames('border-4 border-black rounded-xl overflow-y-auto mb-6', {
+						'bg-white': game.gameData.actions.length % 2 === 1,
+						'bg-gray-200': game.gameData.actions.length % 2 === 0,
+					})}
+					style={{ height: 160 }}
+				>
+					<HanabiActions />
+				</div>
 				<div
 					className="grid gap-y-6 content-start items-start"
 					style={{ gridTemplateColumns: 'auto auto' }}
 				>
-					{turnOrder.map((id) => {
+					{turnOrder.map((playerId) => {
 						const thisPlayersTurn =
-							game.gameData.finishedReason === null && game.gameData.turnOrder[0] === id;
+							game.gameData.finishedReason === null && game.gameData.turnOrder[0] === playerId;
 
 						return (
-							<Fragment key={`player-${id}`}>
+							<Fragment key={`player-${playerId}`}>
 								<div
-									className={classnames('my-4 p-3 border-black border-4', {
+									className={classnames('my-4 p-3 border-black border-4 transition-all', {
 										'bg-gray-800': !thisPlayersTurn,
-										'bg-red-900': thisPlayersTurn,
+										'bg-red-800': thisPlayersTurn,
 									})}
 									style={{
 										borderTopLeftRadius: '0.75rem',
@@ -138,13 +145,16 @@ export default function HanabiBoard(): JSX.Element {
 										borderRightWidth: 0,
 									}}
 								>
-									<HanabiPlayerAvatar player={game.gameData.players[id]} size="sm" />
-									{thisPlayersTurn && (
+									<HanabiPlayerAvatar player={game.gameData.players[playerId]} size="sm" />
+									{thisPlayersTurn && userId === playerId && (
 										<p className="text-white italic whitespace-nowrap">Your turn!</p>
+									)}
+									{thisPlayersTurn && userId !== playerId && (
+										<p className="text-white italic whitespace-nowrap">Waiting…</p>
 									)}
 								</div>
 								<HanabiPlayerTiles
-									id={id}
+									id={playerId}
 									onTileClick={game.gameData.finishedReason === null ? handleTileClick : undefined}
 								/>
 							</Fragment>
@@ -152,7 +162,7 @@ export default function HanabiBoard(): JSX.Element {
 					})}
 				</div>
 			</div>
-			<div className="grid grid-flow-row gap-y-6">
+			<div className="grid grid-flow-row gap-y-6 content-start">
 				<div className="border-4 border-black bg-white rounded-xl p-4 grid grid-flow-row xl:grid-flow-col gap-2 xl:gap-4 justify-start items-center">
 					<HanabiRemainingTiles />
 					<HanabiClues />
@@ -162,12 +172,6 @@ export default function HanabiBoard(): JSX.Element {
 					<HanabiPlayedTiles
 						size={breakpoints.xl ? PlayedTileSize.Regular : PlayedTileSize.Small}
 					/>
-				</div>
-				<div
-					className="border-4 border-black bg-white rounded-xl overflow-y-auto"
-					style={{ maxHeight: 300 }}
-				>
-					<HanabiActions />
 				</div>
 			</div>
 
