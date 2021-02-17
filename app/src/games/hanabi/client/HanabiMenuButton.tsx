@@ -1,3 +1,4 @@
+import useFocusVisible from 'app/src/utils/client/useFocusVisible';
 import classnames from 'classnames';
 import { forwardRef, SyntheticEvent } from 'react';
 
@@ -8,13 +9,18 @@ interface Props {
 }
 
 function HanabiMenuButton({ onClick, label, disabled = false }: Props, ref: any): JSX.Element {
+	const isFocusVisible = useFocusVisible();
+
 	return (
 		<button
 			className={classnames(
-				'block px-5 py-3 bg-gray-800 text-center uppercase font-bold rounded-xl border-4 duration-100 focus:outline-none focus:border-red-600',
+				'block px-5 py-3 bg-gray-800 text-center uppercase font-bold rounded-xl border-4 duration-100 focus:outline-none',
 				disabled
 					? 'border-gray-500 cursor-default text-gray-500'
 					: 'border-white cursor-pointer text-white hover:bg-red-600 active:scale-95',
+				{
+					'focus:border-red-600': isFocusVisible,
+				},
 			)}
 			onClick={onClick}
 			disabled={disabled}
