@@ -1,8 +1,6 @@
+import { generateGameCode } from 'app/src/games/server/generateGameCode';
 import { SaveGameDelegate } from 'app/src/games/server/SaveGameDelegate';
 import { v4 as uuidv4 } from 'uuid';
-
-const CODE_GENERATION_ALPHABET = '23456789abdegjkmnpqrvwxyz';
-const CODE_GENERATION_LENGTH = 4;
 
 export interface GameSerialized {
 	id: string;
@@ -53,20 +51,7 @@ export default class Game {
 		this._creatorId = creatorId;
 
 		this._id = uuidv4();
-		this._code = this._generateCode();
-	}
-
-	private _generateCode(length = CODE_GENERATION_LENGTH) {
-		let code = '';
-
-		for (let i = 0; i < length; i += 1) {
-			code += CODE_GENERATION_ALPHABET.charAt(
-				Math.floor(Math.random() * CODE_GENERATION_ALPHABET.length),
-			);
-		}
-
-		this._code = code;
-		return this._code;
+		this._code = generateGameCode();
 	}
 
 	// Serialize game data for writing offline. Return null if you game doesn't
