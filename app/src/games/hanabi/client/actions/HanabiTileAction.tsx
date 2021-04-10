@@ -72,9 +72,9 @@ export default function HanabiTileAction({ action }: Props): JSX.Element {
 			<div>
 				<HanabiTileActionBody action={action} />
 			</div>
-			{(hovering || thisActionHighlighted || (focused && isFocusVisible)) && (
+			{thisActionHighlighted && (
 				<div className="mx-0.5">
-					{thisActionHighlighted ? (
+					{hovering || (focused && isFocusVisible) ? (
 						<EyeOff size={32} color={focused && isFocusVisible ? '#E11D48' : 'black'} />
 					) : (
 						<Eye size={32} color={focused && isFocusVisible ? '#E11D48' : 'black'} />
