@@ -5,22 +5,23 @@ import useFocusVisible from 'app/src/utils/client/useFocusVisible';
 import classnames from 'classnames';
 import { useEffect, useRef } from 'react';
 
-export enum HanabiTileActionsTooltipOptions {
+export enum HanabiTileActionsTooltipType {
 	Own = 'Own',
 	OtherPlayer = 'OtherPlayer',
+	NoClues = 'NoClues',
 }
 
 interface Props {
 	tile: HanabiTile;
 	coords: { left: number; top: number };
-	options: HanabiTileActionsTooltipOptions;
+	type: HanabiTileActionsTooltipType;
 	onAction: (action: 'discard' | 'play' | 'color' | 'number', tile: HanabiTile) => void;
 	onClose: () => void;
 }
 
 export default function HanabiTileActionsTooltip({
 	tile,
-	options,
+	type,
 	coords,
 	onAction,
 	onClose,
@@ -54,7 +55,7 @@ export default function HanabiTileActionsTooltip({
 			<Tooltip onClose={onClose} top={coords.top} left={coords.left}>
 				<div className="pb-0.5">
 					<div className="bg-gray-900 rounded-lg py-2 px-3">
-						{options === HanabiTileActionsTooltipOptions.Own && (
+						{type === HanabiTileActionsTooltipType.Own && (
 							<div className="grid grid-flow-col gap-x-3 items-center">
 								<button
 									className={classnames('font-bold text-xl text-white focus:outline-none', {
@@ -88,7 +89,7 @@ export default function HanabiTileActionsTooltip({
 								</button>
 							</div>
 						)}
-						{options === HanabiTileActionsTooltipOptions.OtherPlayer && (
+						{type === HanabiTileActionsTooltipType.OtherPlayer && (
 							<div className="grid grid-flow-col gap-x-3 items-center">
 								<button
 									className={classnames(
@@ -122,6 +123,11 @@ export default function HanabiTileActionsTooltip({
 								>
 									{tile.number}
 								</button>
+							</div>
+						)}
+						{type === HanabiTileActionsTooltipType.NoClues && (
+							<div className="grid grid-flow-col gap-x-3 items-center text-white select-none cursor-default">
+								No clues left!
 							</div>
 						)}
 					</div>

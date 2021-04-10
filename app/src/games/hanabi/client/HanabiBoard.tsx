@@ -12,7 +12,7 @@ import HanabiPlayerAvatar from 'app/src/games/hanabi/client/HanabiPlayerAvatar';
 import HanabiPlayerTiles from 'app/src/games/hanabi/client/HanabiPlayerTiles';
 import HanabiRemainingTiles from 'app/src/games/hanabi/client/HanabiRemainingTiles';
 import HanabiTileActionsTooltip, {
-	HanabiTileActionsTooltipOptions,
+	HanabiTileActionsTooltipType,
 } from 'app/src/games/hanabi/client/HanabiTileActionsTooltip';
 import { TileViewSize } from 'app/src/games/hanabi/client/HanabiTileView';
 import { HanabiTile } from 'app/src/games/hanabi/HanabiGameData';
@@ -38,7 +38,7 @@ export default function HanabiBoard(): JSX.Element {
 
 	const [showMenuForTile, setShowMenuForTile] = useState<{
 		tile: HanabiTile;
-		options: HanabiTileActionsTooltipOptions;
+		type: HanabiTileActionsTooltipType;
 		coords: {
 			top: number;
 			left: number;
@@ -52,11 +52,17 @@ export default function HanabiBoard(): JSX.Element {
 				(tl) => tl.tile.id === tile.id,
 			);
 
+			// What menu should we display?
+			let type = ownTile
+				? HanabiTileActionsTooltipType.Own
+				: HanabiTileActionsTooltipType.OtherPlayer;
+			if (game.gameData.clues === 0 && !ownTile) {
+				type = HanabiTileActionsTooltipType.NoClues;
+			}
+
 			setShowMenuForTile({
 				tile,
-				options: ownTile
-					? HanabiTileActionsTooltipOptions.Own
-					: HanabiTileActionsTooltipOptions.OtherPlayer,
+				type,
 				coords: {
 					left: rect.x + rect.width / 2,
 					top: rect.y + window.scrollY,
@@ -198,7 +204,7 @@ export default function HanabiBoard(): JSX.Element {
 				<HanabiTileActionsTooltip
 					coords={showMenuForTile.coords}
 					tile={showMenuForTile.tile}
-					options={showMenuForTile.options}
+					type={showMenuForTile.type}
 					onAction={handleActionsTooltipAction}
 					onClose={handleActionsTooltipOnClose}
 				/>

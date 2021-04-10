@@ -23,7 +23,7 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 	const ownTurn = game.gameData.turnOrder[0] === userId;
 
 	const player = game.gameData.players[id];
-	const enableOnClick = ownTurn && onTileClick && (ownTiles || game.gameData.clues > 0);
+	const enableOnClick = ownTurn && onTileClick;
 	const gameStillPlaying = game.gameData.finishedReason === null;
 
 	return (
