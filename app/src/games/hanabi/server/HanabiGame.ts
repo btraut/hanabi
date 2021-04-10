@@ -34,7 +34,6 @@ import GameMessenger from 'app/src/games/server/GameMessenger';
 import UserConnectionListener, {
 	UserConnectionChange,
 } from 'app/src/games/server/UserConnectionListener';
-import DistributiveOmit from 'app/src/utils/DistributiveOmit';
 import ServerSocketManager from 'app/src/utils/server/SocketManager';
 import { shuffle } from 'app/src/utils/shuffle';
 import { v4 as uuidv4 } from 'uuid';
@@ -136,16 +135,6 @@ export default class HanabiGame extends Game {
 		}
 	};
 
-	private _sendMessage(
-		userIdOrIds: string | readonly string[],
-		message: DistributiveOmit<HanabiMessage, 'scope'>,
-	) {
-		this._messenger.send(userIdOrIds, {
-			...message,
-			scope: getScope(HANABI_GAME_TITLE, this.id),
-		});
-	}
-
 	private _handleUserConnectionChange = (userId: string, change: UserConnectionChange) => {
 		if (!this._gameData.players[userId]) {
 			return;
@@ -153,7 +142,7 @@ export default class HanabiGame extends Game {
 
 		this._gameData.players[userId].connected = change === UserConnectionChange.Authenticated;
 
-		this._sendMessage(this._getAllPlayerAndWatcherIds(), {
+		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
 			type: 'RefreshGameDataMessage',
 			data: this._gameData,
 		});
@@ -163,7 +152,7 @@ export default class HanabiGame extends Game {
 	};
 
 	private _sendGameData(playerId: string): void {
-		this._sendMessage(playerId, {
+		this._messenger.send(playerId, {
 			type: 'RefreshGameDataMessage',
 			data: this._gameData,
 		});
@@ -175,7 +164,7 @@ export default class HanabiGame extends Game {
 	private _handleAddPlayerMessage({ data: { name } }: AddPlayerMessage, playerId: string): void {
 		// Error if already started.
 		if (this._gameData.stage !== HanabiStage.Setup) {
-			this._sendMessage(playerId, {
+			this._messenger.send(playerId, {
 				type: 'AddPlayerResponseMessage',
 				data: {
 					error: 'Cannot join game because it has already started.',
@@ -189,13 +178,13 @@ export default class HanabiGame extends Game {
 		this._gameData.players[playerId] = player;
 
 		// Success! Respond to the creator.
-		this._sendMessage(playerId, {
+		this._messenger.send(playerId, {
 			type: 'AddPlayerResponseMessage',
 			data: {},
 		});
 
 		// Send the updated state to all players/watchers.
-		this._sendMessage(this._getAllPlayerAndWatcherIds(), {
+		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
 			type: 'RefreshGameDataMessage',
 			data: this._gameData,
 		});
@@ -212,7 +201,7 @@ export default class HanabiGame extends Game {
 
 		// Error if already started.
 		if (this._gameData.stage !== HanabiStage.Setup) {
-			this._sendMessage(userId, {
+			this._messenger.send(userId, {
 				type: 'RemovePlayerResponseMessage',
 				data: {
 					error: 'Cannot remove user from game because it has already started.',
@@ -223,13 +212,13 @@ export default class HanabiGame extends Game {
 
 		delete this._gameData.players[removeUserId];
 
-		this._sendMessage(userId, {
+		this._messenger.send(userId, {
 			type: 'RemovePlayerResponseMessage',
 			data: {},
 		});
 
 		// Send the updated state to all players/watchers.
-		this._sendMessage([userId, ...this._getAllPlayerAndWatcherIds()], {
+		this._messenger.send([userId, ...this._getAllPlayerAndWatcherIds()], {
 			type: 'RefreshGameDataMessage',
 			data: this._gameData,
 		});
@@ -244,7 +233,7 @@ export default class HanabiGame extends Game {
 	): void {
 		// Basic validation:
 		if (this._gameData.stage !== HanabiStage.Setup) {
-			this._sendMessage(userId, {
+			this._messenger.send(userId, {
 				type: 'StartGameResponseMessage',
 				data: {
 					error: 'Cannot change game settings after it has started.',
@@ -254,7 +243,7 @@ export default class HanabiGame extends Game {
 		}
 
 		if (!this._gameData.players[userId]) {
-			this._sendMessage(userId, {
+			this._messenger.send(userId, {
 				type: 'StartGameResponseMessage',
 				data: {
 					error: 'Only players can change game settings.',
@@ -270,7 +259,7 @@ export default class HanabiGame extends Game {
 					message.data.ruleSet,
 				)
 			) {
-				this._sendMessage(userId, {
+				this._messenger.send(userId, {
 					type: 'StartGameResponseMessage',
 					data: {
 						error: 'Invalid rules set.',
@@ -283,7 +272,7 @@ export default class HanabiGame extends Game {
 		}
 
 		// Send the updated state to all players/watchers.
-		this._sendMessage(this._getAllPlayerAndWatcherIds(), {
+		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
 			type: 'RefreshGameDataMessage',
 			data: this._gameData,
 		});
@@ -295,7 +284,7 @@ export default class HanabiGame extends Game {
 	private _handleStartGameMessage(_message: StartGameMessage, userId: string): void {
 		// Validate that the game is ready.
 		if (this._gameData.stage !== HanabiStage.Setup) {
-			this._sendMessage(userId, {
+			this._messenger.send(userId, {
 				type: 'StartGameResponseMessage',
 				data: {
 					error: 'Cannot start game because it has already started.',
@@ -308,7 +297,7 @@ export default class HanabiGame extends Game {
 			Object.keys(this._gameData.players).length <
 			(NODE_ENV === 'development' ? 1 : HANABI_MIN_PLAYERS)
 		) {
-			this._sendMessage(userId, {
+			this._messenger.send(userId, {
 				type: 'StartGameResponseMessage',
 				data: {
 					error: 'Not enough players to play.',
@@ -318,7 +307,7 @@ export default class HanabiGame extends Game {
 		}
 
 		if (!this._gameData.players[userId]) {
-			this._sendMessage(userId, {
+			this._messenger.send(userId, {
 				type: 'StartGameResponseMessage',
 				data: {
 					error: 'Only players can start the game.',
@@ -358,13 +347,13 @@ export default class HanabiGame extends Game {
 		});
 
 		// Send success message.
-		this._sendMessage(userId, {
+		this._messenger.send(userId, {
 			type: 'StartGameResponseMessage',
 			data: {},
 		});
 
 		// Send the updated state to all players/watchers.
-		this._sendMessage(this._getAllPlayerAndWatcherIds(), {
+		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
 			type: 'RefreshGameDataMessage',
 			data: this._gameData,
 		});
@@ -422,7 +411,7 @@ export default class HanabiGame extends Game {
 	private _handlePlayTileMessage(message: PlayTileMessage, userId: string): void {
 		const gameActionError = this._validateGameAction(userId);
 		if (gameActionError) {
-			this._sendMessage(userId, {
+			this._messenger.send(userId, {
 				type: 'PlayTileResponseMessage',
 				data: { error: gameActionError },
 			});
@@ -434,7 +423,7 @@ export default class HanabiGame extends Game {
 			.find((t) => t.id === message.data.id);
 
 		if (!tile) {
-			this._sendMessage(userId, {
+			this._messenger.send(userId, {
 				type: 'PlayTileResponseMessage',
 				data: { error: 'That tile isn’t in your hand!' },
 			});
@@ -554,13 +543,13 @@ export default class HanabiGame extends Game {
 		this._gameData.turnOrder.push(this._gameData.turnOrder.shift()!);
 
 		// Send success message.
-		this._sendMessage(userId, {
+		this._messenger.send(userId, {
 			type: 'PlayTileResponseMessage',
 			data: {},
 		});
 
 		// Send the updated state to all players/watchers.
-		this._sendMessage(this._getAllPlayerAndWatcherIds(), {
+		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
 			type: 'RefreshGameDataMessage',
 			data: this._gameData,
 		});
@@ -572,7 +561,7 @@ export default class HanabiGame extends Game {
 	private _handleDiscardTileMessage(message: DiscardTileMessage, userId: string): void {
 		const gameActionError = this._validateGameAction(userId);
 		if (gameActionError) {
-			this._sendMessage(userId, {
+			this._messenger.send(userId, {
 				type: 'DiscardTileResponseMessage',
 				data: { error: gameActionError },
 			});
@@ -584,7 +573,7 @@ export default class HanabiGame extends Game {
 			.find((t) => t.id === message.data.id);
 
 		if (!tile) {
-			this._sendMessage(userId, {
+			this._messenger.send(userId, {
 				type: 'DiscardTileResponseMessage',
 				data: { error: 'That tile isn’t in your hand!' },
 			});
@@ -672,13 +661,13 @@ export default class HanabiGame extends Game {
 		}
 
 		// Send success message.
-		this._sendMessage(userId, {
+		this._messenger.send(userId, {
 			type: 'DiscardTileResponseMessage',
 			data: {},
 		});
 
 		// Send the updated state to all players/watchers.
-		this._sendMessage(this._getAllPlayerAndWatcherIds(), {
+		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
 			type: 'RefreshGameDataMessage',
 			data: this._gameData,
 		});
@@ -690,7 +679,7 @@ export default class HanabiGame extends Game {
 	private _handleGiveClueMessage(message: GiveClueMessage, userId: string): void {
 		const gameActionError = this._validateGameAction(userId);
 		if (gameActionError) {
-			this._sendMessage(userId, {
+			this._messenger.send(userId, {
 				type: 'GiveClueResponseMessage',
 				data: { error: gameActionError },
 			});
@@ -699,14 +688,14 @@ export default class HanabiGame extends Game {
 
 		// Make sure the clue is for a single number or color.
 		if (message.data.color !== undefined && message.data.number !== undefined) {
-			this._sendMessage(userId, {
+			this._messenger.send(userId, {
 				type: 'GiveClueResponseMessage',
 				data: { error: 'Can only give a clue for a single number or color at a time.' },
 			});
 			return;
 		}
 		if (message.data.color === undefined && message.data.number === undefined) {
-			this._sendMessage(userId, {
+			this._messenger.send(userId, {
 				type: 'GiveClueResponseMessage',
 				data: { error: 'Clues must contain a number or color.' },
 			});
@@ -715,7 +704,7 @@ export default class HanabiGame extends Game {
 
 		const recipient = this._gameData.players[message.data.to];
 		if (!recipient) {
-			this._sendMessage(userId, {
+			this._messenger.send(userId, {
 				type: 'GiveClueResponseMessage',
 				data: { error: 'Invalid player!' },
 			});
@@ -729,7 +718,7 @@ export default class HanabiGame extends Game {
 			);
 
 		if (selectedTiles.length === 0) {
-			this._sendMessage(userId, {
+			this._messenger.send(userId, {
 				type: 'GiveClueResponseMessage',
 				data: { error: 'Clues must select at least 1 tile.' },
 			});
@@ -743,7 +732,7 @@ export default class HanabiGame extends Game {
 
 		// Make sure there's a clue to spare.
 		if (this._gameData.clues === 0) {
-			this._sendMessage(userId, {
+			this._messenger.send(userId, {
 				type: 'GiveClueResponseMessage',
 				data: { error: 'No clues remaining.' },
 			});
@@ -795,13 +784,13 @@ export default class HanabiGame extends Game {
 		}
 
 		// Send success message.
-		this._sendMessage(userId, {
+		this._messenger.send(userId, {
 			type: 'GiveClueResponseMessage',
 			data: {},
 		});
 
 		// Send the updated state to all players/watchers.
-		this._sendMessage(this._getAllPlayerAndWatcherIds(), {
+		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
 			type: 'RefreshGameDataMessage',
 			data: this._gameData,
 		});
@@ -812,14 +801,14 @@ export default class HanabiGame extends Game {
 
 	private _handleMoveTileMessage(message: MoveTileMessage, userId: string): void {
 		if (!this._gameData.players[userId]) {
-			this._sendMessage(userId, {
+			this._messenger.send(userId, {
 				type: 'MoveTileResponseMessage',
 				data: { error: 'Invalid player!' },
 			});
 		}
 
 		if (this._gameData.stage !== HanabiStage.Playing) {
-			this._sendMessage(userId, {
+			this._messenger.send(userId, {
 				type: 'MoveTileResponseMessage',
 				data: { error: 'The game isn’t being played right now.!' },
 			});
@@ -830,7 +819,7 @@ export default class HanabiGame extends Game {
 		);
 
 		if (!tileLocation) {
-			this._sendMessage(userId, {
+			this._messenger.send(userId, {
 				type: 'MoveTileResponseMessage',
 				data: { error: 'That tile isn’t in your hand!' },
 			});
@@ -845,7 +834,7 @@ export default class HanabiGame extends Game {
 			position.x < 0 ||
 			position.y < 0
 		) {
-			this._sendMessage(userId, {
+			this._messenger.send(userId, {
 				type: 'MoveTileResponseMessage',
 				data: { error: 'Invalid position.' },
 			});
@@ -865,13 +854,13 @@ export default class HanabiGame extends Game {
 			}, 0) + 1;
 
 		// Send success message.
-		this._sendMessage(userId, {
+		this._messenger.send(userId, {
 			type: 'MoveTileResponseMessage',
 			data: {},
 		});
 
 		// Send the updated state to all players/watchers.
-		this._sendMessage(this._getAllPlayerAndWatcherIds(), {
+		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
 			type: 'RefreshGameDataMessage',
 			data: this._gameData,
 		});
@@ -882,7 +871,7 @@ export default class HanabiGame extends Game {
 
 	private _handleResetGameMessage(_message: ResetGameMessage, userId: string): void {
 		if (!this._gameData.players[userId]) {
-			this._sendMessage(userId, {
+			this._messenger.send(userId, {
 				type: 'ResetGameResponseMessage',
 				data: { error: 'Only players can reset the game.' },
 			});
@@ -899,7 +888,7 @@ export default class HanabiGame extends Game {
 		}
 
 		// Send the updated state to all players/watchers.
-		this._sendMessage(this._getAllPlayerAndWatcherIds(), {
+		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
 			type: 'ResetGameResponseMessage',
 			data: { data: this._gameData },
 		});

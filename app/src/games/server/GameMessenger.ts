@@ -3,10 +3,11 @@
 // SocketManager's onMessage event and also exposes the socket manager's send()
 // method, both of which are strongly-typed to the specified MessageType.
 
-import { SocketMessageBase } from 'app/src/models/SocketMessage';
+import { SocketMessage } from 'app/src/models/SocketMessage';
+import DistributiveOmit from 'app/src/utils/DistributiveOmit';
 import SocketManager from 'app/src/utils/server/SocketManager';
 
-export default class GameMessenger<MessageType extends SocketMessageBase> {
+export default class GameMessenger<MessageType extends SocketMessage<any, any>> {
 	private _scope: string;
 	private _socketManager: SocketManager<MessageType>;
 	private _socketManagerOnMessageSubscriptionId: number;
@@ -16,15 +17,15 @@ export default class GameMessenger<MessageType extends SocketMessageBase> {
 		this._scope = scope;
 	}
 
-	public connect(handler: (data: { userId: string; message: SocketMessageBase }) => void): void {
+	public connect(handler: (data: { userId: string; message: MessageType }) => void): void {
 		this._socketManagerOnMessageSubscriptionId = this._socketManager.onMessage.subscribe(
 			GameMessenger._createScopedHandler<MessageType>(this._scope, handler),
 		);
 	}
 
-	private static _createScopedHandler<M extends SocketMessageBase>(
+	private static _createScopedHandler<M extends SocketMessage<any, any>>(
 		scope: string,
-		handler: (data: { userId: string; message: SocketMessageBase }) => void,
+		handler: (data: { userId: string; message: SocketMessage<any, any> }) => void,
 	) {
 		return (data: { userId: string; message: M }) => {
 			if (data.message.scope !== scope) {
@@ -43,7 +44,15 @@ export default class GameMessenger<MessageType extends SocketMessageBase> {
 		this._socketManager.onMessage.unsubscribe(this._socketManagerOnMessageSubscriptionId);
 	}
 
-	public send(userIdOrIds: string | readonly string[], message: MessageType): void {
-		this._socketManager.send(userIdOrIds, message);
+	public send(
+		userIdOrIds: string | readonly string[],
+		message: DistributiveOmit<MessageType, 'scope'>,
+	): void {
+		// Scope the message to the supplied scope.
+		// TODO: Fix this any type.
+		this._socketManager.send(userIdOrIds, {
+			...message,
+			scope: this._scope,
+		} as any);
 	}
 }

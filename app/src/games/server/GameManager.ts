@@ -39,25 +39,25 @@ export default class GameManager {
 	public async restoreGames(): Promise<void> {
 		const gameData = await this._readSavedGameData();
 
-		for (const gameName in gameData) {
-			if (!this._gameFactories[gameName]) {
-				throw new Error(`No factory for game "${gameName}"`);
+		for (const title in gameData) {
+			if (!this._gameFactories[title]) {
+				throw new Error(`No factory for game "${title}"`);
 			}
 
-			for (const gameFileData of gameData[gameName]) {
-				const game = this._gameFactories[gameName].hydrate(gameFileData, this._socketManager);
+			for (const gameFileData of gameData[title]) {
+				const game = this._gameFactories[title].hydrate(gameFileData, this._socketManager);
 				game.saveGameDelegate = this;
 				this._games[game.id] = game;
 
-				console.log(`Restoring ${gameName} game ${game.id}.`);
+				console.log(`Restoring ${title} game ${game.id}.`);
 			}
 		}
 	}
 
-	private async _readSavedGameData(): Promise<{ [gameName: string]: string[] }> {
+	private async _readSavedGameData(): Promise<{ [title: string]: string[] }> {
 		const { lstat, readdir, readFile } = promises;
 
-		const gameData: { [gameName: string]: string[] } = {};
+		const gameData: { [title: string]: string[] } = {};
 
 		if (!existsSync(this._savedGamesPath)) {
 			return gameData;
@@ -65,23 +65,20 @@ export default class GameManager {
 
 		const gameDirs = await readdir(this._savedGamesPath);
 
-		for (const gameName of gameDirs) {
-			const stat = await lstat(`${this._savedGamesPath}/${gameName}`);
+		for (const title of gameDirs) {
+			const stat = await lstat(`${this._savedGamesPath}/${title}`);
 
 			if (!stat.isDirectory()) {
 				continue;
 			}
 
-			gameData[gameName] = [];
+			gameData[title] = [];
 
-			const gameFiles = await readdir(`${this._savedGamesPath}/${gameName}`);
+			const gameFiles = await readdir(`${this._savedGamesPath}/${title}`);
 
 			for (const gameFile of gameFiles) {
-				const gameFileData = await readFile(
-					`${this._savedGamesPath}/${gameName}/${gameFile}`,
-					'utf8',
-				);
-				gameData[gameName].push(gameFileData);
+				const gameFileData = await readFile(`${this._savedGamesPath}/${title}/${gameFile}`, 'utf8');
+				gameData[title].push(gameFileData);
 			}
 		}
 
