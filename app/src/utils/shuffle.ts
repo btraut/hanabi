@@ -1,12 +1,16 @@
-export function shuffleInPlace<T>(array: T[]): T[] {
+import seedrandom from 'seedrandom';
+
+export function shuffleInPlace<T>(array: T[], seed: string | undefined = undefined): T[] {
 	let currentIndex = array.length;
 	let temporaryValue;
 	let randomIndex;
 
+	const rng = seedrandom(seed);
+
 	// While there remain elements to shuffle...
 	while (0 !== currentIndex) {
 		// pick a remaining element...
-		randomIndex = Math.floor(Math.random() * currentIndex);
+		randomIndex = Math.floor(rng() * currentIndex);
 		currentIndex -= 1;
 
 		// and swap it with the current element.
@@ -18,8 +22,8 @@ export function shuffleInPlace<T>(array: T[]): T[] {
 	return array;
 }
 
-export function shuffle<T>(array: T[]): T[] {
+export function shuffle<T>(array: T[], seed: string | undefined = undefined): T[] {
 	const newArray = [...array];
-	shuffleInPlace(newArray);
+	shuffleInPlace(newArray, seed);
 	return newArray;
 }

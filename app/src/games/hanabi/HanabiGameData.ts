@@ -181,6 +181,7 @@ export type HanabiGameAction =
 
 export interface HanabiGameData {
 	stage: HanabiStage;
+	seed: string | undefined;
 	finishedReason: HanabiFinishedReason | null;
 	players: { [id: string]: HanabiPlayer };
 	turnOrder: string[];
@@ -197,6 +198,7 @@ export interface HanabiGameData {
 export function generateHanabiGameData(data: Partial<HanabiGameData> = {}): HanabiGameData {
 	return {
 		stage: HanabiStage.Setup,
+		seed: undefined,
 		finishedReason: null,
 		players: {},
 		turnOrder: [],
@@ -222,7 +224,10 @@ export function generatePlayer(data: Partial<HanabiPlayer> = {}): HanabiPlayer {
 	};
 }
 
-export function generateRandomDeck(includePurple = false): HanabiTile[] {
+export function generateRandomDeck(
+	includePurple = false,
+	seed: string | undefined = undefined,
+): HanabiTile[] {
 	const tiles: HanabiTile[] = [];
 
 	const colors: HanabiTileColor[] = ['red', 'blue', 'green', 'yellow', 'white'];
@@ -243,7 +248,7 @@ export function generateRandomDeck(includePurple = false): HanabiTile[] {
 		}
 	}
 
-	return shuffle(tiles);
+	return shuffle(tiles, seed);
 }
 
 export const HANABI_BLANK_TILE: HanabiTile = { id: '', number: 1, color: 'red', zIndex: 0 };

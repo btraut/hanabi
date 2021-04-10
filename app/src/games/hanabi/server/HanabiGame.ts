@@ -326,7 +326,10 @@ export default class HanabiGame extends Game {
 
 		// Generate a fresh deck and randomize the tiles.
 		const players = Object.values(this._gameData.players);
-		const tiles = generateRandomDeck(this._gameData.ruleSet !== HanabiRuleSet.Basic);
+		const tiles = generateRandomDeck(
+			this._gameData.ruleSet !== HanabiRuleSet.Basic,
+			this._gameData.seed,
+		);
 		const tilesInHand = HANABI_TILES_IN_HAND[players.length];
 
 		for (const player of players) {
