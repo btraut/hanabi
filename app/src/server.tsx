@@ -2,6 +2,7 @@ import 'cross-fetch/polyfill';
 
 import HanabiGameFactory from 'app/src/games/hanabi/server/HanabiGameFactory';
 import GameManager from 'app/src/games/server/GameManager';
+import LocalFileGameStore from 'app/src/games/server/LocalFileGameStore';
 import Logger from 'app/src/utils/server/Logger';
 import SocketManager from 'app/src/utils/server/SocketManager';
 import * as bodyParser from 'body-parser';
@@ -122,7 +123,8 @@ try {
 		setInterval(() => socketManager.prune(), 1000 * 60);
 
 		// Start a game manager.
-		const gameManager = new GameManager(socketManager, path.resolve(ROOT_PATH, SAVED_GAMES_PATH));
+		const gameStore = new LocalFileGameStore(path.resolve(ROOT_PATH, SAVED_GAMES_PATH));
+		const gameManager = new GameManager(socketManager, gameStore);
 
 		// Add games.
 		gameManager.addGameFactory(new HanabiGameFactory());

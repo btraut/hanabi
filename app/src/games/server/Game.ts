@@ -1,5 +1,5 @@
+import { SaveGameDelegate } from 'app/src/games/server/GameStore';
 import { generateGameCode } from 'app/src/games/server/generateGameCode';
-import { SaveGameDelegate } from 'app/src/games/server/SaveGameDelegate';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface GameSerialized {
@@ -45,10 +45,11 @@ export default class Game {
 		return this._updated;
 	}
 
-	public saveGameDelegate: SaveGameDelegate | null = null;
+	protected _saveGameDelegate: SaveGameDelegate;
 
-	constructor(creatorId: string) {
+	constructor(creatorId: string, saveGameDelegate: SaveGameDelegate) {
 		this._creatorId = creatorId;
+		this._saveGameDelegate = saveGameDelegate;
 
 		this._id = uuidv4();
 		this._code = generateGameCode();
@@ -73,15 +74,12 @@ export default class Game {
 	// Subclasses should call this method whenever data or state changes.
 	protected _update(): void {
 		this._updated = new Date();
-
-		if (this.saveGameDelegate) {
-			this.saveGameDelegate.saveGame(this);
-		}
+		this._saveGameDelegate.saveGame(this);
 	}
 
 	// This game is being deleted and it should clean up all subscriptions and
-	// assets. Children may override but should call super.
+	// assets. Children may override.
 	public cleanUp(): void {
-		this.saveGameDelegate = null;
+		// Noop.
 	}
 }

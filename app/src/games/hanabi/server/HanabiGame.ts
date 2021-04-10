@@ -31,6 +31,7 @@ import {
 import { findBlankSpaceForTile } from 'app/src/games/hanabi/HanabiTileUtils';
 import Game, { GameSerialized } from 'app/src/games/server/Game';
 import GameMessenger from 'app/src/games/server/GameMessenger';
+import { SaveGameDelegate } from 'app/src/games/server/GameStore';
 import UserConnectionListener, {
 	UserConnectionChange,
 } from 'app/src/games/server/UserConnectionListener';
@@ -57,8 +58,12 @@ export default class HanabiGame extends Game {
 	constructor(
 		creatorIdOrData: string | HanabiGameSerialized,
 		socketManager: ServerSocketManager<HanabiMessage>,
+		saveGameDelegate: SaveGameDelegate,
 	) {
-		super(typeof creatorIdOrData === 'string' ? creatorIdOrData : creatorIdOrData.creatorId);
+		super(
+			typeof creatorIdOrData === 'string' ? creatorIdOrData : creatorIdOrData.creatorId,
+			saveGameDelegate,
+		);
 
 		if (typeof creatorIdOrData !== 'string') {
 			this._id = creatorIdOrData.id;

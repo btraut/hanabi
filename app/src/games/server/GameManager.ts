@@ -1,25 +1,25 @@
 import { GAME_MANAGER_SCOPE, GameManagerMessage } from 'app/src/games/GameManagerMessages';
 import Game from 'app/src/games/server/Game';
 import GameFactory from 'app/src/games/server/GameFactory';
+import { GameStore } from 'app/src/games/server/GameStore';
 import SocketManager from 'app/src/utils/server/SocketManager';
-import { existsSync, promises } from 'fs';
 
 export default class GameManager {
 	private _gameFactories: { [title: string]: GameFactory } = {};
 	private _games: { [id: string]: Game } = {};
 
-	private _savedGamesPath: string;
-
 	private _socketManager: SocketManager<GameManagerMessage>;
 	private _socketManagerOnMessageSubscriptionId: number | null = null;
 
-	constructor(socketManager: SocketManager<GameManagerMessage>, savedGamesPath: string) {
+	private _gameStore: GameStore;
+
+	constructor(socketManager: SocketManager<GameManagerMessage>, gameStore: GameStore) {
 		this._socketManager = socketManager;
 		this._socketManagerOnMessageSubscriptionId = socketManager.addScopedMessageHandler(
 			this._handleMessage,
 			GAME_MANAGER_SCOPE,
 		);
-		this._savedGamesPath = savedGamesPath;
+		this._gameStore = gameStore;
 	}
 
 	public cleanUp(): void {
@@ -37,7 +37,7 @@ export default class GameManager {
 	}
 
 	public async restoreGames(): Promise<void> {
-		const gameData = await this._readSavedGameData();
+		const gameData = await this._gameStore.loadGameData();
 
 		for (const title in gameData) {
 			if (!this._gameFactories[title]) {
@@ -45,76 +45,15 @@ export default class GameManager {
 			}
 
 			for (const gameFileData of gameData[title]) {
-				const game = this._gameFactories[title].hydrate(gameFileData, this._socketManager);
-				game.saveGameDelegate = this;
+				const game = this._gameFactories[title].hydrate(
+					gameFileData,
+					this._socketManager,
+					this._gameStore,
+				);
 				this._games[game.id] = game;
 
 				console.log(`Restoring ${title} game ${game.id}.`);
 			}
-		}
-	}
-
-	private async _readSavedGameData(): Promise<{ [title: string]: string[] }> {
-		const { lstat, readdir, readFile } = promises;
-
-		const gameData: { [title: string]: string[] } = {};
-
-		if (!existsSync(this._savedGamesPath)) {
-			return gameData;
-		}
-
-		const gameDirs = await readdir(this._savedGamesPath);
-
-		for (const title of gameDirs) {
-			const stat = await lstat(`${this._savedGamesPath}/${title}`);
-
-			if (!stat.isDirectory()) {
-				continue;
-			}
-
-			gameData[title] = [];
-
-			const gameFiles = await readdir(`${this._savedGamesPath}/${title}`);
-
-			for (const gameFile of gameFiles) {
-				const gameFileData = await readFile(`${this._savedGamesPath}/${title}/${gameFile}`, 'utf8');
-				gameData[title].push(gameFileData);
-			}
-		}
-
-		return gameData;
-	}
-
-	public async saveGames(): Promise<void> {
-		await Promise.all(Object.values(this._games).map(this.saveGame));
-	}
-
-	public async saveGame(game: Game): Promise<void> {
-		const { writeFile, mkdir } = promises;
-
-		const serialized = game.serialize();
-		const path = `${this._savedGamesPath}/${game.title}/${game.id}`;
-
-		if (!existsSync(this._savedGamesPath)) {
-			await mkdir(this._savedGamesPath);
-		}
-
-		if (!existsSync(`${this._savedGamesPath}/${game.title}`)) {
-			await mkdir(`${this._savedGamesPath}/${game.title}`);
-		}
-
-		if (serialized !== null) {
-			await writeFile(path, serialized);
-		}
-	}
-
-	public async deleteGame(game: Game): Promise<void> {
-		const { rm } = promises;
-
-		const path = `${this._savedGamesPath}/${game.title}/${game.id}`;
-
-		if (existsSync(path)) {
-			await rm(path);
 		}
 	}
 
@@ -130,8 +69,7 @@ export default class GameManager {
 		}
 
 		// Make the game.
-		const game = this._gameFactories[title].create(userId, this._socketManager);
-		game.saveGameDelegate = this;
+		const game = this._gameFactories[title].create(userId, this._socketManager, this._gameStore);
 		this._games[game.id] = game;
 
 		// Add the watcher.
@@ -175,7 +113,7 @@ export default class GameManager {
 
 	public _removeGame(id: string): void {
 		this._games[id].cleanUp();
-		this.deleteGame(this._games[id]);
+		this._gameStore.deleteGame(this._games[id]);
 		delete this._games[id];
 	}
 
