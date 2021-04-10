@@ -2,8 +2,10 @@ import 'cross-fetch/polyfill';
 
 import HanabiGameFactory from 'app/src/games/hanabi/server/HanabiGameFactory';
 import GameManager from 'app/src/games/server/GameManager';
-import LocalFileGameStore from 'app/src/games/server/LocalFileGameStore';
+// import LocalFileGameStore from 'app/src/games/server/LocalFileGameStore';
+import RedisGameStore from 'app/src/games/server/RedisGameStore';
 import Logger from 'app/src/utils/server/Logger';
+import RedisClient from 'app/src/utils/server/RedisClient';
 import SocketManager from 'app/src/utils/server/SocketManager';
 import * as bodyParser from 'body-parser';
 import compress from 'compression';
@@ -26,7 +28,7 @@ declare const RELATIVE_ROOT_PATH: string;
 declare const ENV_PATH: string;
 declare const VIEWS_PATH: string;
 declare const PUBLIC_ASSETS_PATH: string;
-declare const SAVED_GAMES_PATH: string;
+// declare const SAVED_GAMES_PATH: string;
 
 const SESSION_COOKIE_NAME = 'SESSION';
 
@@ -122,8 +124,13 @@ try {
 		socketManager.prune();
 		setInterval(() => socketManager.prune(), 1000 * 60);
 
+		// Connect to Redis.
+		const redisClient = new RedisClient();
+		redisClient.connect(process.env.REDIS_URL || '');
+
 		// Start a game manager.
-		const gameStore = new LocalFileGameStore(path.resolve(ROOT_PATH, SAVED_GAMES_PATH));
+		// const gameStore = new LocalFileGameStore(path.resolve(ROOT_PATH, SAVED_GAMES_PATH));
+		const gameStore = new RedisGameStore(redisClient);
 		const gameManager = new GameManager(socketManager, gameStore);
 
 		// Add games.
