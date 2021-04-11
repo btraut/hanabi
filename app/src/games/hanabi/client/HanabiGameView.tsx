@@ -5,7 +5,6 @@ import HanabiHeader from 'app/src/games/hanabi/client/HanabiHeader';
 import HanabiHighlightTileController from 'app/src/games/hanabi/client/HanabiHighlightController';
 import HanabiLobby from 'app/src/games/hanabi/client/HanabiLobby';
 import HanabiNewestTileController from 'app/src/games/hanabi/client/HanabiNewestTileController';
-import HanabiStyles from 'app/src/games/hanabi/client/HanabiStyles';
 import useTileDrop from 'app/src/games/hanabi/client/useTileDrop';
 import { HanabiStage } from 'app/src/games/hanabi/HanabiGameData';
 
@@ -32,7 +31,6 @@ export default function HanabiGameView(): JSX.Element | null {
 								</div>
 								<div id="portal" />
 							</div>
-							<HanabiStyles />
 						</BreakpointController>
 					</HanabiNewestTileController>
 				</HanabiHighlightTileController>

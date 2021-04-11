@@ -56,11 +56,11 @@ export enum HanabiFinishedReason {
 
 export enum HanabiRuleSet {
 	Basic = 'Basic',
-	PurpleDistinct = 'PurpleDistinct',
-	PurpleDecoy = 'PurpleDecoy',
+	RainbowDistinct = 'RainbowDistinct',
+	RainbowDecoy = 'RainbowDecoy',
 }
 
-export type HanabiTileColor = 'red' | 'blue' | 'green' | 'yellow' | 'white' | 'purple';
+export type HanabiTileColor = 'red' | 'blue' | 'green' | 'yellow' | 'white' | 'rainbow';
 
 export type HanabiTileNumber = 1 | 2 | 3 | 4 | 5;
 
@@ -77,7 +77,7 @@ export const tileColorClasses = {
 	green: 'text-green-500',
 	yellow: 'text-yellow-500',
 	white: 'text-white',
-	purple: 'text-purple-500',
+	rainbow: 'text-rainbow',
 };
 
 export const tileBackgroundClasses = {
@@ -86,7 +86,7 @@ export const tileBackgroundClasses = {
 	green: 'bg-green-500',
 	yellow: 'bg-yellow-500',
 	white: 'bg-white',
-	purple: 'bg-purple-500',
+	rainbow: 'bg-rainbow',
 };
 
 export interface HanabiTileLocation {
@@ -225,14 +225,14 @@ export function generatePlayer(data: Partial<HanabiPlayer> = {}): HanabiPlayer {
 }
 
 export function generateRandomDeck(
-	includePurple = false,
+	includeRainbow = false,
 	seed: string | undefined = undefined,
 ): HanabiTile[] {
 	const tiles: HanabiTile[] = [];
 
 	const colors: HanabiTileColor[] = ['red', 'blue', 'green', 'yellow', 'white'];
-	if (includePurple) {
-		colors.push('purple');
+	if (includeRainbow) {
+		colors.push('rainbow');
 	}
 
 	const numbers: HanabiTileNumber[] = [1, 1, 1, 2, 2, 3, 3, 4, 4, 5];

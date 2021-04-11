@@ -260,7 +260,7 @@ export default class HanabiGame extends Game {
 		// Settings specific validation:
 		if (typeof message.data.ruleSet === 'number') {
 			if (
-				![HanabiRuleSet.Basic, HanabiRuleSet.PurpleDecoy, HanabiRuleSet.PurpleDistinct].includes(
+				![HanabiRuleSet.Basic, HanabiRuleSet.RainbowDecoy, HanabiRuleSet.RainbowDistinct].includes(
 					message.data.ruleSet,
 				)
 			) {

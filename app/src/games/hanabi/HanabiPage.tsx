@@ -1,7 +1,8 @@
 import SocketManagerController from 'app/src/components/SocketController';
 import GameManagerController from 'app/src/games/client/GameManagerController';
 import HanabiController from 'app/src/games/hanabi/client/HanabiController';
-import HanabiGameView from 'app/src/games/hanabi/client/HanabiRouter';
+import HanabiRouter from 'app/src/games/hanabi/client/HanabiRouter';
+import HanabiStyles from 'app/src/games/hanabi/client/HanabiStyles';
 import Page from 'app/src/pages/Page';
 import useSetTitle from 'app/src/utils/client/useSetTitle';
 import { DndProvider } from 'react-dnd';
@@ -17,7 +18,8 @@ const HanabiPage: Page = () => {
 			<GameManagerController>
 				<HanabiController>
 					<DndProvider backend={HTML5Backend}>
-						<HanabiGameView />
+						<HanabiStyles />
+						<HanabiRouter />
 					</DndProvider>
 				</HanabiController>
 			</GameManagerController>

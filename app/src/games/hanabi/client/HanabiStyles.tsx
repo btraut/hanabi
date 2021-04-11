@@ -50,6 +50,15 @@ export default function HanabiStyles(): JSX.Element {
 	}
 }
 
+.text-rainbow {
+	background: linear-gradient(to top, #3b83f6 24%, #10b981 36%, #f59f0b 66%, #f43f5d 76%);
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+}
+.bg-rainbow {
+	background: linear-gradient(to top, #3b83f6, #10b981, #f59f0b, #f43f5d);
+}
+
 	`}</style>
 	);
 }

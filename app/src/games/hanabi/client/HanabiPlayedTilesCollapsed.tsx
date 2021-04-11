@@ -18,7 +18,7 @@ export default function HanabiPlayedTiles(): JSX.Element {
 
 	const colors: HanabiTileColor[] = ['red', 'blue', 'green', 'yellow', 'white'];
 	if (gameData.ruleSet !== HanabiRuleSet.Basic) {
-		colors.push('purple');
+		colors.push('rainbow');
 	}
 
 	const maxScore = colors.length * TILE_NUMBERS.length;
