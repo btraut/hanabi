@@ -6,13 +6,12 @@
 // Note: All the state we hold in this class is specific to the viewing user and
 // none of it is sent back up the wire.
 
+import HanabiAnimatableBuilder from 'app/src/games/hanabi/client/HanabiAnimatableBuilder';
 import HanabiGame from 'app/src/games/hanabi/client/HanabiGame';
-import {
-	HanabiGameAction,
-	HanabiGameActionType,
-	HanabiGameData,
-} from 'app/src/games/hanabi/HanabiGameData';
+import { HanabiAnimatable } from 'app/src/games/hanabi/HanabiAnimatables';
+import { HanabiGameData } from 'app/src/games/hanabi/HanabiGameData';
 import PubSub from 'app/src/utils/PubSub';
+import { v4 as uuidv4 } from 'uuid';
 
 export default class HanabiAnimationManager {
 	public onUpdate = new PubSub<void>();
@@ -24,22 +23,19 @@ export default class HanabiAnimationManager {
 	}
 
 	// List all the animations that should play.
-	private _animateActions: HanabiGameAction[] = [];
-	public get animateActions(): HanabiGameAction[] {
-		return this._animateActions;
+	private _animating = false;
+	private _animatables: { [id: string]: HanabiAnimatable } = {};
+	public get animatables(): { [id: string]: HanabiAnimatable } {
+		return this._animatables;
 	}
 
 	private _game: HanabiGame;
 	private _gameOnUpdateSubscriptionIdRef: number;
 
-	private _lastHandledGameState: HanabiGameData;
-	private _animatingGameState: HanabiGameData | null = null;
-
 	private _gameStateQueue: HanabiGameData[] = [];
 
 	constructor(game: HanabiGame) {
 		this._game = game;
-		this._lastHandledGameState = game.gameData;
 		this._displayGameData = game.gameData;
 		this._gameOnUpdateSubscriptionIdRef = game.onUpdate.subscribe(this._handleUpdate);
 	}
@@ -54,7 +50,7 @@ export default class HanabiAnimationManager {
 	};
 
 	private _executeQueueIfIdle() {
-		if (this._gameStateQueue.length && !this._animatingGameState) {
+		if (this._gameStateQueue.length && !this._animating) {
 			this._handleNextGameState();
 		}
 	}
@@ -64,7 +60,7 @@ export default class HanabiAnimationManager {
 			throw new Error('Empty game state queue!');
 		}
 
-		if (this._animatingGameState) {
+		if (this._animating) {
 			throw new Error('Can’t animate game state while animation is in flight!');
 		}
 
@@ -76,85 +72,62 @@ export default class HanabiAnimationManager {
 			return;
 		}
 
-		// Check if we're skipping way ahead in time or if we're only handling a
-		// single action. We're only going to animate if it's a single action.
-		if (nextGameState.actions.length - this._lastHandledGameState.actions.length !== 1) {
+		// TODO: Compare current and next state and create list of animatable
+		// changes.
+
+		// Create animations for each animatable change.
+		const animatables = HanabiAnimatableBuilder.buildAnimatables(
+			this._displayGameData,
+			nextGameState,
+		);
+
+		// If there's nothing to animate, we can skip to the next state.
+		if (animatables.length === 0) {
 			this._replaceStateAndAdvance(nextGameState);
 			return;
 		}
 
-		// Grab the latest action.
-		const action = nextGameState.actions[nextGameState.actions.length - 1];
+		this._animating = true;
+		this._animatables = {};
 
-		// Only animate if the action is a discard or play. We could animate
-		// clues or other stuff in the future, but for now, this is it.
-		if (action.type !== HanabiGameActionType.Discard && action.type !== HanabiGameActionType.Play) {
-			this._replaceStateAndAdvance(nextGameState);
-			return;
+		for (const animatable of animatables) {
+			this._animatables[uuidv4()] = animatable;
 		}
-
-		// Set up the animations.
-		this._animateActions = [action];
-		this._animatingGameState = nextGameState;
 
 		// Copy the next game state to the display state.
 		this._displayGameData = { ...nextGameState };
-
-		// Since we're animating a discard or a play and the user has picked up
-		// a new tile, we need to hide the new and old tiles. The animations
-		// will display both of these.
-		this._displayGameData.players = { ...this._displayGameData.players };
-		this._displayGameData.players[action.playerId] = {
-			...this._displayGameData.players[action.playerId],
-		};
-		this._displayGameData.players[action.playerId].tileLocations = this._displayGameData.players[
-			action.playerId
-		].tileLocations.filter(
-			(tl) => tl.tile.id !== action.newTile?.id && tl.tile.id !== action.tile.id,
-		);
-
-		// We also need to hide the tile from the played/discarded pile until
-		// the animation is finished.
-		if (action.type === HanabiGameActionType.Play) {
-			this._displayGameData.playedTiles = this._displayGameData.playedTiles.filter(
-				(t) => t.id !== action.tile.id,
-			);
-		} else if (action.type === HanabiGameActionType.Discard) {
-			this._displayGameData.discardedTiles = this._displayGameData.discardedTiles.filter(
-				(t) => t.id !== action.tile.id,
-			);
-		}
 
 		// Update. This will cause the animators to start animating.
 		this.onUpdate.emit();
 
 		// TODO: For now, we'll just auto-advance after a second.
 		setTimeout(() => {
-			this.animationsCompleted();
+			this._handleAllAnimationsComplete();
 		}, 1000);
 	}
 
 	private _replaceStateAndAdvance(nextGameState: HanabiGameData) {
-		this._animateActions = [];
-		this._animatingGameState = null;
+		this._animating = false;
+		this._animatables = {};
 		this._displayGameData = nextGameState;
-		this._lastHandledGameState = nextGameState;
 
 		this.onUpdate.emit();
 
 		this._executeQueueIfIdle();
 	}
 
-	// The animation component should call this when all animations are
-	// complete.
-	public animationsCompleted(): void {
-		if (!this._animatingGameState) {
-			throw new Error('Can’t complete animation if we’re not animating!');
-		}
+	// The animation component should call this when an animation is complete.
+	public animationsCompleted(id: string): void {
+		delete this._animatables[id];
 
-		this._lastHandledGameState = this._animatingGameState;
-		this._animatingGameState = null;
-		this._animateActions = [];
+		if (Object.keys(this._animatables).length === 0) {
+			this._handleAllAnimationsComplete();
+		}
+	}
+
+	private _handleAllAnimationsComplete() {
+		this._animating = false;
+		this._animatables = {};
 
 		this._executeQueueIfIdle();
 	}

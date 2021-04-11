@@ -1,5 +1,5 @@
 import { useUserId } from 'app/src/components/SocketContext';
-import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
+import { useHanabiAnimationManager } from 'app/src/games/hanabi/client/HanabiContext';
 import { useHanabiHighlightContext } from 'app/src/games/hanabi/client/HanabiHighlightContext';
 import HanabiInteractiveTileView from 'app/src/games/hanabi/client/HanabiInteractiveTileView';
 import { useNewestTile } from 'app/src/games/hanabi/client/HanabiNewestTileContext';
@@ -13,18 +13,21 @@ interface Props {
 }
 
 export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Element {
-	const game = useHanabiGame();
+	const animationManager = useHanabiAnimationManager();
+	const { displayGameData: gameData } = animationManager;
 	const userId = useUserId();
 
 	const { highlightedTiles } = useHanabiHighlightContext();
 	const newestTileId = useNewestTile();
 
 	const ownTiles = id === userId;
-	const ownTurn = game.gameData.turnOrder[0] === userId;
+	const ownTurn = gameData.turnOrder[0] === userId;
 
-	const player = game.gameData.players[id];
+	const player = gameData.players[id];
 	const enableOnClick = ownTurn && onTileClick;
-	const gameStillPlaying = game.gameData.finishedReason === null;
+	const gameStillPlaying = gameData.finishedReason === null;
+
+	console.log(player.tileLocations[4].position);
 
 	return (
 		<div>

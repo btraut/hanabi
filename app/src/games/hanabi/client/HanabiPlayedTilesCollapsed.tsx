@@ -1,4 +1,4 @@
-import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
+import { useHanabiAnimationManager } from 'app/src/games/hanabi/client/HanabiContext';
 import { useHanabiHighlightContext } from 'app/src/games/hanabi/client/HanabiHighlightContext';
 import HanabiTileView, { TileViewSize } from 'app/src/games/hanabi/client/HanabiTileView';
 import {
@@ -11,12 +11,13 @@ import classnames from 'classnames';
 const TILE_NUMBERS: HanabiTileNumber[] = [1, 2, 3, 4, 5];
 
 export default function HanabiPlayedTiles(): JSX.Element {
-	const game = useHanabiGame();
+	const animationManager = useHanabiAnimationManager();
+	const { displayGameData: gameData } = animationManager;
 
 	const { highlightedTiles } = useHanabiHighlightContext();
 
 	const colors: HanabiTileColor[] = ['red', 'blue', 'green', 'yellow', 'white'];
-	if (game.gameData.ruleSet !== HanabiRuleSet.Basic) {
+	if (gameData.ruleSet !== HanabiRuleSet.Basic) {
 		colors.push('purple');
 	}
 
@@ -25,7 +26,7 @@ export default function HanabiPlayedTiles(): JSX.Element {
 	return (
 		<div className="grid grid-flow-col justify-start gap-1 items-center">
 			{colors.map((color) => {
-				const coloredTiles = game.gameData.playedTiles
+				const coloredTiles = gameData.playedTiles
 					.filter((t) => t.color === color)
 					.sort((a, b) => (a.number < b.number ? -1 : 1));
 				const greatestTile =
@@ -48,7 +49,7 @@ export default function HanabiPlayedTiles(): JSX.Element {
 					</div>
 				);
 			})}
-			<div className="text-lg font-bold mx-1">{`${game.gameData.playedTiles.length}/${maxScore}`}</div>
+			<div className="text-lg font-bold mx-1">{`${gameData.playedTiles.length}/${maxScore}`}</div>
 		</div>
 	);
 }

@@ -1,5 +1,8 @@
 import { useUserId } from 'app/src/components/SocketContext';
-import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
+import {
+	useHanabiAnimationManager,
+	useHanabiGame,
+} from 'app/src/games/hanabi/client/HanabiContext';
 import HanabiMenuButton from 'app/src/games/hanabi/client/HanabiMenuButton';
 import HanabiPopup from 'app/src/games/hanabi/client/HanabiPopup';
 import { HanabiFinishedReason } from 'app/src/games/hanabi/HanabiGameData';
@@ -24,9 +27,11 @@ interface Props {
 
 export default function HanabiGameOverPopup({ onClose }: Props): JSX.Element | null {
 	const game = useHanabiGame();
+	const animationManager = useHanabiAnimationManager();
+	const { displayGameData: gameData } = animationManager;
 	const userId = useUserId();
 
-	const { finishedReason } = game.gameData;
+	const { finishedReason } = gameData;
 	if (finishedReason === null) {
 		return null;
 	}
@@ -41,7 +46,7 @@ export default function HanabiGameOverPopup({ onClose }: Props): JSX.Element | n
 					{GAME_OVER_MESSAGES[finishedReason]}
 				</p>
 				<div className="grid grid-flow-col gap-x-4 justify-center">
-					{game.gameData.players[userId] && (
+					{gameData.players[userId] && (
 						<HanabiMenuButton
 							label="New Game"
 							onClick={() => {

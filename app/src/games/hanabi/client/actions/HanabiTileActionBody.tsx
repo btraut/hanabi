@@ -1,4 +1,4 @@
-import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
+import { useHanabiAnimationManager } from 'app/src/games/hanabi/client/HanabiContext';
 import HanabiTileView, { TileViewSize } from 'app/src/games/hanabi/client/HanabiTileView';
 import {
 	HanabiGameActionDiscard,
@@ -16,8 +16,10 @@ interface Props {
 const ENGLISH_NUMBERS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six'];
 
 export default function HanabiTileActionBody({ action }: Props): JSX.Element | null {
-	const game = useHanabiGame();
-	const player = game.gameData.players[action.playerId];
+	const animationManager = useHanabiAnimationManager();
+	const { displayGameData: gameData } = animationManager;
+
+	const player = gameData.players[action.playerId];
 
 	if (action.type === HanabiGameActionType.Play) {
 		if (action.valid) {
@@ -71,7 +73,7 @@ export default function HanabiTileActionBody({ action }: Props): JSX.Element | n
 		action.type === HanabiGameActionType.GiveColorClue ||
 		action.type === HanabiGameActionType.GiveNumberClue
 	) {
-		const recipient = game.gameData.players[action.recipientId];
+		const recipient = gameData.players[action.recipientId];
 
 		const clue =
 			action.type === HanabiGameActionType.GiveColorClue ? (

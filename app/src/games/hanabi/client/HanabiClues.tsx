@@ -1,12 +1,13 @@
 import HanabiClue from 'app/src/games/hanabi/client/HanabiClue';
-import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
+import { useHanabiAnimationManager } from 'app/src/games/hanabi/client/HanabiContext';
 import { HANABI_MAX_CLUES } from 'app/src/games/hanabi/HanabiGameData';
 import classnames from 'classnames';
 
 export default function HanabiClues(): JSX.Element {
-	const game = useHanabiGame();
+	const animationManager = useHanabiAnimationManager();
+	const { displayGameData: gameData } = animationManager;
 
-	const remainingClues = game.gameData.clues;
+	const remainingClues = gameData.clues;
 
 	return (
 		<div className="grid grid-flow-col gap-0.5">

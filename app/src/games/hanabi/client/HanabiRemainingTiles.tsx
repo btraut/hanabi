@@ -1,4 +1,4 @@
-import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
+import { useHanabiAnimationManager } from 'app/src/games/hanabi/client/HanabiContext';
 import HanabiTileView, { TileViewSize } from 'app/src/games/hanabi/client/HanabiTileView';
 import { HANABI_TILE_SIZE_SMALL } from 'app/src/games/hanabi/HanabiGameData';
 import classnames from 'classnames';
@@ -7,9 +7,10 @@ const TILE_OFFSET = 4;
 const MAX_STACKED_TILES = 5;
 
 export default function HanabiRemainingTiles(): JSX.Element {
-	const game = useHanabiGame();
+	const animationManager = useHanabiAnimationManager();
+	const { displayGameData: gameData } = animationManager;
 
-	const remainingTiles = game.gameData.remainingTiles.length;
+	const remainingTiles = gameData.remainingTiles.length;
 	const visibleRemainingTiles = Math.min(remainingTiles, MAX_STACKED_TILES);
 
 	return (

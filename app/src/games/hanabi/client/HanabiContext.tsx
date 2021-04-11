@@ -63,14 +63,21 @@ export function useHanabiGame(): HanabiGame {
 // HanabiContext, but this time, an animation manager. Animation managers
 // also subscribe to changes in game state, so it's likely you'd use either
 // useHanabiGame or useHanabiAnimationManager but not both.
-export function useHanabiAnimationManager(refreshOnUpdate = true): HanabiAnimationManager | null {
+export function useHanabiAnimationManager(refreshOnUpdate = true): HanabiAnimationManager {
 	const contextValue = useContext(context);
 
 	if (contextValue === null) {
-		throw new Error('useHanabiGame must be used within a HanabiContextProvider');
+		throw new Error('useHanabiAnimationManager must be used within a HanabiContextProvider');
 	}
 
-	const animationManager = contextValue.animationManager;
+	const { animationManager } = contextValue;
+
+	if (!animationManager) {
+		throw new Error(
+			'useHanabiAnimationManager expects an animationManager to be loaded in context.',
+		);
+	}
+
 	const animationManagerOnUpdateSubscriptionIdRef = useRef<number | null>(null);
 
 	const forceRefresh = useForceRefresh();

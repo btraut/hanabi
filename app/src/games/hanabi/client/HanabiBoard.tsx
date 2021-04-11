@@ -2,7 +2,10 @@ import { useBreakpointContext } from 'app/src/components/BreakpointContext';
 import { useUserId } from 'app/src/components/SocketContext';
 import HanabiActions from 'app/src/games/hanabi/client/HanabiActions';
 import HanabiClues from 'app/src/games/hanabi/client/HanabiClues';
-import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
+import {
+	useHanabiAnimationManager,
+	useHanabiGame,
+} from 'app/src/games/hanabi/client/HanabiContext';
 import HanabiDiscardedTilesCollapsed from 'app/src/games/hanabi/client/HanabiDiscardedTilesCollapsed';
 import HanabiGameOverPopup from 'app/src/games/hanabi/client/HanabiGameOverPopup';
 import HanabiLives from 'app/src/games/hanabi/client/HanabiLives';
@@ -32,9 +35,12 @@ function rotateArrayToItem<T>(arr: T[], item: T): T[] {
 
 export default function HanabiBoard(): JSX.Element {
 	const game = useHanabiGame();
+	const animationManager = useHanabiAnimationManager();
+	const { displayGameData: gameData } = animationManager;
+
 	const userId = useUserId();
 
-	const turnOrder = rotateArrayToItem(game.gameData.turnOrder, userId);
+	const turnOrder = rotateArrayToItem(gameData.turnOrder, userId);
 
 	const [showMenuForTile, setShowMenuForTile] = useState<{
 		tile: HanabiTile;
@@ -48,15 +54,13 @@ export default function HanabiBoard(): JSX.Element {
 	const handleTileClick = useCallback(
 		(event: React.MouseEvent<HTMLDivElement>, tile: HanabiTile) => {
 			const rect = (event.target as any).getBoundingClientRect();
-			const ownTile = !!game.gameData.players[userId].tileLocations.find(
-				(tl) => tl.tile.id === tile.id,
-			);
+			const ownTile = !!gameData.players[userId].tileLocations.find((tl) => tl.tile.id === tile.id);
 
 			// What menu should we display?
 			let type = ownTile
 				? HanabiTileActionsTooltipType.Own
 				: HanabiTileActionsTooltipType.OtherPlayer;
-			if (game.gameData.clues === 0 && !ownTile) {
+			if (gameData.clues === 0 && !ownTile) {
 				type = HanabiTileActionsTooltipType.NoClues;
 			}
 
@@ -69,15 +73,15 @@ export default function HanabiBoard(): JSX.Element {
 				},
 			});
 		},
-		[game, userId],
+		[gameData, userId],
 	);
 
 	const handleActionsTooltipAction = useCallback(
 		(action: 'discard' | 'play' | 'color' | 'number', tile: HanabiTile) => {
 			let tileOwner: string | null = null;
 
-			for (const playerId in game.gameData.players) {
-				if (game.gameData.players[playerId].tileLocations.find((tl) => tl.tile.id === tile.id)) {
+			for (const playerId in gameData.players) {
+				if (gameData.players[playerId].tileLocations.find((tl) => tl.tile.id === tile.id)) {
 					tileOwner = playerId;
 					break;
 				}
@@ -104,20 +108,20 @@ export default function HanabiBoard(): JSX.Element {
 
 			setShowMenuForTile(null);
 		},
-		[game],
+		[game, gameData],
 	);
 
 	const handleActionsTooltipOnClose = useCallback(() => {
 		setShowMenuForTile(null);
 	}, []);
 
-	const [showGameOverPopup, setShowGameOverPopup] = useState(!!game.gameData.finishedReason);
-	const gameFinishedReasonChanged = useValueChanged(game.gameData.finishedReason);
+	const [showGameOverPopup, setShowGameOverPopup] = useState(!!gameData.finishedReason);
+	const gameFinishedReasonChanged = useValueChanged(gameData.finishedReason);
 	useEffect(() => {
 		if (gameFinishedReasonChanged) {
-			setShowGameOverPopup(!!game.gameData.finishedReason);
+			setShowGameOverPopup(!!gameData.finishedReason);
 		}
-	}, [gameFinishedReasonChanged, game.gameData.finishedReason]);
+	}, [gameFinishedReasonChanged, gameData.finishedReason]);
 
 	const breakpoints = useBreakpointContext();
 
@@ -126,8 +130,8 @@ export default function HanabiBoard(): JSX.Element {
 			<div>
 				<div
 					className={classnames('border-4 border-black rounded-xl overflow-y-auto mb-6', {
-						'bg-white': game.gameData.actions.length % 2 === 1,
-						'bg-gray-200': game.gameData.actions.length % 2 === 0,
+						'bg-white': gameData.actions.length % 2 === 1,
+						'bg-gray-200': gameData.actions.length % 2 === 0,
 					})}
 					style={{ maxHeight: 160 }}
 				>
@@ -142,7 +146,7 @@ export default function HanabiBoard(): JSX.Element {
 							<HanabiLives />
 						</div>
 						<HanabiPlayedTilesCollapsed />
-						{game.gameData.discardedTiles.length > 0 && <HanabiDiscardedTilesCollapsed />}
+						{gameData.discardedTiles.length > 0 && <HanabiDiscardedTilesCollapsed />}
 					</div>
 				)}
 
@@ -152,7 +156,7 @@ export default function HanabiBoard(): JSX.Element {
 				>
 					{turnOrder.map((playerId) => {
 						const thisPlayersTurn =
-							game.gameData.finishedReason === null && game.gameData.turnOrder[0] === playerId;
+							gameData.finishedReason === null && gameData.turnOrder[0] === playerId;
 
 						return (
 							<Fragment key={`player-${playerId}`}>
@@ -167,7 +171,7 @@ export default function HanabiBoard(): JSX.Element {
 										borderRightWidth: 0,
 									}}
 								>
-									<HanabiPlayerAvatar player={game.gameData.players[playerId]} size="sm" />
+									<HanabiPlayerAvatar player={gameData.players[playerId]} size="sm" />
 									{thisPlayersTurn && userId === playerId && (
 										<p className="text-white italic whitespace-nowrap">Your turn!</p>
 									)}
@@ -177,7 +181,7 @@ export default function HanabiBoard(): JSX.Element {
 								</div>
 								<HanabiPlayerTiles
 									id={playerId}
-									onTileClick={game.gameData.finishedReason === null ? handleTileClick : undefined}
+									onTileClick={gameData.finishedReason === null ? handleTileClick : undefined}
 								/>
 							</Fragment>
 						);

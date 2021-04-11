@@ -1,12 +1,13 @@
-import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
+import { useHanabiAnimationManager } from 'app/src/games/hanabi/client/HanabiContext';
 import HanabiLife from 'app/src/games/hanabi/client/HanabiLife';
 import { HANABI_MAX_LIVES } from 'app/src/games/hanabi/HanabiGameData';
 import classnames from 'classnames';
 
 export default function HanabiLives(): JSX.Element {
-	const game = useHanabiGame();
+	const animationManager = useHanabiAnimationManager();
+	const { displayGameData: gameData } = animationManager;
 
-	const remainingLives = game.gameData.lives;
+	const remainingLives = gameData.lives;
 
 	return (
 		<div className="grid grid-flow-col gap-0.5 justify-start">

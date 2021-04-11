@@ -1,13 +1,14 @@
 import HanabiAction from 'app/src/games/hanabi/client/HanabiAction';
-import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
+import { useHanabiAnimationManager } from 'app/src/games/hanabi/client/HanabiContext';
 import useActionHighlighter from 'app/src/games/hanabi/client/useActionHighlighter';
 import useActionSounds from 'app/src/games/hanabi/client/useActionSounds';
 import classnames from 'classnames';
 
 export default function HanabiActions(): JSX.Element {
-	const game = useHanabiGame();
+	const animationManager = useHanabiAnimationManager();
+	const { displayGameData: gameData } = animationManager;
 
-	const actionsReversed = game.gameData.actions.slice().reverse();
+	const actionsReversed = gameData.actions.slice().reverse();
 
 	useActionHighlighter();
 	useActionSounds();

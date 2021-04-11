@@ -1,4 +1,4 @@
-import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
+import { useHanabiAnimationManager } from 'app/src/games/hanabi/client/HanabiContext';
 import { HanabiGameActionGameStarted } from 'app/src/games/hanabi/HanabiGameData';
 
 interface Props {
@@ -6,9 +6,10 @@ interface Props {
 }
 
 export default function HanabiGameStartedAction({ action }: Props): JSX.Element {
-	const game = useHanabiGame();
+	const animationManager = useHanabiAnimationManager();
+	const { displayGameData: gameData } = animationManager;
 
-	const player = game.gameData.players[action.startingPlayerId];
+	const player = gameData.players[action.startingPlayerId];
 
 	return (
 		<div className="text-md p-3">

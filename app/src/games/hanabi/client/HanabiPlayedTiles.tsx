@@ -1,4 +1,4 @@
-import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
+import { useHanabiAnimationManager } from 'app/src/games/hanabi/client/HanabiContext';
 import { useHanabiHighlightContext } from 'app/src/games/hanabi/client/HanabiHighlightContext';
 import HanabiTileView, { TileViewSize } from 'app/src/games/hanabi/client/HanabiTileView';
 import {
@@ -19,7 +19,8 @@ interface Props {
 export default function HanabiPlayedTiles({
 	tileSize: tileViewSize = TileViewSize.Regular,
 }: Props): JSX.Element {
-	const game = useHanabiGame();
+	const animationManager = useHanabiAnimationManager();
+	const { displayGameData: gameData } = animationManager;
 
 	const { highlightedTiles } = useHanabiHighlightContext();
 
@@ -27,7 +28,7 @@ export default function HanabiPlayedTiles({
 		tileViewSize === TileViewSize.Regular ? HANABI_TILE_SIZE : HANABI_TILE_SIZE_SMALL;
 
 	const colors: HanabiTileColor[] = ['red', 'blue', 'green', 'yellow', 'white'];
-	if (game.gameData.ruleSet !== HanabiRuleSet.Basic) {
+	if (gameData.ruleSet !== HanabiRuleSet.Basic) {
 		colors.push('purple');
 	}
 
@@ -37,7 +38,7 @@ export default function HanabiPlayedTiles({
 		greatestPlayedForEachColor[color] = null;
 
 		for (const number of TILE_NUMBERS) {
-			if (game.gameData.playedTiles.find((t) => t.color === color && t.number === number)) {
+			if (gameData.playedTiles.find((t) => t.color === color && t.number === number)) {
 				greatestPlayedForEachColor[color] = number;
 			} else {
 				break;
@@ -48,7 +49,7 @@ export default function HanabiPlayedTiles({
 	return (
 		<div className="grid grid-flow-row justify-start gap-1 xl:gap-2">
 			{colors.map((color) => {
-				const discardedTiles = game.gameData.discardedTiles.filter((t) => t.color === color);
+				const discardedTiles = gameData.discardedTiles.filter((t) => t.color === color);
 
 				return (
 					<div
@@ -58,7 +59,7 @@ export default function HanabiPlayedTiles({
 					>
 						<div className="grid grid-flow-col justify-start gap-0.5 xl:gap-1">
 							{TILE_NUMBERS.map((number) => {
-								const playedTile = game.gameData.playedTiles.find(
+								const playedTile = gameData.playedTiles.find(
 									(t) => t.color === color && t.number === number,
 								);
 
