@@ -14,7 +14,7 @@ export default class HanabiAnimatableBuilder {
 		if (newState.actions.length > previousState.actions.length) {
 			for (
 				let actionKey = previousState.actions.length + 1;
-				actionKey <= newState.actions.length;
+				actionKey < newState.actions.length;
 				actionKey += 1
 			) {
 				const action = newState.actions[actionKey];
