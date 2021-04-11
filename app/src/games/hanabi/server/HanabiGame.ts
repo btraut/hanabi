@@ -50,7 +50,9 @@ export default class HanabiGame extends Game {
 		return HANABI_GAME_TITLE;
 	}
 
-	private _gameData: HanabiGameData = generateHanabiGameData();
+	private _gameData: HanabiGameData = generateHanabiGameData({
+		ruleSet: HanabiRuleSet.RainbowDecoy,
+	});
 
 	private _messenger: GameMessenger<HanabiMessage>;
 	private _userConnectionListener: UserConnectionListener;
@@ -276,6 +278,10 @@ export default class HanabiGame extends Game {
 			this._gameData.ruleSet = message.data.ruleSet;
 		}
 
+		// TODO: Allow user to specify seed.
+
+		// TODO: Allow user to keep playing after discarding critical tile.
+
 		// Send the updated state to all players/watchers.
 		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
 			type: 'RefreshGameDataMessage',
@@ -326,10 +332,7 @@ export default class HanabiGame extends Game {
 
 		// Generate a fresh deck and randomize the tiles.
 		const players = Object.values(this._gameData.players);
-		const tiles = generateRandomDeck(
-			this._gameData.ruleSet !== HanabiRuleSet.Basic,
-			this._gameData.seed,
-		);
+		const tiles = generateRandomDeck(this._gameData.ruleSet, this._gameData.seed);
 		const tilesInHand = HANABI_TILES_IN_HAND[players.length];
 
 		for (const player of players) {
@@ -721,9 +724,17 @@ export default class HanabiGame extends Game {
 
 		const selectedTiles = recipient.tileLocations
 			.map((tl) => tl.tile)
-			.filter((t) =>
-				message.data.color ? t.color === message.data.color : t.number === message.data.number,
-			);
+			.filter((t) => {
+				if (message.data.color) {
+					if (this._gameData.ruleSet === HanabiRuleSet.RainbowDecoy) {
+						return t.color === message.data.color || t.color === 'rainbow';
+					} else {
+						return t.color === message.data.color;
+					}
+				} else {
+					return t.number === message.data.number;
+				}
+			});
 
 		if (selectedTiles.length === 0) {
 			this._messenger.send(userId, {
@@ -886,6 +897,7 @@ export default class HanabiGame extends Game {
 		}
 
 		// Generate a new game.
+		// TODO: Copy other options over.
 		this._gameData = generateHanabiGameData({
 			players: this._gameData.players,
 			ruleSet: this._gameData.ruleSet,

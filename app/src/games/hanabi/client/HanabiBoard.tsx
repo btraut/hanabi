@@ -77,7 +77,11 @@ export default function HanabiBoard(): JSX.Element {
 	);
 
 	const handleActionsTooltipAction = useCallback(
-		(action: 'discard' | 'play' | 'color' | 'number', tile: HanabiTile) => {
+		(
+			action: 'discard' | 'play' | 'color' | 'number',
+			tile: HanabiTile,
+			details?: { color?: HanabiTileColor },
+		) => {
 			let tileOwner: string | null = null;
 
 			for (const playerId in gameData.players) {
@@ -99,7 +103,7 @@ export default function HanabiBoard(): JSX.Element {
 					game.playTile(tile);
 					break;
 				case 'color':
-					game.giveColorClue(tileOwner, tile.color);
+					game.giveColorClue(tileOwner, details?.color ?? tile.color);
 					break;
 				case 'number':
 					game.giveNumberClue(tileOwner, tile.number);

@@ -1,6 +1,12 @@
 import Portal from 'app/src/components/Portal';
 import Tooltip from 'app/src/components/Tooltip';
-import { HanabiTile, tileBackgroundClasses } from 'app/src/games/hanabi/HanabiGameData';
+import { useHanabiAnimationManager } from 'app/src/games/hanabi/client/HanabiContext';
+import {
+	HanabiRuleSet,
+	HanabiTile,
+	HanabiTileColor,
+	tileBackgroundClasses,
+} from 'app/src/games/hanabi/HanabiGameData';
 import useFocusVisible from 'app/src/utils/client/useFocusVisible';
 import classnames from 'classnames';
 import { useEffect, useRef } from 'react';
@@ -11,11 +17,17 @@ export enum HanabiTileActionsTooltipType {
 	NoClues = 'NoClues',
 }
 
+const MULTIPLE_BUTTON_COLORS: HanabiTileColor[] = ['red', 'blue', 'green', 'yellow', 'white'];
+
 interface Props {
 	tile: HanabiTile;
 	coords: { left: number; top: number };
 	type: HanabiTileActionsTooltipType;
-	onAction: (action: 'discard' | 'play' | 'color' | 'number', tile: HanabiTile) => void;
+	onAction: (
+		action: 'discard' | 'play' | 'color' | 'number',
+		tile: HanabiTile,
+		details?: { color?: HanabiTileColor },
+	) => void;
 	onClose: () => void;
 }
 
@@ -26,6 +38,9 @@ export default function HanabiTileActionsTooltip({
 	onAction,
 	onClose,
 }: Props): JSX.Element {
+	const animationManager = useHanabiAnimationManager();
+	const { displayGameData: gameData } = animationManager;
+
 	const isFocusVisible = useFocusVisible();
 
 	const firstButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -49,6 +64,9 @@ export default function HanabiTileActionsTooltip({
 			document.removeEventListener('keydown', handleKeyDown);
 		};
 	}, [onClose]);
+
+	const showMultipleColorOptions =
+		tile.color === 'rainbow' && gameData.ruleSet === HanabiRuleSet.RainbowDecoy;
 
 	return (
 		<Portal>
@@ -91,19 +109,40 @@ export default function HanabiTileActionsTooltip({
 						)}
 						{type === HanabiTileActionsTooltipType.OtherPlayer && (
 							<div className="grid grid-flow-col gap-x-3 items-center">
-								<button
-									className={classnames(
-										'w-6 h-6 rounded-full border-black border-4 text-white focus:outline-none',
-										{
-											'focus:text-red-600': isFocusVisible,
-										},
-										tileBackgroundClasses[tile.color],
-									)}
-									onClick={() => {
-										onAction('color', tile);
-									}}
-									ref={firstButtonRef}
-								/>
+								{showMultipleColorOptions ? (
+									<div>
+										{MULTIPLE_BUTTON_COLORS.map((buttonColor) => (
+											<button
+												key={buttonColor}
+												className={classnames(
+													'w-6 h-6 rounded-full border-black border-4 text-white focus:outline-none',
+													{
+														'focus:text-red-600': isFocusVisible,
+													},
+													tileBackgroundClasses[buttonColor],
+												)}
+												onClick={() => {
+													onAction('color', tile, { color: buttonColor });
+												}}
+												ref={firstButtonRef}
+											/>
+										))}
+									</div>
+								) : (
+									<button
+										className={classnames(
+											'w-6 h-6 rounded-full border-black border-4 text-white focus:outline-none',
+											{
+												'focus:text-red-600': isFocusVisible,
+											},
+											tileBackgroundClasses[tile.color],
+										)}
+										onClick={() => {
+											onAction('color', tile);
+										}}
+										ref={firstButtonRef}
+									/>
+								)}
 								<div
 									className="border-solid h-6"
 									style={{

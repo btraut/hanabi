@@ -225,13 +225,13 @@ export function generatePlayer(data: Partial<HanabiPlayer> = {}): HanabiPlayer {
 }
 
 export function generateRandomDeck(
-	includeRainbow = false,
+	ruleSet: HanabiRuleSet,
 	seed: string | undefined = undefined,
 ): HanabiTile[] {
 	const tiles: HanabiTile[] = [];
 
 	const colors: HanabiTileColor[] = ['red', 'blue', 'green', 'yellow', 'white'];
-	if (includeRainbow) {
+	if (ruleSet !== HanabiRuleSet.Basic) {
 		colors.push('rainbow');
 	}
 
