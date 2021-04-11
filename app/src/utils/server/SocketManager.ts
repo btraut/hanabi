@@ -173,7 +173,9 @@ export default class ServerSocketManager<MessageType extends SocketMessageBase> 
 				this._authenticatedSockets[userId] = [];
 			}
 
-			this._authenticatedSockets[userId].push(socketId);
+			if (!this._authenticatedSockets[userId].includes(socketId)) {
+				this._authenticatedSockets[userId].push(socketId);
+			}
 
 			this._onAuthenticate.emit({ userId });
 

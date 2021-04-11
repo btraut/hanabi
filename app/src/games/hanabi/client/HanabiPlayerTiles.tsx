@@ -27,8 +27,6 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 	const enableOnClick = ownTurn && onTileClick;
 	const gameStillPlaying = gameData.finishedReason === null;
 
-	console.log(player.tileLocations[4].position);
-
 	return (
 		<div>
 			<div className={classnames('border-4 border-black rounded-xl p-0.5 bg-white')}>
