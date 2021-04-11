@@ -1,4 +1,5 @@
 import { useUserId } from 'app/src/components/SocketContext';
+import HanabiChooseRuleSetForm from 'app/src/games/hanabi/client/HanabiChooseRuleSetForm';
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
 import HanabiCopyLinkButton from 'app/src/games/hanabi/client/HanabiCopyLinkButton';
 import HanabiJoinForm from 'app/src/games/hanabi/client/HanabiJoinForm';
@@ -42,14 +43,19 @@ export default function HanabiLobby(): JSX.Element {
 				</div>
 			)}
 			{userIsJoined ? (
-				<div className="grid grid-flow-col gap-x-4 justify-center">
-					<HanabiMenuButton label="Leave" onClick={handleLeaveClick} />
-					<HanabiMenuButton
-						label="Start Game"
-						onClick={handleStartClick}
-						disabled={!enoughPlayers}
-					/>
-				</div>
+				<>
+					<div>
+						<HanabiChooseRuleSetForm ruleSet={game.gameData.ruleSet} />
+					</div>
+					<div className="grid grid-flow-col gap-x-4 justify-center">
+						<HanabiMenuButton label="Leave" onClick={handleLeaveClick} />
+						<HanabiMenuButton
+							label="Start Game"
+							onClick={handleStartClick}
+							disabled={!enoughPlayers}
+						/>
+					</div>
+				</>
 			) : (
 				<HanabiJoinForm />
 			)}

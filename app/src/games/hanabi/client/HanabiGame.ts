@@ -3,6 +3,7 @@ import {
 	generateHanabiGameData,
 	HANABI_GAME_TITLE,
 	HanabiGameData,
+	HanabiRuleSet,
 	HanabiTile,
 	HanabiTileColor,
 	HanabiTileNumber,
@@ -10,6 +11,7 @@ import {
 } from 'app/src/games/hanabi/HanabiGameData';
 import {
 	AddPlayerResponseMessage,
+	ChangeGameSettingsResponseMessage,
 	DiscardTileResponseMessage,
 	getScope,
 	GiveClueResponseMessage,
@@ -211,6 +213,24 @@ export default class HanabiGame extends Game {
 		this._gameData = resetGameResponseMessage.data.data;
 
 		this.onUpdate.emit();
+	}
+
+	public async changeSettings(settings: { ruleSet?: HanabiRuleSet }): Promise<void> {
+		this._sendMessage({
+			type: 'ChangeGameSettingsMessage',
+			data: settings,
+		});
+
+		const changeGameSettingsResponseMessage = await this._socketManager.expectMessageOfType<ChangeGameSettingsResponseMessage>(
+			'ChangeGameSettingsResponseMessage',
+		);
+
+		if (changeGameSettingsResponseMessage.data.error) {
+			throw new Error(changeGameSettingsResponseMessage.data.error);
+		}
+
+		// After responding to our initial message, the server will also send a
+		// RefreshGameData message. We'll handle that in a separate handler.
 	}
 
 	public async moveTile(userId: string, tileId: string, newPosition: Position): Promise<void> {

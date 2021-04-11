@@ -18,7 +18,7 @@ import HanabiTileActionsTooltip, {
 	HanabiTileActionsTooltipType,
 } from 'app/src/games/hanabi/client/HanabiTileActionsTooltip';
 import { TileViewSize } from 'app/src/games/hanabi/client/HanabiTileView';
-import { HanabiTile } from 'app/src/games/hanabi/HanabiGameData';
+import { HanabiTile, HanabiTileColor } from 'app/src/games/hanabi/HanabiGameData';
 import useValueChanged from 'app/src/utils/client/useValueChanged';
 import classnames from 'classnames';
 import { Fragment, useCallback, useEffect, useState } from 'react';

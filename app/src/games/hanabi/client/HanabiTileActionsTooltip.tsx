@@ -2,7 +2,6 @@ import Portal from 'app/src/components/Portal';
 import Tooltip from 'app/src/components/Tooltip';
 import { useHanabiAnimationManager } from 'app/src/games/hanabi/client/HanabiContext';
 import {
-	HanabiRuleSet,
 	HanabiTile,
 	HanabiTileColor,
 	tileBackgroundClasses,
@@ -16,8 +15,6 @@ export enum HanabiTileActionsTooltipType {
 	OtherPlayer = 'OtherPlayer',
 	NoClues = 'NoClues',
 }
-
-const MULTIPLE_BUTTON_COLORS: HanabiTileColor[] = ['red', 'blue', 'green', 'yellow', 'white'];
 
 interface Props {
 	tile: HanabiTile;
@@ -65,8 +62,11 @@ export default function HanabiTileActionsTooltip({
 		};
 	}, [onClose]);
 
-	const showMultipleColorOptions =
-		tile.color === 'rainbow' && gameData.ruleSet === HanabiRuleSet.RainbowDecoy;
+	const showMultipleColorOptions = tile.color === 'rainbow' && gameData.ruleSet === 'rainbow';
+	const rainbowButtonColors: HanabiTileColor[] = ['red', 'blue', 'green', 'yellow', 'white'];
+	if (gameData.ruleSet === '6-color') {
+		rainbowButtonColors.push('purple');
+	}
 
 	return (
 		<Portal>
@@ -111,7 +111,7 @@ export default function HanabiTileActionsTooltip({
 							<div className="grid grid-flow-col gap-x-3 items-center">
 								{showMultipleColorOptions ? (
 									<div>
-										{MULTIPLE_BUTTON_COLORS.map((buttonColor) => (
+										{rainbowButtonColors.map((buttonColor) => (
 											<button
 												key={buttonColor}
 												className={classnames(

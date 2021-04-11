@@ -1,7 +1,7 @@
 import { useHanabiAnimationManager } from 'app/src/games/hanabi/client/HanabiContext';
 import { useHanabiHighlightContext } from 'app/src/games/hanabi/client/HanabiHighlightContext';
 import HanabiTileView, { TileViewSize } from 'app/src/games/hanabi/client/HanabiTileView';
-import { HanabiRuleSet, HanabiTileColor } from 'app/src/games/hanabi/HanabiGameData';
+import { HanabiTileColor } from 'app/src/games/hanabi/HanabiGameData';
 import { Fragment } from 'react';
 
 export default function HanabiPlayedTiles(): JSX.Element {
@@ -11,8 +11,10 @@ export default function HanabiPlayedTiles(): JSX.Element {
 	const { highlightedTiles } = useHanabiHighlightContext();
 
 	const colors: HanabiTileColor[] = ['red', 'blue', 'green', 'yellow', 'white'];
-	if (gameData.ruleSet !== HanabiRuleSet.Basic) {
+	if (gameData.ruleSet === 'rainbow') {
 		colors.push('rainbow');
+	} else if (gameData.ruleSet === '6-color') {
+		colors.push('purple');
 	}
 
 	return (

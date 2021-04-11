@@ -4,7 +4,6 @@ import HanabiTileView, { TileViewSize } from 'app/src/games/hanabi/client/Hanabi
 import {
 	HANABI_TILE_SIZE,
 	HANABI_TILE_SIZE_SMALL,
-	HanabiRuleSet,
 	HanabiTileColor,
 	HanabiTileNumber,
 } from 'app/src/games/hanabi/HanabiGameData';
@@ -28,8 +27,10 @@ export default function HanabiPlayedTiles({
 		tileViewSize === TileViewSize.Regular ? HANABI_TILE_SIZE : HANABI_TILE_SIZE_SMALL;
 
 	const colors: HanabiTileColor[] = ['red', 'blue', 'green', 'yellow', 'white'];
-	if (gameData.ruleSet !== HanabiRuleSet.Basic) {
+	if (gameData.ruleSet === 'rainbow') {
 		colors.push('rainbow');
+	} else if (gameData.ruleSet === '6-color') {
+		colors.push('purple');
 	}
 
 	const greatestPlayedForEachColor: Partial<Record<HanabiTileColor, HanabiTileNumber | null>> = {};

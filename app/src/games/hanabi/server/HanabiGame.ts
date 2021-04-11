@@ -11,7 +11,6 @@ import {
 	HanabiFinishedReason,
 	HanabiGameActionType,
 	HanabiGameData,
-	HanabiRuleSet,
 	HanabiStage,
 	HanabiTile,
 } from 'app/src/games/hanabi/HanabiGameData';
@@ -51,7 +50,7 @@ export default class HanabiGame extends Game {
 	}
 
 	private _gameData: HanabiGameData = generateHanabiGameData({
-		ruleSet: HanabiRuleSet.RainbowDecoy,
+		ruleSet: 'rainbow',
 	});
 
 	private _messenger: GameMessenger<HanabiMessage>;
@@ -260,12 +259,8 @@ export default class HanabiGame extends Game {
 		}
 
 		// Settings specific validation:
-		if (typeof message.data.ruleSet === 'number') {
-			if (
-				![HanabiRuleSet.Basic, HanabiRuleSet.RainbowDecoy, HanabiRuleSet.RainbowDistinct].includes(
-					message.data.ruleSet,
-				)
-			) {
+		if (message.data.ruleSet) {
+			if (!['5-color', '6-color', 'rainbow'].includes(message.data.ruleSet)) {
 				this._messenger.send(userId, {
 					type: 'StartGameResponseMessage',
 					data: {
@@ -535,7 +530,7 @@ export default class HanabiGame extends Game {
 		}
 
 		// Detect if the game has been won.
-		const maxPlayedTiles = this._gameData.ruleSet === HanabiRuleSet.Basic ? 25 : 30;
+		const maxPlayedTiles = this._gameData.ruleSet === '5-color' ? 25 : 30;
 		if (this._gameData.playedTiles.length === maxPlayedTiles) {
 			this._gameData.stage = HanabiStage.Finished;
 			this._gameData.finishedReason = HanabiFinishedReason.Won;
@@ -726,7 +721,7 @@ export default class HanabiGame extends Game {
 			.map((tl) => tl.tile)
 			.filter((t) => {
 				if (message.data.color) {
-					if (this._gameData.ruleSet === HanabiRuleSet.RainbowDecoy) {
+					if (this._gameData.ruleSet === 'rainbow') {
 						return t.color === message.data.color || t.color === 'rainbow';
 					} else {
 						return t.color === message.data.color;

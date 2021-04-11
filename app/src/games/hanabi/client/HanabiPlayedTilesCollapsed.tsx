@@ -1,11 +1,7 @@
 import { useHanabiAnimationManager } from 'app/src/games/hanabi/client/HanabiContext';
 import { useHanabiHighlightContext } from 'app/src/games/hanabi/client/HanabiHighlightContext';
 import HanabiTileView, { TileViewSize } from 'app/src/games/hanabi/client/HanabiTileView';
-import {
-	HanabiRuleSet,
-	HanabiTileColor,
-	HanabiTileNumber,
-} from 'app/src/games/hanabi/HanabiGameData';
+import { HanabiTileColor, HanabiTileNumber } from 'app/src/games/hanabi/HanabiGameData';
 import classnames from 'classnames';
 
 const TILE_NUMBERS: HanabiTileNumber[] = [1, 2, 3, 4, 5];
@@ -17,8 +13,10 @@ export default function HanabiPlayedTiles(): JSX.Element {
 	const { highlightedTiles } = useHanabiHighlightContext();
 
 	const colors: HanabiTileColor[] = ['red', 'blue', 'green', 'yellow', 'white'];
-	if (gameData.ruleSet !== HanabiRuleSet.Basic) {
+	if (gameData.ruleSet === 'rainbow') {
 		colors.push('rainbow');
+	} else if (gameData.ruleSet === '6-color') {
+		colors.push('purple');
 	}
 
 	const maxScore = colors.length * TILE_NUMBERS.length;

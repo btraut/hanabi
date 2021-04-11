@@ -54,13 +54,9 @@ export enum HanabiFinishedReason {
 	OutOfLives = 'OutOfLives',
 }
 
-export enum HanabiRuleSet {
-	Basic = 'Basic',
-	RainbowDistinct = 'RainbowDistinct',
-	RainbowDecoy = 'RainbowDecoy',
-}
+export type HanabiRuleSet = '5-color' | '6-color' | 'rainbow';
 
-export type HanabiTileColor = 'red' | 'blue' | 'green' | 'yellow' | 'white' | 'rainbow';
+export type HanabiTileColor = 'red' | 'blue' | 'green' | 'yellow' | 'white' | 'purple' | 'rainbow';
 
 export type HanabiTileNumber = 1 | 2 | 3 | 4 | 5;
 
@@ -77,6 +73,7 @@ export const tileColorClasses = {
 	green: 'text-green-500',
 	yellow: 'text-yellow-500',
 	white: 'text-white',
+	purple: 'text-purple-500',
 	rainbow: 'text-rainbow',
 };
 
@@ -86,6 +83,7 @@ export const tileBackgroundClasses = {
 	green: 'bg-green-500',
 	yellow: 'bg-yellow-500',
 	white: 'bg-white',
+	purple: 'bg-purple-500',
 	rainbow: 'bg-rainbow',
 };
 
@@ -208,7 +206,7 @@ export function generateHanabiGameData(data: Partial<HanabiGameData> = {}): Hana
 		discardedTiles: [],
 		clues: HANABI_MAX_CLUES,
 		lives: HANABI_MAX_LIVES,
-		ruleSet: HanabiRuleSet.Basic,
+		ruleSet: '5-color',
 		actions: [],
 		...data,
 	};
@@ -231,8 +229,10 @@ export function generateRandomDeck(
 	const tiles: HanabiTile[] = [];
 
 	const colors: HanabiTileColor[] = ['red', 'blue', 'green', 'yellow', 'white'];
-	if (ruleSet !== HanabiRuleSet.Basic) {
+	if (ruleSet === 'rainbow') {
 		colors.push('rainbow');
+	} else if (ruleSet === '6-color') {
+		colors.push('purple');
 	}
 
 	const numbers: HanabiTileNumber[] = [1, 1, 1, 2, 2, 3, 3, 4, 4, 5];
