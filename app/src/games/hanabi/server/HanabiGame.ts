@@ -49,9 +49,7 @@ export default class HanabiGame extends Game {
 		return HANABI_GAME_TITLE;
 	}
 
-	private _gameData: HanabiGameData = generateHanabiGameData({
-		ruleSet: 'rainbow',
-	});
+	private _gameData: HanabiGameData = generateHanabiGameData();
 
 	private _messenger: GameMessenger<HanabiMessage>;
 	private _userConnectionListener: UserConnectionListener;
