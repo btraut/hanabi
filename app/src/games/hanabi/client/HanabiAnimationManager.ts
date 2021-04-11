@@ -72,9 +72,6 @@ export default class HanabiAnimationManager {
 			return;
 		}
 
-		// TODO: Compare current and next state and create list of animatable
-		// changes.
-
 		// Create animations for each animatable change.
 		const animatables = HanabiAnimatableBuilder.buildAnimatables(
 			this._displayGameData,
