@@ -238,7 +238,7 @@ export default class HanabiGame extends Game {
 		// Basic validation:
 		if (this._gameData.stage !== HanabiStage.Setup) {
 			this._messenger.send(userId, {
-				type: 'StartGameResponseMessage',
+				type: 'ChangeGameSettingsResponseMessage',
 				data: {
 					error: 'Cannot change game settings after it has started.',
 				},
@@ -248,7 +248,7 @@ export default class HanabiGame extends Game {
 
 		if (!this._gameData.players[userId]) {
 			this._messenger.send(userId, {
-				type: 'StartGameResponseMessage',
+				type: 'ChangeGameSettingsResponseMessage',
 				data: {
 					error: 'Only players can change game settings.',
 				},
@@ -260,7 +260,7 @@ export default class HanabiGame extends Game {
 		if (message.data.ruleSet) {
 			if (!['5-color', '6-color', 'rainbow'].includes(message.data.ruleSet)) {
 				this._messenger.send(userId, {
-					type: 'StartGameResponseMessage',
+					type: 'ChangeGameSettingsResponseMessage',
 					data: {
 						error: 'Invalid rules set.',
 					},
@@ -274,6 +274,12 @@ export default class HanabiGame extends Game {
 		// TODO: Allow user to specify seed.
 
 		// TODO: Allow user to keep playing after discarding critical tile.
+
+		// Success!
+		this._messenger.send(userId, {
+			type: 'ChangeGameSettingsResponseMessage',
+			data: {},
+		});
 
 		// Send the updated state to all players/watchers.
 		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
