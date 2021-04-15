@@ -1,9 +1,9 @@
 import { useUserId } from 'app/src/components/SocketContext';
+import HanabiMenuButton from 'app/src/games/hanabi/client/design-system/HanabiMenuButton';
 import HanabiChooseRuleSetForm from 'app/src/games/hanabi/client/HanabiChooseRuleSetForm';
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
 import HanabiCopyLinkButton from 'app/src/games/hanabi/client/HanabiCopyLinkButton';
 import HanabiJoinForm from 'app/src/games/hanabi/client/HanabiJoinForm';
-import HanabiMenuButton from 'app/src/games/hanabi/client/HanabiMenuButton';
 import HanabiPlayerAvatar from 'app/src/games/hanabi/client/HanabiPlayerAvatar';
 import { HANABI_MIN_PLAYERS } from 'app/src/games/hanabi/HanabiGameData';
 

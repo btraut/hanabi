@@ -1,6 +1,6 @@
+import HanabiMenuButton from 'app/src/games/hanabi/client/design-system/HanabiMenuButton';
+import HanabiTextInput from 'app/src/games/hanabi/client/design-system/HanabiTextInput';
 import { useHanabiContext } from 'app/src/games/hanabi/client/HanabiContext';
-import HanabiMenuButton from 'app/src/games/hanabi/client/HanabiMenuButton';
-import HanabiTextInput from 'app/src/games/hanabi/client/HanabiTextInput';
 import { ChangeEvent, FormEvent, useCallback, useState } from 'react';
 import { useHistory } from 'react-router';
 

@@ -1,5 +1,5 @@
 import Portal from 'app/src/components/Portal';
-import HanabiXButton from 'app/src/games/hanabi/client/HanabiXButton';
+import HanabiXButton from 'app/src/games/hanabi/client/design-system/HanabiXButton';
 import classnames from 'classnames';
 import { useEffect, useRef } from 'react';
 import FocusLock from 'react-focus-lock';

@@ -1,7 +1,8 @@
+import HanabiMenuButton from 'app/src/games/hanabi/client/design-system/HanabiMenuButton';
+import HanabiTextInput from 'app/src/games/hanabi/client/design-system/HanabiTextInput';
 import { useHanabiContext } from 'app/src/games/hanabi/client/HanabiContext';
-import HanabiLocalStorageManager from 'app/src/games/hanabi/client/HanabiLocalStorageManager';
-import HanabiMenuButton from 'app/src/games/hanabi/client/HanabiMenuButton';
-import HanabiTextInput from 'app/src/games/hanabi/client/HanabiTextInput';
+import LOCAL_STORAGE_KEYS from 'app/src/games/hanabi/client/HanabiLocalStorageManager';
+import { useLocalStorage } from 'app/src/games/hanabi/client/useLocalStorage';
 import { ChangeEvent, FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 
 export default function HanabiJoinForm(): JSX.Element {
@@ -9,12 +10,14 @@ export default function HanabiJoinForm(): JSX.Element {
 
 	const [addPlayerError, setAddPlayerError] = useState('');
 
-	const [nameValue, setNameValue] = useState(
-		() => HanabiLocalStorageManager.sharedInstance.getUserName() || '',
+	const [nameValue, setNameValue] = useLocalStorage(LOCAL_STORAGE_KEYS.USER_NAME, '');
+
+	const handleNameInputChange = useCallback(
+		(event: ChangeEvent<HTMLInputElement>) => {
+			setNameValue(event.target.value);
+		},
+		[setNameValue],
 	);
-	const handleNameInputChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
-		setNameValue(event.target.value);
-	}, []);
 
 	const handleAddPlayerSubmit = async (event: FormEvent) => {
 		event.preventDefault();
@@ -22,7 +25,7 @@ export default function HanabiJoinForm(): JSX.Element {
 		if (game && nameValue) {
 			try {
 				await game.join(nameValue);
-				HanabiLocalStorageManager.sharedInstance.setUserName(nameValue);
+				setNameValue(nameValue);
 			} catch (error) {
 				setAddPlayerError(error?.message || '');
 			}

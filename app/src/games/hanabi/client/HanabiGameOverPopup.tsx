@@ -1,10 +1,10 @@
 import { useUserId } from 'app/src/components/SocketContext';
+import HanabiMenuButton from 'app/src/games/hanabi/client/design-system/HanabiMenuButton';
+import HanabiPopup from 'app/src/games/hanabi/client/design-system/HanabiPopup';
 import {
 	useHanabiAnimationManager,
 	useHanabiGame,
 } from 'app/src/games/hanabi/client/HanabiContext';
-import HanabiMenuButton from 'app/src/games/hanabi/client/HanabiMenuButton';
-import HanabiPopup from 'app/src/games/hanabi/client/HanabiPopup';
 import { HanabiFinishedReason } from 'app/src/games/hanabi/HanabiGameData';
 
 const GAME_OVER_TITLES: { [key in HanabiFinishedReason]: string } = {

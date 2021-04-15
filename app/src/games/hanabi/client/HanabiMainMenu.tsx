@@ -1,5 +1,5 @@
+import HanabiMenuButton from 'app/src/games/hanabi/client/design-system/HanabiMenuButton';
 import { useHanabiContext } from 'app/src/games/hanabi/client/HanabiContext';
-import HanabiMenuButton from 'app/src/games/hanabi/client/HanabiMenuButton';
 import HanabiTileView from 'app/src/games/hanabi/client/HanabiTileView';
 import { HanabiTileColor, HanabiTileNumber } from 'app/src/games/hanabi/HanabiGameData';
 import useForceRefresh from 'app/src/utils/client/useForceRefresh';

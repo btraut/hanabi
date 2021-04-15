@@ -1,5 +1,5 @@
+import HanabiDropdown from 'app/src/games/hanabi/client/design-system/HanabiDropdown';
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
-import HanabiDropdown from 'app/src/games/hanabi/client/HanabiDropdown';
 import { HanabiRuleSet } from 'app/src/games/hanabi/HanabiGameData';
 import { ChangeEvent, useCallback, useEffect, useState } from 'react';
 

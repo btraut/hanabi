@@ -22,7 +22,7 @@ function playAudio(ele: HTMLAudioElement) {
 	}
 }
 
-export default function useActionSounds(): void {
+export default function useActionSounds(enabled = true): void {
 	const rightRef = useRef<HTMLAudioElement | null>();
 	const wrongRef = useRef<HTMLAudioElement | null>();
 	const beepRef = useRef<HTMLAudioElement | null>();
@@ -55,6 +55,10 @@ export default function useActionSounds(): void {
 		) as any;
 
 	useEffect(() => {
+		if (!enabled) {
+			return;
+		}
+
 		if (!latestTileAction) {
 			return;
 		}
@@ -76,5 +80,5 @@ export default function useActionSounds(): void {
 				playAudio(beepRef.current!);
 			}
 		}
-	}, [latestTileAction, userId]);
+	}, [enabled, latestTileAction, userId]);
 }

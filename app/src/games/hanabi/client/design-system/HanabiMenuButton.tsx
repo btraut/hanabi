@@ -14,7 +14,7 @@ function HanabiMenuButton({ onClick, label, disabled = false }: Props, ref: any)
 	return (
 		<button
 			className={classnames(
-				'block px-5 py-3 bg-gray-800 text-center uppercase font-bold rounded-xl border-4 duration-100 focus:outline-none',
+				'block px-5 py-3 bg-gray-800 text-center uppercase font-bold rounded-xl border-4 duration-100 focus:outline-none select-none',
 				disabled
 					? 'border-gray-500 cursor-default text-gray-500'
 					: 'border-white cursor-pointer text-white hover:bg-red-600 active:scale-95',

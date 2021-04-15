@@ -1,6 +1,7 @@
 import SocketManagerController from 'app/src/components/SocketController';
 import GameManagerController from 'app/src/games/client/GameManagerController';
 import HanabiController from 'app/src/games/hanabi/client/HanabiController';
+import HanabiOptionsController from 'app/src/games/hanabi/client/HanabiOptionsController';
 import HanabiRouter from 'app/src/games/hanabi/client/HanabiRouter';
 import HanabiStyles from 'app/src/games/hanabi/client/HanabiStyles';
 import Page from 'app/src/pages/Page';
@@ -17,10 +18,12 @@ const HanabiPage: Page = () => {
 		<SocketManagerController>
 			<GameManagerController>
 				<HanabiController>
-					<DndProvider backend={HTML5Backend}>
-						<HanabiStyles />
-						<HanabiRouter />
-					</DndProvider>
+					<HanabiOptionsController>
+						<DndProvider backend={HTML5Backend}>
+							<HanabiStyles />
+							<HanabiRouter />
+						</DndProvider>
+					</HanabiOptionsController>
 				</HanabiController>
 			</GameManagerController>
 		</SocketManagerController>
