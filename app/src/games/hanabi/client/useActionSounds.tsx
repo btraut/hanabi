@@ -43,7 +43,8 @@ export default function useActionSounds(enabled = true): void {
 	const latestTileAction:
 		| HanabiGameActionPlay
 		| HanabiGameActionDiscard
-		| HanabiGameActionGiveClue = latestActions
+		| HanabiGameActionGiveClue
+		| undefined = latestActions
 		.reverse()
 		.find((a) =>
 			[
@@ -54,12 +55,22 @@ export default function useActionSounds(enabled = true): void {
 			].includes(a.type),
 		) as any;
 
+	const lastTileActionSoundPlayedRef = useRef(latestTileAction);
+
 	useEffect(() => {
-		if (!enabled) {
+		// If there's no action to play a sound for or we've already played a
+		// sound for this one, bail.
+		if (!latestTileAction || lastTileActionSoundPlayedRef.current === latestTileAction) {
 			return;
 		}
 
-		if (!latestTileAction) {
+		// Keep track of which action we handled already.
+		lastTileActionSoundPlayedRef.current = latestTileAction;
+
+		// If disabled, bail. We have to do this after saving the latest tile
+		// action above because otherwise it'll play a sound when the user
+		// re-enables sounds in the preferences.
+		if (!enabled) {
 			return;
 		}
 
