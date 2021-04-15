@@ -19,11 +19,10 @@ export default function HanabiGameMenu({ onClose, onOptions }: Props): JSX.Eleme
 	const userId = useUserId();
 
 	return (
-		<HanabiPopup background="gray" closeButton onClose={onClose} backgroundWash>
+		<HanabiPopup background="gray" onClose={onClose} backgroundWash>
 			<div style={{ width: 320 }}>
 				<h1 className="italic text-4xl text-white font-normal text-center mb-8">Game Menu</h1>
 				<div className="grid grid-flow-row gap-8 justify-center">
-					<HanabiMenuButton label="Options" onClick={onOptions} />
 					{gameData.players[userId] ? (
 						<HanabiMenuButton
 							label="New Game"
@@ -35,6 +34,10 @@ export default function HanabiGameMenu({ onClose, onOptions }: Props): JSX.Eleme
 					) : (
 						<HanabiLinkButton label="Back to Home" href="/" />
 					)}
+					<div className="grid grid-flow-row gap-4">
+						<HanabiMenuButton label="Options" onClick={onOptions} />
+						<HanabiMenuButton label="Close" onClick={onClose} />
+					</div>
 				</div>
 			</div>
 		</HanabiPopup>

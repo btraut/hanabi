@@ -38,12 +38,12 @@ export default function HanabiPopup({
 			<FocusLock>
 				<div
 					className="absolute inset-0 w-full flex items-center justify-center"
-					style={{ backgroundColor: backgroundWash ? 'rgba(0, 0, 0, 0.4)' : '' }}
+					style={{ backgroundColor: backgroundWash ? 'rgba(0, 0, 0, 0.6)' : '' }}
 					ref={containerRef}
 				>
 					<div
 						className={classnames(
-							'border-solid border-black border-2 px-8 py-6 shadow-dark relative',
+							'border-solid border-black border-4 px-8 py-6 shadow-dark relative rounded-xl',
 							BACKGROUND_CLASS[background],
 						)}
 					>

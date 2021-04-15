@@ -11,8 +11,8 @@ export default function HanabiOptionsMenu({ onClose }: Props): JSX.Element | nul
 	const { playSounds, setPlaySounds } = useHanabiOptionsContext();
 
 	return (
-		<HanabiPopup background="gray" closeButton onClose={onClose} backgroundWash>
-			<div style={{ width: 480 }}>
+		<HanabiPopup background="gray" onClose={onClose} backgroundWash>
+			<div style={{ width: 320 }}>
 				<h1 className="italic text-4xl text-white font-normal text-center mb-8">Options</h1>
 				<div className="grid grid-flow-col gap-x-2 justify-center items-center mb-8">
 					<label className="text-lg font-bold truncate text-center text-white">Play Sounds:</label>
