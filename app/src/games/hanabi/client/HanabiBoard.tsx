@@ -132,26 +132,27 @@ export default function HanabiBoard(): JSX.Element {
 	return (
 		<div className="grid grid-flow-row lg:grid-flow-col gap-6 relative">
 			<div>
-				<div
-					className={classnames('border-4 border-black rounded-xl overflow-y-auto mb-6', {
-						'bg-white': gameData.actions.length % 2 === 1,
-						'bg-gray-200': gameData.actions.length % 2 === 0,
-					})}
-					style={{ maxHeight: 160 }}
-				>
-					<HanabiActions />
-				</div>
-
 				{!breakpoints.lg && (
-					<div className="grid grid-flow-row border-4 border-black bg-white rounded-xl p-4 gap-3 mb-6">
-						<div className="grid grid-flow-col gap-2 justify-start">
-							<HanabiRemainingTiles />
-							<HanabiClues />
-							<HanabiLives />
+					<>
+						<div
+							className={classnames('border-4 border-black rounded-xl overflow-y-auto mb-6', {
+								'bg-white': gameData.actions.length % 2 === 1,
+								'bg-gray-200': gameData.actions.length % 2 === 0,
+							})}
+							style={{ maxHeight: 160 }}
+						>
+							<HanabiActions />
 						</div>
-						<HanabiPlayedTilesCollapsed />
-						{gameData.discardedTiles.length > 0 && <HanabiDiscardedTilesCollapsed />}
-					</div>
+						<div className="grid grid-flow-row border-4 border-black bg-white rounded-xl p-4 gap-3 mb-6">
+							<div className="grid grid-flow-col gap-2 justify-start">
+								<HanabiRemainingTiles />
+								<HanabiClues />
+								<HanabiLives />
+							</div>
+							<HanabiPlayedTilesCollapsed />
+							{gameData.discardedTiles.length > 0 && <HanabiDiscardedTilesCollapsed />}
+						</div>
+					</>
 				)}
 
 				<div
@@ -203,6 +204,15 @@ export default function HanabiBoard(): JSX.Element {
 						<HanabiPlayedTiles
 							tileSize={breakpoints.xl ? TileViewSize.Regular : TileViewSize.Small}
 						/>
+					</div>
+					<div
+						className={classnames('border-4 border-black rounded-xl overflow-y-auto mb-6', {
+							'bg-white': gameData.actions.length % 2 === 1,
+							'bg-gray-200': gameData.actions.length % 2 === 0,
+						})}
+						style={{ maxHeight: 320 }}
+					>
+						<HanabiActions />
 					</div>
 				</div>
 			)}
