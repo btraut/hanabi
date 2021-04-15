@@ -123,7 +123,7 @@ export default function HanabiBoard(): JSX.Element {
 	const gameFinishedReasonChanged = useValueChanged(gameData.finishedReason);
 	useEffect(() => {
 		if (gameFinishedReasonChanged) {
-			setShowGameOverPopup(!!gameData.finishedReason);
+			setShowGameOverPopup(gameData.finishedReason !== null);
 		}
 	}, [gameFinishedReasonChanged, gameData.finishedReason]);
 
