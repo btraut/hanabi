@@ -42,7 +42,7 @@ Note that `.env` is ignored by git, so you run no risk of committing sensitive i
 Once web is built, you can use node.js to host them locally:
 
 1. Navigate to `<root>/web` in a command prompt.
-2. Run `yarn run serve` to launch a local HTTP server. Any time web code is rebuilt, this server will automatically relaunch.
+2. Run `yarn run start` to launch a local HTTP server. Any time web code is rebuilt, this server will automatically relaunch.
 
 It is recommended that, during active development, you run `yarn run watch` in the web directory in addition to running the server. That way, when source files are changed, they are rebuilt and the server will automatically restart.
 
