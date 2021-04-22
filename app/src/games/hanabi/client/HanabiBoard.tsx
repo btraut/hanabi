@@ -18,10 +18,11 @@ import HanabiTileActionsTooltip, {
 	HanabiTileActionsTooltipType,
 } from 'app/src/games/hanabi/client/HanabiTileActionsTooltip';
 import { TileViewSize } from 'app/src/games/hanabi/client/HanabiTileView';
-import { HanabiTile, HanabiTileColor } from 'app/src/games/hanabi/HanabiGameData';
+import useLatestActions from 'app/src/games/hanabi/client/useLatestActions';
+import { HanabiGameAction, HanabiTile, HanabiTileColor } from 'app/src/games/hanabi/HanabiGameData';
 import useValueChanged from 'app/src/utils/client/useValueChanged';
 import classnames from 'classnames';
-import { Fragment, useCallback, useEffect, useState } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 
 function rotateArrayToItem<T>(arr: T[], item: T): T[] {
 	const itemIndex = arr.indexOf(item);
@@ -119,6 +120,7 @@ export default function HanabiBoard(): JSX.Element {
 		setShowMenuForTile(null);
 	}, []);
 
+	// Show the game over popup when the game ends for any reason.
 	const [showGameOverPopup, setShowGameOverPopup] = useState(!!gameData.finishedReason);
 	const gameFinishedReasonChanged = useValueChanged(gameData.finishedReason);
 	useEffect(() => {
@@ -128,6 +130,18 @@ export default function HanabiBoard(): JSX.Element {
 	}, [gameFinishedReasonChanged, gameData.finishedReason]);
 
 	const breakpoints = useBreakpointContext();
+
+	// When a new action happens, scroll the actions container to the top.
+	const latestActions = useLatestActions();
+	const latestAction = latestActions.length ? latestActions[latestActions.length - 1] : null;
+	const latestHandledActionRef = useRef<HanabiGameAction | null>(null);
+	const actionsContainerRef = useRef<HTMLDivElement | null>(null);
+	useEffect(() => {
+		if (latestHandledActionRef.current !== latestAction) {
+			latestHandledActionRef.current = latestAction;
+			actionsContainerRef.current?.scrollTo(0, 0);
+		}
+	}, [latestAction]);
 
 	return (
 		<div className="grid grid-flow-row lg:grid-flow-col gap-6 relative">
@@ -140,6 +154,7 @@ export default function HanabiBoard(): JSX.Element {
 								'bg-gray-200': gameData.actions.length % 2 === 0,
 							})}
 							style={{ maxHeight: 160 }}
+							ref={actionsContainerRef}
 						>
 							<HanabiActions />
 						</div>
@@ -211,6 +226,7 @@ export default function HanabiBoard(): JSX.Element {
 							'bg-gray-200': gameData.actions.length % 2 === 0,
 						})}
 						style={{ maxHeight: 320 }}
+						ref={actionsContainerRef}
 					>
 						<HanabiActions />
 					</div>
