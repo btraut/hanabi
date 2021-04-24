@@ -66,8 +66,11 @@ export type GiveClueMessage = SocketMessage<
 >;
 export type GiveClueResponseMessage = SocketMessage<'GiveClueResponseMessage', { error?: string }>;
 
-export type MoveTileMessage = SocketMessage<'MoveTileMessage', { id: string; position: Position }>;
-export type MoveTileResponseMessage = SocketMessage<'MoveTileResponseMessage', { error?: string }>;
+export type MoveTilesMessage = SocketMessage<'MoveTilesMessage', { [tileId: string]: Position }>;
+export type MoveTilesResponseMessage = SocketMessage<
+	'MoveTilesResponseMessage',
+	{ error?: string }
+>;
 
 export type HanabiMessage =
 	| GetGameDataMessage
@@ -88,5 +91,5 @@ export type HanabiMessage =
 	| DiscardTileResponseMessage
 	| GiveClueMessage
 	| GiveClueResponseMessage
-	| MoveTileMessage
-	| MoveTileResponseMessage;
+	| MoveTilesMessage
+	| MoveTilesResponseMessage;

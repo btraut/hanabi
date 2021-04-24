@@ -16,7 +16,7 @@ import {
 	getScope,
 	GiveClueResponseMessage,
 	HanabiMessage,
-	MoveTileResponseMessage,
+	MoveTilesResponseMessage,
 	PlayTileResponseMessage,
 	RefreshGameDataMessage,
 	RemovePlayerResponseMessage,
@@ -233,7 +233,7 @@ export default class HanabiGame extends Game {
 		// RefreshGameData message. We'll handle that in a separate handler.
 	}
 
-	public async moveTile(userId: string, tileId: string, newPosition: Position): Promise<void> {
+	public moveTileLocally(userId: string, tileId: string, newPosition: Position): void {
 		const tileLocation = this._gameData.players[userId].tileLocations.find(
 			(tl) => tl.tile.id === tileId,
 		);
@@ -241,6 +241,9 @@ export default class HanabiGame extends Game {
 		if (!tileLocation) {
 			throw new Error('Invalid player or tile id.');
 		}
+
+		// TODO: We shouldn't be editing positions. We should be replacing
+		// state.
 
 		// Move the tile. Normally, we'd rely on the backend for all updates,
 		// but we'll move it optimistically and wait for the server to catch up
@@ -258,18 +261,26 @@ export default class HanabiGame extends Game {
 		// Emit an early onUpdate so clients update with the moved tile. We'll
 		// update again after the server response.
 		this.onUpdate.emit();
+	}
+
+	public async commitTileMoves(userId: string): Promise<void> {
+		const newTileLocations: { [tileId: string]: Position } = {};
+
+		for (const tileLocation of this._gameData.players[userId].tileLocations) {
+			newTileLocations[tileLocation.tile.id] = tileLocation.position;
+		}
 
 		this._sendMessage({
-			type: 'MoveTileMessage',
-			data: { id: tileId, position: newPosition },
+			type: 'MoveTilesMessage',
+			data: newTileLocations,
 		});
 
-		const moveTileResponseMessage = await this._socketManager.expectMessageOfType<MoveTileResponseMessage>(
-			'MoveTileResponseMessage',
+		const moveTilesResponseMessage = await this._socketManager.expectMessageOfType<MoveTilesResponseMessage>(
+			'MoveTilesResponseMessage',
 		);
 
-		if (moveTileResponseMessage.data.error) {
-			throw new Error(moveTileResponseMessage.data.error);
+		if (moveTilesResponseMessage.data.error) {
+			throw new Error(moveTilesResponseMessage.data.error);
 		}
 
 		// After responding to our initial message, the server will also send a

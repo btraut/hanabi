@@ -13,6 +13,33 @@ export default function useTileDrop(): DragElementWrapper<any> {
 	// played when dropping things outside drop targets.
 	const [, dropRef] = useDrop<HanabiTileDragItem, void, void>({
 		accept: [hanabiDragTypes.TILE],
+		// hover: (item, monitor) => {
+		// 	const delta = monitor.getDifferenceFromInitialOffset()!;
+		// 	const origintalPosition = game.gameData.players[userId].tileLocations.find(
+		// 		(l) => l.tile.id === item.id,
+		// 	)!.position;
+
+		// 	const left = Math.round(origintalPosition.x + delta.x);
+		// 	const top = Math.round(origintalPosition.y + delta.y);
+
+		// 	const leftClamped = Math.min(
+		// 		Math.max(left, 0),
+		// 		HANABI_BOARD_SIZE.width - HANABI_TILE_SIZE.width,
+		// 	);
+		// 	const topClamped = Math.min(
+		// 		Math.max(top, 0),
+		// 		HANABI_BOARD_SIZE.height - HANABI_TILE_SIZE.height,
+		// 	);
+
+		// 	const isTopHalf = topClamped < HANABI_BOARD_SIZE.height / 2;
+
+		// 	// TODO:
+
+		// 	// If in the top half, determine position and move tiles locally.
+		// 	// If in bottom half, move all tiles to the left
+
+		// 	console.log(isTopHalf);
+		// },
 		drop: (item, monitor) => {
 			const delta = monitor.getDifferenceFromInitialOffset()!;
 			const origintalPosition = game.gameData.players[userId].tileLocations.find(
@@ -31,9 +58,10 @@ export default function useTileDrop(): DragElementWrapper<any> {
 				HANABI_BOARD_SIZE.height - HANABI_TILE_SIZE.height,
 			);
 
-			game.moveTile(userId, item.id, { x: leftClamped, y: topClamped });
+			// hover is handling the movement, so drop will just commit those moves to the server
 
-			return undefined;
+			game.moveTileLocally(userId, item.id, { x: leftClamped, y: topClamped });
+			game.commitTileMoves(userId);
 		},
 	});
 

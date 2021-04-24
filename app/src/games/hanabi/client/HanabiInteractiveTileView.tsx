@@ -1,5 +1,5 @@
-import { hanabiDragTypes, HanabiTileDragItem } from 'app/src/games/hanabi/client/HanabiDragTypes';
 import HanabiTileView from 'app/src/games/hanabi/client/HanabiTileView';
+import useTileDrag from 'app/src/games/hanabi/client/useTileDrag';
 import {
 	HANABI_TILE_SIZE,
 	HANABI_TILE_SIZE_SMALL,
@@ -8,8 +8,6 @@ import {
 import useFocusVisible from 'app/src/utils/client/useFocusVisible';
 import classnames from 'classnames';
 import { useCallback, useEffect, useState } from 'react';
-import { useDrag } from 'react-dnd';
-import { getEmptyImage } from 'react-dnd-html5-backend';
 
 export enum TileViewSize {
 	Regular = 'Regular',
@@ -67,25 +65,7 @@ export default function HanabiInteractiveTileView({
 	}, []);
 
 	// Handle drag support.
-	const [{ isDragging }, dragRef, preview] = useDrag<
-		HanabiTileDragItem,
-		void,
-		{ isDragging: boolean }
-	>({
-		canDrag: draggable,
-		item: { type: hanabiDragTypes.TILE, id: tile.id },
-		collect: (monitor) => ({
-			isDragging: !!monitor.isDragging(),
-		}),
-	});
-
-	// By default, HTML5 drag APIs will screenshot the draggable and show a
-	// ghosted version of that screenshot as the user drags it around. Instead,
-	// we're going to override that screenshot with an empty image and we'll
-	// render and update our own ghosted tile in the drag layer.
-	useEffect(() => {
-		preview(getEmptyImage());
-	}, [preview]);
+	const { isDragging, dragRef } = useTileDrag(tile.id, draggable);
 
 	const cursor = draggable ? 'cursor-move' : onClick ? 'cursor-pointer' : 'cursor-default';
 

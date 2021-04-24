@@ -21,7 +21,7 @@ import {
 	getScope,
 	GiveClueMessage,
 	HanabiMessage,
-	MoveTileMessage,
+	MoveTilesMessage,
 	PlayTileMessage,
 	RemovePlayerMessage,
 	ResetGameMessage,
@@ -130,8 +130,8 @@ export default class HanabiGame extends Game {
 			case 'GiveClueMessage':
 				this._handleGiveClueMessage(message, userId);
 				break;
-			case 'MoveTileMessage':
-				this._handleMoveTileMessage(message, userId);
+			case 'MoveTilesMessage':
+				this._handleMoveTilesMessage(message, userId);
 				break;
 			case 'ResetGameMessage':
 				this._handleResetGameMessage(message, userId);
@@ -817,63 +817,68 @@ export default class HanabiGame extends Game {
 		this._update();
 	}
 
-	private _handleMoveTileMessage(message: MoveTileMessage, userId: string): void {
+	private _handleMoveTilesMessage(message: MoveTilesMessage, userId: string): void {
 		if (!this._gameData.players[userId]) {
 			this._messenger.send(userId, {
-				type: 'MoveTileResponseMessage',
+				type: 'MoveTilesResponseMessage',
 				data: { error: 'Invalid player!' },
 			});
 		}
 
 		if (this._gameData.stage !== HanabiStage.Playing) {
 			this._messenger.send(userId, {
-				type: 'MoveTileResponseMessage',
+				type: 'MoveTilesResponseMessage',
 				data: { error: 'The game isn’t being played right now.!' },
 			});
 		}
 
-		const tileLocation = this._gameData.players[userId].tileLocations.find(
-			(t) => t.tile.id === message.data.id,
-		);
+		for (const tileId of Object.keys(message.data)) {
+			const tileLocation = this._gameData.players[userId].tileLocations.find(
+				(t) => t.tile.id === tileId,
+			);
 
-		if (!tileLocation) {
-			this._messenger.send(userId, {
-				type: 'MoveTileResponseMessage',
-				data: { error: 'That tile isn’t in your hand!' },
-			});
-			return;
+			if (!tileLocation) {
+				this._messenger.send(userId, {
+					type: 'MoveTilesResponseMessage',
+					data: { error: 'That tile isn’t in your hand!' },
+				});
+				return;
+			}
+
+			const position = message.data[tileId];
+
+			if (
+				position.x > HANABI_BOARD_SIZE.width - HANABI_TILE_SIZE.width ||
+				position.y > HANABI_BOARD_SIZE.height - HANABI_TILE_SIZE.height ||
+				position.x < 0 ||
+				position.y < 0
+			) {
+				this._messenger.send(userId, {
+					type: 'MoveTilesResponseMessage',
+					data: { error: 'Invalid position.' },
+				});
+			}
+
+			// TODO: We should really be validating all the tiles before editing
+			// any of them.
+
+			// Move the tile.
+			tileLocation.position = position;
+
+			// Update the zIndex.
+			tileLocation.tile.zIndex =
+				this._gameData.players[userId].tileLocations.reduce((maxZIndex, tl) => {
+					if (tl.tile.zIndex > maxZIndex) {
+						return tl.tile.zIndex;
+					}
+
+					return maxZIndex;
+				}, 0) + 1;
 		}
-
-		const { position } = message.data;
-
-		if (
-			position.x > HANABI_BOARD_SIZE.width - HANABI_TILE_SIZE.width ||
-			position.y > HANABI_BOARD_SIZE.height - HANABI_TILE_SIZE.height ||
-			position.x < 0 ||
-			position.y < 0
-		) {
-			this._messenger.send(userId, {
-				type: 'MoveTileResponseMessage',
-				data: { error: 'Invalid position.' },
-			});
-		}
-
-		// Move the tile.
-		tileLocation.position = position;
-
-		// Update the zIndex.
-		tileLocation.tile.zIndex =
-			this._gameData.players[userId].tileLocations.reduce((maxZIndex, tl) => {
-				if (tl.tile.zIndex > maxZIndex) {
-					return tl.tile.zIndex;
-				}
-
-				return maxZIndex;
-			}, 0) + 1;
 
 		// Send success message.
 		this._messenger.send(userId, {
-			type: 'MoveTileResponseMessage',
+			type: 'MoveTilesResponseMessage',
 			data: {},
 		});
 
