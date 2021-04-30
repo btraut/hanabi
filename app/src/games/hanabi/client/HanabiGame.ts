@@ -233,11 +233,7 @@ export default class HanabiGame extends Game {
 		// RefreshGameData message. We'll handle that in a separate handler.
 	}
 
-	public moveTilesLocally(
-		userId: string,
-		positions: { [tileId: string]: Position },
-		draggedTileId?: string,
-	): void {
+	public moveTilesLocally(userId: string, positions: { [tileId: string]: Position }): void {
 		for (const tileId of Object.keys(positions)) {
 			const tileLocation = this._gameData.players[userId].tileLocations.find(
 				(tl) => tl.tile.id === tileId,
@@ -248,19 +244,6 @@ export default class HanabiGame extends Game {
 			}
 
 			tileLocation.position = { ...positions[tileId] };
-		}
-
-		if (draggedTileId) {
-			const tileLocations = [...this._gameData.players[userId].tileLocations];
-			tileLocations.sort((a, b) => (a.position.z > b.position.z ? -1 : 1));
-			const maxZIndex = tileLocations[0].position.z;
-
-			const draggedTile = this._gameData.players[userId].tileLocations.find(
-				(t) => t.tile.id === draggedTileId,
-			);
-			if (draggedTile) {
-				draggedTile.position.z = maxZIndex + 1;
-			}
 		}
 
 		// Emit an early onUpdate so clients update with the moved tile. We'll

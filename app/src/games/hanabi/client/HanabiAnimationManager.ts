@@ -97,10 +97,10 @@ export default class HanabiAnimationManager {
 		// Update. This will cause the animators to start animating.
 		this.onUpdate.emit();
 
-		// TODO: For now, we'll just auto-advance after a second.
+		// TODO: For now, we'll just auto-advance quickly.
 		setTimeout(() => {
 			this._handleAllAnimationsComplete();
-		}, 1000);
+		}, 1);
 	}
 
 	private _replaceStateAndAdvance(nextGameState: HanabiGameData) {

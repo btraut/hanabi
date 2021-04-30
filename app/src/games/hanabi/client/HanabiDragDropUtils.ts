@@ -41,6 +41,8 @@ export function getNewPositionsForTiles(
 	const topTiles: { id: string; position: Position }[] = [];
 	const bottomTiles: { id: string; position: Position }[] = [];
 
+	let maxZIndex = 0;
+
 	// Separate tiles into top and bottom.
 	for (const tileId of Object.keys(otherTilePositions)) {
 		const position = { ...otherTilePositions[tileId] };
@@ -49,6 +51,10 @@ export function getNewPositionsForTiles(
 			topTiles.push({ id: tileId, position });
 		} else {
 			bottomTiles.push({ id: tileId, position });
+		}
+
+		if (position.z > maxZIndex) {
+			maxZIndex = position.z;
 		}
 	}
 
@@ -89,10 +95,10 @@ export function getNewPositionsForTiles(
 					HANABI_DEFAULT_TILE_PADDING +
 					(HANABI_DEFAULT_TILE_PADDING + HANABI_TILE_SIZE.width) * draggingTileSlotX,
 				y: HANABI_DEFAULT_TILE_PADDING,
-				z: 0,
+				z: maxZIndex + 1,
 			};
 		} else {
-			newPositions[draggingTileKey] = draggingTilePosition;
+			newPositions[draggingTileKey] = { ...draggingTilePosition, z: maxZIndex };
 		}
 	}
 
@@ -109,14 +115,4 @@ export function getTilePositions(
 	}
 
 	return tilePositions;
-}
-
-export function getTileZIndexes(tileLocations: HanabiTileLocation[]): { [tileId: string]: number } {
-	const tileZIndexes: { [tileId: string]: number } = {};
-
-	for (const tileLocation of tileLocations) {
-		tileZIndexes[tileLocation.tile.id] = tileLocation.position.z;
-	}
-
-	return tileZIndexes;
 }
