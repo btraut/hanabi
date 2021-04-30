@@ -4,6 +4,7 @@ import { useHanabiHighlightContext } from 'app/src/games/hanabi/client/HanabiHig
 import HanabiInteractiveTileView from 'app/src/games/hanabi/client/HanabiInteractiveTileView';
 import { useNewestTile } from 'app/src/games/hanabi/client/HanabiNewestTileContext';
 import HanabiPlayerTilesDragLayer from 'app/src/games/hanabi/client/HanabiPlayerTilesDragLayer';
+import useJustTookAction from 'app/src/games/hanabi/client/useJustTookAction';
 import { HANABI_BOARD_SIZE, HanabiTile } from 'app/src/games/hanabi/HanabiGameData';
 import classnames from 'classnames';
 import { useDragLayer } from 'react-dnd';
@@ -32,6 +33,8 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 		isDragging: monitor.isDragging(),
 	}));
 
+	const justTookAction = useJustTookAction();
+
 	return (
 		<div>
 			<div className="border-4 border-black rounded-xl p-0.5 bg-white relative">
@@ -41,7 +44,7 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 						<div
 							key={`TileContainer-${tileLocation.tile.id}`}
 							className={classnames('absolute top-0 left-0', {
-								'duration-100': !ownTiles || isDragging,
+								'duration-100': !ownTiles || isDragging || justTookAction,
 							})}
 							style={{
 								transform: `translate(${tileLocation.position.x}px, ${tileLocation.position.y}px)`,
