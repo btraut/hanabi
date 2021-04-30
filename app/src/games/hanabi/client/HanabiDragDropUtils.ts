@@ -5,15 +5,16 @@ import {
 	HanabiTileLocation,
 	Position,
 } from 'app/src/games/hanabi/HanabiGameData';
+import { XYCoord } from 'react-dnd';
 
-export function getPositionInContainer(originalPosition: Position, delta: Position): Position {
+export function getPositionInContainer(originalPosition: Position, delta: XYCoord): Position {
 	const left = Math.round(originalPosition.x + delta.x);
 	const top = Math.round(originalPosition.y + delta.y);
 
 	const leftClamped = Math.min(Math.max(left, 0), HANABI_BOARD_SIZE.width - HANABI_TILE_SIZE.width);
 	const topClamped = Math.min(Math.max(top, 0), HANABI_BOARD_SIZE.height - HANABI_TILE_SIZE.height);
 
-	return { x: leftClamped, y: topClamped };
+	return { x: leftClamped, y: topClamped, z: originalPosition.z };
 }
 
 export function getSlotXForDraggingTile(x: number, max: number = Number.MAX_SAFE_INTEGER): number {
@@ -65,6 +66,7 @@ export function getNewPositionsForTiles(
 			x:
 				HANABI_DEFAULT_TILE_PADDING + (HANABI_DEFAULT_TILE_PADDING + HANABI_TILE_SIZE.width) * slot,
 			y: HANABI_DEFAULT_TILE_PADDING,
+			z: tile.position.z,
 		};
 	}
 
@@ -83,6 +85,7 @@ export function getNewPositionsForTiles(
 					HANABI_DEFAULT_TILE_PADDING +
 					(HANABI_DEFAULT_TILE_PADDING + HANABI_TILE_SIZE.width) * draggingTileSlotX,
 				y: HANABI_DEFAULT_TILE_PADDING,
+				z: newPositions[draggingTileKey].z,
 			};
 		} else {
 			newPositions[draggingTileKey] = draggingTilePosition;
@@ -108,7 +111,7 @@ export function getTileZIndexes(tileLocations: HanabiTileLocation[]): { [tileId:
 	const tileZIndexes: { [tileId: string]: number } = {};
 
 	for (const tileLocation of tileLocations) {
-		tileZIndexes[tileLocation.tile.id] = tileLocation.tile.zIndex;
+		tileZIndexes[tileLocation.tile.id] = tileLocation.position.z;
 	}
 
 	return tileZIndexes;

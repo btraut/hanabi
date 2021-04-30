@@ -17,6 +17,7 @@ export interface Size {
 export interface Position {
 	x: number;
 	y: number;
+	z: number;
 }
 
 export interface Rect extends Size, Position {}
@@ -37,22 +38,27 @@ export const HANABI_DEFAULT_TILE_POSITIONS: { [tileNumber: number]: Position } =
 	{
 		x: HANABI_DEFAULT_TILE_PADDING + (HANABI_DEFAULT_TILE_PADDING + HANABI_TILE_SIZE.width) * 0,
 		y: HANABI_DEFAULT_TILE_PADDING,
+		z: 0,
 	},
 	{
 		x: HANABI_DEFAULT_TILE_PADDING + (HANABI_DEFAULT_TILE_PADDING + HANABI_TILE_SIZE.width) * 1,
 		y: HANABI_DEFAULT_TILE_PADDING,
+		z: 0,
 	},
 	{
 		x: HANABI_DEFAULT_TILE_PADDING + (HANABI_DEFAULT_TILE_PADDING + HANABI_TILE_SIZE.width) * 2,
 		y: HANABI_DEFAULT_TILE_PADDING,
+		z: 0,
 	},
 	{
 		x: HANABI_DEFAULT_TILE_PADDING + (HANABI_DEFAULT_TILE_PADDING + HANABI_TILE_SIZE.width) * 3,
 		y: HANABI_DEFAULT_TILE_PADDING,
+		z: 0,
 	},
 	{
 		x: HANABI_DEFAULT_TILE_PADDING + (HANABI_DEFAULT_TILE_PADDING + HANABI_TILE_SIZE.width) * 4,
 		y: HANABI_DEFAULT_TILE_PADDING,
+		z: 0,
 	},
 ];
 
@@ -79,7 +85,6 @@ export interface HanabiTile {
 	id: string;
 	color: HanabiTileColor;
 	number: HanabiTileNumber;
-	zIndex: number;
 }
 
 export const tileColorClasses = {
@@ -260,7 +265,6 @@ export function generateRandomDeck(
 				id: uuidv4(),
 				color,
 				number,
-				zIndex: 0,
 			});
 		}
 	}
@@ -268,4 +272,4 @@ export function generateRandomDeck(
 	return shuffle(tiles, seed);
 }
 
-export const HANABI_BLANK_TILE: HanabiTile = { id: '', number: 1, color: 'red', zIndex: 0 };
+export const HANABI_BLANK_TILE: HanabiTile = { id: '', number: 1, color: 'red' };

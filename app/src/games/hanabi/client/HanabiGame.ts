@@ -252,11 +252,11 @@ export default class HanabiGame extends Game {
 
 		if (draggedTileId) {
 			const tileLocations = [...this._gameData.players[userId].tileLocations];
-			tileLocations.sort((a, b) => (a.tile.zIndex > b.tile.zIndex ? -1 : 1));
-			const maxZIndex = tileLocations[0].tile.zIndex;
+			tileLocations.sort((a, b) => (a.position.z > b.position.z ? -1 : 1));
+			const maxZIndex = tileLocations[0].position.z;
 
 			console.log(
-				tileLocations.map((t) => t.tile.zIndex),
+				tileLocations.map((t) => t.position.z),
 				{ maxZIndex },
 			);
 
@@ -264,7 +264,7 @@ export default class HanabiGame extends Game {
 				(t) => t.tile.id === draggedTileId,
 			);
 			if (draggedTile) {
-				draggedTile.tile.zIndex = maxZIndex + 1;
+				draggedTile.position.z = maxZIndex + 1;
 			}
 		}
 

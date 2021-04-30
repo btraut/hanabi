@@ -56,7 +56,7 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 							})}
 							style={{
 								transform: `translate(${tileLocation.position.x}px, ${tileLocation.position.y}px)`,
-								zIndex: tileLocation.tile.zIndex,
+								zIndex: tileLocation.position.z,
 							}}
 						>
 							<HanabiInteractiveTileView
