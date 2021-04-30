@@ -6,7 +6,6 @@ import { useNewestTile } from 'app/src/games/hanabi/client/HanabiNewestTileConte
 import HanabiPlayerTilesDragLayer from 'app/src/games/hanabi/client/HanabiPlayerTilesDragLayer';
 import { HANABI_BOARD_SIZE, HanabiTile } from 'app/src/games/hanabi/HanabiGameData';
 import classnames from 'classnames';
-import { useEffect, useRef } from 'react';
 import { useDragLayer } from 'react-dnd';
 
 interface Props {
@@ -33,16 +32,6 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 		isDragging: monitor.isDragging(),
 	}));
 
-	const wasDraggingRef = useRef(false);
-
-	useEffect(() => {
-		if (isDragging !== wasDraggingRef.current) {
-			wasDraggingRef.current = isDragging;
-		}
-	}, [isDragging]);
-
-	const disableTransition = wasDraggingRef.current && !isDragging;
-
 	return (
 		<div>
 			<div className="border-4 border-black rounded-xl p-0.5 bg-white relative">
@@ -52,7 +41,7 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 						<div
 							key={`TileContainer-${tileLocation.tile.id}`}
 							className={classnames('absolute top-0 left-0', {
-								'duration-100': !ownTiles || !disableTransition,
+								'duration-100': !ownTiles || isDragging,
 							})}
 							style={{
 								transform: `translate(${tileLocation.position.x}px, ${tileLocation.position.y}px)`,

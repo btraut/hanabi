@@ -6,9 +6,9 @@ import {
 	getSlotXForDraggingTile,
 	getTilePositions,
 	getTileZIndexes,
+	isTileInTopHalf,
 } from 'app/src/games/hanabi/client/HanabiDragDropUtils';
 import { HANABI_DRAG_TYPES, HanabiDragTypes } from 'app/src/games/hanabi/client/HanabiDragTypes';
-import { HANABI_BOARD_SIZE } from 'app/src/games/hanabi/HanabiGameData';
 import { useRef } from 'react';
 import { DragElementWrapper, useDrop } from 'react-dnd';
 
@@ -31,7 +31,7 @@ export default function useTileDrop(): DragElementWrapper<any> {
 			const delta = monitor.getDifferenceFromInitialOffset()!;
 			const newPosition = getPositionInContainer(originalPosition, delta);
 
-			const isTopHalf = newPosition.y < HANABI_BOARD_SIZE.height / 2;
+			const isTopHalf = isTileInTopHalf(newPosition);
 			const tileSlotX = getSlotXForDraggingTile(newPosition.x);
 
 			if (isTopHalf !== previousIsTopHalfRef.current || tileSlotX !== previousTileSlotX.current) {

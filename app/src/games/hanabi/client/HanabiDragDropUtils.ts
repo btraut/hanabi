@@ -25,6 +25,10 @@ export function getSlotXForDraggingTile(x: number, max: number = Number.MAX_SAFE
 	return Math.max(Math.min(slot, max), 0);
 }
 
+export function isTileInTopHalf(position: Position): boolean {
+	return position.y < HANABI_BOARD_SIZE.height / 2 - HANABI_DEFAULT_TILE_PADDING;
+}
+
 export function getNewPositionsForTiles(
 	draggingTile: {
 		[tileId: string]: Position;
@@ -41,7 +45,7 @@ export function getNewPositionsForTiles(
 	for (const tileId of Object.keys(otherTilePositions)) {
 		const position = { ...otherTilePositions[tileId] };
 
-		if (position.y < HANABI_BOARD_SIZE.height / 2) {
+		if (isTileInTopHalf(position)) {
 			topTiles.push({ id: tileId, position });
 		} else {
 			bottomTiles.push({ id: tileId, position });
@@ -50,7 +54,7 @@ export function getNewPositionsForTiles(
 
 	const draggingTileKey = Object.keys(draggingTile)[0];
 	const draggingTilePosition = draggingTile[draggingTileKey];
-	const draggingTileIsTop = draggingTilePosition.y < HANABI_BOARD_SIZE.height / 2;
+	const draggingTileIsTop = isTileInTopHalf(draggingTilePosition);
 	const draggingTileSlotX = getSlotXForDraggingTile(draggingTilePosition.x, topTiles.length);
 
 	// Sort the top tiles by x position.
@@ -85,7 +89,7 @@ export function getNewPositionsForTiles(
 					HANABI_DEFAULT_TILE_PADDING +
 					(HANABI_DEFAULT_TILE_PADDING + HANABI_TILE_SIZE.width) * draggingTileSlotX,
 				y: HANABI_DEFAULT_TILE_PADDING,
-				z: newPositions[draggingTileKey].z,
+				z: 0,
 			};
 		} else {
 			newPositions[draggingTileKey] = draggingTilePosition;

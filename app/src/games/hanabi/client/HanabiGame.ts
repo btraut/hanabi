@@ -255,11 +255,6 @@ export default class HanabiGame extends Game {
 			tileLocations.sort((a, b) => (a.position.z > b.position.z ? -1 : 1));
 			const maxZIndex = tileLocations[0].position.z;
 
-			console.log(
-				tileLocations.map((t) => t.position.z),
-				{ maxZIndex },
-			);
-
 			const draggedTile = this._gameData.players[userId].tileLocations.find(
 				(t) => t.tile.id === draggedTileId,
 			);
