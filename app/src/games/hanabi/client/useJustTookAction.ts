@@ -2,34 +2,33 @@
 // taken. This is useful if we need to enable animations for a period of time
 // after an action was taken, but then disable later.
 
-import useLatestActions from 'app/src/games/hanabi/client/useLatestActions';
-import { useEffect, useRef, useState } from 'react';
+import { useHanabiAnimationManager } from 'app/src/games/hanabi/client/HanabiContext';
+import { useEffect, useRef } from 'react';
 
 export default function useJustTookAction(duration = 200): boolean {
-	const [justTookAction, setJustTookAction] = useState(false);
-
 	const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
-	const actionsLength = useLatestActions().length;
+	const animationManager = useHanabiAnimationManager();
+	const actionsLength = animationManager.displayGameData.actions.length;
+
+	const lastActionsLengthRef = useRef(actionsLength);
+
 	useEffect(() => {
 		if (timeoutRef.current) {
 			clearTimeout(timeoutRef.current);
 		}
 
-		setJustTookAction(true);
-
 		timeoutRef.current = setTimeout(() => {
-			setJustTookAction(false);
 			timeoutRef.current = undefined;
+			lastActionsLengthRef.current = actionsLength;
 		}, duration);
 
 		return () => {
 			if (timeoutRef.current) {
-				setJustTookAction(false);
 				clearTimeout(timeoutRef.current);
 			}
 		};
 	}, [actionsLength, duration]);
 
-	return justTookAction;
+	return actionsLength !== lastActionsLengthRef.current;
 }
