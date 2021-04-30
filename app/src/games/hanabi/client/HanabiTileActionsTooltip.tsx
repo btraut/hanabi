@@ -76,9 +76,12 @@ export default function HanabiTileActionsTooltip({
 						{type === HanabiTileActionsTooltipType.Own && (
 							<div className="grid grid-flow-col gap-x-3 items-center">
 								<button
-									className={classnames('font-bold text-xl text-white focus:outline-none', {
-										'focus:text-red-600': isFocusVisible,
-									})}
+									className={classnames(
+										'font-bold text-xl text-white focus:outline-none hover:text-red-600',
+										{
+											'focus:text-red-600': isFocusVisible,
+										},
+									)}
 									onClick={() => {
 										onAction('discard', tile);
 									}}
@@ -96,9 +99,12 @@ export default function HanabiTileActionsTooltip({
 									}}
 								/>
 								<button
-									className={classnames('font-bold text-xl text-white focus:outline-none', {
-										'focus:text-red-600': isFocusVisible,
-									})}
+									className={classnames(
+										'font-bold text-xl text-white focus:outline-none hover:text-red-600',
+										{
+											'focus:text-red-600': isFocusVisible,
+										},
+									)}
 									onClick={() => {
 										onAction('play', tile);
 									}}
@@ -115,9 +121,9 @@ export default function HanabiTileActionsTooltip({
 											<button
 												key={buttonColor}
 												className={classnames(
-													'w-6 h-6 rounded-full border-black border-4 text-white focus:outline-none',
+													'w-6 h-6 rounded-full border-black border-4 focus:outline-none hover:border-red-600',
 													{
-														'focus:text-red-600': isFocusVisible,
+														'focus:border-red-600': isFocusVisible,
 													},
 													tileBackgroundClasses[buttonColor],
 												)}
@@ -131,9 +137,9 @@ export default function HanabiTileActionsTooltip({
 								) : (
 									<button
 										className={classnames(
-											'w-6 h-6 rounded-full border-black border-4 text-white focus:outline-none',
+											'w-6 h-6 rounded-full border-black border-4 focus:outline-none hover:border-red-600',
 											{
-												'focus:text-red-600': isFocusVisible,
+												'focus:border-red-600': isFocusVisible,
 											},
 											tileBackgroundClasses[tile.color],
 										)}
@@ -153,9 +159,12 @@ export default function HanabiTileActionsTooltip({
 									}}
 								/>
 								<button
-									className={classnames('font-bold text-xl text-white focus:outline-none', {
-										'focus:text-red-600': isFocusVisible,
-									})}
+									className={classnames(
+										'font-bold text-xl text-white focus:outline-none hover:text-red-600',
+										{
+											'focus:text-red-600': isFocusVisible,
+										},
+									)}
 									onClick={() => {
 										onAction('number', tile);
 									}}
