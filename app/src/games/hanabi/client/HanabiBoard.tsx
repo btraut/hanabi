@@ -184,7 +184,7 @@ export default function HanabiBoard(): JSX.Element {
 						return (
 							<Fragment key={`player-${playerId}`}>
 								<div
-									className={classnames('my-4 p-3 border-black border-4 transition-all', {
+									className={classnames('my-2 p-3 border-black border-4', {
 										'bg-gray-800': !thisPlayersTurn,
 										'bg-red-800': thisPlayersTurn,
 									})}

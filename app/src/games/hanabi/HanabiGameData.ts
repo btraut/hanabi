@@ -21,10 +21,6 @@ export interface Position {
 
 export interface Rect extends Size, Position {}
 
-export const HANABI_BOARD_SIZE: Size = { width: 500, height: 160 };
-export const HANABI_TILE_SIZE: Size = { width: 40, height: 48 };
-export const HANABI_TILE_SIZE_SMALL: Size = { width: 30, height: 36 };
-
 export const HANABI_TILES_IN_HAND: { [numPlayers: number]: number } = {
 	'1': 5,
 	'2': 5,
@@ -33,12 +29,31 @@ export const HANABI_TILES_IN_HAND: { [numPlayers: number]: number } = {
 	'5': 4,
 };
 
+export const HANABI_BOARD_SIZE: Size = { width: 400, height: 140 };
+export const HANABI_TILE_SIZE: Size = { width: 40, height: 48 };
+export const HANABI_TILE_SIZE_SMALL: Size = { width: 30, height: 36 };
+export const HANABI_DEFAULT_TILE_PADDING = 10;
 export const HANABI_DEFAULT_TILE_POSITIONS: { [tileNumber: number]: Position } = [
-	{ x: 10, y: 10 },
-	{ x: 60, y: 10 },
-	{ x: 110, y: 10 },
-	{ x: 160, y: 10 },
-	{ x: 210, y: 10 },
+	{
+		x: HANABI_DEFAULT_TILE_PADDING + (HANABI_DEFAULT_TILE_PADDING + HANABI_TILE_SIZE.width) * 0,
+		y: HANABI_DEFAULT_TILE_PADDING,
+	},
+	{
+		x: HANABI_DEFAULT_TILE_PADDING + (HANABI_DEFAULT_TILE_PADDING + HANABI_TILE_SIZE.width) * 1,
+		y: HANABI_DEFAULT_TILE_PADDING,
+	},
+	{
+		x: HANABI_DEFAULT_TILE_PADDING + (HANABI_DEFAULT_TILE_PADDING + HANABI_TILE_SIZE.width) * 2,
+		y: HANABI_DEFAULT_TILE_PADDING,
+	},
+	{
+		x: HANABI_DEFAULT_TILE_PADDING + (HANABI_DEFAULT_TILE_PADDING + HANABI_TILE_SIZE.width) * 3,
+		y: HANABI_DEFAULT_TILE_PADDING,
+	},
+	{
+		x: HANABI_DEFAULT_TILE_PADDING + (HANABI_DEFAULT_TILE_PADDING + HANABI_TILE_SIZE.width) * 4,
+		y: HANABI_DEFAULT_TILE_PADDING,
+	},
 ];
 
 export enum HanabiStage {
@@ -182,6 +197,7 @@ export interface HanabiGameData {
 	seed: string | undefined;
 	finishedReason: HanabiFinishedReason | null;
 	players: { [id: string]: HanabiPlayer };
+	firstPlayerId: string | null;
 	turnOrder: string[];
 	remainingTurns: number | null;
 	remainingTiles: HanabiTile[];
@@ -199,6 +215,7 @@ export function generateHanabiGameData(data: Partial<HanabiGameData> = {}): Hana
 		seed: undefined,
 		finishedReason: null,
 		players: {},
+		firstPlayerId: null,
 		turnOrder: [],
 		remainingTurns: null,
 		remainingTiles: [],

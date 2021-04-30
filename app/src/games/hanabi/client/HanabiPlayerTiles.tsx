@@ -6,6 +6,8 @@ import { useNewestTile } from 'app/src/games/hanabi/client/HanabiNewestTileConte
 import HanabiPlayerTilesDragLayer from 'app/src/games/hanabi/client/HanabiPlayerTilesDragLayer';
 import { HANABI_BOARD_SIZE, HanabiTile } from 'app/src/games/hanabi/HanabiGameData';
 import classnames from 'classnames';
+import { useEffect, useRef } from 'react';
+import { useDragLayer } from 'react-dnd';
 
 interface Props {
 	id: string;
@@ -27,15 +29,30 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 	const enableOnClick = ownTurn && onTileClick;
 	const gameStillPlaying = gameData.finishedReason === null;
 
+	const { isDragging } = useDragLayer((monitor) => ({
+		isDragging: monitor.isDragging(),
+	}));
+
+	const wasDraggingRef = useRef(false);
+
+	useEffect(() => {
+		if (isDragging !== wasDraggingRef.current) {
+			wasDraggingRef.current = isDragging;
+		}
+	}, [isDragging]);
+
+	const disableTransition = wasDraggingRef.current && !isDragging;
+
 	return (
 		<div>
-			<div className={classnames('border-4 border-black rounded-xl p-0.5 bg-white')}>
+			<div className="border-4 border-black rounded-xl p-0.5 bg-white relative">
+				<div className="absolute bottom-0 left-0 right-0 h-1/2 bg-black opacity-5" />
 				<div style={HANABI_BOARD_SIZE} className="relative z-0">
 					{player.tileLocations.map((tileLocation) => (
 						<div
 							key={`TileContainer-${tileLocation.tile.id}`}
 							className={classnames('absolute top-0 left-0', {
-								'duration-100': !ownTiles,
+								'duration-100': !ownTiles || !disableTransition,
 							})}
 							style={{
 								transform: `translate(${tileLocation.position.x}px, ${tileLocation.position.y}px)`,
@@ -43,7 +60,7 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 							}}
 						>
 							<HanabiInteractiveTileView
-								tile={tileLocation.tile}
+								tileLocation={tileLocation}
 								hidden={gameStillPlaying && ownTiles}
 								onClick={enableOnClick ? onTileClick : undefined}
 								draggable={gameStillPlaying && ownTiles}

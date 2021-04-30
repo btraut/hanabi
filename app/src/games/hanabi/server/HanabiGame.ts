@@ -1,4 +1,8 @@
 import {
+	getNewPositionsForTiles,
+	getTilePositions,
+} from 'app/src/games/hanabi/client/HanabiDragDropUtils';
+import {
 	generateHanabiGameData,
 	generatePlayer,
 	generateRandomDeck,
@@ -27,7 +31,6 @@ import {
 	ResetGameMessage,
 	StartGameMessage,
 } from 'app/src/games/hanabi/HanabiMessages';
-import { findBlankSpaceForTile } from 'app/src/games/hanabi/HanabiTileUtils';
 import Game, { GameSerialized } from 'app/src/games/server/Game';
 import GameMessenger from 'app/src/games/server/GameMessenger';
 import { SaveGameDelegate } from 'app/src/games/server/GameStore';
@@ -348,6 +351,7 @@ export default class HanabiGame extends Game {
 
 		// Set up turn order.
 		this._gameData.turnOrder = shuffle(players.map((p) => p.id));
+		this._gameData.firstPlayerId = this._gameData.turnOrder[0];
 
 		// Record the action.
 		this._gameData.actions.push({
@@ -418,6 +422,29 @@ export default class HanabiGame extends Game {
 		return true;
 	}
 
+	private _pickUpNextTile(userId: string): void {
+		const newTile = this._gameData.remainingTiles.pop()!;
+		const newPosition = { x: Number.MAX_SAFE_INTEGER, y: 0 };
+
+		this._gameData.players[userId].tileLocations.push({
+			tile: newTile,
+			position: newPosition,
+		});
+
+		const tilePositions = getTilePositions(this._gameData.players[userId].tileLocations);
+		delete tilePositions[newTile.id];
+
+		const newTilePositions = getNewPositionsForTiles(
+			{ [newTile.id]: newPosition },
+			tilePositions,
+			true,
+		);
+
+		for (const tileLocation of this._gameData.players[userId].tileLocations) {
+			tileLocation.position = newTilePositions[tileLocation.tile.id];
+		}
+	}
+
 	private _handlePlayTileMessage(message: PlayTileMessage, userId: string): void {
 		const gameActionError = this._validateGameAction(userId);
 		if (gameActionError) {
@@ -447,11 +474,7 @@ export default class HanabiGame extends Game {
 
 		// Pick up another tile if available.
 		if (this._gameData.remainingTiles.length) {
-			const newTile = this._gameData.remainingTiles.pop()!;
-			this._gameData.players[userId].tileLocations.push({
-				tile: newTile,
-				position: findBlankSpaceForTile(this._gameData.players[userId].tileLocations),
-			});
+			this._pickUpNextTile(userId);
 		}
 
 		// Check if the tile is valid.
@@ -600,11 +623,7 @@ export default class HanabiGame extends Game {
 
 		// Pick up another tile if available.
 		if (this._gameData.remainingTiles.length) {
-			const newTile = this._gameData.remainingTiles.pop()!;
-			this._gameData.players[userId].tileLocations.push({
-				tile: newTile,
-				position: findBlankSpaceForTile(this._gameData.players[userId].tileLocations),
-			});
+			this._pickUpNextTile(userId);
 		}
 
 		// Record the action.
@@ -866,14 +885,14 @@ export default class HanabiGame extends Game {
 			tileLocation.position = position;
 
 			// Update the zIndex.
-			tileLocation.tile.zIndex =
-				this._gameData.players[userId].tileLocations.reduce((maxZIndex, tl) => {
-					if (tl.tile.zIndex > maxZIndex) {
-						return tl.tile.zIndex;
-					}
+			// tileLocation.tile.zIndex =
+			// 	this._gameData.players[userId].tileLocations.reduce((maxZIndex, tl) => {
+			// 		if (tl.tile.zIndex > maxZIndex) {
+			// 			return tl.tile.zIndex;
+			// 		}
 
-					return maxZIndex;
-				}, 0) + 1;
+			// 		return maxZIndex;
+			// 	}, 0) + 1;
 		}
 
 		// Send success message.

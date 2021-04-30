@@ -1,63 +1,44 @@
-import { useUserId } from 'app/src/components/SocketContext';
-import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
-import { hanabiDragTypes } from 'app/src/games/hanabi/client/HanabiDragTypes';
+import { getPositionInContainer } from 'app/src/games/hanabi/client/HanabiDragDropUtils';
+import { HANABI_DRAG_TYPES, HanabiDragTypes } from 'app/src/games/hanabi/client/HanabiDragTypes';
 import { useHanabiHighlightContext } from 'app/src/games/hanabi/client/HanabiHighlightContext';
 import HanabiTileView from 'app/src/games/hanabi/client/HanabiTileView';
-import { HANABI_BOARD_SIZE, HANABI_TILE_SIZE } from 'app/src/games/hanabi/HanabiGameData';
 import { useDragLayer } from 'react-dnd';
 
 export default function HanabiPlayerTilesDragLayer(): JSX.Element | null {
-	const userId = useUserId();
-	const game = useHanabiGame();
-
-	const { itemType, isDragging, item, differenceFromInitialOffset } = useDragLayer((monitor) => ({
-		item: monitor.getItem(),
+	const { itemType, isDragging, item, delta } = useDragLayer((monitor) => ({
+		item: monitor.getItem() as HanabiDragTypes,
 		itemType: monitor.getItemType(),
-		differenceFromInitialOffset: monitor.getDifferenceFromInitialOffset(),
+		delta: monitor.getDifferenceFromInitialOffset(),
 		isDragging: monitor.isDragging(),
 	}));
 
 	const { highlightedTiles } = useHanabiHighlightContext();
 
-	let tileContainer: JSX.Element | null = null;
+	// If we're not dragging, no need for a drag layer.
+	if (!isDragging || !item || !delta) {
+		return null;
+	}
 
-	if (itemType === hanabiDragTypes.TILE && item && differenceFromInitialOffset) {
-		const tileLocation = game.gameData.players[userId].tileLocations.find(
-			(l) => l.tile.id === item.id,
-		)!;
+	// If the item being dragged is not a tile, bail.
+	if (itemType !== HANABI_DRAG_TYPES.TILE) {
+		return null;
+	}
 
-		const origintalPosition = tileLocation.position;
+	const { originalPosition, id } = item;
+	const newPosition = getPositionInContainer(originalPosition, delta);
 
-		const left = Math.round(origintalPosition.x + differenceFromInitialOffset.x);
-		const top = Math.round(origintalPosition.y + differenceFromInitialOffset.y);
-
-		const leftClamped = Math.min(
-			Math.max(left, 0),
-			HANABI_BOARD_SIZE.width - HANABI_TILE_SIZE.width,
-		);
-		const topClamped = Math.min(
-			Math.max(top, 0),
-			HANABI_BOARD_SIZE.height - HANABI_TILE_SIZE.height,
-		);
-
-		tileContainer = (
+	return (
+		<div className="absolute inset-0 pointer-events-none">
 			<div
-				key={`TileContainer-${tileLocation.tile.id}`}
+				key={`TileContainer-${id}`}
 				className="absolute top-0 left-0"
 				style={{
-					transform: `translate(${leftClamped}px, ${topClamped}px)`,
+					transform: `translate(${newPosition.x}px, ${newPosition.y}px)`,
 					zIndex: 1000000,
 				}}
 			>
-				<HanabiTileView
-					id={tileLocation.tile.id}
-					highlight={highlightedTiles.has(tileLocation.tile.id)}
-				/>
+				<HanabiTileView id={id} highlight={highlightedTiles.has(id)} />
 			</div>
-		);
-	}
-
-	return isDragging ? (
-		<div className="absolute inset-0 pointer-events-none">{tileContainer}</div>
-	) : null;
+		</div>
+	);
 }

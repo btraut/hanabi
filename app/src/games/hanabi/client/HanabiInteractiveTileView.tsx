@@ -4,6 +4,7 @@ import {
 	HANABI_TILE_SIZE,
 	HANABI_TILE_SIZE_SMALL,
 	HanabiTile,
+	HanabiTileLocation,
 } from 'app/src/games/hanabi/HanabiGameData';
 import useFocusVisible from 'app/src/utils/client/useFocusVisible';
 import classnames from 'classnames';
@@ -16,7 +17,7 @@ export enum TileViewSize {
 
 interface Props {
 	// Tile data:
-	tile: HanabiTile;
+	tileLocation: HanabiTileLocation;
 
 	// Optionally hide the value of the tile.
 	hidden?: boolean;
@@ -43,7 +44,7 @@ interface Props {
 }
 
 export default function HanabiInteractiveTileView({
-	tile,
+	tileLocation,
 	hidden = false,
 	size = TileViewSize.Regular,
 	onClick,
@@ -65,7 +66,11 @@ export default function HanabiInteractiveTileView({
 	}, []);
 
 	// Handle drag support.
-	const { isDragging, dragRef } = useTileDrag(tile.id, draggable);
+	const { isDragging, dragRef } = useTileDrag(
+		tileLocation.tile.id,
+		tileLocation.position,
+		draggable,
+	);
 
 	const cursor = draggable ? 'cursor-move' : onClick ? 'cursor-pointer' : 'cursor-default';
 
@@ -74,15 +79,11 @@ export default function HanabiInteractiveTileView({
 	const handleClick = useCallback(
 		(event) => {
 			if (onClick) {
-				onClick(event, tile);
+				onClick(event, tileLocation.tile);
 			}
 		},
-		[onClick, tile],
+		[onClick, tileLocation.tile],
 	);
-
-	if (isDragging) {
-		return null;
-	}
 
 	const Comp = onClick ? 'button' : 'div';
 
@@ -97,14 +98,15 @@ export default function HanabiInteractiveTileView({
 					'focus:ring': isFocusVisible,
 					'focus:border-blue-800': isFocusVisible,
 					shake: showNewAnimation,
+					'opacity-0': isDragging,
 				},
 			])}
 			onClick={onClick ? handleClick : undefined}
 			onMouseDown={handleMouseDown}
 		>
 			<HanabiTileView
-				color={hidden ? undefined : tile.color}
-				number={hidden ? undefined : tile.number}
+				color={hidden ? undefined : tileLocation.tile.color}
+				number={hidden ? undefined : tileLocation.tile.number}
 				border={border}
 				highlight={highlight}
 			/>
