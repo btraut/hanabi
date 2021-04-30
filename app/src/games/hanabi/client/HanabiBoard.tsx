@@ -41,7 +41,10 @@ export default function HanabiBoard(): JSX.Element {
 
 	const userId = useUserId();
 
-	const turnOrder = rotateArrayToItem(gameData.turnOrder, userId);
+	const userIsPlayer = Object.keys(game.gameData.players).includes(userId);
+	const sortUserId = userIsPlayer ? userId : game.gameData.firstPlayerId!;
+
+	const turnOrder = rotateArrayToItem(gameData.turnOrder, sortUserId);
 
 	const [showMenuForTile, setShowMenuForTile] = useState<{
 		tile: HanabiTile;
