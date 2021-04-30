@@ -24,7 +24,7 @@ import useValueChanged from 'app/src/utils/client/useValueChanged';
 import classnames from 'classnames';
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 
-function rotateArrayToItem<T>(arr: T[], item: T): T[] {
+function rotateArrayToItem<T>(arr: readonly T[], item: T): readonly T[] {
 	const itemIndex = arr.indexOf(item);
 
 	if (itemIndex === -1 || itemIndex === 0) {
@@ -41,10 +41,7 @@ export default function HanabiBoard(): JSX.Element {
 
 	const userId = useUserId();
 
-	const userIsPlayer = Object.keys(game.gameData.players).includes(userId);
-	const sortUserId = userIsPlayer ? userId : game.gameData.firstPlayerId!;
-
-	const turnOrder = rotateArrayToItem(gameData.turnOrder, sortUserId);
+	const playerDisplayOrder = rotateArrayToItem(gameData.turnOrder, userId);
 
 	const [showMenuForTile, setShowMenuForTile] = useState<{
 		tile: HanabiTile;
@@ -177,9 +174,9 @@ export default function HanabiBoard(): JSX.Element {
 					className="grid gap-y-6 content-start items-start"
 					style={{ gridTemplateColumns: 'auto auto' }}
 				>
-					{turnOrder.map((playerId) => {
+					{playerDisplayOrder.map((playerId) => {
 						const thisPlayersTurn =
-							gameData.finishedReason === null && gameData.turnOrder[0] === playerId;
+							gameData.finishedReason === null && gameData.currentPlayerId === playerId;
 
 						return (
 							<Fragment key={`player-${playerId}`}>

@@ -351,13 +351,13 @@ export default class HanabiGame extends Game {
 
 		// Set up turn order.
 		this._gameData.turnOrder = shuffle(players.map((p) => p.id));
-		this._gameData.firstPlayerId = this._gameData.turnOrder[0];
+		this._gameData.currentPlayerId = this._gameData.turnOrder[0];
 
 		// Record the action.
 		this._gameData.actions.push({
 			id: uuidv4(),
 			type: HanabiGameActionType.GameStarted,
-			startingPlayerId: this._gameData.turnOrder[0],
+			startingPlayerId: this._gameData.currentPlayerId,
 		});
 
 		// Send success message.
@@ -385,7 +385,7 @@ export default class HanabiGame extends Game {
 			return 'The game isn’t being played right now.';
 		}
 
-		if (this._gameData.turnOrder[0] !== userId) {
+		if (this._gameData.currentPlayerId !== userId) {
 			return 'It’s not your turn!';
 		}
 
@@ -443,6 +443,21 @@ export default class HanabiGame extends Game {
 		for (const tileLocation of this._gameData.players[userId].tileLocations) {
 			tileLocation.position = newTilePositions[tileLocation.tile.id];
 		}
+	}
+
+	private _getNextUserId(turnOrder: readonly string[], currentUser: string | null): string | null {
+		if (currentUser === null) {
+			return null;
+		}
+
+		const currentIndex = turnOrder.indexOf(currentUser);
+
+		if (currentIndex === -1) {
+			return null;
+		}
+
+		const nextIndex = (currentIndex + 1) % turnOrder.length;
+		return turnOrder[nextIndex];
 	}
 
 	private _handlePlayTileMessage(message: PlayTileMessage, userId: string): void {
@@ -573,7 +588,10 @@ export default class HanabiGame extends Game {
 		}
 
 		// Advance the turn.
-		this._gameData.turnOrder.push(this._gameData.turnOrder.shift()!);
+		this._gameData.currentPlayerId = this._getNextUserId(
+			this._gameData.turnOrder,
+			this._gameData.currentPlayerId,
+		);
 
 		// Send success message.
 		this._messenger.send(userId, {
@@ -678,7 +696,10 @@ export default class HanabiGame extends Game {
 		this._gameData.clues += 1;
 
 		// Advance the turn.
-		this._gameData.turnOrder.push(this._gameData.turnOrder.shift()!);
+		this._gameData.currentPlayerId = this._getNextUserId(
+			this._gameData.turnOrder,
+			this._gameData.currentPlayerId,
+		);
 
 		// If the game is over, notify the user.
 		if (this._gameData.finishedReason !== null) {
@@ -809,7 +830,10 @@ export default class HanabiGame extends Game {
 		}
 
 		// Advance the turn.
-		this._gameData.turnOrder.push(this._gameData.turnOrder.shift()!);
+		this._gameData.currentPlayerId = this._getNextUserId(
+			this._gameData.turnOrder,
+			this._gameData.currentPlayerId,
+		);
 
 		// If the game is over, notify the user.
 		if (this._gameData.finishedReason !== null) {

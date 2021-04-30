@@ -202,8 +202,8 @@ export interface HanabiGameData {
 	seed: string | undefined;
 	finishedReason: HanabiFinishedReason | null;
 	players: { [id: string]: HanabiPlayer };
-	firstPlayerId: string | null;
-	turnOrder: string[];
+	currentPlayerId: string | null;
+	turnOrder: readonly string[];
 	remainingTurns: number | null;
 	remainingTiles: HanabiTile[];
 	playedTiles: HanabiTile[];
@@ -220,7 +220,7 @@ export function generateHanabiGameData(data: Partial<HanabiGameData> = {}): Hana
 		seed: undefined,
 		finishedReason: null,
 		players: {},
-		firstPlayerId: null,
+		currentPlayerId: null,
 		turnOrder: [],
 		remainingTurns: null,
 		remainingTiles: [],

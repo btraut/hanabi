@@ -23,7 +23,7 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 	const newestTileId = useNewestTile();
 
 	const ownTiles = id === userId;
-	const ownTurn = gameData.turnOrder[0] === userId;
+	const ownTurn = gameData.currentPlayerId === userId;
 
 	const player = gameData.players[id];
 	const enableOnClick = ownTurn && onTileClick;
