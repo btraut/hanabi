@@ -237,9 +237,7 @@ export default class HanabiGame extends Game {
 		}
 
 		// Update positions.
-		for (const tileId of Object.keys(positions)) {
-			this._gameData.tilePositions[tileId] = positions[tileId];
-		}
+		this._gameData.tilePositions = { ...this._gameData.tilePositions, ...positions };
 
 		// Emit an early onUpdate so clients update with the moved tile. We'll
 		// update again after the server response.

@@ -16,7 +16,7 @@ export default function useActionHighlighter(): void {
 
 	const { highlightAction, highlightTiles } = useHanabiHighlightContext();
 
-	const latestActions = useLatestActions();
+	const latestActions = [...useLatestActions()];
 	const latestTileAction:
 		| HanabiGameActionPlay
 		| HanabiGameActionDiscard

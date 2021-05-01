@@ -2,7 +2,7 @@ import { useHanabiAnimationManager } from 'app/src/games/hanabi/client/HanabiCon
 import { HanabiGameAction } from 'app/src/games/hanabi/HanabiGameData';
 import { useEffect, useState } from 'react';
 
-export default function useLatestActions(): HanabiGameAction[] {
+export default function useLatestActions(): readonly HanabiGameAction[] {
 	const animationManager = useHanabiAnimationManager();
 	const { displayGameData: gameData } = animationManager;
 
@@ -10,7 +10,7 @@ export default function useLatestActions(): HanabiGameAction[] {
 	const actionsLength = gameData.actions.length;
 
 	const [latestActionIndex, setLatestActionIndex] = useState(gameData.actions.length);
-	const [actionsToProcess, setActionsToProcess] = useState<HanabiGameAction[]>([]);
+	const [actionsToProcess, setActionsToProcess] = useState<readonly HanabiGameAction[]>([]);
 
 	useEffect(() => {
 		if (actionsLength > latestActionIndex) {

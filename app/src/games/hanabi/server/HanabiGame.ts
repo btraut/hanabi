@@ -337,19 +337,21 @@ export default class HanabiGame extends Game {
 		const [tiles, remainingTiles] = generateRandomDeck(this._gameData.ruleSet, this._gameData.seed);
 		const tilesInHand = HANABI_TILES_IN_HAND[players.length];
 
+		const newPlayerTiles: { [playerId: string]: string[] } = {};
+		const newPositions: { [tileId: string]: Position } = {};
+
 		for (const player of players) {
+			newPlayerTiles[player.id] = [];
+
 			for (let i = 0; i < tilesInHand; i += 1) {
 				const tileId = remainingTiles.pop()!;
-
-				if (!this._gameData.playerTiles[player.id]) {
-					this._gameData.playerTiles[player.id] = [];
-				}
-
-				this._gameData.playerTiles[player.id].push(tileId);
-
-				this._gameData.tilePositions[tileId] = { ...HANABI_DEFAULT_TILE_POSITIONS[i] };
+				newPlayerTiles[player.id].push(tileId);
+				newPositions[tileId] = { ...HANABI_DEFAULT_TILE_POSITIONS[i] };
 			}
 		}
+
+		this._gameData.playerTiles = { ...this._gameData.playerTiles, ...newPlayerTiles };
+		this._gameData.tilePositions = { ...this._gameData.tilePositions, ...newPositions };
 
 		this._gameData.tiles = tiles;
 		this._gameData.remainingTiles = remainingTiles;
@@ -359,11 +361,14 @@ export default class HanabiGame extends Game {
 		this._gameData.currentPlayerId = this._gameData.turnOrder[0];
 
 		// Record the action.
-		this._gameData.actions.push({
-			id: uuidv4(),
-			type: HanabiGameActionType.GameStarted,
-			startingPlayerId: this._gameData.currentPlayerId,
-		});
+		this._gameData.actions = [
+			...this._gameData.actions,
+			{
+				id: uuidv4(),
+				type: HanabiGameActionType.GameStarted,
+				startingPlayerId: this._gameData.currentPlayerId,
+			},
+		];
 
 		// Send success message.
 		this._messenger.send(userId, {
@@ -432,7 +437,12 @@ export default class HanabiGame extends Game {
 	}
 
 	private _pickUpNextTile(userId: string): void {
-		const newTileId = this._gameData.remainingTiles.pop()!;
+		if (this._gameData.remainingTiles.length === 0) {
+			throw new Error('No tiles left to pick up!');
+		}
+
+		const newTileId = this._gameData.remainingTiles[this._gameData.remainingTiles.length - 1];
+		this._gameData.remainingTiles = this._gameData.remainingTiles.slice(0, -1);
 		const newPosition = { x: Number.MAX_SAFE_INTEGER, y: 0, z: 0 };
 
 		const tilePositions: { [tileId: string]: Position } = {};
@@ -446,11 +456,9 @@ export default class HanabiGame extends Game {
 			true,
 		);
 
-		this._gameData.playerTiles[userId].push(newTileId);
+		this._gameData.tilePositions = { ...this._gameData.tilePositions, ...newTilePositions };
 
-		for (const tileId of this._gameData.playerTiles[userId]) {
-			this._gameData.tilePositions[tileId] = newTilePositions[tileId];
-		}
+		this._gameData.playerTiles[userId].push(newTileId);
 	}
 
 	private _getNextUserId(turnOrder: readonly string[], currentUser: string | null): string | null {
@@ -491,9 +499,8 @@ export default class HanabiGame extends Game {
 		}
 
 		// Remove the tile from the player.
-		this._gameData.playerTiles[userId] = this._gameData.playerTiles[userId].filter(
-			(tid) => tid !== tile.id,
-		);
+		const newPlayerTiles = this._gameData.playerTiles[userId].filter((tid) => tid !== tile.id);
+		this._gameData.playerTiles = { ...this._gameData.playerTiles, [userId]: newPlayerTiles };
 
 		// Pick up another tile if available.
 		if (this._gameData.remainingTiles.length) {
@@ -514,7 +521,7 @@ export default class HanabiGame extends Game {
 		const tileIsValid = !duplicate && prevNumberInSequenceExists;
 
 		if (tileIsValid) {
-			this._gameData.playedTiles.push(tile.id);
+			this._gameData.playedTiles = [...this._gameData.playedTiles, tile.id];
 
 			if (tile.number === 5) {
 				this._gameData.clues += 1;
@@ -527,7 +534,7 @@ export default class HanabiGame extends Game {
 				this._gameData.finishedReason = HanabiFinishedReason.OutOfLives;
 			}
 
-			this._gameData.discardedTiles.push(tile.id);
+			this._gameData.discardedTiles = [...this._gameData.discardedTiles, tile.id];
 		}
 
 		// Detect if the game is over due to the wrong tile being discarded.
@@ -537,14 +544,17 @@ export default class HanabiGame extends Game {
 		}
 
 		// Record the action.
-		this._gameData.actions.push({
-			id: uuidv4(),
-			playerId: userId,
-			type: HanabiGameActionType.Play,
-			tile,
-			valid: tileIsValid,
-			remainingLives: this._gameData.lives,
-		});
+		this._gameData.actions = [
+			...this._gameData.actions,
+			{
+				id: uuidv4(),
+				playerId: userId,
+				type: HanabiGameActionType.Play,
+				tile,
+				valid: tileIsValid,
+				remainingLives: this._gameData.lives,
+			},
+		];
 
 		// If there's no longer any remaining tiles, start the shot clock.
 		if (this._gameData.remainingTurns === null) {
@@ -554,12 +564,15 @@ export default class HanabiGame extends Game {
 				this._gameData.remainingTurns = Object.keys(this._gameData.players).length;
 
 				// Notify the user.
-				this._gameData.actions.push({
-					id: uuidv4(),
-					playerId: userId,
-					type: HanabiGameActionType.ShotClockStarted,
-					remainingTurns: this._gameData.remainingTurns,
-				});
+				this._gameData.actions = [
+					...this._gameData.actions,
+					{
+						id: uuidv4(),
+						playerId: userId,
+						type: HanabiGameActionType.ShotClockStarted,
+						remainingTurns: this._gameData.remainingTurns,
+					},
+				];
 			}
 		} else {
 			// Advance the shot clock.
@@ -572,12 +585,15 @@ export default class HanabiGame extends Game {
 				this._gameData.finishedReason = HanabiFinishedReason.OutOfTurns;
 			} else {
 				// Notify the user.
-				this._gameData.actions.push({
-					id: uuidv4(),
-					playerId: userId,
-					type: HanabiGameActionType.ShotClockTickedDown,
-					remainingTurns: this._gameData.remainingTurns,
-				});
+				this._gameData.actions = [
+					...this._gameData.actions,
+					{
+						id: uuidv4(),
+						playerId: userId,
+						type: HanabiGameActionType.ShotClockTickedDown,
+						remainingTurns: this._gameData.remainingTurns,
+					},
+				];
 			}
 		}
 
@@ -590,11 +606,14 @@ export default class HanabiGame extends Game {
 
 		// If the game is over, notify the user.
 		if (this._gameData.finishedReason !== null) {
-			this._gameData.actions.push({
-				id: uuidv4(),
-				type: HanabiGameActionType.GameFinished,
-				finishedReason: this._gameData.finishedReason,
-			});
+			this._gameData.actions = [
+				...this._gameData.actions,
+				{
+					id: uuidv4(),
+					type: HanabiGameActionType.GameFinished,
+					finishedReason: this._gameData.finishedReason,
+				},
+			];
 		}
 
 		// Advance the turn.
@@ -640,9 +659,8 @@ export default class HanabiGame extends Game {
 		}
 
 		// Remove the tile from the player.
-		this._gameData.playerTiles[userId] = this._gameData.playerTiles[userId].filter(
-			(tid) => tid !== tile.id,
-		);
+		const newPlayerTiles = this._gameData.playerTiles[userId].filter((tid) => tid !== tile.id);
+		this._gameData.playerTiles = { ...this._gameData.playerTiles, [userId]: newPlayerTiles };
 
 		// Add the tile to discarded tiles.
 		this._gameData.discardedTiles = [...this._gameData.discardedTiles, tile.id];
@@ -653,12 +671,15 @@ export default class HanabiGame extends Game {
 		}
 
 		// Record the action.
-		this._gameData.actions.push({
-			id: uuidv4(),
-			playerId: userId,
-			type: HanabiGameActionType.Discard,
-			tile,
-		});
+		this._gameData.actions = [
+			...this._gameData.actions,
+			{
+				id: uuidv4(),
+				playerId: userId,
+				type: HanabiGameActionType.Discard,
+				tile,
+			},
+		];
 
 		// Detect if the game is over due to the wrong tile being discarded.
 		if (this._discardedTileIsFatal(tile)) {
@@ -674,12 +695,15 @@ export default class HanabiGame extends Game {
 				this._gameData.remainingTurns = Object.keys(this._gameData.players).length;
 
 				// Notify the user.
-				this._gameData.actions.push({
-					id: uuidv4(),
-					playerId: userId,
-					type: HanabiGameActionType.ShotClockStarted,
-					remainingTurns: this._gameData.remainingTurns,
-				});
+				this._gameData.actions = [
+					...this._gameData.actions,
+					{
+						id: uuidv4(),
+						playerId: userId,
+						type: HanabiGameActionType.ShotClockStarted,
+						remainingTurns: this._gameData.remainingTurns,
+					},
+				];
 			}
 		} else {
 			// Advance the shot clock.
@@ -691,12 +715,15 @@ export default class HanabiGame extends Game {
 				this._gameData.finishedReason = HanabiFinishedReason.OutOfTurns;
 			} else {
 				// Notify the user.
-				this._gameData.actions.push({
-					id: uuidv4(),
-					playerId: userId,
-					type: HanabiGameActionType.ShotClockTickedDown,
-					remainingTurns: this._gameData.remainingTurns,
-				});
+				this._gameData.actions = [
+					...this._gameData.actions,
+					{
+						id: uuidv4(),
+						playerId: userId,
+						type: HanabiGameActionType.ShotClockTickedDown,
+						remainingTurns: this._gameData.remainingTurns,
+					},
+				];
 			}
 		}
 
@@ -711,11 +738,14 @@ export default class HanabiGame extends Game {
 
 		// If the game is over, notify the user.
 		if (this._gameData.finishedReason !== null) {
-			this._gameData.actions.push({
-				id: uuidv4(),
-				type: HanabiGameActionType.GameFinished,
-				finishedReason: this._gameData.finishedReason,
-			});
+			this._gameData.actions = [
+				...this._gameData.actions,
+				{
+					id: uuidv4(),
+					type: HanabiGameActionType.GameFinished,
+					finishedReason: this._gameData.finishedReason,
+				},
+			];
 		}
 
 		// Send success message.
@@ -808,15 +838,18 @@ export default class HanabiGame extends Game {
 		this._gameData.clues -= 1;
 
 		// Record the action.
-		this._gameData.actions.push({
-			id: uuidv4(),
-			playerId: userId,
-			type: actionType,
-			recipientId: message.data.to,
-			color: message.data.color,
-			number: message.data.number,
-			tiles: selectedTiles,
-		});
+		this._gameData.actions = [
+			...this._gameData.actions,
+			{
+				id: uuidv4(),
+				playerId: userId,
+				type: actionType,
+				recipientId: message.data.to,
+				color: message.data.color,
+				number: message.data.number,
+				tiles: selectedTiles,
+			},
+		];
 
 		// If the shot clock was started, advance it.
 		if (this._gameData.remainingTurns !== null) {
@@ -828,12 +861,15 @@ export default class HanabiGame extends Game {
 				this._gameData.finishedReason = HanabiFinishedReason.OutOfTurns;
 			} else {
 				// Notify the user.
-				this._gameData.actions.push({
-					id: uuidv4(),
-					playerId: userId,
-					type: HanabiGameActionType.ShotClockTickedDown,
-					remainingTurns: this._gameData.remainingTurns,
-				});
+				this._gameData.actions = [
+					...this._gameData.actions,
+					{
+						id: uuidv4(),
+						playerId: userId,
+						type: HanabiGameActionType.ShotClockTickedDown,
+						remainingTurns: this._gameData.remainingTurns,
+					},
+				];
 			}
 		}
 
@@ -845,11 +881,14 @@ export default class HanabiGame extends Game {
 
 		// If the game is over, notify the user.
 		if (this._gameData.finishedReason !== null) {
-			this._gameData.actions.push({
-				id: uuidv4(),
-				type: HanabiGameActionType.GameFinished,
-				finishedReason: this._gameData.finishedReason,
-			});
+			this._gameData.actions = [
+				...this._gameData.actions,
+				{
+					id: uuidv4(),
+					type: HanabiGameActionType.GameFinished,
+					finishedReason: this._gameData.finishedReason,
+				},
+			];
 		}
 
 		// Send success message.
@@ -917,9 +956,7 @@ export default class HanabiGame extends Game {
 		}
 
 		// All tiles are validated. We can update positions now.
-		for (const tileId of Object.keys(message.data)) {
-			this._gameData.tilePositions[tileId] = message.data[tileId];
-		}
+		this._gameData.tilePositions = { ...this._gameData.tilePositions, ...message.data };
 
 		// Send success message.
 		this._messenger.send(userId, {

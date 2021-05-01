@@ -39,7 +39,7 @@ export default function useActionSounds(enabled = true): void {
 
 	const userId = useUserId();
 
-	const latestActions = useLatestActions();
+	const latestActions = [...useLatestActions()];
 	const latestTileAction:
 		| HanabiGameActionPlay
 		| HanabiGameActionDiscard

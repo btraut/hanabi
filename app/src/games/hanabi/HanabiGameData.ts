@@ -217,17 +217,17 @@ export interface HanabiGameData {
 	lives: number;
 
 	// Tiles and zones:
-	tiles: { [tileId: string]: HanabiTile };
-	remainingTiles: string[];
-	playedTiles: string[];
-	discardedTiles: string[];
+	tiles: { readonly [tileId: string]: HanabiTile };
+	remainingTiles: readonly string[];
+	playedTiles: readonly string[];
+	discardedTiles: readonly string[];
 
 	// Player -> Tile mappings:
-	playerTiles: { [playerId: string]: string[] };
-	tilePositions: { [tileId: string]: Position };
+	playerTiles: { readonly [playerId: string]: string[] };
+	tilePositions: { readonly [tileId: string]: Position };
 
 	// Action log (including chat):
-	actions: HanabiGameAction[];
+	actions: readonly HanabiGameAction[];
 }
 
 export function generateHanabiGameData(data: Partial<HanabiGameData> = {}): HanabiGameData {
