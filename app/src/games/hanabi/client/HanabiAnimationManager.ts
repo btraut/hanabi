@@ -100,7 +100,7 @@ export default class HanabiAnimationManager {
 		// TODO: For now, we'll just auto-advance quickly.
 		setTimeout(() => {
 			this._handleAllAnimationsComplete();
-		}, 1);
+		}, 0);
 	}
 
 	private _replaceStateAndAdvance(nextGameState: HanabiGameData) {
