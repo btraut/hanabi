@@ -26,13 +26,13 @@ export default class HanabiAnimatableBuilder {
 				) {
 					let newTileId: null | string = null;
 					if (
-						previousState.players[action.playerId].tileLocations.length ===
-						newState.players[action.playerId].tileLocations.length
+						previousState.playerTiles[action.playerId].length ===
+						newState.playerTiles[action.playerId].length
 					) {
 						newTileId =
-							newState.players[action.playerId].tileLocations[
-								newState.players[action.playerId].tileLocations.length - 1
-							].tile.id;
+							newState.playerTiles[action.playerId][
+								newState.playerTiles[action.playerId].length - 1
+							];
 					}
 
 					if (newTileId !== null) {

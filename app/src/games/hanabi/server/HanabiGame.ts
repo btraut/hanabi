@@ -1,7 +1,4 @@
-import {
-	getNewPositionsForTiles,
-	getTilePositions,
-} from 'app/src/games/hanabi/client/HanabiDragDropUtils';
+import { getNewPositionsForTiles } from 'app/src/games/hanabi/client/HanabiDragDropUtils';
 import {
 	generateHanabiGameData,
 	generatePlayer,
@@ -17,6 +14,7 @@ import {
 	HanabiGameData,
 	HanabiStage,
 	HanabiTile,
+	Position,
 } from 'app/src/games/hanabi/HanabiGameData';
 import {
 	AddPlayerMessage,
@@ -334,20 +332,25 @@ export default class HanabiGame extends Game {
 
 		// Generate a fresh deck and randomize the tiles.
 		const players = Object.values(this._gameData.players);
-		const tiles = generateRandomDeck(this._gameData.ruleSet, this._gameData.seed);
+		const [tiles, remainingTiles] = generateRandomDeck(this._gameData.ruleSet, this._gameData.seed);
 		const tilesInHand = HANABI_TILES_IN_HAND[players.length];
 
 		for (const player of players) {
 			for (let i = 0; i < tilesInHand; i += 1) {
-				const tile = tiles.pop()!;
-				player.tileLocations.push({
-					position: HANABI_DEFAULT_TILE_POSITIONS[i],
-					tile,
-				});
+				const tileId = remainingTiles.pop()!;
+
+				if (!this._gameData.playerTiles[player.id]) {
+					this._gameData.playerTiles[player.id] = [];
+				}
+
+				this._gameData.playerTiles[player.id].push(tileId);
+
+				this._gameData.tilePositions[tileId] = { ...HANABI_DEFAULT_TILE_POSITIONS[i] };
 			}
 		}
 
-		this._gameData.remainingTiles = tiles;
+		this._gameData.tiles = tiles;
+		this._gameData.remainingTiles = remainingTiles;
 
 		// Set up turn order.
 		this._gameData.turnOrder = shuffle(players.map((p) => p.id));
@@ -393,28 +396,32 @@ export default class HanabiGame extends Game {
 	}
 
 	private _discardedTileIsFatal(tile: HanabiTile): boolean {
+		const { tiles } = this._gameData;
+
 		// Check if the tile has already been played.
 		if (
-			this._gameData.playedTiles.find((t) => t.color === tile.color && t.number === tile.number)
+			this._gameData.playedTiles.find(
+				(tid) => tiles[tid].color === tile.color && tiles[tid].number === tile.number,
+			)
 		) {
 			return false;
 		}
 
 		// Check remaining tiles for a copy.
 		if (
-			this._gameData.remainingTiles.find((t) => t.color === tile.color && t.number === tile.number)
+			this._gameData.remainingTiles.find(
+				(tid) => tiles[tid].color === tile.color && tiles[tid].number === tile.number,
+			)
 		) {
 			return false;
 		}
 
 		// Check players' hands for a copy.
-		for (const player of Object.values(this._gameData.players)) {
-			if (
-				player.tileLocations
-					.map((l) => l.tile)
-					.find((t) => t.color === tile.color && t.number === tile.number)
-			) {
-				return false;
+		for (const playerTiles of Object.values(this._gameData.playerTiles)) {
+			for (const tid of playerTiles) {
+				if (tiles[tid].color === tile.color && tiles[tid].number === tile.number) {
+					return false;
+				}
 			}
 		}
 
@@ -423,25 +430,24 @@ export default class HanabiGame extends Game {
 	}
 
 	private _pickUpNextTile(userId: string): void {
-		const newTile = this._gameData.remainingTiles.pop()!;
+		const newTileId = this._gameData.remainingTiles.pop()!;
 		const newPosition = { x: Number.MAX_SAFE_INTEGER, y: 0, z: 0 };
 
-		this._gameData.players[userId].tileLocations.push({
-			tile: newTile,
-			position: newPosition,
-		});
-
-		const tilePositions = getTilePositions(this._gameData.players[userId].tileLocations);
-		delete tilePositions[newTile.id];
+		const tilePositions: { [tileId: string]: Position } = {};
+		for (const tileId of this._gameData.playerTiles[userId]) {
+			tilePositions[tileId] = this._gameData.tilePositions[tileId];
+		}
 
 		const newTilePositions = getNewPositionsForTiles(
-			{ [newTile.id]: newPosition },
+			{ [newTileId]: newPosition },
 			tilePositions,
 			true,
 		);
 
-		for (const tileLocation of this._gameData.players[userId].tileLocations) {
-			tileLocation.position = newTilePositions[tileLocation.tile.id];
+		this._gameData.playerTiles[userId].push(newTileId);
+
+		for (const tileId of this._gameData.playerTiles[userId]) {
+			this._gameData.tilePositions[tileId] = newTilePositions[tileId];
 		}
 	}
 
@@ -461,6 +467,8 @@ export default class HanabiGame extends Game {
 	}
 
 	private _handlePlayTileMessage(message: PlayTileMessage, userId: string): void {
+		const { tiles } = this._gameData;
+
 		const gameActionError = this._validateGameAction(userId);
 		if (gameActionError) {
 			this._messenger.send(userId, {
@@ -470,9 +478,7 @@ export default class HanabiGame extends Game {
 			return;
 		}
 
-		const tile = this._gameData.players[userId].tileLocations
-			.map((l) => l.tile)
-			.find((t) => t.id === message.data.id);
+		const tile = this._gameData.tiles[message.data.id];
 
 		if (!tile) {
 			this._messenger.send(userId, {
@@ -483,9 +489,9 @@ export default class HanabiGame extends Game {
 		}
 
 		// Remove the tile from the player.
-		this._gameData.players[userId].tileLocations = this._gameData.players[
-			userId
-		].tileLocations.filter((l) => l.tile.id !== tile.id);
+		this._gameData.playerTiles[userId] = this._gameData.playerTiles[userId].filter(
+			(tid) => tid !== tile.id,
+		);
 
 		// Pick up another tile if available.
 		if (this._gameData.remainingTiles.length) {
@@ -494,17 +500,19 @@ export default class HanabiGame extends Game {
 
 		// Check if the tile is valid.
 		const duplicate = !!this._gameData.playedTiles.find(
-			(t) => t.color === tile.color && t.number === tile.number,
+			(tid) => tiles[tid].color === tile.color && tiles[tid].number === tile.number,
 		);
 		const prevNumberInSequenceExists = !!(
 			tile.number === 1 ||
-			this._gameData.playedTiles.find((t) => t.color === tile.color && t.number === tile.number - 1)
+			this._gameData.playedTiles.find(
+				(tid) => tiles[tid].color === tile.color && tiles[tid].number === tile.number - 1,
+			)
 		);
 
 		const tileIsValid = !duplicate && prevNumberInSequenceExists;
 
 		if (tileIsValid) {
-			this._gameData.playedTiles.push(tile);
+			this._gameData.playedTiles.push(tile.id);
 
 			if (tile.number === 5) {
 				this._gameData.clues += 1;
@@ -517,7 +525,7 @@ export default class HanabiGame extends Game {
 				this._gameData.finishedReason = HanabiFinishedReason.OutOfLives;
 			}
 
-			this._gameData.discardedTiles.push(tile);
+			this._gameData.discardedTiles.push(tile.id);
 		}
 
 		// Detect if the game is over due to the wrong tile being discarded.
@@ -619,9 +627,7 @@ export default class HanabiGame extends Game {
 			return;
 		}
 
-		const tile = this._gameData.players[userId].tileLocations
-			.map((l) => l.tile)
-			.find((t) => t.id === message.data.id);
+		const tile = this._gameData.tiles[message.data.id];
 
 		if (!tile) {
 			this._messenger.send(userId, {
@@ -632,12 +638,12 @@ export default class HanabiGame extends Game {
 		}
 
 		// Remove the tile from the player.
-		this._gameData.players[userId].tileLocations = this._gameData.players[
-			userId
-		].tileLocations.filter((l) => l.tile.id !== tile.id);
+		this._gameData.playerTiles[userId] = this._gameData.playerTiles[userId].filter(
+			(tid) => tid !== tile.id,
+		);
 
 		// Add the tile to discarded tiles.
-		this._gameData.discardedTiles.push(tile);
+		this._gameData.discardedTiles = [...this._gameData.discardedTiles, tile.id];
 
 		// Pick up another tile if available.
 		if (this._gameData.remainingTiles.length) {
@@ -752,8 +758,8 @@ export default class HanabiGame extends Game {
 			return;
 		}
 
-		const recipient = this._gameData.players[message.data.to];
-		if (!recipient) {
+		const recipientTiles = this._gameData.playerTiles[message.data.to];
+		if (!recipientTiles) {
 			this._messenger.send(userId, {
 				type: 'GiveClueResponseMessage',
 				data: { error: 'Invalid player!' },
@@ -761,8 +767,8 @@ export default class HanabiGame extends Game {
 			return;
 		}
 
-		const selectedTiles = recipient.tileLocations
-			.map((tl) => tl.tile)
+		const selectedTiles = recipientTiles
+			.map((tid) => this._gameData.tiles[tid])
 			.filter((t) => {
 				if (message.data.color) {
 					if (this._gameData.ruleSet === 'rainbow') {
@@ -875,12 +881,17 @@ export default class HanabiGame extends Game {
 			});
 		}
 
+		// Validate that the user owns all these tiles.
 		for (const tileId of Object.keys(message.data)) {
-			const tileLocation = this._gameData.players[userId].tileLocations.find(
-				(t) => t.tile.id === tileId,
-			);
+			if (!this._gameData.tilePositions[tileId]) {
+				this._messenger.send(userId, {
+					type: 'MoveTilesResponseMessage',
+					data: { error: 'Invalid tile id!' },
+				});
+				return;
+			}
 
-			if (!tileLocation) {
+			if (!this._gameData.playerTiles[userId].includes(tileId)) {
 				this._messenger.send(userId, {
 					type: 'MoveTilesResponseMessage',
 					data: { error: 'That tile isn’t in your hand!' },
@@ -888,7 +899,7 @@ export default class HanabiGame extends Game {
 				return;
 			}
 
-			const position = message.data[tileId];
+			const position = this._gameData.tilePositions[tileId];
 
 			if (
 				position.x > HANABI_BOARD_SIZE.width - HANABI_TILE_SIZE.width ||
@@ -901,12 +912,11 @@ export default class HanabiGame extends Game {
 					data: { error: 'Invalid position.' },
 				});
 			}
+		}
 
-			// TODO: We should really be validating all the tiles before editing
-			// any of them.
-
-			// Move the tile.
-			tileLocation.position = position;
+		// All tiles are validated. We can update positions now.
+		for (const tileId of Object.keys(message.data)) {
+			this._gameData.tilePositions[tileId] = message.data[tileId];
 		}
 
 		// Send success message.
@@ -934,15 +944,10 @@ export default class HanabiGame extends Game {
 		}
 
 		// Generate a new game.
-		// TODO: Copy other options over.
 		this._gameData = generateHanabiGameData({
 			players: this._gameData.players,
 			ruleSet: this._gameData.ruleSet,
 		});
-
-		for (const player of Object.values(this._gameData.players)) {
-			player.tileLocations = [];
-		}
 
 		// Send the updated state to all players/watchers.
 		this._messenger.send(this._getAllPlayerAndWatcherIds(), {

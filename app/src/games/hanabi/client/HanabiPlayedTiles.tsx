@@ -39,7 +39,11 @@ export default function HanabiPlayedTiles({
 		greatestPlayedForEachColor[color] = null;
 
 		for (const number of TILE_NUMBERS) {
-			if (gameData.playedTiles.find((t) => t.color === color && t.number === number)) {
+			if (
+				gameData.playedTiles
+					.map((tid) => gameData.tiles[tid])
+					.find((t) => t.color === color && t.number === number)
+			) {
 				greatestPlayedForEachColor[color] = number;
 			} else {
 				break;
@@ -50,7 +54,9 @@ export default function HanabiPlayedTiles({
 	return (
 		<div className="grid grid-flow-row justify-start gap-1 xl:gap-2">
 			{colors.map((color) => {
-				const discardedTiles = gameData.discardedTiles.filter((t) => t.color === color);
+				const discardedTiles = gameData.discardedTiles
+					.map((tid) => gameData.tiles[tid])
+					.filter((t) => t.color === color);
 
 				return (
 					<div
@@ -60,9 +66,9 @@ export default function HanabiPlayedTiles({
 					>
 						<div className="grid grid-flow-col justify-start gap-0.5 xl:gap-1">
 							{TILE_NUMBERS.map((number) => {
-								const playedTile = gameData.playedTiles.find(
-									(t) => t.color === color && t.number === number,
-								);
+								const playedTile = gameData.playedTiles
+									.map((tid) => gameData.tiles[tid])
+									.find((t) => t.color === color && t.number === number);
 
 								return (
 									<div

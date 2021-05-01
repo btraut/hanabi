@@ -233,17 +233,17 @@ export default class HanabiGame extends Game {
 		// RefreshGameData message. We'll handle that in a separate handler.
 	}
 
-	public moveTilesLocally(userId: string, positions: { [tileId: string]: Position }): void {
+	public moveTilesLocally(positions: { [tileId: string]: Position }): void {
+		// Validate tile ids.
 		for (const tileId of Object.keys(positions)) {
-			const tileLocation = this._gameData.players[userId].tileLocations.find(
-				(tl) => tl.tile.id === tileId,
-			);
-
-			if (!tileLocation) {
+			if (!this._gameData.tiles[tileId]) {
 				throw new Error('Invalid player or tile id.');
 			}
+		}
 
-			tileLocation.position = { ...positions[tileId] };
+		// Update positions.
+		for (const tileId of Object.keys(positions)) {
+			this._gameData.tilePositions[tileId] = positions[tileId];
 		}
 
 		// Emit an early onUpdate so clients update with the moved tile. We'll
@@ -254,8 +254,8 @@ export default class HanabiGame extends Game {
 	public async commitTileMoves(userId: string): Promise<void> {
 		const newTileLocations: { [tileId: string]: Position } = {};
 
-		for (const tileLocation of this._gameData.players[userId].tileLocations) {
-			newTileLocations[tileLocation.tile.id] = tileLocation.position;
+		for (const tileId of this._gameData.playerTiles[userId]) {
+			newTileLocations[tileId] = this._gameData.tilePositions[tileId];
 		}
 
 		this._sendMessage({

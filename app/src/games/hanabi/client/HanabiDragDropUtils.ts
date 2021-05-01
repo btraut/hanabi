@@ -2,7 +2,6 @@ import {
 	HANABI_BOARD_SIZE,
 	HANABI_DEFAULT_TILE_PADDING,
 	HANABI_TILE_SIZE,
-	HanabiTileLocation,
 	Position,
 } from 'app/src/games/hanabi/HanabiGameData';
 import { XYCoord } from 'react-dnd';
@@ -103,16 +102,4 @@ export function getNewPositionsForTiles(
 	}
 
 	return newPositions;
-}
-
-export function getTilePositions(
-	tileLocations: HanabiTileLocation[],
-): { [tileId: string]: Position } {
-	const tilePositions: { [tileId: string]: Position } = {};
-
-	for (const tileLocation of tileLocations) {
-		tilePositions[tileLocation.tile.id] = tileLocation.position;
-	}
-
-	return tilePositions;
 }

@@ -55,7 +55,7 @@ export default function HanabiBoard(): JSX.Element {
 	const handleTileClick = useCallback(
 		(event: React.MouseEvent<HTMLDivElement>, tile: HanabiTile) => {
 			const rect = (event.target as any).getBoundingClientRect();
-			const ownTile = !!gameData.players[userId].tileLocations.find((tl) => tl.tile.id === tile.id);
+			const ownTile = !!gameData.playerTiles[userId].includes(tile.id);
 
 			// What menu should we display?
 			let type = ownTile
@@ -86,7 +86,7 @@ export default function HanabiBoard(): JSX.Element {
 			let tileOwner: string | null = null;
 
 			for (const playerId in gameData.players) {
-				if (gameData.players[playerId].tileLocations.find((tl) => tl.tile.id === tile.id)) {
+				if (gameData.playerTiles[playerId].includes(tile.id)) {
 					tileOwner = playerId;
 					break;
 				}

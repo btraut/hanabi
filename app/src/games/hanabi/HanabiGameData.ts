@@ -107,16 +107,10 @@ export const tileBackgroundClasses = {
 	rainbow: 'bg-rainbow',
 };
 
-export interface HanabiTileLocation {
-	tile: HanabiTile;
-	position: Position;
-}
-
 export interface HanabiPlayer {
 	id: string;
 	connected: boolean;
 	name: string;
-	tileLocations: HanabiTileLocation[];
 }
 
 export enum HanabiGameActionType {
@@ -198,37 +192,62 @@ export type HanabiGameAction =
 	| HanabiGameActionChat;
 
 export interface HanabiGameData {
+	// What seed was used for the random number generator? This seed should
+	// dictate all the same tile types/order at the beginning of the game.
+	seed: string | null;
+
+	// What kind of game is this? Regular? Rainbow?
+	ruleSet: HanabiRuleSet;
+
+	// Where are we in the game?
 	stage: HanabiStage;
-	seed: string | undefined;
 	finishedReason: HanabiFinishedReason | null;
+
+	// Who are the players, and what is their order?
 	players: { [id: string]: HanabiPlayer };
 	currentPlayerId: string | null;
 	turnOrder: readonly string[];
+
+	// How many turns remain? This will be null until the shot clock starts at
+	// the end.
 	remainingTurns: number | null;
-	remainingTiles: HanabiTile[];
-	playedTiles: HanabiTile[];
-	discardedTiles: HanabiTile[];
-	ruleSet: HanabiRuleSet;
+
+	// Game stats:
 	clues: number;
 	lives: number;
+
+	// Tiles and zones:
+	tiles: { [tileId: string]: HanabiTile };
+	remainingTiles: string[];
+	playedTiles: string[];
+	discardedTiles: string[];
+
+	// Player -> Tile mappings:
+	playerTiles: { [playerId: string]: string[] };
+	tilePositions: { [tileId: string]: Position };
+
+	// Action log (including chat):
 	actions: HanabiGameAction[];
 }
 
 export function generateHanabiGameData(data: Partial<HanabiGameData> = {}): HanabiGameData {
 	return {
+		seed: null,
+		ruleSet: '5-color',
 		stage: HanabiStage.Setup,
-		seed: undefined,
 		finishedReason: null,
 		players: {},
 		currentPlayerId: null,
 		turnOrder: [],
 		remainingTurns: null,
+		clues: HANABI_MAX_CLUES,
+		lives: HANABI_MAX_LIVES,
+		tiles: {},
 		remainingTiles: [],
 		playedTiles: [],
 		discardedTiles: [],
-		clues: HANABI_MAX_CLUES,
-		lives: HANABI_MAX_LIVES,
-		ruleSet: '5-color',
+		playerTiles: {},
+		tilePositions: {},
 		actions: [],
 		...data,
 	};
@@ -239,16 +258,16 @@ export function generatePlayer(data: Partial<HanabiPlayer> = {}): HanabiPlayer {
 		connected: true,
 		id: uuidv4(),
 		name: '',
-		tileLocations: [],
 		...data,
 	};
 }
 
 export function generateRandomDeck(
 	ruleSet: HanabiRuleSet,
-	seed: string | undefined = undefined,
-): HanabiTile[] {
-	const tiles: HanabiTile[] = [];
+	seed: string | null = null,
+): [{ [tileId: string]: HanabiTile }, string[]] {
+	const tiles: { [tileId: string]: HanabiTile } = {};
+	const tileIds: string[] = [];
 
 	const colors: HanabiTileColor[] = ['red', 'blue', 'green', 'yellow', 'white'];
 	if (ruleSet === 'rainbow') {
@@ -261,15 +280,13 @@ export function generateRandomDeck(
 
 	for (const color of colors) {
 		for (const number of numbers) {
-			tiles.push({
-				id: uuidv4(),
-				color,
-				number,
-			});
+			const id = uuidv4();
+			tiles[id] = { id, color, number };
+			tileIds.push(id);
 		}
 	}
 
-	return shuffle(tiles, seed);
+	return [tiles, shuffle(tileIds, seed ?? undefined)];
 }
 
 export const HANABI_BLANK_TILE: HanabiTile = { id: '', number: 1, color: 'red' };

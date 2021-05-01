@@ -25,7 +25,6 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 	const ownTiles = id === userId;
 	const ownTurn = gameData.currentPlayerId === userId;
 
-	const player = gameData.players[id];
 	const enableOnClick = ownTurn && onTileClick;
 	const gameStillPlaying = gameData.finishedReason === null;
 
@@ -40,24 +39,25 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 			<div className="border-4 border-black rounded-xl p-0.5 bg-white relative">
 				<div className="absolute bottom-0 left-0 right-0 h-1/2 bg-black opacity-5" />
 				<div style={HANABI_BOARD_SIZE} className="relative z-0">
-					{player.tileLocations.map((tileLocation) => (
+					{gameData.playerTiles[id].map((tileId) => (
 						<div
-							key={`TileContainer-${tileLocation.tile.id}`}
+							key={`TileContainer-${tileId}`}
 							className={classnames('absolute top-0 left-0', {
 								'duration-100': !ownTiles || isDragging || justTookAction,
 							})}
 							style={{
-								transform: `translate(${tileLocation.position.x}px, ${tileLocation.position.y}px)`,
-								zIndex: tileLocation.position.z,
+								transform: `translate(${gameData.tilePositions[tileId].x}px, ${gameData.tilePositions[tileId].y}px)`,
+								zIndex: gameData.tilePositions[tileId].z,
 							}}
 						>
 							<HanabiInteractiveTileView
-								tileLocation={tileLocation}
+								tile={gameData.tiles[tileId]}
+								position={gameData.tilePositions[tileId]}
 								hidden={gameStillPlaying && ownTiles}
 								onClick={enableOnClick ? onTileClick : undefined}
 								draggable={gameStillPlaying && ownTiles}
-								highlight={highlightedTiles.has(tileLocation.tile.id)}
-								enableNewAnimation={gameStillPlaying && tileLocation.tile.id === newestTileId}
+								highlight={highlightedTiles.has(tileId)}
+								enableNewAnimation={gameStillPlaying && tileId === newestTileId}
 							/>
 						</div>
 					))}

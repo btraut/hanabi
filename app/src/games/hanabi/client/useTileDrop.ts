@@ -4,7 +4,6 @@ import {
 	getNewPositionsForTiles,
 	getPositionInContainer,
 	getSlotXForDraggingTile,
-	getTilePositions,
 	isTileInTopHalf,
 } from 'app/src/games/hanabi/client/HanabiDragDropUtils';
 import { HANABI_DRAG_TYPES, HanabiDragTypes } from 'app/src/games/hanabi/client/HanabiDragTypes';
@@ -19,22 +18,16 @@ export default function useTileDrop(): DragElementWrapper<any> {
 	const previousIsTopHalfRef = useRef<boolean | null>(null);
 	const previousTileSlotX = useRef<number | null>(null);
 
-	const originalPositionRef = useRef<Position | null>(null);
-
 	// The entire screen should be used as a drop target. This is to work around
 	// a limitation of HTML5 drag and drop API where the "return animation" is
 	// played when dropping things outside drop targets.
 	const [, dropRef] = useDrop<HanabiDragTypes, void, void>({
 		accept: [HANABI_DRAG_TYPES.TILE],
 		hover: (item, monitor) => {
-			if (!originalPositionRef.current) {
-				originalPositionRef.current = game.gameData.players[userId].tileLocations.find(
-					(l) => l.tile.id === item.id,
-				)!.position;
-			}
+			const originalPosition = game.gameData.tilePositions[item.id];
 
 			const delta = monitor.getDifferenceFromInitialOffset()!;
-			const newPosition = getPositionInContainer(originalPositionRef.current, delta);
+			const newPosition = getPositionInContainer(originalPosition, delta);
 
 			const isTopHalf = isTileInTopHalf(newPosition);
 			const tileSlotX = getSlotXForDraggingTile(newPosition.x);
@@ -43,8 +36,12 @@ export default function useTileDrop(): DragElementWrapper<any> {
 				isTopHalf !== previousIsTopHalfRef.current ||
 				(isTopHalf && tileSlotX !== previousTileSlotX.current)
 			) {
-				const tilePositions = getTilePositions(game.gameData.players[userId].tileLocations);
-				delete tilePositions[item.id];
+				const tilePositions: { [tileId: string]: Position } = {};
+				for (const tileId of game.gameData.playerTiles[userId]) {
+					if (tileId !== item.id) {
+						tilePositions[tileId] = game.gameData.tilePositions[tileId];
+					}
+				}
 
 				// TODO: Make this way faster.
 				const newPositions = getNewPositionsForTiles(
@@ -53,34 +50,32 @@ export default function useTileDrop(): DragElementWrapper<any> {
 					false,
 				);
 
-				game.moveTilesLocally(userId, newPositions);
+				game.moveTilesLocally(newPositions);
 			}
 
 			previousIsTopHalfRef.current = isTopHalf;
 			previousTileSlotX.current = tileSlotX;
 		},
 		drop: (item, monitor) => {
-			if (!originalPositionRef.current) {
-				originalPositionRef.current = game.gameData.players[userId].tileLocations.find(
-					(l) => l.tile.id === item.id,
-				)!.position;
-			}
+			const originalPosition = game.gameData.tilePositions[item.id];
 
 			const delta = monitor.getDifferenceFromInitialOffset()!;
-			const newPosition = getPositionInContainer(originalPositionRef.current, delta);
+			const newPosition = getPositionInContainer(originalPosition, delta);
 
-			const tilePositions = getTilePositions(game.gameData.players[userId].tileLocations);
-			delete tilePositions[item.id];
+			const tilePositions: { [tileId: string]: Position } = {};
+			for (const tileId of game.gameData.playerTiles[userId]) {
+				if (tileId !== item.id) {
+					tilePositions[tileId] = game.gameData.tilePositions[tileId];
+				}
+			}
 
 			const newPositions = getNewPositionsForTiles({ [item.id]: newPosition }, tilePositions, true);
 
-			game.moveTilesLocally(userId, newPositions);
+			game.moveTilesLocally(newPositions);
 			game.commitTileMoves(userId);
 
 			previousIsTopHalfRef.current = null;
 			previousTileSlotX.current = null;
-
-			originalPositionRef.current = null;
 		},
 	});
 

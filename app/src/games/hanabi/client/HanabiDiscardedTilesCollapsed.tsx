@@ -21,6 +21,7 @@ export default function HanabiPlayedTiles(): JSX.Element {
 		<div className="grid grid-flow-col justify-start gap-1 items-center">
 			{colors.map((color) => {
 				const coloredTiles = gameData.discardedTiles
+					.map((tid) => gameData.tiles[tid])
 					.filter((t) => t.color === color)
 					.sort((a, b) => (a.number < b.number ? -1 : 1));
 

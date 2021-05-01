@@ -26,8 +26,8 @@ export default function HanabiNewestTileController({ children }: Props): JSX.Ele
 		}
 
 		const previousGameData = gameDataRef.current;
-		const previousTiles = previousGameData.players[userId].tileLocations.map((tl) => tl.tile);
-		const newTiles = game.gameData.players[userId].tileLocations.map((tl) => tl.tile);
+		const previousTileIds = previousGameData.playerTiles[userId];
+		const newTileIds = game.gameData.playerTiles[userId];
 
 		gameDataRef.current = game.gameData;
 
@@ -36,10 +36,10 @@ export default function HanabiNewestTileController({ children }: Props): JSX.Ele
 		}
 
 		if (
-			newTiles[newTiles.length - 1].id !== previousTiles[previousTiles.length - 1].id &&
+			newTileIds[newTileIds.length - 1] !== previousTileIds[previousTileIds.length - 1] &&
 			previousGameData.stage === HanabiStage.Playing
 		) {
-			setNewestTileId(newTiles[newTiles.length - 1].id);
+			setNewestTileId(newTileIds[newTileIds.length - 1]);
 		}
 	}, [game.gameData, isMounted, userId]);
 
