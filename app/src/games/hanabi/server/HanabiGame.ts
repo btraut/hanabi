@@ -180,7 +180,7 @@ export default class HanabiGame extends Game {
 
 		// Add the player to the player list.
 		const player = generatePlayer({ id: playerId, name });
-		this._gameData.players[playerId] = player;
+		this._gameData.players = { ...this._gameData.players, [playerId]: player };
 
 		// Success! Respond to the creator.
 		this._messenger.send(playerId, {
@@ -215,7 +215,9 @@ export default class HanabiGame extends Game {
 			return;
 		}
 
-		delete this._gameData.players[removeUserId];
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		const { [removeUserId]: _removedPlayer, ...remainingPlayers } = this._gameData.players;
+		this._gameData.players = remainingPlayers;
 
 		this._messenger.send(userId, {
 			type: 'RemovePlayerResponseMessage',
@@ -950,9 +952,15 @@ export default class HanabiGame extends Game {
 		});
 
 		// Send the updated state to all players/watchers.
-		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
+		this._messenger.send(userId, {
 			type: 'ResetGameResponseMessage',
-			data: { data: this._gameData },
+			data: {},
+		});
+
+		// Send the updated state to all players/watchers.
+		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
+			type: 'RefreshGameDataMessage',
+			data: this._gameData,
 		});
 
 		// Touch the games last updated time.

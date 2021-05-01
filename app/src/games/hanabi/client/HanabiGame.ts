@@ -206,13 +206,8 @@ export default class HanabiGame extends Game {
 			throw new Error(resetGameResponseMessage.data.error);
 		}
 
-		if (!resetGameResponseMessage.data.data) {
-			throw new Error('Missing game data.');
-		}
-
-		this._gameData = resetGameResponseMessage.data.data;
-
-		this.onUpdate.emit();
+		// After responding to our initial message, the server will also send a
+		// RefreshGameData message. We'll handle that in a separate handler.
 	}
 
 	public async changeSettings(settings: { ruleSet?: HanabiRuleSet }): Promise<void> {

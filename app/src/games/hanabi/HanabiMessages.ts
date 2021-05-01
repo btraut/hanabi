@@ -47,7 +47,7 @@ export type StartGameResponseMessage = SocketMessage<
 export type ResetGameMessage = SocketMessage<'ResetGameMessage', void>;
 export type ResetGameResponseMessage = SocketMessage<
 	'ResetGameResponseMessage',
-	{ error?: string; data?: HanabiGameData }
+	{ error?: string }
 >;
 
 // Game Actions

@@ -204,7 +204,7 @@ export interface HanabiGameData {
 	finishedReason: HanabiFinishedReason | null;
 
 	// Who are the players, and what is their order?
-	players: { [id: string]: HanabiPlayer };
+	players: { readonly [id: string]: HanabiPlayer };
 	currentPlayerId: string | null;
 	turnOrder: readonly string[];
 
