@@ -20,8 +20,6 @@ export interface Position {
 	z: number;
 }
 
-export interface Rect extends Size, Position {}
-
 export const HANABI_TILES_IN_HAND: { [numPlayers: number]: number } = {
 	'1': 5,
 	'2': 5,
@@ -288,5 +286,3 @@ export function generateRandomDeck(
 
 	return [tiles, shuffle(tileIds, seed ?? undefined)];
 }
-
-export const HANABI_BLANK_TILE: HanabiTile = { id: '', number: 1, color: 'red' };
