@@ -1,7 +1,7 @@
 const colors = require('tailwindcss/colors');
 
 module.exports = {
-	purge: [],
+	purge: ['./app/**/*.html', './app/**/*.js'],
 	darkMode: false,
 	theme: {
 		textShadow: {
