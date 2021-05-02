@@ -29,8 +29,6 @@ const baseConfig: Partial<Configuration> = {
 // Load environment variables from .env file.
 dotenv.config({ path: path.resolve(ROOT_PATH, '.env') });
 
-const isDevelopment = process.env.NODE_ENV === 'development';
-
 const clientConfig: Configuration = {
 	...baseConfig,
 
@@ -39,7 +37,7 @@ const clientConfig: Configuration = {
 	},
 	output: {
 		path: CLIENT_BUILD_PATH,
-		filename: isDevelopment ? 'js/[name]-[fullhash].js' : 'js/[name].js',
+		filename: 'js/[name]-[chunkhash].js',
 		publicPath: '/',
 	},
 	module: {
@@ -88,7 +86,7 @@ const clientConfig: Configuration = {
 	},
 	plugins: [
 		new MiniCssExtractPlugin({
-			filename: isDevelopment ? 'css/main-[fullhash].css' : 'css/main.css',
+			filename: 'css/main-[chunkhash].css',
 		}),
 		new HtmlWebpackPlugin({
 			template: path.resolve(APP_PATH, 'index.html'),
