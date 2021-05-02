@@ -2,7 +2,6 @@ import { useUserId } from 'app/src/components/SocketContext';
 import { useHanabiAnimationManager } from 'app/src/games/hanabi/client/HanabiContext';
 import { useHanabiHighlightContext } from 'app/src/games/hanabi/client/HanabiHighlightContext';
 import HanabiInteractiveTileView from 'app/src/games/hanabi/client/HanabiInteractiveTileView';
-import { useNewestTile } from 'app/src/games/hanabi/client/HanabiNewestTileContext';
 import HanabiPlayerTilesDragLayer from 'app/src/games/hanabi/client/HanabiPlayerTilesDragLayer';
 import useJustTookAction from 'app/src/games/hanabi/client/useJustTookAction';
 import { HANABI_BOARD_SIZE, HanabiTile } from 'app/src/games/hanabi/HanabiGameData';
@@ -20,7 +19,6 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 	const userId = useUserId();
 
 	const { highlightedTiles } = useHanabiHighlightContext();
-	const newestTileId = useNewestTile();
 
 	const ownTiles = id === userId;
 	const ownTurn = gameData.currentPlayerId === userId;
@@ -57,7 +55,6 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 								onClick={enableOnClick ? onTileClick : undefined}
 								draggable={gameStillPlaying && ownTiles}
 								highlight={highlightedTiles.has(tileId)}
-								enableNewAnimation={gameStillPlaying && tileId === newestTileId}
 							/>
 						</div>
 					))}

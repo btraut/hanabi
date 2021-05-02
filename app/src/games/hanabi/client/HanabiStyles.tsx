@@ -31,25 +31,6 @@ export default function HanabiStyles(): JSX.Element {
 	}
 }
 
-.shake {
-	animation: shake 0.3s both infinite;
-	transform: translate3d(0, 0, 0);
-}
-@keyframes shake {
-	0% {
-		transform: rotate(0);
-	}
-	25% {
-		transform: rotate(2deg);
-	}
-	75% {
-		transform: rotate(-2deg);
-	}
-	100% {
-		transform: rotate(0);
-	}
-}
-
 .text-rainbow {
 	background: linear-gradient(to top, #3b83f6 24%, #10b981 36%, #f59f0b 66%, #f43f5d 76%);
 	-webkit-background-clip: text;

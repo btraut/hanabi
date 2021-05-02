@@ -8,7 +8,7 @@ import {
 } from 'app/src/games/hanabi/HanabiGameData';
 import useFocusVisible from 'app/src/utils/client/useFocusVisible';
 import classnames from 'classnames';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
 
 export enum TileViewSize {
 	Regular = 'Regular',
@@ -37,11 +37,6 @@ interface Props {
 
 	// Optionally show a 1px border on this tile.
 	border?: boolean;
-
-	// Allow a "new" badge and animation to play. Enabling doesn't guarantee
-	// that it will show because we hide after the user interacts with the tile.
-	// Disabling will guarantee that we do not show.
-	enableNewAnimation?: boolean;
 }
 
 export default function HanabiInteractiveTileView({
@@ -53,26 +48,12 @@ export default function HanabiInteractiveTileView({
 	draggable = false,
 	highlight = false,
 	border = true,
-	enableNewAnimation = false,
 }: Props): JSX.Element | null {
-	// Keep track of whether we should show the "new tile" animation. If this
-	// becomes disabled after mounting but before stopping the animation, stop
-	// it automatically.
-	const [showNewAnimation, setShowNewAnimation] = useState(enableNewAnimation);
-	useEffect(() => {
-		setShowNewAnimation(enableNewAnimation);
-	}, [enableNewAnimation]);
-
-	const handleMouseDown = useCallback(() => {
-		setShowNewAnimation(false);
-	}, []);
-
-	// Handle drag support.
-	const { isDragging, dragRef } = useTileDrag(tile.id, position, draggable);
+	const isFocusVisible = useFocusVisible();
 
 	const cursor = draggable ? 'cursor-move' : onClick ? 'cursor-pointer' : 'cursor-default';
 
-	const isFocusVisible = useFocusVisible();
+	const { isDragging, dragRef } = useTileDrag(tile.id, position, draggable);
 
 	const handleClick = useCallback(
 		(event) => {
@@ -95,12 +76,10 @@ export default function HanabiInteractiveTileView({
 				{
 					'focus:ring': isFocusVisible,
 					'focus:border-blue-800': isFocusVisible,
-					shake: showNewAnimation,
 					'opacity-0': isDragging,
 				},
 			])}
 			onClick={onClick ? handleClick : undefined}
-			onMouseDown={handleMouseDown}
 		>
 			<HanabiTileView
 				color={hidden ? undefined : tile.color}
@@ -108,11 +87,6 @@ export default function HanabiInteractiveTileView({
 				border={border}
 				highlight={highlight}
 			/>
-			{showNewAnimation && (
-				<div className="absolute inset-0 flex items-center justify-center text-white font-bold transform -rotate-45 pointer-events-none">
-					New
-				</div>
-			)}
 		</Comp>
 	);
 }
