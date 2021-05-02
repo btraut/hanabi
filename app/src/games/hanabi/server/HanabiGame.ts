@@ -6,6 +6,7 @@ import {
 	HANABI_BOARD_SIZE,
 	HANABI_DEFAULT_TILE_POSITIONS,
 	HANABI_GAME_TITLE,
+	HANABI_MAX_CLUES,
 	HANABI_MIN_PLAYERS,
 	HANABI_TILE_SIZE,
 	HANABI_TILES_IN_HAND,
@@ -523,7 +524,7 @@ export default class HanabiGame extends Game {
 		if (tileIsValid) {
 			this._gameData.playedTiles = [...this._gameData.playedTiles, tile.id];
 
-			if (tile.number === 5) {
+			if (tile.number === 5 && this._gameData.clues !== HANABI_MAX_CLUES) {
 				this._gameData.clues += 1;
 			}
 		} else {
@@ -728,7 +729,9 @@ export default class HanabiGame extends Game {
 		}
 
 		// Add a clue.
-		this._gameData.clues += 1;
+		if (this._gameData.clues !== HANABI_MAX_CLUES) {
+			this._gameData.clues += 1;
+		}
 
 		// Advance the turn.
 		this._gameData.currentPlayerId = this._getNextUserId(
