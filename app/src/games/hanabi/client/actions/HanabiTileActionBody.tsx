@@ -35,14 +35,14 @@ export default function HanabiTileActionBody({ action }: Props): JSX.Element | n
 							size={TileViewSize.Small}
 						/>
 					</div>
-					{action.tile.number === 5 && 'and created a clue'}
+					<span className="align-middle">{action.tile.number === 5 && 'and created a clue'}</span>
 				</>
 			);
 		} else {
 			return (
 				<>
 					<span className="align-middle">
-						<span className="font-bold">{player.name}</span> tried, but failed to play
+						<span className="font-bold">{player.name}</span> played
 					</span>
 					<div className="inline-block align-middle mx-2">
 						<HanabiTileView
@@ -51,6 +51,7 @@ export default function HanabiTileActionBody({ action }: Props): JSX.Element | n
 							size={TileViewSize.Small}
 						/>
 					</div>
+					<span className="align-middle">but it was invalid</span>
 				</>
 			);
 		}
