@@ -2,7 +2,7 @@ import { useHanabiAnimationManager } from 'app/src/games/hanabi/client/HanabiCon
 import { useHanabiHighlightContext } from 'app/src/games/hanabi/client/HanabiHighlightContext';
 import HanabiTileView, { TileViewSize } from 'app/src/games/hanabi/client/HanabiTileView';
 import { HanabiTileColor, HanabiTileNumber } from 'app/src/games/hanabi/HanabiGameData';
-import classnames from 'classnames';
+import classNames from 'classnames';
 
 const TILE_NUMBERS: HanabiTileNumber[] = [1, 2, 3, 4, 5];
 
@@ -34,7 +34,7 @@ export default function HanabiPlayedTiles(): JSX.Element {
 				return (
 					<div
 						key={`color-${color}`}
-						className={classnames({
+						className={classNames({
 							'opacity-20': greatestTile === null,
 						})}
 					>

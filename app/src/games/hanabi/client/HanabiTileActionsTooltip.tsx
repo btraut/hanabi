@@ -7,7 +7,7 @@ import {
 	tileBackgroundClasses,
 } from 'app/src/games/hanabi/HanabiGameData';
 import useFocusVisible from 'app/src/utils/client/useFocusVisible';
-import classnames from 'classnames';
+import classNames from 'classnames';
 import { useEffect, useRef } from 'react';
 
 export enum HanabiTileActionsTooltipType {
@@ -78,7 +78,7 @@ export default function HanabiTileActionsTooltip({
 						{type === HanabiTileActionsTooltipType.Own && (
 							<div className="grid grid-flow-col gap-x-3 items-center">
 								<button
-									className={classnames(
+									className={classNames(
 										'font-bold text-xl text-white focus:outline-none hover:text-red-600',
 										{
 											'focus:text-red-600': isFocusVisible,
@@ -101,7 +101,7 @@ export default function HanabiTileActionsTooltip({
 									}}
 								/>
 								<button
-									className={classnames(
+									className={classNames(
 										'font-bold text-xl text-white focus:outline-none hover:text-red-600',
 										{
 											'focus:text-red-600': isFocusVisible,
@@ -122,7 +122,7 @@ export default function HanabiTileActionsTooltip({
 										{rainbowButtonColors.map((buttonColor) => (
 											<button
 												key={buttonColor}
-												className={classnames(
+												className={classNames(
 													'w-6 h-6 rounded-full border-black border-4 focus:outline-none hover:border-red-600',
 													{
 														'focus:border-red-600': isFocusVisible,
@@ -138,7 +138,7 @@ export default function HanabiTileActionsTooltip({
 									</div>
 								) : (
 									<button
-										className={classnames(
+										className={classNames(
 											'w-6 h-6 rounded-full border-black border-4 focus:outline-none hover:border-red-600',
 											{
 												'focus:border-red-600': isFocusVisible,
@@ -161,7 +161,7 @@ export default function HanabiTileActionsTooltip({
 									}}
 								/>
 								<button
-									className={classnames(
+									className={classNames(
 										'font-bold text-xl text-white focus:outline-none hover:text-red-600',
 										{
 											'focus:text-red-600': isFocusVisible,

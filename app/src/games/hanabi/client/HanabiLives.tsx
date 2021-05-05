@@ -1,7 +1,7 @@
 import { useHanabiAnimationManager } from 'app/src/games/hanabi/client/HanabiContext';
 import HanabiLife from 'app/src/games/hanabi/client/HanabiLife';
 import { HANABI_MAX_LIVES } from 'app/src/games/hanabi/HanabiGameData';
-import classnames from 'classnames';
+import classNames from 'classnames';
 
 export default function HanabiLives(): JSX.Element {
 	const animationManager = useHanabiAnimationManager();
@@ -14,7 +14,7 @@ export default function HanabiLives(): JSX.Element {
 			{new Array(HANABI_MAX_LIVES).fill('').map((_, index) => (
 				<div
 					key={`clue-${index}`}
-					className={classnames({ 'opacity-20': index >= remainingLives })}
+					className={classNames({ 'opacity-20': index >= remainingLives })}
 				>
 					<HanabiLife />
 				</div>

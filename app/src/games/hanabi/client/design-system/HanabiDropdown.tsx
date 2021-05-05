@@ -1,5 +1,5 @@
 import useFocusVisible from 'app/src/utils/client/useFocusVisible';
-import classnames from 'classnames';
+import classNames from 'classnames';
 import { ChangeEventHandler, forwardRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -21,7 +21,7 @@ function HanabiDropdown({ id, onChange, options, value }: Props, ref: any): JSX.
 			onChange={onChange}
 			ref={ref}
 			value={value}
-			className={classnames(
+			className={classNames(
 				'block p-2 bg-gray-800 text-center font-bold rounded-xl border-4 duration-100 focus:outline-none',
 				'border-white cursor-pointer text-white hover:bg-red-600 active:scale-95',
 				{

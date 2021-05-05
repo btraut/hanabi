@@ -1,4 +1,4 @@
-import classnames from 'classnames';
+import classNames from 'classnames';
 import { useCallback, useEffect, useRef } from 'react';
 
 interface Props {
@@ -51,7 +51,7 @@ export default function Tooltip({
 				top,
 				left,
 			}}
-			className={classnames('absolute transform', {
+			className={classNames('absolute transform', {
 				'-translate-y-full -translate-x-1/2': position === 'above',
 				'-translate-x-1/2': position === 'below',
 			})}

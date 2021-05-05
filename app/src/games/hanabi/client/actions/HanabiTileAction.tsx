@@ -9,7 +9,7 @@ import {
 	HanabiGameActionType,
 } from 'app/src/games/hanabi/HanabiGameData';
 import useFocusVisible from 'app/src/utils/client/useFocusVisible';
-import classnames from 'classnames';
+import classNames from 'classnames';
 import { useState } from 'react';
 
 interface Props {
@@ -48,7 +48,7 @@ export default function HanabiTileAction({ action }: Props): JSX.Element {
 
 	return (
 		<button
-			className={classnames(
+			className={classNames(
 				'text-md p-3 flex justify-between items-center w-full focus:outline-none',
 				{
 					'cursor-zoom-in': !thisActionHighlighted,

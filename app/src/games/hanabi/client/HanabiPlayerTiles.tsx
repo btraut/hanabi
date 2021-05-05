@@ -5,7 +5,7 @@ import HanabiInteractiveTileView from 'app/src/games/hanabi/client/HanabiInterac
 import HanabiPlayerTilesDragLayer from 'app/src/games/hanabi/client/HanabiPlayerTilesDragLayer';
 import useJustTookAction from 'app/src/games/hanabi/client/useJustTookAction';
 import { HANABI_BOARD_SIZE } from 'app/src/games/hanabi/HanabiGameData';
-import classnames from 'classnames';
+import classNames from 'classnames';
 import { useDragLayer } from 'react-dnd';
 
 interface Props {
@@ -47,7 +47,7 @@ export default function HanabiPlayerTiles({
 					{gameData.playerTiles[id].map((tileId) => (
 						<div
 							key={`TileContainer-${tileId}`}
-							className={classnames('absolute top-0 left-0', {
+							className={classNames('absolute top-0 left-0', {
 								'duration-100': !ownTiles || isDragging || justTookAction,
 							})}
 							style={{

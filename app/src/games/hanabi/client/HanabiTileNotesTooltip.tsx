@@ -7,7 +7,7 @@ import {
 	HanabiTileNumber,
 	tileBackgroundClasses,
 } from 'app/src/games/hanabi/HanabiGameData';
-import classnames from 'classnames';
+import classNames from 'classnames';
 
 export enum HanabiTileActionsTooltipType {
 	Own = 'Own',
@@ -52,7 +52,7 @@ export default function HanabiTileNotesTooltip({ notes, coords }: Props): JSX.El
 							{allNumbers.map((number) => (
 								<div
 									key={number}
-									className={classnames('font-bold text-xl text-white', {
+									className={classNames('font-bold text-xl text-white', {
 										'opacity-30': !notes?.numbers.includes(number),
 									})}
 								>
@@ -64,7 +64,7 @@ export default function HanabiTileNotesTooltip({ notes, coords }: Props): JSX.El
 							{allColors.map((color) => (
 								<div
 									key={color}
-									className={classnames(
+									className={classNames(
 										'w-6 h-6 rounded-full border-black border-4',
 										tileBackgroundClasses[color],
 										{ 'opacity-30': !notes?.colors.includes(color) },

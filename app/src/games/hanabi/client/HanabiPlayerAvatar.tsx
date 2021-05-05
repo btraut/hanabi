@@ -1,6 +1,6 @@
 import User from 'app/src/games/hanabi/client/icons/User';
 import { HanabiPlayer } from 'app/src/games/hanabi/HanabiGameData';
-import classnames from 'classnames';
+import classNames from 'classnames';
 
 interface Props {
 	player: HanabiPlayer;
@@ -15,7 +15,7 @@ export default function HanabiPlayerAvatar({
 }: Props): JSX.Element {
 	return (
 		<div
-			className={classnames(
+			className={classNames(
 				'grid grid-flow-row justify-center justify-items-center content-center items-center gap-y-2',
 				{
 					'opacity-60': !player.connected,

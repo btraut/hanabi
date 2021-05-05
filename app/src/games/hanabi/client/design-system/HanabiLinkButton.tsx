@@ -1,5 +1,5 @@
 import useFocusVisible from 'app/src/utils/client/useFocusVisible';
-import classnames from 'classnames';
+import classNames from 'classnames';
 import { forwardRef } from 'react';
 
 interface Props {
@@ -12,7 +12,7 @@ function HanabiLinkButton({ href, label }: Props, ref: any): JSX.Element {
 
 	return (
 		<a
-			className={classnames(
+			className={classNames(
 				'block px-5 py-3 bg-gray-800 text-center uppercase font-bold rounded-xl border-4 duration-100 focus:outline-none',
 				'border-white cursor-pointer text-white hover:bg-red-600 active:scale-95 select-none',
 				{

@@ -1,7 +1,7 @@
 import { useHanabiAnimationManager } from 'app/src/games/hanabi/client/HanabiContext';
 import HanabiTileView, { TileViewSize } from 'app/src/games/hanabi/client/HanabiTileView';
 import { HANABI_TILE_SIZE_SMALL } from 'app/src/games/hanabi/HanabiGameData';
-import classnames from 'classnames';
+import classNames from 'classnames';
 
 const TILE_OFFSET = 4;
 const MAX_STACKED_TILES = 5;
@@ -16,7 +16,7 @@ export default function HanabiRemainingTiles(): JSX.Element {
 	return (
 		<div className="grid justify-start gap-1 relative grid-flow-col z-0 select-none cursor-default">
 			<div
-				className={classnames('absolute inset-0 flex justify-center items-center text-lg', {
+				className={classNames('absolute inset-0 flex justify-center items-center text-lg', {
 					'text-white': visibleRemainingTiles,
 					'text-black': !visibleRemainingTiles,
 				})}

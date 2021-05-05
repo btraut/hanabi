@@ -1,6 +1,6 @@
 import Portal from 'app/src/components/Portal';
 import HanabiXButton from 'app/src/games/hanabi/client/design-system/HanabiXButton';
-import classnames from 'classnames';
+import classNames from 'classnames';
 import { useEffect, useRef } from 'react';
 import FocusLock from 'react-focus-lock';
 
@@ -42,7 +42,7 @@ export default function HanabiPopup({
 					ref={containerRef}
 				>
 					<div
-						className={classnames(
+						className={classNames(
 							'border-solid border-black border-4 px-8 py-6 shadow-dark relative rounded-xl',
 							BACKGROUND_CLASS[background],
 						)}

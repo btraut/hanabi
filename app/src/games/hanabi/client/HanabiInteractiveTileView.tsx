@@ -7,7 +7,7 @@ import {
 	Position,
 } from 'app/src/games/hanabi/HanabiGameData';
 import useFocusVisible from 'app/src/utils/client/useFocusVisible';
-import classnames from 'classnames';
+import classNames from 'classnames';
 import { useCallback } from 'react';
 
 export enum TileViewSize {
@@ -90,7 +90,7 @@ export default function HanabiInteractiveTileView({
 		<Comp
 			ref={dragRef}
 			style={size === TileViewSize.Regular ? HANABI_TILE_SIZE : HANABI_TILE_SIZE_SMALL}
-			className={classnames([
+			className={classNames([
 				'relative rounded-lg focus:outline-none',
 				cursor,
 				{

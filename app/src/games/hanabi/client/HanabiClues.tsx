@@ -1,7 +1,7 @@
 import HanabiClue from 'app/src/games/hanabi/client/HanabiClue';
 import { useHanabiAnimationManager } from 'app/src/games/hanabi/client/HanabiContext';
 import { HANABI_MAX_CLUES } from 'app/src/games/hanabi/HanabiGameData';
-import classnames from 'classnames';
+import classNames from 'classnames';
 
 export default function HanabiClues(): JSX.Element {
 	const animationManager = useHanabiAnimationManager();
@@ -14,7 +14,7 @@ export default function HanabiClues(): JSX.Element {
 			{new Array(HANABI_MAX_CLUES).fill('').map((_, index) => (
 				<div
 					key={`clue-${index}`}
-					className={classnames({ 'opacity-20': index >= remainingClues })}
+					className={classNames({ 'opacity-20': index >= remainingClues })}
 				>
 					<HanabiClue />
 				</div>

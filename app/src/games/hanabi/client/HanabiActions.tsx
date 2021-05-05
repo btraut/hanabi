@@ -3,7 +3,7 @@ import { useHanabiAnimationManager } from 'app/src/games/hanabi/client/HanabiCon
 import { useHanabiOptionsContext } from 'app/src/games/hanabi/client/HanabiOptionsContext';
 import useActionHighlighter from 'app/src/games/hanabi/client/useActionHighlighter';
 import useActionSounds from 'app/src/games/hanabi/client/useActionSounds';
-import classnames from 'classnames';
+import classNames from 'classnames';
 
 export default function HanabiActions(): JSX.Element {
 	const animationManager = useHanabiAnimationManager();
@@ -21,7 +21,7 @@ export default function HanabiActions(): JSX.Element {
 			{actionsReversed.map((action, index) => {
 				return (
 					<div
-						className={classnames('border-solid border-gray-600', {
+						className={classNames('border-solid border-gray-600', {
 							'border-t-2': index !== 0,
 							'bg-white': index % 2 === 1,
 							'bg-gray-200': index % 2 === 0,

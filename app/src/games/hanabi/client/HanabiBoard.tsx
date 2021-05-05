@@ -19,7 +19,7 @@ import useTileActionMenuHandlers from 'app/src/games/hanabi/client/useTileAction
 import useTileNotesHandlers from 'app/src/games/hanabi/client/useTileNotesHandlers';
 import { HanabiGameAction } from 'app/src/games/hanabi/HanabiGameData';
 import useValueChanged from 'app/src/utils/client/useValueChanged';
-import classnames from 'classnames';
+import classNames from 'classnames';
 import { Fragment, useEffect, useRef, useState } from 'react';
 
 function rotateArrayToItem<T>(arr: readonly T[], item: T): readonly T[] {
@@ -82,7 +82,7 @@ export default function HanabiBoard(): JSX.Element {
 				{!breakpoints.lg && (
 					<>
 						<div
-							className={classnames('border-4 border-black rounded-xl overflow-y-auto mb-6', {
+							className={classNames('border-4 border-black rounded-xl overflow-y-auto mb-6', {
 								'bg-white': gameData.actions.length % 2 === 1,
 								'bg-gray-200': gameData.actions.length % 2 === 0,
 							})}
@@ -114,7 +114,7 @@ export default function HanabiBoard(): JSX.Element {
 						return (
 							<Fragment key={`player-${playerId}`}>
 								<div
-									className={classnames('my-2 p-3 border-black border-4', {
+									className={classNames('my-2 p-3 border-black border-4', {
 										'bg-gray-800': !thisPlayersTurn,
 										'bg-red-800': thisPlayersTurn,
 									})}
@@ -156,7 +156,7 @@ export default function HanabiBoard(): JSX.Element {
 						/>
 					</div>
 					<div
-						className={classnames('border-4 border-black rounded-xl overflow-y-auto mb-6', {
+						className={classNames('border-4 border-black rounded-xl overflow-y-auto mb-6', {
 							'bg-white': gameData.actions.length % 2 === 1,
 							'bg-gray-200': gameData.actions.length % 2 === 0,
 						})}
@@ -178,7 +178,7 @@ export default function HanabiBoard(): JSX.Element {
 					onClose={handleActionsTooltipOnClose}
 				/>
 			)}
-			{showNotesForTile && (
+			{showNotesForTile && !showMenuForTile && (
 				<HanabiTileNotesTooltip notes={showNotesForTile.notes} coords={showNotesForTile.coords} />
 			)}
 			{showGameOverPopup && (

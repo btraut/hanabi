@@ -1,4 +1,4 @@
-import classnames from 'classnames';
+import classNames from 'classnames';
 import { useRef, useState } from 'react';
 
 interface Props {
@@ -35,7 +35,7 @@ export default function HanabiCopyLinkButton({ link }: Props): JSX.Element {
 
 	return (
 		<button
-			className={classnames(
+			className={classNames(
 				'outline-none grid grid-flow-col items-center max-w-screen-md overflow-hidden rounded-lg font-bold text-lg',
 				'group transition-all focus:outline-none',
 			)}

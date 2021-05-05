@@ -7,7 +7,7 @@ import {
 	HanabiGameActionType,
 	tileBackgroundClasses,
 } from 'app/src/games/hanabi/HanabiGameData';
-import classnames from 'classnames';
+import classNames from 'classnames';
 
 interface Props {
 	action: HanabiGameActionPlay | HanabiGameActionDiscard | HanabiGameActionGiveClue;
@@ -79,7 +79,7 @@ export default function HanabiTileActionBody({ action }: Props): JSX.Element | n
 		const clue =
 			action.type === HanabiGameActionType.GiveColorClue ? (
 				<div
-					className={classnames(
+					className={classNames(
 						'inline-block align-middle w-6 h-6 rounded-full border-black border-4 mx-1.5',
 						tileBackgroundClasses[action.color!],
 					)}

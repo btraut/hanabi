@@ -5,7 +5,7 @@ import {
 	HanabiTileNumber,
 	tileColorClasses,
 } from 'app/src/games/hanabi/HanabiGameData';
-import classnames from 'classnames';
+import classNames from 'classnames';
 
 export enum TileViewSize {
 	Regular = 'Regular',
@@ -38,7 +38,7 @@ export default function HanabiTileView({
 	return (
 		<div
 			style={size === TileViewSize.Regular ? HANABI_TILE_SIZE : HANABI_TILE_SIZE_SMALL}
-			className={classnames([
+			className={classNames([
 				'bg-black rounded-lg flex items-center justify-center select-none relative',
 				{
 					'marquee-highlight': highlight,
@@ -48,7 +48,7 @@ export default function HanabiTileView({
 		>
 			{!!(color && number) && (
 				<div
-					className={classnames(
+					className={classNames(
 						'font-bold pointer-events-none',
 						{
 							'text-xl': size === TileViewSize.Small,

@@ -7,7 +7,7 @@ import {
 	HanabiTileColor,
 	HanabiTileNumber,
 } from 'app/src/games/hanabi/HanabiGameData';
-import classnames from 'classnames';
+import classNames from 'classnames';
 
 const TILE_NUMBERS: HanabiTileNumber[] = [1, 2, 3, 4, 5];
 
@@ -78,7 +78,7 @@ export default function HanabiPlayedTiles({
 									>
 										<div className="transform rotate-90 absolute">
 											<div
-												className={classnames({
+												className={classNames({
 													'opacity-20': !playedTile,
 												})}
 											>
