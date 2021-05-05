@@ -189,6 +189,11 @@ export type HanabiGameAction =
 	| HanabiGameActionShotClockTickedDown
 	| HanabiGameActionChat;
 
+export type HanabiTileNotes = {
+	colors: readonly HanabiTileColor[];
+	numbers: readonly HanabiTileNumber[];
+};
+
 export interface HanabiGameData {
 	// What seed was used for the random number generator? This seed should
 	// dictate all the same tile types/order at the beginning of the game.
@@ -223,9 +228,31 @@ export interface HanabiGameData {
 	// Player -> Tile mappings:
 	playerTiles: { readonly [playerId: string]: string[] };
 	tilePositions: { readonly [tileId: string]: Position };
+	tileNotes: { readonly [tileId: string]: HanabiTileNotes };
 
 	// Action log (including chat):
 	actions: readonly HanabiGameAction[];
+}
+
+export function addToTileNotes(
+	tileNotes: HanabiTileNotes | undefined,
+	newColor: HanabiTileColor | undefined,
+	newNumber: HanabiTileNumber | undefined,
+): HanabiTileNotes {
+	const newNotes = {
+		colors: tileNotes ? [...tileNotes.colors] : [],
+		numbers: tileNotes ? [...tileNotes.numbers] : [],
+	};
+
+	if (newColor !== undefined) {
+		newNotes.colors.push(newColor);
+	}
+
+	if (newNumber !== undefined) {
+		newNotes.numbers.push(newNumber);
+	}
+
+	return newNotes;
 }
 
 export function generateHanabiGameData(data: Partial<HanabiGameData> = {}): HanabiGameData {
@@ -246,6 +273,7 @@ export function generateHanabiGameData(data: Partial<HanabiGameData> = {}): Hana
 		discardedTiles: [],
 		playerTiles: {},
 		tilePositions: {},
+		tileNotes: {},
 		actions: [],
 		...data,
 	};

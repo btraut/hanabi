@@ -32,8 +32,10 @@ interface Props {
 	// Optionally show dashed highlight lines around the edges.
 	highlight?: boolean;
 
-	// Specify a custom click handler.
-	onClick?: (event: React.MouseEvent<HTMLDivElement>, tile: HanabiTile) => void;
+	// Specify custom event handlers.
+	onClick?: (event: React.MouseEvent<HTMLDivElement>, tileId: string) => void;
+	onMouseOver?: (event: React.MouseEvent<HTMLDivElement>, tileId: string) => void;
+	onMouseOut?: (event: React.MouseEvent<HTMLDivElement>, tileId: string) => void;
 
 	// Optionally show a 1px border on this tile.
 	border?: boolean;
@@ -45,6 +47,8 @@ export default function HanabiInteractiveTileView({
 	hidden = false,
 	size = TileViewSize.Regular,
 	onClick,
+	onMouseOver,
+	onMouseOut,
 	draggable = false,
 	highlight = false,
 	border = true,
@@ -58,10 +62,26 @@ export default function HanabiInteractiveTileView({
 	const handleClick = useCallback(
 		(event) => {
 			if (onClick) {
-				onClick(event, tile);
+				onClick(event, tile.id);
 			}
 		},
 		[onClick, tile],
+	);
+	const handleMouseOver = useCallback(
+		(event) => {
+			if (onMouseOver) {
+				onMouseOver(event, tile.id);
+			}
+		},
+		[onMouseOver, tile],
+	);
+	const handleMouseOut = useCallback(
+		(event) => {
+			if (onMouseOut) {
+				onMouseOut(event, tile.id);
+			}
+		},
+		[onMouseOut, tile],
 	);
 
 	const Comp = onClick ? 'button' : 'div';
@@ -80,6 +100,8 @@ export default function HanabiInteractiveTileView({
 				},
 			])}
 			onClick={onClick ? handleClick : undefined}
+			onMouseOver={onMouseOver ? handleMouseOver : undefined}
+			onMouseOut={onMouseOut ? handleMouseOut : undefined}
 		>
 			<HanabiTileView
 				color={hidden ? undefined : tile.color}

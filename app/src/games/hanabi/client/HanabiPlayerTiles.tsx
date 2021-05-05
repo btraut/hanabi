@@ -4,16 +4,23 @@ import { useHanabiHighlightContext } from 'app/src/games/hanabi/client/HanabiHig
 import HanabiInteractiveTileView from 'app/src/games/hanabi/client/HanabiInteractiveTileView';
 import HanabiPlayerTilesDragLayer from 'app/src/games/hanabi/client/HanabiPlayerTilesDragLayer';
 import useJustTookAction from 'app/src/games/hanabi/client/useJustTookAction';
-import { HANABI_BOARD_SIZE, HanabiTile } from 'app/src/games/hanabi/HanabiGameData';
+import { HANABI_BOARD_SIZE } from 'app/src/games/hanabi/HanabiGameData';
 import classnames from 'classnames';
 import { useDragLayer } from 'react-dnd';
 
 interface Props {
 	id: string;
-	onTileClick?: (event: React.MouseEvent<HTMLDivElement>, tile: HanabiTile) => void;
+	onTileClick?: (event: React.MouseEvent<HTMLDivElement>, tileId: string) => void;
+	onTileMouseOver?: (event: React.MouseEvent<HTMLDivElement>, tileId: string) => void;
+	onTileMouseOut?: (event: React.MouseEvent<HTMLDivElement>, tileId: string) => void;
 }
 
-export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Element {
+export default function HanabiPlayerTiles({
+	id,
+	onTileClick,
+	onTileMouseOver,
+	onTileMouseOut,
+}: Props): JSX.Element {
 	const animationManager = useHanabiAnimationManager();
 	const { displayGameData: gameData } = animationManager;
 	const userId = useUserId();
@@ -53,6 +60,8 @@ export default function HanabiPlayerTiles({ id, onTileClick }: Props): JSX.Eleme
 								position={gameData.tilePositions[tileId]}
 								hidden={gameStillPlaying && ownTiles}
 								onClick={enableOnClick ? onTileClick : undefined}
+								onMouseOver={onTileMouseOver}
+								onMouseOut={onTileMouseOut}
 								draggable={gameStillPlaying && ownTiles}
 								highlight={highlightedTiles.has(tileId)}
 							/>

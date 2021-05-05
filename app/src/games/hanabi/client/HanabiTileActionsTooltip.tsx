@@ -17,7 +17,7 @@ export enum HanabiTileActionsTooltipType {
 }
 
 interface Props {
-	tile: HanabiTile;
+	tileId: string;
 	coords: { left: number; top: number };
 	type: HanabiTileActionsTooltipType;
 	onAction: (
@@ -29,7 +29,7 @@ interface Props {
 }
 
 export default function HanabiTileActionsTooltip({
-	tile,
+	tileId,
 	type,
 	coords,
 	onAction,
@@ -37,6 +37,8 @@ export default function HanabiTileActionsTooltip({
 }: Props): JSX.Element {
 	const animationManager = useHanabiAnimationManager();
 	const { displayGameData: gameData } = animationManager;
+
+	const tile = gameData.tiles[tileId];
 
 	const isFocusVisible = useFocusVisible();
 

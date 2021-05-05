@@ -1,5 +1,6 @@
 import { getNewPositionsForTiles } from 'app/src/games/hanabi/client/HanabiDragDropUtils';
 import {
+	addToTileNotes,
 	generateHanabiGameData,
 	generatePlayer,
 	generateRandomDeck,
@@ -874,6 +875,20 @@ export default class HanabiGame extends Game {
 					},
 				];
 			}
+		}
+
+		// Record notes for the selected tiles.
+		for (const selectedTile of selectedTiles) {
+			const newTileNotes = addToTileNotes(
+				this._gameData.tileNotes[selectedTile.id],
+				message.data.color,
+				message.data.number,
+			);
+
+			this._gameData.tileNotes = {
+				...this._gameData.tileNotes,
+				[selectedTile.id]: newTileNotes,
+			};
 		}
 
 		// Advance the turn.

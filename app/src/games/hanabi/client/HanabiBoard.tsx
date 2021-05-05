@@ -2,10 +2,7 @@ import { useBreakpointContext } from 'app/src/components/BreakpointContext';
 import { useUserId } from 'app/src/components/SocketContext';
 import HanabiActions from 'app/src/games/hanabi/client/HanabiActions';
 import HanabiClues from 'app/src/games/hanabi/client/HanabiClues';
-import {
-	useHanabiAnimationManager,
-	useHanabiGame,
-} from 'app/src/games/hanabi/client/HanabiContext';
+import { useHanabiAnimationManager } from 'app/src/games/hanabi/client/HanabiContext';
 import HanabiDiscardedTilesCollapsed from 'app/src/games/hanabi/client/HanabiDiscardedTilesCollapsed';
 import HanabiGameOverPopup from 'app/src/games/hanabi/client/HanabiGameOverPopup';
 import HanabiLives from 'app/src/games/hanabi/client/HanabiLives';
@@ -14,15 +11,16 @@ import HanabiPlayedTilesCollapsed from 'app/src/games/hanabi/client/HanabiPlayed
 import HanabiPlayerAvatar from 'app/src/games/hanabi/client/HanabiPlayerAvatar';
 import HanabiPlayerTiles from 'app/src/games/hanabi/client/HanabiPlayerTiles';
 import HanabiRemainingTiles from 'app/src/games/hanabi/client/HanabiRemainingTiles';
-import HanabiTileActionsTooltip, {
-	HanabiTileActionsTooltipType,
-} from 'app/src/games/hanabi/client/HanabiTileActionsTooltip';
+import HanabiTileActionsTooltip from 'app/src/games/hanabi/client/HanabiTileActionsTooltip';
+import HanabiTileNotesTooltip from 'app/src/games/hanabi/client/HanabiTileNotesTooltip';
 import { TileViewSize } from 'app/src/games/hanabi/client/HanabiTileView';
 import useLatestActions from 'app/src/games/hanabi/client/useLatestActions';
-import { HanabiGameAction, HanabiTile, HanabiTileColor } from 'app/src/games/hanabi/HanabiGameData';
+import useTileActionMenuHandlers from 'app/src/games/hanabi/client/useTileActionMenuHandlers';
+import useTileNotesHandlers from 'app/src/games/hanabi/client/useTileNotesHandlers';
+import { HanabiGameAction } from 'app/src/games/hanabi/HanabiGameData';
 import useValueChanged from 'app/src/utils/client/useValueChanged';
 import classnames from 'classnames';
-import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 
 function rotateArrayToItem<T>(arr: readonly T[], item: T): readonly T[] {
 	const itemIndex = arr.indexOf(item);
@@ -35,7 +33,6 @@ function rotateArrayToItem<T>(arr: readonly T[], item: T): readonly T[] {
 }
 
 export default function HanabiBoard(): JSX.Element {
-	const game = useHanabiGame();
 	const animationManager = useHanabiAnimationManager();
 	const { displayGameData: gameData } = animationManager;
 
@@ -43,82 +40,20 @@ export default function HanabiBoard(): JSX.Element {
 
 	const playerDisplayOrder = rotateArrayToItem(gameData.turnOrder, userId);
 
-	const [showMenuForTile, setShowMenuForTile] = useState<{
-		tile: HanabiTile;
-		type: HanabiTileActionsTooltipType;
-		coords: {
-			top: number;
-			left: number;
-		};
-	} | null>(null);
+	const breakpoints = useBreakpointContext();
 
-	const handleTileClick = useCallback(
-		(event: React.MouseEvent<HTMLDivElement>, tile: HanabiTile) => {
-			const rect = (event.target as any).getBoundingClientRect();
-			const ownTile = !!gameData.playerTiles[userId].includes(tile.id);
+	// Build handlers and data pertaining to the action menu (clicks for tiles).
+	const {
+		showMenuForTile,
+		handleTileClick,
+		handleActionsTooltipAction,
+		handleActionsTooltipOnClose,
+	} = useTileActionMenuHandlers(gameData, userId);
 
-			// What menu should we display?
-			let type = ownTile
-				? HanabiTileActionsTooltipType.Own
-				: HanabiTileActionsTooltipType.OtherPlayer;
-			if (gameData.clues === 0 && !ownTile) {
-				type = HanabiTileActionsTooltipType.NoClues;
-			}
-
-			setShowMenuForTile({
-				tile,
-				type,
-				coords: {
-					left: rect.x + rect.width / 2,
-					top: rect.y + window.scrollY,
-				},
-			});
-		},
-		[gameData, userId],
+	// Build handlers and data pertaining to the notes menu (hover for tiles).
+	const { showNotesForTile, handleTileMouseOver, handleTileMouseOut } = useTileNotesHandlers(
+		gameData,
 	);
-
-	const handleActionsTooltipAction = useCallback(
-		(
-			action: 'discard' | 'play' | 'color' | 'number',
-			tile: HanabiTile,
-			details?: { color?: HanabiTileColor },
-		) => {
-			let tileOwner: string | null = null;
-
-			for (const playerId in gameData.players) {
-				if (gameData.playerTiles[playerId].includes(tile.id)) {
-					tileOwner = playerId;
-					break;
-				}
-			}
-
-			if (!tileOwner) {
-				throw new Error('Invalid tile. No owner found.');
-			}
-
-			switch (action) {
-				case 'discard':
-					game.discardTile(tile);
-					break;
-				case 'play':
-					game.playTile(tile);
-					break;
-				case 'color':
-					game.giveColorClue(tileOwner, details?.color ?? tile.color);
-					break;
-				case 'number':
-					game.giveNumberClue(tileOwner, tile.number);
-					break;
-			}
-
-			setShowMenuForTile(null);
-		},
-		[game, gameData],
-	);
-
-	const handleActionsTooltipOnClose = useCallback(() => {
-		setShowMenuForTile(null);
-	}, []);
 
 	// Show the game over popup when the game ends for any reason.
 	const [showGameOverPopup, setShowGameOverPopup] = useState(!!gameData.finishedReason);
@@ -128,8 +63,6 @@ export default function HanabiBoard(): JSX.Element {
 			setShowGameOverPopup(gameData.finishedReason !== null);
 		}
 	}, [gameFinishedReasonChanged, gameData.finishedReason]);
-
-	const breakpoints = useBreakpointContext();
 
 	// When a new action happens, scroll the actions container to the top.
 	const latestActions = useLatestActions();
@@ -202,6 +135,8 @@ export default function HanabiBoard(): JSX.Element {
 								<HanabiPlayerTiles
 									id={playerId}
 									onTileClick={gameData.finishedReason === null ? handleTileClick : undefined}
+									onTileMouseOver={handleTileMouseOver}
+									onTileMouseOut={handleTileMouseOut}
 								/>
 							</Fragment>
 						);
@@ -237,11 +172,14 @@ export default function HanabiBoard(): JSX.Element {
 			{showMenuForTile && (
 				<HanabiTileActionsTooltip
 					coords={showMenuForTile.coords}
-					tile={showMenuForTile.tile}
+					tileId={showMenuForTile.tileId}
 					type={showMenuForTile.type}
 					onAction={handleActionsTooltipAction}
 					onClose={handleActionsTooltipOnClose}
 				/>
+			)}
+			{showNotesForTile && (
+				<HanabiTileNotesTooltip notes={showNotesForTile.notes} coords={showNotesForTile.coords} />
 			)}
 			{showGameOverPopup && (
 				<HanabiGameOverPopup
