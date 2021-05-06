@@ -94,10 +94,10 @@ export function getNewPositionsForTiles(
 					HANABI_DEFAULT_TILE_PADDING +
 					(HANABI_DEFAULT_TILE_PADDING + HANABI_TILE_SIZE.width) * draggingTileSlotX,
 				y: HANABI_DEFAULT_TILE_PADDING,
-				z: maxZIndex + 1,
+				z: maxZIndex,
 			};
 		} else {
-			newPositions[draggingTileKey] = { ...draggingTilePosition, z: maxZIndex };
+			newPositions[draggingTileKey] = { ...draggingTilePosition, z: maxZIndex + 1 };
 		}
 	}
 
