@@ -34,20 +34,22 @@ export default function HanabiCopyLinkButton({ link }: Props): JSX.Element {
 	};
 
 	return (
-		<button
-			className={classNames(
-				'outline-none grid grid-flow-col items-center max-w-screen-md overflow-hidden rounded-lg font-bold text-lg',
-				'group transition-all focus:outline-none',
-			)}
-			onClick={handleLinkClick}
-			ref={copyButtonRef}
-		>
-			<div className="self-stretch items-center flex px-5 text-center text-red-600 group-hover:text-red-600 transition-all bg-gray-300 group-focus:bg-white">
-				{link}
-			</div>
-			<div className="text-white bg-gray-800 px-5 py-3 w-28 group-hover:bg-red-600 transition-all group-focus:border-red-600">
-				{showCopiedButton ? 'Copied!' : 'Copy'}
-			</div>
-		</button>
+		<div className="grid justify-center">
+			<button
+				className={classNames(
+					'outline-none grid grid-flow-col items-center max-w-screen-md overflow-hidden rounded-lg font-bold text-lg',
+					'group transition-all focus:outline-none',
+				)}
+				onClick={handleLinkClick}
+				ref={copyButtonRef}
+			>
+				<div className="self-stretch items-center flex px-5 text-center text-red-600 group-hover:text-red-600 transition-all bg-gray-300 group-focus:bg-white">
+					{link}
+				</div>
+				<div className="text-white bg-gray-800 px-5 py-3 w-28 group-hover:bg-red-600 transition-all group-focus:border-red-600">
+					{showCopiedButton ? 'Copied!' : 'Copy'}
+				</div>
+			</button>
+		</div>
 	);
 }
