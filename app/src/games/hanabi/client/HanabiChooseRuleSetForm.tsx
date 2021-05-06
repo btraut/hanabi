@@ -6,6 +6,7 @@ import { ChangeEvent, useCallback, useEffect, useState } from 'react';
 interface Props {
 	ruleSet: HanabiRuleSet;
 	label?: string;
+	id?: string;
 }
 
 const OPTIONS: { [label: string]: HanabiRuleSet } = {
@@ -17,6 +18,7 @@ const OPTIONS: { [label: string]: HanabiRuleSet } = {
 export default function HanabiChooseRuleSetForm({
 	ruleSet,
 	label = 'Game Mode:',
+	id = 'choose-ruleset-dropdown',
 }: Props): JSX.Element {
 	const game = useHanabiGame();
 
@@ -43,14 +45,16 @@ export default function HanabiChooseRuleSetForm({
 
 	return (
 		<div className="grid grid-flow-col gap-3 justify-center items-center">
-			<label
-				htmlFor="choose-ruleset-dropdown"
-				className="text-lg font-bold truncate text-center text-white cursor-pointer select-none"
-			>
-				{label}
-			</label>
+			{label && (
+				<label
+					htmlFor={id}
+					className="text-lg font-bold truncate text-center text-white cursor-pointer select-none"
+				>
+					{label}
+				</label>
+			)}
 			<HanabiDropdown
-				id="choose-ruleset-dropdown"
+				id={id}
 				value={displayedRuleSet}
 				options={OPTIONS}
 				onChange={handleRuleSetChange}

@@ -46,10 +46,48 @@ export default function HanabiLobby(): JSX.Element {
 			)}
 			{userIsJoined ? (
 				<>
-					<div className="grid grid-flow-row gap-2">
-						<HanabiChooseRuleSetForm ruleSet={game.gameData.ruleSet} />
-						<HanabiAllowDraggingForm allowDragging={game.gameData.allowDragging} />
-						<HanabiShowNotesForm showNotes={game.gameData.showNotes} />
+					<div className="grid grid-cols-2 gap-3 items-center">
+						<label
+							htmlFor="choose-ruleset-dropdown"
+							className="text-lg font-bold truncate text-center text-white cursor-pointer select-none justify-self-end"
+						>
+							Game Mode:
+						</label>
+						<div className="justify-self-start">
+							<HanabiChooseRuleSetForm
+								ruleSet={game.gameData.ruleSet}
+								label=""
+								id="choose-ruleset-dropdown"
+							/>
+						</div>
+
+						<label
+							htmlFor="allow-dragging-checkbox"
+							className="text-lg font-bold truncate text-center text-white cursor-pointer select-none justify-self-end"
+						>
+							Allow Tile Reordering:
+						</label>
+						<div className="justify-self-start">
+							<HanabiAllowDraggingForm
+								allowDragging={game.gameData.allowDragging}
+								label=""
+								id="allow-dragging-checkbox"
+							/>
+						</div>
+
+						<label
+							htmlFor="show-notes-checkbox"
+							className="text-lg font-bold truncate text-center text-white cursor-pointer select-none justify-self-end"
+						>
+							Show Notes:
+						</label>
+						<div className="justify-self-start">
+							<HanabiShowNotesForm
+								showNotes={game.gameData.showNotes}
+								label=""
+								id="show-notes-checkbox"
+							/>
+						</div>
 					</div>
 					<div className="grid grid-flow-col gap-x-4 justify-center">
 						<HanabiMenuButton label="Leave" onClick={handleLeaveClick} />
