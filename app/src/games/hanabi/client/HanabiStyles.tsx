@@ -40,6 +40,14 @@ export default function HanabiStyles(): JSX.Element {
 	background: linear-gradient(to top, #3b83f6, #10b981, #f59f0b, #f43f5d);
 }
 
+.HanabiDropdown::after {
+  content: "";
+  width: 0.8em;
+  height: 0.5em;
+  background-color: white;
+  clip-path: polygon(100% 0%, 0 0%, 50% 100%);
+}
+
 	`}</style>
 	);
 }
