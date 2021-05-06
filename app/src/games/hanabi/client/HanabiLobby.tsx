@@ -60,10 +60,10 @@ export default function HanabiLobby(): JSX.Element {
 								/>
 							</div>
 
-							<div className="mt-1 text-lg font-bold truncate text-center text-white cursor-default select-none justify-self-end">
+							<div className="text-lg font-bold truncate text-center text-white cursor-default select-none justify-self-end">
 								Advanced Features:
 							</div>
-							<div className="justify-self-start grid gap-1">
+							<div className="justify-self-start grid gap-2">
 								<HanabiLobbyGameOptionsForm
 									checked={game.gameData.allowDragging}
 									label="Allow reordering of tiles"

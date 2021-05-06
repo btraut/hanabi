@@ -15,9 +15,9 @@ function HanabiCheckbox({ id, onChange, checked }: Props, ref: any): JSX.Element
 	const [finalId] = useState(id ?? `dropdown-${uuidv4()}`);
 
 	return (
-		<div className="relative">
+		<div className="relative h-8">
 			{checked && (
-				<div className="absolute inset-0 grid justify-center mt-0.5 text-white pointer-events-none text-xl font-bold">
+				<div className="absolute inset-0 grid justify-center items-center text-white pointer-events-none text-xl font-bold h-8">
 					✓
 				</div>
 			)}
