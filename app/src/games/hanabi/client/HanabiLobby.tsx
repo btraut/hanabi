@@ -59,7 +59,7 @@ export default function HanabiLobby(): JSX.Element {
 						</div>
 
 						<div className="mt-1 text-lg font-bold truncate text-center text-white cursor-default select-none justify-self-end">
-							Additional Features:
+							Advanced Features:
 						</div>
 						<div className="justify-self-start grid gap-1">
 							<HanabiLobbyGameOptionsForm

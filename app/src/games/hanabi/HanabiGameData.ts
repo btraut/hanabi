@@ -197,7 +197,7 @@ export type HanabiTileNotes = {
 export interface HanabiGameData {
 	// What seed was used for the random number generator? This seed should
 	// dictate all the same tile types/order at the beginning of the game.
-	seed: string | null;
+	seed: string;
 
 	// What kind of game is this? Regular? Rainbow?
 	ruleSet: HanabiRuleSet;
@@ -239,7 +239,7 @@ export interface HanabiGameData {
 
 export function generateHanabiGameData(data: Partial<HanabiGameData> = {}): HanabiGameData {
 	return {
-		seed: null,
+		seed: uuidv4(),
 		ruleSet: '5-color',
 		allowDragging: true,
 		showNotes: true,
@@ -275,7 +275,7 @@ export function generatePlayer(data: Partial<HanabiPlayer> = {}): HanabiPlayer {
 
 export function generateRandomDeck(
 	ruleSet: HanabiRuleSet,
-	seed: string | null = null,
+	seed: string,
 ): [{ [tileId: string]: HanabiTile }, string[]] {
 	const tiles: { [tileId: string]: HanabiTile } = {};
 	const tileIds: string[] = [];
@@ -297,7 +297,7 @@ export function generateRandomDeck(
 		}
 	}
 
-	return [tiles, shuffle(tileIds, seed ?? undefined)];
+	return [tiles, shuffle(tileIds, seed)];
 }
 
 export function addToTileNotes(
