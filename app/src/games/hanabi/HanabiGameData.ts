@@ -189,6 +189,8 @@ export type HanabiGameAction =
 	| HanabiGameActionShotClockTickedDown
 	| HanabiGameActionChat;
 
+export type ActionsFilterOption = 'all' | 'to-me' | 'from-me' | 'chat';
+
 export type HanabiTileNotes = {
 	colors: readonly HanabiTileColor[];
 	numbers: readonly HanabiTileNumber[];

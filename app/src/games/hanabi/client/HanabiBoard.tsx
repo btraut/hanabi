@@ -1,6 +1,7 @@
 import { useBreakpointContext } from 'app/src/components/BreakpointContext';
 import { useUserId } from 'app/src/components/SocketContext';
 import HanabiActions from 'app/src/games/hanabi/client/HanabiActions';
+import HanabiActionsFilter from 'app/src/games/hanabi/client/HanabiActionsFilter';
 import HanabiClues from 'app/src/games/hanabi/client/HanabiClues';
 import { useHanabiAnimationManager } from 'app/src/games/hanabi/client/HanabiContext';
 import HanabiDiscardedTilesCollapsed from 'app/src/games/hanabi/client/HanabiDiscardedTilesCollapsed';
@@ -17,6 +18,7 @@ import { TileViewSize } from 'app/src/games/hanabi/client/HanabiTileView';
 import useLatestActions from 'app/src/games/hanabi/client/useLatestActions';
 import useTileActionMenuHandlers from 'app/src/games/hanabi/client/useTileActionMenuHandlers';
 import useTileNotesHandlers from 'app/src/games/hanabi/client/useTileNotesHandlers';
+import { ActionsFilterOption } from 'app/src/games/hanabi/HanabiGameData';
 import useValueChanged from 'app/src/utils/client/useValueChanged';
 import classNames from 'classnames';
 import { Fragment, useEffect, useRef, useState } from 'react';
@@ -77,6 +79,9 @@ export default function HanabiBoard(): JSX.Element {
 			hideNotesForTile();
 		}
 	}, [hideNotesForTile, latestActionId]);
+
+	// Actions Filter:
+	const [actionsFilter, setActionsFilter] = useState<ActionsFilterOption>('all');
 
 	return (
 		<div className="grid grid-flow-row lg:grid-flow-col gap-6 relative">
@@ -165,14 +170,19 @@ export default function HanabiBoard(): JSX.Element {
 						/>
 					</div>
 					<div
-						className={classNames('border-4 border-black rounded-xl overflow-y-auto mb-6', {
+						className={classNames('border-4 border-black rounded-xl mb-6 overflow-hidden', {
 							'bg-white': gameData.actions.length % 2 === 1,
 							'bg-gray-200': gameData.actions.length % 2 === 0,
 						})}
 						style={{ maxHeight: 320 }}
 						ref={actionsContainerRef}
 					>
-						<HanabiActions />
+						<div className="border-solid border-gray-600 border-b-2 bg-gray-300">
+							<HanabiActionsFilter filter={actionsFilter} onChange={setActionsFilter} />
+						</div>
+						<div className="overflow-y-auto">
+							<HanabiActions filter={actionsFilter} />
+						</div>
 					</div>
 				</div>
 			)}
