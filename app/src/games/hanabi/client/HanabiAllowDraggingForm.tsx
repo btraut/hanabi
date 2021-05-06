@@ -4,15 +4,9 @@ import { ChangeEvent, useCallback, useEffect, useState } from 'react';
 
 interface Props {
 	allowDragging: boolean;
-	label?: string;
-	id?: string;
 }
 
-export default function HanabiAllowDraggingForm({
-	allowDragging,
-	label = 'Allow Tile Reording:',
-	id = 'allow-dragging-checkbox',
-}: Props): JSX.Element {
+export default function HanabiAllowDraggingForm({ allowDragging }: Props): JSX.Element {
 	const game = useHanabiGame();
 
 	const [displayedAllowDragging, setDisplayedAllowDragging] = useState(allowDragging);
@@ -37,20 +31,18 @@ export default function HanabiAllowDraggingForm({
 	}, [allowDragging]);
 
 	return (
-		<div className="grid grid-flow-col gap-3 justify-center items-center">
-			{label && (
-				<label
-					htmlFor={id}
-					className="text-lg font-bold truncate text-center text-white cursor-pointer select-none"
-				>
-					{label}
-				</label>
-			)}
+		<div className="grid grid-flow-col gap-3 justify-start items-center">
 			<HanabiCheckbox
-				id={id}
+				id="allow-dragging-checkbox"
 				checked={displayedAllowDragging}
 				onChange={handleAllowDraggingChange}
 			/>
+			<label
+				htmlFor="allow-dragging-checkbox"
+				className="text-lg font-bold truncate text-center text-white cursor-pointer select-none"
+			>
+				Allow reordering of tiles
+			</label>
 		</div>
 	);
 }

@@ -4,15 +4,9 @@ import { ChangeEvent, useCallback, useEffect, useState } from 'react';
 
 interface Props {
 	showNotes: boolean;
-	label?: string;
-	id?: string;
 }
 
-export default function HanabiShowNotesForm({
-	showNotes,
-	label = 'Show Notes:',
-	id = 'show-notes-checkbox',
-}: Props): JSX.Element {
+export default function HanabiShowNotesForm({ showNotes }: Props): JSX.Element {
 	const game = useHanabiGame();
 
 	const [displayedShowNotes, setDisplayedShowNotes] = useState(showNotes);
@@ -37,16 +31,18 @@ export default function HanabiShowNotesForm({
 	}, [showNotes]);
 
 	return (
-		<div className="grid grid-flow-col gap-3 justify-center items-center">
-			{label && (
-				<label
-					htmlFor={id}
-					className="text-lg font-bold truncate text-center text-white cursor-pointer select-none"
-				>
-					{label}
-				</label>
-			)}
-			<HanabiCheckbox id={id} checked={displayedShowNotes} onChange={handleShowNotesChange} />
+		<div className="grid grid-flow-col gap-3 justify-start items-center">
+			<HanabiCheckbox
+				id="show-notes-checkbox"
+				checked={displayedShowNotes}
+				onChange={handleShowNotesChange}
+			/>
+			<label
+				htmlFor="show-notes-checkbox"
+				className="text-lg font-bold truncate text-center text-white cursor-pointer select-none"
+			>
+				Show notes on tiles
+			</label>
 		</div>
 	);
 }

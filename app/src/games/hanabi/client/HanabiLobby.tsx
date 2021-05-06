@@ -34,7 +34,7 @@ export default function HanabiLobby(): JSX.Element {
 	const players = Object.values(game.gameData.players);
 
 	return (
-		<div className="w-screen min-h-screen p-20 grid grid-flow-row gap-10 content-center justify-center">
+		<div className="w-screen min-h-screen p-20 grid grid-flow-row gap-10 content-center justify-items-center">
 			<h1 className="mb-10 text-8xl italic text-white text-center text-shadow">Hanabi</h1>
 			{userIsJoined && <HanabiCopyLinkButton link={link} />}
 			{players.length > 0 && (
@@ -46,47 +46,20 @@ export default function HanabiLobby(): JSX.Element {
 			)}
 			{userIsJoined ? (
 				<>
-					<div className="grid grid-cols-2 gap-3 items-center">
-						<label
-							htmlFor="choose-ruleset-dropdown"
-							className="text-lg font-bold truncate text-center text-white cursor-pointer select-none justify-self-end"
-						>
-							Game Mode:
-						</label>
+					<div className="grid gap-4" style={{ gridTemplateColumns: 'auto auto' }}>
+						<div className="mt-2 text-lg font-bold truncate text-center text-white cursor-default select-none justify-self-end">
+							Game Rules:
+						</div>
 						<div className="justify-self-start">
-							<HanabiChooseRuleSetForm
-								ruleSet={game.gameData.ruleSet}
-								label=""
-								id="choose-ruleset-dropdown"
-							/>
+							<HanabiChooseRuleSetForm ruleSet={game.gameData.ruleSet} />
 						</div>
 
-						<label
-							htmlFor="allow-dragging-checkbox"
-							className="text-lg font-bold truncate text-center text-white cursor-pointer select-none justify-self-end"
-						>
-							Allow Tile Reordering:
-						</label>
-						<div className="justify-self-start">
-							<HanabiAllowDraggingForm
-								allowDragging={game.gameData.allowDragging}
-								label=""
-								id="allow-dragging-checkbox"
-							/>
+						<div className="mt-1 text-lg font-bold truncate text-center text-white cursor-default select-none justify-self-end">
+							Additional Features:
 						</div>
-
-						<label
-							htmlFor="show-notes-checkbox"
-							className="text-lg font-bold truncate text-center text-white cursor-pointer select-none justify-self-end"
-						>
-							Show Notes:
-						</label>
-						<div className="justify-self-start">
-							<HanabiShowNotesForm
-								showNotes={game.gameData.showNotes}
-								label=""
-								id="show-notes-checkbox"
-							/>
+						<div className="justify-self-start grid gap-1">
+							<HanabiAllowDraggingForm allowDragging={game.gameData.allowDragging} />
+							<HanabiShowNotesForm showNotes={game.gameData.showNotes} />
 						</div>
 					</div>
 					<div className="grid grid-flow-col gap-x-4 justify-center">
