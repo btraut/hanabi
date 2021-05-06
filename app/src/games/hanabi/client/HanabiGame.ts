@@ -210,7 +210,11 @@ export default class HanabiGame extends Game {
 		// RefreshGameData message. We'll handle that in a separate handler.
 	}
 
-	public async changeSettings(settings: { ruleSet?: HanabiRuleSet }): Promise<void> {
+	public async changeSettings(settings: {
+		ruleSet?: HanabiRuleSet;
+		allowDragging?: boolean;
+		showNotes?: boolean;
+	}): Promise<void> {
 		this._sendMessage({
 			type: 'ChangeGameSettingsMessage',
 			data: settings,

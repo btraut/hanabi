@@ -38,7 +38,7 @@ export default function HanabiChooseRuleSetForm({ ruleSet }: Props): JSX.Element
 	}, [ruleSet]);
 
 	return (
-		<div className="grid grid-flow-col gap-x-2 justify-center items-center">
+		<div className="grid grid-flow-col gap-3 justify-center items-center">
 			<label className="text-lg font-bold truncate text-center text-white">Game Mode:</label>
 			<HanabiDropdown value={displayedRuleSet} options={OPTIONS} onChange={handleRuleSetChange} />
 		</div>

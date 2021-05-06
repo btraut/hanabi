@@ -276,6 +276,14 @@ export default class HanabiGame extends Game {
 			this._gameData.ruleSet = message.data.ruleSet;
 		}
 
+		if (message.data.allowDragging !== undefined) {
+			this._gameData.allowDragging = message.data.allowDragging;
+		}
+
+		if (message.data.showNotes !== undefined) {
+			this._gameData.showNotes = message.data.showNotes;
+		}
+
 		// TODO: Allow user to specify seed.
 
 		// TODO: Allow user to keep playing after discarding critical tile.

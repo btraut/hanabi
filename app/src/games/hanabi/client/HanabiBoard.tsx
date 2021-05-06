@@ -138,9 +138,15 @@ export default function HanabiBoard(): JSX.Element {
 								<HanabiPlayerTiles
 									id={playerId}
 									onTileClick={gameData.finishedReason === null ? handleTileClick : undefined}
-									onTileMouseOver={!showMenuForTile ? handleTileMouseOver : undefined}
-									onTileMouseOut={!showMenuForTile ? handleTileMouseOut : undefined}
-									onTileMouseDown={!showMenuForTile ? handleTileMouseDown : undefined}
+									onTileMouseOver={
+										gameData.showNotes && !showMenuForTile ? handleTileMouseOver : undefined
+									}
+									onTileMouseOut={
+										gameData.showNotes && !showMenuForTile ? handleTileMouseOut : undefined
+									}
+									onTileMouseDown={
+										gameData.showNotes && !showMenuForTile ? handleTileMouseDown : undefined
+									}
 								/>
 							</Fragment>
 						);

@@ -25,7 +25,7 @@ export function getSlotXForDraggingTile(x: number, max: number = Number.MAX_SAFE
 }
 
 export function isTileInTopHalf(position: Position): boolean {
-	return position.y < HANABI_BOARD_SIZE.height / 2 - HANABI_DEFAULT_TILE_PADDING;
+	return position.y < HANABI_TILE_SIZE.height + HANABI_DEFAULT_TILE_PADDING;
 }
 
 export function getNewPositionsForTiles(

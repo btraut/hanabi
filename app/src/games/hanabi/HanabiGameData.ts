@@ -201,6 +201,8 @@ export interface HanabiGameData {
 
 	// What kind of game is this? Regular? Rainbow?
 	ruleSet: HanabiRuleSet;
+	allowDragging: boolean;
+	showNotes: boolean;
 
 	// Where are we in the game?
 	stage: HanabiStage;
@@ -234,31 +236,12 @@ export interface HanabiGameData {
 	actions: readonly HanabiGameAction[];
 }
 
-export function addToTileNotes(
-	tileNotes: HanabiTileNotes | undefined,
-	newColor: HanabiTileColor | undefined,
-	newNumber: HanabiTileNumber | undefined,
-): HanabiTileNotes {
-	const newNotes = {
-		colors: tileNotes ? [...tileNotes.colors] : [],
-		numbers: tileNotes ? [...tileNotes.numbers] : [],
-	};
-
-	if (newColor !== undefined) {
-		newNotes.colors.push(newColor);
-	}
-
-	if (newNumber !== undefined) {
-		newNotes.numbers.push(newNumber);
-	}
-
-	return newNotes;
-}
-
 export function generateHanabiGameData(data: Partial<HanabiGameData> = {}): HanabiGameData {
 	return {
 		seed: null,
 		ruleSet: '5-color',
+		allowDragging: true,
+		showNotes: true,
 		stage: HanabiStage.Setup,
 		finishedReason: null,
 		players: {},
@@ -313,4 +296,25 @@ export function generateRandomDeck(
 	}
 
 	return [tiles, shuffle(tileIds, seed ?? undefined)];
+}
+
+export function addToTileNotes(
+	tileNotes: HanabiTileNotes | undefined,
+	newColor: HanabiTileColor | undefined,
+	newNumber: HanabiTileNumber | undefined,
+): HanabiTileNotes {
+	const newNotes = {
+		colors: tileNotes ? [...tileNotes.colors] : [],
+		numbers: tileNotes ? [...tileNotes.numbers] : [],
+	};
+
+	if (newColor !== undefined) {
+		newNotes.colors.push(newColor);
+	}
+
+	if (newNumber !== undefined) {
+		newNotes.numbers.push(newNumber);
+	}
+
+	return newNotes;
 }

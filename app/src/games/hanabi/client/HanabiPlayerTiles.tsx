@@ -44,7 +44,9 @@ export default function HanabiPlayerTiles({
 	return (
 		<div>
 			<div className="border-4 border-black rounded-xl p-0.5 bg-white relative">
-				<div className="absolute bottom-0 left-0 right-0 h-1/2 bg-black opacity-5" />
+				{gameData.allowDragging && (
+					<div className="absolute bottom-0 left-0 right-0 h-1/2 bg-black opacity-5" />
+				)}
 				<div style={HANABI_BOARD_SIZE} className="relative z-0">
 					{gameData.playerTiles[id].map((tileId) => (
 						<div
@@ -65,7 +67,7 @@ export default function HanabiPlayerTiles({
 								onMouseOver={onTileMouseOver}
 								onMouseOut={onTileMouseOut}
 								onMouseDown={onTileMouseDown}
-								draggable={gameStillPlaying && ownTiles}
+								draggable={gameData.allowDragging && gameStillPlaying && ownTiles}
 								highlight={highlightedTiles.has(tileId)}
 							/>
 						</div>
