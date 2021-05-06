@@ -5,6 +5,7 @@ import { ChangeEvent, useCallback, useEffect, useState } from 'react';
 
 interface Props {
 	ruleSet: HanabiRuleSet;
+	label?: string;
 }
 
 const OPTIONS: { [label: string]: HanabiRuleSet } = {
@@ -13,7 +14,10 @@ const OPTIONS: { [label: string]: HanabiRuleSet } = {
 	'Decoy Rainbow': 'rainbow',
 };
 
-export default function HanabiChooseRuleSetForm({ ruleSet }: Props): JSX.Element {
+export default function HanabiChooseRuleSetForm({
+	ruleSet,
+	label = 'Game Mode:',
+}: Props): JSX.Element {
 	const game = useHanabiGame();
 
 	const [displayedRuleSet, setDisplayedRuleSet] = useState(ruleSet);
@@ -43,7 +47,7 @@ export default function HanabiChooseRuleSetForm({ ruleSet }: Props): JSX.Element
 				htmlFor="choose-ruleset-dropdown"
 				className="text-lg font-bold truncate text-center text-white cursor-pointer select-none"
 			>
-				Game Mode:
+				{label}
 			</label>
 			<HanabiDropdown
 				id="choose-ruleset-dropdown"

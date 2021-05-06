@@ -4,9 +4,13 @@ import { ChangeEvent, useCallback, useEffect, useState } from 'react';
 
 interface Props {
 	showNotes: boolean;
+	label?: string;
 }
 
-export default function HanabiShowNotesForm({ showNotes }: Props): JSX.Element {
+export default function HanabiShowNotesForm({
+	showNotes,
+	label = 'Show Notes:',
+}: Props): JSX.Element {
 	const game = useHanabiGame();
 
 	const [displayedShowNotes, setDisplayedShowNotes] = useState(showNotes);
@@ -36,7 +40,7 @@ export default function HanabiShowNotesForm({ showNotes }: Props): JSX.Element {
 				htmlFor="show-notes-checkbox"
 				className="text-lg font-bold truncate text-center text-white cursor-pointer select-none"
 			>
-				Show Notes:
+				{label}
 			</label>
 			<HanabiCheckbox
 				id="show-notes-checkbox"
