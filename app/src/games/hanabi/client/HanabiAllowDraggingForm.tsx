@@ -32,10 +32,17 @@ export default function HanabiAllowDraggingForm({ allowDragging }: Props): JSX.E
 
 	return (
 		<div className="grid grid-flow-col gap-3 justify-center items-center">
-			<label className="text-lg font-bold truncate text-center text-white">
+			<label
+				htmlFor="allow-dragging-checkbox"
+				className="text-lg font-bold truncate text-center text-white cursor-pointer select-none"
+			>
 				Allow Tile Reording:
 			</label>
-			<HanabiCheckbox checked={displayedAllowDragging} onChange={handleAllowDraggingChange} />
+			<HanabiCheckbox
+				id="allow-dragging-checkbox"
+				checked={displayedAllowDragging}
+				onChange={handleAllowDraggingChange}
+			/>
 		</div>
 	);
 }

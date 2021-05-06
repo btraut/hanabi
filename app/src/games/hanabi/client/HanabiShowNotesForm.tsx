@@ -32,8 +32,17 @@ export default function HanabiShowNotesForm({ showNotes }: Props): JSX.Element {
 
 	return (
 		<div className="grid grid-flow-col gap-3 justify-center items-center">
-			<label className="text-lg font-bold truncate text-center text-white">Show Notes:</label>
-			<HanabiCheckbox checked={displayedShowNotes} onChange={handleShowNotesChange} />
+			<label
+				htmlFor="show-notes-checkbox"
+				className="text-lg font-bold truncate text-center text-white cursor-pointer select-none"
+			>
+				Show Notes:
+			</label>
+			<HanabiCheckbox
+				id="show-notes-checkbox"
+				checked={displayedShowNotes}
+				onChange={handleShowNotesChange}
+			/>
 		</div>
 	);
 }

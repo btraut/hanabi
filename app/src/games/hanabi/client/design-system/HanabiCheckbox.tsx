@@ -1,14 +1,18 @@
 import useFocusVisible from 'app/src/utils/client/useFocusVisible';
 import classNames from 'classnames';
-import { ChangeEventHandler, forwardRef } from 'react';
+import { ChangeEventHandler, forwardRef, useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 
 interface Props {
+	id?: string;
 	onChange: ChangeEventHandler<HTMLInputElement>;
 	checked: boolean;
 }
 
-function HanabiCheckbox({ onChange, checked }: Props, ref: any): JSX.Element {
+function HanabiCheckbox({ id, onChange, checked }: Props, ref: any): JSX.Element {
 	const isFocusVisible = useFocusVisible();
+
+	const [finalId] = useState(id ?? `dropdown-${uuidv4()}`);
 
 	return (
 		<div className="relative">
@@ -18,6 +22,7 @@ function HanabiCheckbox({ onChange, checked }: Props, ref: any): JSX.Element {
 				</div>
 			)}
 			<input
+				id={finalId}
 				type="checkbox"
 				checked={checked}
 				onChange={onChange}
