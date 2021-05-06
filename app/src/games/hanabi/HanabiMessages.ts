@@ -43,6 +43,9 @@ export type ChangeGameSettingsResponseMessage = SocketMessage<
 	{ error?: string }
 >;
 
+export type SendChatMessage = SocketMessage<'SendChatMessage', string>;
+export type SendChatResponseMessage = SocketMessage<'SendChatResponseMessage', { error?: string }>;
+
 export type StartGameMessage = SocketMessage<'StartGameMessage', void>;
 export type StartGameResponseMessage = SocketMessage<
 	'StartGameResponseMessage',
@@ -86,6 +89,8 @@ export type HanabiMessage =
 	| RemovePlayerResponseMessage
 	| ChangeGameSettingsMessage
 	| ChangeGameSettingsResponseMessage
+	| SendChatMessage
+	| SendChatResponseMessage
 	| StartGameMessage
 	| StartGameResponseMessage
 	| ResetGameMessage

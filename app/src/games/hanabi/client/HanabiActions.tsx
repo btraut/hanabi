@@ -62,7 +62,7 @@ export default function HanabiActions({ filter = 'all' }: Props): JSX.Element {
 			{actionsFiltered.map((action, index) => {
 				return (
 					<div
-						className={classNames('border-solid border-gray-600', {
+						className={classNames('border-solid border-gray-500', {
 							'border-t-2': index !== 0,
 							'bg-white': index % 2 === 0,
 							'bg-gray-200': index % 2 === 1,
@@ -74,9 +74,7 @@ export default function HanabiActions({ filter = 'all' }: Props): JSX.Element {
 				);
 			})}
 			{actionsFiltered.length === 0 && (
-				<div className="border-solid border-gray-600 bg-white text-md p-3 italic">
-					Nothing to show here.
-				</div>
+				<div className="bg-white text-md p-3 italic">Nothing to show here.</div>
 			)}
 		</div>
 	);

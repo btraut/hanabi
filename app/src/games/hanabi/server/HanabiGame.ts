@@ -29,6 +29,7 @@ import {
 	PlayTileMessage,
 	RemovePlayerMessage,
 	ResetGameMessage,
+	SendChatMessage,
 	StartGameMessage,
 } from 'app/src/games/hanabi/HanabiMessages';
 import Game, { GameSerialized } from 'app/src/games/server/Game';
@@ -120,6 +121,9 @@ export default class HanabiGame extends Game {
 				break;
 			case 'ChangeGameSettingsMessage':
 				this._handleChangeGameSettingsMessage(message, userId);
+				break;
+			case 'SendChatMessage':
+				this._handleSendChatMessage(message, userId);
 				break;
 			case 'StartGameMessage':
 				this._handleStartGameMessage(message, userId);
@@ -293,6 +297,34 @@ export default class HanabiGame extends Game {
 		// Success!
 		this._messenger.send(userId, {
 			type: 'ChangeGameSettingsResponseMessage',
+			data: {},
+		});
+
+		// Send the updated state to all players/watchers.
+		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
+			type: 'RefreshGameDataMessage',
+			data: this._gameData,
+		});
+
+		// Touch the games last updated time.
+		this._update();
+	}
+
+	private _handleSendChatMessage(message: SendChatMessage, userId: string): void {
+		// Add the chat action.
+		this._gameData.actions = [
+			...this._gameData.actions,
+			{
+				id: uuidv4(),
+				type: HanabiGameActionType.Chat,
+				playerId: userId,
+				message: message.data,
+			},
+		];
+
+		// Success!
+		this._messenger.send(userId, {
+			type: 'SendChatResponseMessage',
 			data: {},
 		});
 

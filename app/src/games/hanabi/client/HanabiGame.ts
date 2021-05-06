@@ -21,6 +21,7 @@ import {
 	RefreshGameDataMessage,
 	RemovePlayerResponseMessage,
 	ResetGameResponseMessage,
+	SendChatResponseMessage,
 	StartGameResponseMessage,
 } from 'app/src/games/hanabi/HanabiMessages';
 import AuthSocketManager, { AuthenticationState } from 'app/src/utils/client/AuthSocketManager';
@@ -226,6 +227,24 @@ export default class HanabiGame extends Game {
 
 		if (changeGameSettingsResponseMessage.data.error) {
 			throw new Error(changeGameSettingsResponseMessage.data.error);
+		}
+
+		// After responding to our initial message, the server will also send a
+		// RefreshGameData message. We'll handle that in a separate handler.
+	}
+
+	public async sendChat(message: string): Promise<void> {
+		this._sendMessage({
+			type: 'SendChatMessage',
+			data: message,
+		});
+
+		const sendChatResponseMessage = await this._socketManager.expectMessageOfType<SendChatResponseMessage>(
+			'SendChatResponseMessage',
+		);
+
+		if (sendChatResponseMessage.data.error) {
+			throw new Error(sendChatResponseMessage.data.error);
 		}
 
 		// After responding to our initial message, the server will also send a

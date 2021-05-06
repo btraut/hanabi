@@ -1,9 +1,9 @@
-import { ChangeEvent, forwardRef, MutableRefObject } from 'react';
+import { ChangeEventHandler, forwardRef, MutableRefObject } from 'react';
 
 interface Props {
 	id?: string;
 	value?: string;
-	onChange?: (event: ChangeEvent) => void;
+	onChange?: ChangeEventHandler<HTMLInputElement>;
 	ref?: MutableRefObject<HTMLInputElement | null>;
 }
 

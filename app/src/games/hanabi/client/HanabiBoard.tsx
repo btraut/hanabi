@@ -2,6 +2,7 @@ import { useBreakpointContext } from 'app/src/components/BreakpointContext';
 import { useUserId } from 'app/src/components/SocketContext';
 import HanabiActions from 'app/src/games/hanabi/client/HanabiActions';
 import HanabiActionsFilter from 'app/src/games/hanabi/client/HanabiActionsFilter';
+import HanabiChatInput from 'app/src/games/hanabi/client/HanabiChatInput';
 import HanabiClues from 'app/src/games/hanabi/client/HanabiClues';
 import { useHanabiAnimationManager } from 'app/src/games/hanabi/client/HanabiContext';
 import HanabiDiscardedTilesCollapsed from 'app/src/games/hanabi/client/HanabiDiscardedTilesCollapsed';
@@ -170,11 +171,11 @@ export default function HanabiBoard(): JSX.Element {
 						/>
 					</div>
 					<div
-						className={classNames('border-4 border-black rounded-xl mb-6 overflow-hidden', {
+						className={classNames('grid border-4 border-black rounded-xl mb-6 overflow-hidden', {
 							'bg-white': gameData.actions.length % 2 === 1,
 							'bg-gray-200': gameData.actions.length % 2 === 0,
 						})}
-						style={{ maxHeight: 320 }}
+						style={{ maxHeight: 320, gridTemplateRows: 'auto 1fr auto' }}
 						ref={actionsContainerRef}
 					>
 						<div className="border-solid border-gray-600 border-b-2 bg-gray-300">
@@ -182,6 +183,9 @@ export default function HanabiBoard(): JSX.Element {
 						</div>
 						<div className="overflow-y-auto">
 							<HanabiActions filter={actionsFilter} />
+						</div>
+						<div className="border-solid border-gray-600 border-t-2 bg-gray-300">
+							<HanabiChatInput />
 						</div>
 					</div>
 				</div>

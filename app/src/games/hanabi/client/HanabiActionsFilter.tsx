@@ -17,7 +17,6 @@ const FILTER_OPTIONS: { [key: string]: string } = {
 export default function HanabiActionsFilter({ filter, onChange }: Props): JSX.Element {
 	const handleChange = useCallback(
 		(event: ChangeEvent<HTMLInputElement>) => {
-			console.log(event.target.value);
 			onChange(event.target.value as ActionsFilterOption);
 		},
 		[onChange],
