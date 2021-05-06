@@ -17,7 +17,6 @@ import { TileViewSize } from 'app/src/games/hanabi/client/HanabiTileView';
 import useLatestActions from 'app/src/games/hanabi/client/useLatestActions';
 import useTileActionMenuHandlers from 'app/src/games/hanabi/client/useTileActionMenuHandlers';
 import useTileNotesHandlers from 'app/src/games/hanabi/client/useTileNotesHandlers';
-import { HanabiGameAction } from 'app/src/games/hanabi/HanabiGameData';
 import useValueChanged from 'app/src/utils/client/useValueChanged';
 import classNames from 'classnames';
 import { Fragment, useEffect, useRef, useState } from 'react';
@@ -53,6 +52,7 @@ export default function HanabiBoard(): JSX.Element {
 	// Build handlers and data pertaining to the notes menu (hover for tiles).
 	const {
 		showNotesForTile,
+		hideNotesForTile,
 		handleTileMouseOver,
 		handleTileMouseOut,
 		handleTileMouseDown,
@@ -69,15 +69,14 @@ export default function HanabiBoard(): JSX.Element {
 
 	// When a new action happens, scroll the actions container to the top.
 	const latestActions = useLatestActions();
-	const latestAction = latestActions.length ? latestActions[latestActions.length - 1] : null;
-	const latestHandledActionRef = useRef<HanabiGameAction | null>(null);
+	const latestActionId = latestActions.length ? latestActions[latestActions.length - 1].id : null;
 	const actionsContainerRef = useRef<HTMLDivElement | null>(null);
 	useEffect(() => {
-		if (latestHandledActionRef.current !== latestAction) {
-			latestHandledActionRef.current = latestAction;
+		if (latestActionId) {
 			actionsContainerRef.current?.scrollTo(0, 0);
+			hideNotesForTile();
 		}
-	}, [latestAction]);
+	}, [hideNotesForTile, latestActionId]);
 
 	return (
 		<div className="grid grid-flow-row lg:grid-flow-col gap-6 relative">

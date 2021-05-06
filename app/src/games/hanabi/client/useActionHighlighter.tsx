@@ -1,12 +1,7 @@
 import { useUserId } from 'app/src/components/SocketContext';
 import { useHanabiHighlightContext } from 'app/src/games/hanabi/client/HanabiHighlightContext';
-import useLatestActions from 'app/src/games/hanabi/client/useLatestActions';
-import {
-	HanabiGameActionDiscard,
-	HanabiGameActionGiveClue,
-	HanabiGameActionPlay,
-	HanabiGameActionType,
-} from 'app/src/games/hanabi/HanabiGameData';
+import { useLatestTileAction } from 'app/src/games/hanabi/client/useLatestActions';
+import { HanabiGameActionType } from 'app/src/games/hanabi/HanabiGameData';
 import { useEffect } from 'react';
 
 const HIGHLIGHT_FOR_ACTING_USER = true;
@@ -16,20 +11,7 @@ export default function useActionHighlighter(): void {
 
 	const { highlightAction, highlightTiles } = useHanabiHighlightContext();
 
-	const latestActions = [...useLatestActions()];
-	const latestTileAction:
-		| HanabiGameActionPlay
-		| HanabiGameActionDiscard
-		| HanabiGameActionGiveClue = latestActions
-		.reverse()
-		.find((a) =>
-			[
-				HanabiGameActionType.Play,
-				HanabiGameActionType.Discard,
-				HanabiGameActionType.GiveColorClue,
-				HanabiGameActionType.GiveNumberClue,
-			].includes(a.type),
-		) as any;
+	const latestTileAction = useLatestTileAction();
 
 	useEffect(() => {
 		if (!latestTileAction) {

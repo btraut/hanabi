@@ -18,6 +18,7 @@ export default function useTileNotesHandlers(
 	gameData: HanabiGameData,
 ): {
 	showNotesForTile: NotesDetails | null;
+	hideNotesForTile: () => void;
 	handleTileMouseOver: (event: React.MouseEvent<HTMLDivElement>, tileId: string) => void;
 	handleTileMouseOut: (event: React.MouseEvent<HTMLDivElement>, tileId: string) => void;
 	handleTileMouseDown: (event: React.MouseEvent<HTMLDivElement>, tileId: string) => void;
@@ -40,6 +41,10 @@ export default function useTileNotesHandlers(
 		[gameData],
 	);
 
+	const hideNotesForTile = useCallback(() => {
+		setShowNotesForTile(null);
+	}, []);
+
 	const handleTileMouseOut = useCallback(
 		(_event: React.MouseEvent<HTMLDivElement>, tileId: string) => {
 			if (showNotesForTile?.tileId === tileId) {
@@ -60,6 +65,7 @@ export default function useTileNotesHandlers(
 
 	return {
 		showNotesForTile,
+		hideNotesForTile,
 		handleTileMouseOver,
 		handleTileMouseOut,
 		handleTileMouseDown,

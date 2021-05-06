@@ -3,13 +3,8 @@ import 'app/sounds/hanabi/wrong.wav';
 import 'app/sounds/hanabi/beep.wav';
 
 import { useUserId } from 'app/src/components/SocketContext';
-import useLatestActions from 'app/src/games/hanabi/client/useLatestActions';
-import {
-	HanabiGameActionDiscard,
-	HanabiGameActionGiveClue,
-	HanabiGameActionPlay,
-	HanabiGameActionType,
-} from 'app/src/games/hanabi/HanabiGameData';
+import { useLatestTileAction } from 'app/src/games/hanabi/client/useLatestActions';
+import { HanabiGameActionType } from 'app/src/games/hanabi/HanabiGameData';
 import { useEffect, useRef } from 'react';
 
 const PLAY_SOUNDS_FOR_ACTING_USER = true;
@@ -39,33 +34,18 @@ export default function useActionSounds(enabled = true): void {
 
 	const userId = useUserId();
 
-	const latestActions = [...useLatestActions()];
-	const latestTileAction:
-		| HanabiGameActionPlay
-		| HanabiGameActionDiscard
-		| HanabiGameActionGiveClue
-		| undefined = latestActions
-		.reverse()
-		.find((a) =>
-			[
-				HanabiGameActionType.Play,
-				HanabiGameActionType.Discard,
-				HanabiGameActionType.GiveColorClue,
-				HanabiGameActionType.GiveNumberClue,
-			].includes(a.type),
-		) as any;
-
-	const lastTileActionSoundPlayedRef = useRef(latestTileAction);
+	const latestTileAction = useLatestTileAction();
+	const latestTileActionSoundPlayedRef = useRef(latestTileAction);
 
 	useEffect(() => {
 		// If there's no action to play a sound for or we've already played a
 		// sound for this one, bail.
-		if (!latestTileAction || lastTileActionSoundPlayedRef.current === latestTileAction) {
+		if (!latestTileAction || latestTileActionSoundPlayedRef.current === latestTileAction) {
 			return;
 		}
 
 		// Keep track of which action we handled already.
-		lastTileActionSoundPlayedRef.current = latestTileAction;
+		latestTileActionSoundPlayedRef.current = latestTileAction;
 
 		// If disabled, bail. We have to do this after saving the latest tile
 		// action above because otherwise it'll play a sound when the user

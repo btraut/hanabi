@@ -1,5 +1,5 @@
 import { useHanabiAnimationManager } from 'app/src/games/hanabi/client/HanabiContext';
-import { HanabiGameAction } from 'app/src/games/hanabi/HanabiGameData';
+import { HanabiGameAction, HanabiGameActionType } from 'app/src/games/hanabi/HanabiGameData';
 import { useEffect, useState } from 'react';
 
 export default function useLatestActions(): readonly HanabiGameAction[] {
@@ -23,4 +23,23 @@ export default function useLatestActions(): readonly HanabiGameAction[] {
 	}, [actions, actionsLength, latestActionIndex]);
 
 	return actionsToProcess;
+}
+
+const TILE_ACTION_TYPES = new Set<HanabiGameActionType>([
+	HanabiGameActionType.Play,
+	HanabiGameActionType.Discard,
+	HanabiGameActionType.GiveColorClue,
+	HanabiGameActionType.GiveNumberClue,
+]);
+
+export function useLatestTileAction(): HanabiGameAction | undefined {
+	const latestActions = useLatestActions();
+
+	for (let i = latestActions.length - 1; i >= 0; i -= 1) {
+		if (TILE_ACTION_TYPES.has(latestActions[i].type)) {
+			return latestActions[i];
+		}
+	}
+
+	return undefined;
 }
