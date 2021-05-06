@@ -284,9 +284,11 @@ export default class HanabiGame extends Game {
 			this._gameData.showNotes = message.data.showNotes;
 		}
 
-		// TODO: Allow user to specify seed.
+		if (message.data.criticalGameOver !== undefined) {
+			this._gameData.criticalGameOver = message.data.criticalGameOver;
+		}
 
-		// TODO: Allow user to keep playing after discarding critical tile.
+		// TODO: Allow user to specify seed.
 
 		// Success!
 		this._messenger.send(userId, {
@@ -548,7 +550,7 @@ export default class HanabiGame extends Game {
 		}
 
 		// Detect if the game is over due to the wrong tile being discarded.
-		if (!tileIsValid && this._discardedTileIsFatal(tile)) {
+		if (this._gameData.criticalGameOver && !tileIsValid && this._discardedTileIsFatal(tile)) {
 			this._gameData.stage = HanabiStage.Finished;
 			this._gameData.finishedReason = HanabiFinishedReason.DiscardedFatalTile;
 		}
@@ -692,7 +694,7 @@ export default class HanabiGame extends Game {
 		];
 
 		// Detect if the game is over due to the wrong tile being discarded.
-		if (this._discardedTileIsFatal(tile)) {
+		if (this._gameData.criticalGameOver && this._discardedTileIsFatal(tile)) {
 			this._gameData.stage = HanabiStage.Finished;
 			this._gameData.finishedReason = HanabiFinishedReason.DiscardedFatalTile;
 		}

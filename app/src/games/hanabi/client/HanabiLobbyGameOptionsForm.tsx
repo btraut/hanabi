@@ -1,47 +1,52 @@
 import HanabiCheckbox from 'app/src/games/hanabi/client/design-system/HanabiCheckbox';
 import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
 import { ChangeEvent, useCallback, useEffect, useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 
 interface Props {
-	allowDragging: boolean;
+	checked: boolean;
+	label: string;
+	settingsKey: 'allowDragging' | 'showNotes' | 'criticalGameOver';
 }
 
-export default function HanabiAllowDraggingForm({ allowDragging }: Props): JSX.Element {
+export default function HanabiLobbyGameOptionsForm({
+	checked,
+	label,
+	settingsKey,
+}: Props): JSX.Element {
 	const game = useHanabiGame();
 
-	const [displayedAllowDragging, setDisplayedAllowDragging] = useState(allowDragging);
+	const [displayedChecked, setDisplayedChecked] = useState(checked);
+
+	const [id] = useState(uuidv4());
 
 	// This will set the local input value optimistically and also update the
 	// server.
-	const handleAllowDraggingChange = useCallback(
+	const handleChange = useCallback(
 		(event: ChangeEvent<HTMLInputElement>) => {
 			const newAllowDragging = event.target.checked;
-			setDisplayedAllowDragging(newAllowDragging);
+			setDisplayedChecked(newAllowDragging);
 
 			game.changeSettings({
-				allowDragging: newAllowDragging,
+				[settingsKey]: newAllowDragging,
 			});
 		},
-		[game],
+		[game, settingsKey],
 	);
 
 	// If the server sends a different ruleSet, replace our local one.
 	useEffect(() => {
-		setDisplayedAllowDragging(allowDragging);
-	}, [allowDragging]);
+		setDisplayedChecked(checked);
+	}, [checked]);
 
 	return (
 		<div className="grid grid-flow-col gap-3 justify-start items-center">
-			<HanabiCheckbox
-				id="allow-dragging-checkbox"
-				checked={displayedAllowDragging}
-				onChange={handleAllowDraggingChange}
-			/>
+			<HanabiCheckbox id={id} checked={displayedChecked} onChange={handleChange} />
 			<label
-				htmlFor="allow-dragging-checkbox"
+				htmlFor={id}
 				className="text-lg font-bold truncate text-center text-white cursor-pointer select-none"
 			>
-				Allow reordering of tiles
+				{label}
 			</label>
 		</div>
 	);

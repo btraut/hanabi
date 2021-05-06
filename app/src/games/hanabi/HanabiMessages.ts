@@ -31,7 +31,12 @@ export type RemovePlayerResponseMessage = SocketMessage<
 // State Management
 export type ChangeGameSettingsMessage = SocketMessage<
 	'ChangeGameSettingsMessage',
-	{ ruleSet?: HanabiRuleSet; allowDragging?: boolean; showNotes?: boolean }
+	{
+		ruleSet?: HanabiRuleSet;
+		allowDragging?: boolean;
+		showNotes?: boolean;
+		criticalGameOver?: boolean;
+	}
 >;
 export type ChangeGameSettingsResponseMessage = SocketMessage<
 	'ChangeGameSettingsResponseMessage',

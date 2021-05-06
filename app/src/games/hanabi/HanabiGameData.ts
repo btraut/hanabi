@@ -203,6 +203,7 @@ export interface HanabiGameData {
 	ruleSet: HanabiRuleSet;
 	allowDragging: boolean;
 	showNotes: boolean;
+	criticalGameOver: boolean;
 
 	// Where are we in the game?
 	stage: HanabiStage;
@@ -242,6 +243,7 @@ export function generateHanabiGameData(data: Partial<HanabiGameData> = {}): Hana
 		ruleSet: '5-color',
 		allowDragging: true,
 		showNotes: true,
+		criticalGameOver: true,
 		stage: HanabiStage.Setup,
 		finishedReason: null,
 		players: {},
