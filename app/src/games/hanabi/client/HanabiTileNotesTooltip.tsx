@@ -33,26 +33,14 @@ export default function HanabiTileNotesTooltip({ notes, coords }: Props): JSX.El
 
 	return (
 		<Portal>
-			<Tooltip top={coords.top} left={coords.left} position="below">
-				<div className="pb-0.5">
-					<div className="flex justify-center">
-						<div
-							style={{
-								borderLeftColor: 'transparent',
-								borderRightColor: 'transparent',
-								borderBottomWidth: 12,
-								borderLeftWidth: 12,
-								borderRightWidth: 12,
-							}}
-							className="border-gray-900"
-						/>
-					</div>
-					<div className="bg-gray-900 rounded-lg py-2 px-3">
-						<div className="grid grid-flow-col gap-2 justify-center">
+			<Tooltip top={coords.top} left={coords.left} position="below" fadeIn>
+				<div className="mt-1">
+					<div className="bg-gray-900 rounded-lg pb-2 pt-1 px-2">
+						<div className="grid grid-flow-col gap-1.5 justify-center">
 							{allNumbers.map((number) => (
 								<div
 									key={number}
-									className={classNames('font-bold text-xl text-white', {
+									className={classNames('font-bold text-l text-white', {
 										'opacity-30': !notes?.numbers.includes(number),
 									})}
 								>
@@ -65,7 +53,7 @@ export default function HanabiTileNotesTooltip({ notes, coords }: Props): JSX.El
 								<div
 									key={color}
 									className={classNames(
-										'w-6 h-6 rounded-full border-black border-4',
+										'w-4 h-4 rounded-full border-black border-2',
 										tileBackgroundClasses[color],
 										{ 'opacity-30': !notes?.colors.includes(color) },
 									)}

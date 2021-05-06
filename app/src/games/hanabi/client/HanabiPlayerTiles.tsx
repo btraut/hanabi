@@ -13,6 +13,7 @@ interface Props {
 	onTileClick?: (event: React.MouseEvent<HTMLDivElement>, tileId: string) => void;
 	onTileMouseOver?: (event: React.MouseEvent<HTMLDivElement>, tileId: string) => void;
 	onTileMouseOut?: (event: React.MouseEvent<HTMLDivElement>, tileId: string) => void;
+	onTileMouseDown?: (event: React.MouseEvent<HTMLDivElement>, tileId: string) => void;
 }
 
 export default function HanabiPlayerTiles({
@@ -20,6 +21,7 @@ export default function HanabiPlayerTiles({
 	onTileClick,
 	onTileMouseOver,
 	onTileMouseOut,
+	onTileMouseDown,
 }: Props): JSX.Element {
 	const animationManager = useHanabiAnimationManager();
 	const { displayGameData: gameData } = animationManager;
@@ -62,6 +64,7 @@ export default function HanabiPlayerTiles({
 								onClick={enableOnClick ? onTileClick : undefined}
 								onMouseOver={onTileMouseOver}
 								onMouseOut={onTileMouseOut}
+								onMouseDown={onTileMouseDown}
 								draggable={gameStillPlaying && ownTiles}
 								highlight={highlightedTiles.has(tileId)}
 							/>

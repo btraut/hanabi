@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface Props {
 	readonly top: number;
@@ -7,6 +7,7 @@ interface Props {
 	readonly onClose?: () => void;
 	readonly children: JSX.Element | JSX.Element[] | null;
 	readonly position?: 'above' | 'below';
+	readonly fadeIn?: boolean;
 }
 
 export default function Tooltip({
@@ -15,6 +16,7 @@ export default function Tooltip({
 	top,
 	left,
 	position = 'above',
+	fadeIn = false,
 }: Props): JSX.Element {
 	const tooltipRef = useRef<HTMLDivElement | null>(null);
 
@@ -44,6 +46,17 @@ export default function Tooltip({
 		};
 	}, [handleBodyClick]);
 
+	const [visible, setVisible] = useState(!fadeIn);
+	useEffect(() => {
+		setTimeout(() => {
+			setVisible(true);
+		}, 0);
+
+		return () => {
+			setVisible(false);
+		};
+	}, []);
+
 	return (
 		<div
 			ref={tooltipRef}
@@ -51,9 +64,11 @@ export default function Tooltip({
 				top,
 				left,
 			}}
-			className={classNames('absolute transform', {
+			className={classNames('absolute transform transition-all', {
 				'-translate-y-full -translate-x-1/2': position === 'above',
 				'-translate-x-1/2': position === 'below',
+				'opacity-0': !visible,
+				'opacity-100': visible,
 			})}
 		>
 			{children}

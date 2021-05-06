@@ -51,9 +51,12 @@ export default function HanabiBoard(): JSX.Element {
 	} = useTileActionMenuHandlers(gameData, userId);
 
 	// Build handlers and data pertaining to the notes menu (hover for tiles).
-	const { showNotesForTile, handleTileMouseOver, handleTileMouseOut } = useTileNotesHandlers(
-		gameData,
-	);
+	const {
+		showNotesForTile,
+		handleTileMouseOver,
+		handleTileMouseOut,
+		handleTileMouseDown,
+	} = useTileNotesHandlers(gameData);
 
 	// Show the game over popup when the game ends for any reason.
 	const [showGameOverPopup, setShowGameOverPopup] = useState(!!gameData.finishedReason);
@@ -135,8 +138,9 @@ export default function HanabiBoard(): JSX.Element {
 								<HanabiPlayerTiles
 									id={playerId}
 									onTileClick={gameData.finishedReason === null ? handleTileClick : undefined}
-									onTileMouseOver={handleTileMouseOver}
-									onTileMouseOut={handleTileMouseOut}
+									onTileMouseOver={!showMenuForTile ? handleTileMouseOver : undefined}
+									onTileMouseOut={!showMenuForTile ? handleTileMouseOut : undefined}
+									onTileMouseDown={!showMenuForTile ? handleTileMouseDown : undefined}
 								/>
 							</Fragment>
 						);

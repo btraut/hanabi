@@ -20,6 +20,7 @@ export default function useTileNotesHandlers(
 	showNotesForTile: NotesDetails | null;
 	handleTileMouseOver: (event: React.MouseEvent<HTMLDivElement>, tileId: string) => void;
 	handleTileMouseOut: (event: React.MouseEvent<HTMLDivElement>, tileId: string) => void;
+	handleTileMouseDown: (event: React.MouseEvent<HTMLDivElement>, tileId: string) => void;
 } {
 	const [showNotesForTile, setShowNotesForTile] = useState<NotesDetails | null>(null);
 
@@ -32,7 +33,7 @@ export default function useTileNotesHandlers(
 				notes: gameData.tileNotes[tileId],
 				coords: {
 					left: rect.x + rect.width / 2,
-					top: rect.y + rect.height + 2 + window.scrollY,
+					top: rect.y + rect.height + window.scrollY,
 				},
 			});
 		},
@@ -48,9 +49,19 @@ export default function useTileNotesHandlers(
 		[showNotesForTile?.tileId],
 	);
 
+	const handleTileMouseDown = useCallback(
+		(_event: React.MouseEvent<HTMLDivElement>, tileId: string) => {
+			if (showNotesForTile?.tileId === tileId) {
+				setShowNotesForTile(null);
+			}
+		},
+		[showNotesForTile?.tileId],
+	);
+
 	return {
 		showNotesForTile,
 		handleTileMouseOver,
 		handleTileMouseOut,
+		handleTileMouseDown,
 	};
 }
