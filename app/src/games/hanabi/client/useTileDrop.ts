@@ -6,15 +6,16 @@ import {
 	isTileInTopHalf,
 } from 'app/src/games/hanabi/client/HanabiDragDropUtils';
 import { HANABI_DRAG_TYPES, HanabiDragTypes } from 'app/src/games/hanabi/client/HanabiDragTypes';
-import { useGameData, useGameMessenger } from 'app/src/games/hanabi/client/HanabiGameContext';
+import { useGameData } from 'app/src/games/hanabi/client/HanabiGameContext';
+import { useHanabiMoveTileContext } from 'app/src/games/hanabi/client/HanabiMoveTileContext';
 import { Position } from 'app/src/games/hanabi/HanabiGameData';
 import { useRef } from 'react';
 import { DragElementWrapper, useDrop } from 'react-dnd';
 
 export default function useTileDrop(): DragElementWrapper<any> {
-	const gameMessenger = useGameMessenger();
 	const gameData = useGameData();
 	const userId = useUserId();
+	const { moveTiles } = useHanabiMoveTileContext();
 
 	const previousIsTopHalfRef = useRef<boolean | null>(null);
 	const previousTileSlotX = useRef<number | null>(null);
@@ -51,7 +52,7 @@ export default function useTileDrop(): DragElementWrapper<any> {
 					false,
 				);
 
-				gameMessenger.moveTilesLocally(newPositions);
+				moveTiles(newPositions, false);
 			}
 
 			previousIsTopHalfRef.current = isTopHalf;
@@ -72,8 +73,7 @@ export default function useTileDrop(): DragElementWrapper<any> {
 
 			const newPositions = getNewPositionsForTiles({ [item.id]: newPosition }, tilePositions, true);
 
-			gameMessenger.moveTilesLocally(newPositions);
-			gameMessenger.commitTileMoves(userId);
+			moveTiles(newPositions, true);
 
 			previousIsTopHalfRef.current = null;
 			previousTileSlotX.current = null;

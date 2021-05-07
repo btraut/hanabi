@@ -7,12 +7,10 @@ import {
 	HANABI_TILE_SIZE_SMALL,
 	HanabiTileColor,
 	HanabiTileNumber,
-	Position,
 } from 'app/src/games/hanabi/HanabiGameData';
 import classNames from 'classnames';
 
 const TILE_NUMBERS: HanabiTileNumber[] = [1, 2, 3, 4, 5];
-const IDENTITY_POSITION: Position = { x: 0, y: 0, z: 0 };
 
 interface Props {
 	readonly tileSize?: TileViewSize;
@@ -91,7 +89,6 @@ export default function HanabiPlayedTiles({
 												{playedTile ? (
 													<HanabiInteractiveTileView
 														tile={playedTile}
-														position={IDENTITY_POSITION}
 														onMouseOver={onTileMouseOver}
 														onMouseOut={onTileMouseOut}
 														highlight={playedTile && highlightedTiles.has(playedTile.id)}
@@ -112,7 +109,6 @@ export default function HanabiPlayedTiles({
 									<HanabiInteractiveTileView
 										key={`discarded-${tile.id}`}
 										tile={tile}
-										position={IDENTITY_POSITION}
 										onMouseOver={onTileMouseOver}
 										onMouseOut={onTileMouseOut}
 										highlight={highlightedTiles.has(tile.id)}

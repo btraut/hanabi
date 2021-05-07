@@ -10,6 +10,9 @@ import { HanabiStage } from 'app/src/games/hanabi/HanabiGameData';
 export default function HanabiGameView(): JSX.Element | null {
 	const gameData = useGameData();
 
+	// The entire screen should be used as a drop target. This is to work around a
+	// limitation of react-dnd where the "return animation" is played when
+	// dropping things outside drop targets.
 	const dropRef = useTileDrop();
 
 	return (

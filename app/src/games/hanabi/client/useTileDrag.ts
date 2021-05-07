@@ -1,16 +1,19 @@
 import { HANABI_DRAG_TYPES, HanabiDragTypes } from 'app/src/games/hanabi/client/HanabiDragTypes';
-import { Position } from 'app/src/games/hanabi/HanabiGameData';
+import { useHanabiMoveTileContext } from 'app/src/games/hanabi/client/HanabiMoveTileContext';
 import { useEffect } from 'react';
 import { DragElementWrapper, useDrag } from 'react-dnd';
 import { getEmptyImage } from 'react-dnd-html5-backend';
 
 export default function useTileDrag(
 	id: string,
-	position: Position,
 	highlight: boolean,
 	notesIndicator: boolean,
 	enable = true,
 ): { isDragging: boolean; dragRef: DragElementWrapper<any> } {
+	// Grab game data so we can look up position.
+	const { tilePositions } = useHanabiMoveTileContext();
+	const position = tilePositions[id];
+
 	// Call out to react-dnd.
 	const [{ isDragging }, dragRef, preview] = useDrag<
 		HanabiDragTypes,

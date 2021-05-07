@@ -20,14 +20,14 @@ const HanabiPage: Page = () => {
 	return (
 		<SocketManagerController>
 			<GameManagerController>
-				<HanabiGameController>
-					<HanabiOptionsController>
+				<HanabiOptionsController>
+					<HanabiGameController>
 						<DndProvider backend={HTML5Backend}>
 							<HanabiStyles />
 							<HanabiRouter />
 						</DndProvider>
-					</HanabiOptionsController>
-				</HanabiGameController>
+					</HanabiGameController>
+				</HanabiOptionsController>
 			</GameManagerController>
 		</SocketManagerController>
 	);

@@ -4,7 +4,6 @@ import {
 	HANABI_TILE_SIZE,
 	HANABI_TILE_SIZE_SMALL,
 	HanabiTile,
-	Position,
 } from 'app/src/games/hanabi/HanabiGameData';
 import useFocusVisible from 'app/src/utils/client/useFocusVisible';
 import classNames from 'classnames';
@@ -18,7 +17,6 @@ export enum TileViewSize {
 interface Props {
 	// Tile data:
 	tile: HanabiTile;
-	position: Position;
 
 	// Optionally hide the value of the tile.
 	hidden?: boolean;
@@ -48,7 +46,6 @@ interface Props {
 
 export default function HanabiInteractiveTileView({
 	tile,
-	position,
 	hidden = false,
 	size = TileViewSize.Regular,
 	onClick,
@@ -64,13 +61,7 @@ export default function HanabiInteractiveTileView({
 
 	const cursor = draggable ? 'cursor-move' : onClick ? 'cursor-pointer' : 'cursor-default';
 
-	const { isDragging, dragRef } = useTileDrag(
-		tile.id,
-		position,
-		highlight,
-		notesIndicator,
-		draggable,
-	);
+	const { isDragging, dragRef } = useTileDrag(tile.id, highlight, notesIndicator, draggable);
 
 	const handleClick = useCallback(
 		(event) => {

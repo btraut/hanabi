@@ -14,7 +14,7 @@ import {
 	getScope,
 	GiveClueResponseMessage,
 	HanabiMessage,
-	// MoveTilesResponseMessage,
+	MoveTilesResponseMessage,
 	PlayTileResponseMessage,
 	RefreshGameDataMessage,
 	RemovePlayerResponseMessage,
@@ -113,16 +113,10 @@ export default class HanabiGameMessenger {
 			return;
 		}
 
-		switch (message.type) {
-			case 'RefreshGameDataMessage':
-				this._handleRefreshGameDataMessage(message);
-				break;
+		if (message.type === 'RefreshGameDataMessage') {
+			this._updateGameDataDelegate(message.data);
 		}
 	};
-
-	private _handleRefreshGameDataMessage({ data }: RefreshGameDataMessage) {
-		this._updateGameDataDelegate(data);
-	}
 
 	public async refreshGameData(): Promise<void> {
 		this._sendMessage({
@@ -248,39 +242,10 @@ export default class HanabiGameMessenger {
 		// RefreshGameData message. We'll handle that in a separate handler.
 	}
 
-	public moveTilesLocally(_positions: { [tileId: string]: Position }): void {
-		/*
-		// TODO!
-		
-		// Validate tile ids.
-		for (const tileId of Object.keys(positions)) {
-			if (!this._gameData.tiles[tileId]) {
-				throw new Error('Invalid player or tile id.');
-			}
-		}
-
-		// Update positions.
-		this._gameData.tilePositions = { ...this._gameData.tilePositions, ...positions };
-
-		// Emit an early onUpdate so clients update with the moved tile. We'll
-		// update again after the server response.
-		this.onUpdate.emit();
-		*/
-	}
-
-	public async commitTileMoves(_userId: string): Promise<void> {
-		/*
-		// TODO!
-		
-		const newTileLocations: { [tileId: string]: Position } = {};
-
-		for (const tileId of this._gameData.playerTiles[userId]) {
-			newTileLocations[tileId] = this._gameData.tilePositions[tileId];
-		}
-
+	public async moveTiles(positions: { [tileId: string]: Position }): Promise<void> {
 		this._sendMessage({
 			type: 'MoveTilesMessage',
-			data: newTileLocations,
+			data: positions,
 		});
 
 		const moveTilesResponseMessage = await this._socketManager.expectMessageOfType<MoveTilesResponseMessage>(
@@ -293,7 +258,6 @@ export default class HanabiGameMessenger {
 
 		// After responding to our initial message, the server will also send a
 		// RefreshGameData message. We'll handle that in a separate handler.
-		*/
 	}
 
 	public async discardTile(tile: HanabiTile): Promise<void> {
