@@ -1,3 +1,4 @@
+import MagnifyingGlass from 'app/src/games/hanabi/client/icons/MagnifyingGlass';
 import {
 	HANABI_TILE_SIZE,
 	HANABI_TILE_SIZE_SMALL,
@@ -23,6 +24,10 @@ interface Props {
 	// Optionally show dashed highlight lines around the edges.
 	highlight?: boolean;
 
+	// Optionally show a little tick mark meaning there has been a clue given
+	// for this tile. This only shows for hidden tiles.
+	notesIndicator?: boolean;
+
 	// Optionally show a 1px border on this tile.
 	border?: boolean;
 }
@@ -32,6 +37,7 @@ export default function HanabiTileView({
 	number,
 	size = TileViewSize.Regular,
 	highlight = false,
+	notesIndicator = false,
 	border = true,
 }: Props): JSX.Element | null {
 	return (
@@ -57,6 +63,11 @@ export default function HanabiTileView({
 					)}
 				>
 					{number}
+				</div>
+			)}
+			{notesIndicator && (
+				<div className="absolute right-0 bottom-0 p-1.5 pointer-events-none">
+					<MagnifyingGlass color="yellow" size={12} />
 				</div>
 			)}
 		</div>

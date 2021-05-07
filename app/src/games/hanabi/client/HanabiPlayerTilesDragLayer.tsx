@@ -1,6 +1,5 @@
 import { getPositionInContainer } from 'app/src/games/hanabi/client/HanabiDragDropUtils';
 import { HANABI_DRAG_TYPES, HanabiDragTypes } from 'app/src/games/hanabi/client/HanabiDragTypes';
-import { useHanabiHighlightContext } from 'app/src/games/hanabi/client/HanabiHighlightContext';
 import HanabiTileView from 'app/src/games/hanabi/client/HanabiTileView';
 import { useDragLayer } from 'react-dnd';
 
@@ -12,8 +11,6 @@ export default function HanabiPlayerTilesDragLayer(): JSX.Element | null {
 		isDragging: monitor.isDragging(),
 	}));
 
-	const { highlightedTiles } = useHanabiHighlightContext();
-
 	// If we're not dragging, no need for a drag layer.
 	if (!isDragging || !item || !delta) {
 		return null;
@@ -24,7 +21,7 @@ export default function HanabiPlayerTilesDragLayer(): JSX.Element | null {
 		return null;
 	}
 
-	const { originalPosition, id } = item;
+	const { originalPosition, id, highlight, notesIndicator } = item;
 	const newPosition = getPositionInContainer(originalPosition, delta);
 
 	return (
@@ -37,7 +34,7 @@ export default function HanabiPlayerTilesDragLayer(): JSX.Element | null {
 					zIndex: 1000000,
 				}}
 			>
-				<HanabiTileView id={id} highlight={highlightedTiles.has(id)} />
+				<HanabiTileView highlight={highlight} notesIndicator={notesIndicator} />
 			</div>
 		</div>
 	);

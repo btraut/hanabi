@@ -32,6 +32,10 @@ interface Props {
 	// Optionally show dashed highlight lines around the edges.
 	highlight?: boolean;
 
+	// Optionally show a little tick mark meaning there has been a clue given
+	// for this tile. This only shows for hidden tiles.
+	notesIndicator?: boolean;
+
 	// Specify custom event handlers.
 	onClick?: (event: React.MouseEvent<HTMLDivElement>, tileId: string) => void;
 	onMouseOver?: (event: React.MouseEvent<HTMLDivElement>, tileId: string) => void;
@@ -53,13 +57,20 @@ export default function HanabiInteractiveTileView({
 	onMouseDown,
 	draggable = false,
 	highlight = false,
+	notesIndicator = false,
 	border = true,
 }: Props): JSX.Element | null {
 	const isFocusVisible = useFocusVisible();
 
 	const cursor = draggable ? 'cursor-move' : onClick ? 'cursor-pointer' : 'cursor-default';
 
-	const { isDragging, dragRef } = useTileDrag(tile.id, position, draggable);
+	const { isDragging, dragRef } = useTileDrag(
+		tile.id,
+		position,
+		highlight,
+		notesIndicator,
+		draggable,
+	);
 
 	const handleClick = useCallback(
 		(event) => {
@@ -102,7 +113,7 @@ export default function HanabiInteractiveTileView({
 			ref={dragRef}
 			style={size === TileViewSize.Regular ? HANABI_TILE_SIZE : HANABI_TILE_SIZE_SMALL}
 			className={classNames([
-				'relative rounded-lg focus:outline-none',
+				'rounded-lg focus:outline-none',
 				cursor,
 				{
 					'focus:ring': isFocusVisible,
@@ -120,6 +131,7 @@ export default function HanabiInteractiveTileView({
 				number={hidden ? undefined : tile.number}
 				border={border}
 				highlight={highlight}
+				notesIndicator={hidden && notesIndicator}
 			/>
 		</Comp>
 	);

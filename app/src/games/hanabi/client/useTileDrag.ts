@@ -7,6 +7,8 @@ import { getEmptyImage } from 'react-dnd-html5-backend';
 export default function useTileDrag(
 	id: string,
 	position: Position,
+	highlight: boolean,
+	notesIndicator: boolean,
 	enable = true,
 ): { isDragging: boolean; dragRef: DragElementWrapper<any> } {
 	// Call out to react-dnd.
@@ -16,7 +18,13 @@ export default function useTileDrag(
 		{ isDragging: boolean }
 	>({
 		canDrag: enable,
-		item: { type: HANABI_DRAG_TYPES.TILE, id, originalPosition: position },
+		item: {
+			type: HANABI_DRAG_TYPES.TILE,
+			id,
+			originalPosition: position,
+			highlight,
+			notesIndicator,
+		},
 		collect: (monitor) => ({
 			isDragging: !!monitor.isDragging(),
 		}),

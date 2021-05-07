@@ -28,7 +28,7 @@ export default function HanabiActionsFilter({ filter, onChange }: Props): JSX.El
 			{Object.keys(FILTER_OPTIONS).map((filterKey) => (
 				<label
 					key={filterKey}
-					className={classNames('cursor-pointer px-2 py-0.5 text-sm rounded-xl', {
+					className={classNames('cursor-pointer px-2 py-0.5 text-sm rounded-xl select-none', {
 						'bg-gray-600': filter === filterKey,
 						'text-white': filter === filterKey,
 						'hover:bg-gray-200': filter !== filterKey,

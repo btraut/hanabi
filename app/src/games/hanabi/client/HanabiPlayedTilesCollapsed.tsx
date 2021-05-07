@@ -39,7 +39,6 @@ export default function HanabiPlayedTiles(): JSX.Element {
 						})}
 					>
 						<HanabiTileView
-							id={greatestTile === null ? undefined : greatestTile.id}
 							color={color}
 							number={greatestTile === null ? 1 : greatestTile.number}
 							highlight={greatestTile !== null && highlightedTiles.has(greatestTile.id)}

@@ -30,7 +30,6 @@ export default function HanabiPlayedTiles(): JSX.Element {
 						{coloredTiles.map((tile) => (
 							<HanabiTileView
 								key={`tile-${tile.id}`}
-								id={tile.id}
 								color={tile.color}
 								number={tile.number}
 								size={TileViewSize.Small}

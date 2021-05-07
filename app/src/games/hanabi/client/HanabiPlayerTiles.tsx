@@ -68,6 +68,9 @@ export default function HanabiPlayerTiles({
 								onMouseOut={onTileMouseOut}
 								onMouseDown={onTileMouseDown}
 								draggable={gameData.allowDragging && gameStillPlaying && ownTiles}
+								notesIndicator={
+									gameStillPlaying && ownTiles && gameData.showNotes && !!gameData.tileNotes[tileId]
+								}
 								highlight={highlightedTiles.has(tileId)}
 							/>
 						</div>
