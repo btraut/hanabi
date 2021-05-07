@@ -172,7 +172,7 @@ export default function HanabiBoard(): JSX.Element {
 				</div>
 			</div>
 			{breakpoints.lg && (
-				<div className="grid grid-flow-row gap-y-6 content-start">
+				<div className="grid grid-flow-row gap-y-6 content-start max-w-lg">
 					<div className="border-4 border-black bg-white rounded-xl p-4 grid grid-flow-row xl:grid-flow-col gap-2 xl:gap-4 justify-start items-center">
 						<HanabiRemainingTiles />
 						<HanabiClues />
