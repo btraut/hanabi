@@ -36,7 +36,7 @@ export default function HanabiLobby(): JSX.Element {
 	return (
 		<div className="w-screen min-h-screen grid grid-flow-row gap-6 content-start">
 			<HanabiHeader />
-			<div className="grid gap-10 justify-content-center p-10">
+			<div className="grid gap-10 justify-content-center justify-center p-10">
 				{players.length > 0 && (
 					<div className="grid grid-flow-col gap-x-6 justify-center">
 						{players.map((player) => (
