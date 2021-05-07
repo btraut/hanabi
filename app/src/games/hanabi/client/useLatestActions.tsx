@@ -42,3 +42,11 @@ export function useLatestTileAction(): HanabiGameAction | undefined {
 
 	return undefined;
 }
+
+export function useLatestActionEffect(handler: (action: HanabiGameAction | null) => void): void {
+	const latestActions = useLatestActions();
+	const latestAction = latestActions.length ? latestActions[latestActions.length - 1] : null;
+	useEffect(() => {
+		handler(latestAction);
+	}, [handler, latestAction]);
+}

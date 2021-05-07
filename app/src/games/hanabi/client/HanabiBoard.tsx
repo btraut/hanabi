@@ -1,8 +1,6 @@
 import { useBreakpointContext } from 'app/src/components/BreakpointContext';
 import { useUserId } from 'app/src/components/SocketContext';
-import HanabiActions from 'app/src/games/hanabi/client/HanabiActions';
-import HanabiActionsFilter from 'app/src/games/hanabi/client/HanabiActionsFilter';
-import HanabiChatInput from 'app/src/games/hanabi/client/HanabiChatInput';
+import HanabiActionsPanel from 'app/src/games/hanabi/client/HanabiActionsPanel';
 import HanabiClues from 'app/src/games/hanabi/client/HanabiClues';
 import HanabiDiscardedTilesCollapsed from 'app/src/games/hanabi/client/HanabiDiscardedTilesCollapsed';
 import { useGameData } from 'app/src/games/hanabi/client/HanabiGameContext';
@@ -16,13 +14,13 @@ import HanabiRemainingTiles from 'app/src/games/hanabi/client/HanabiRemainingTil
 import HanabiTileActionsTooltip from 'app/src/games/hanabi/client/HanabiTileActionsTooltip';
 import HanabiTileNotesTooltip from 'app/src/games/hanabi/client/HanabiTileNotesTooltip';
 import { TileViewSize } from 'app/src/games/hanabi/client/HanabiTileView';
-import useLatestActions from 'app/src/games/hanabi/client/useLatestActions';
+import { useLatestActionEffect } from 'app/src/games/hanabi/client/useLatestActions';
 import useTileActionMenuHandlers from 'app/src/games/hanabi/client/useTileActionMenuHandlers';
 import useTileNotesHandlers from 'app/src/games/hanabi/client/useTileNotesHandlers';
-import { ActionsFilterOption } from 'app/src/games/hanabi/HanabiGameData';
+import { HanabiGameAction } from 'app/src/games/hanabi/HanabiGameData';
 import useValueChanged from 'app/src/utils/client/useValueChanged';
 import classNames from 'classnames';
-import { Fragment, useEffect, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useState } from 'react';
 
 function rotateArrayToItem<T>(arr: readonly T[], item: T): readonly T[] {
 	const itemIndex = arr.indexOf(item);
@@ -37,7 +35,6 @@ function rotateArrayToItem<T>(arr: readonly T[], item: T): readonly T[] {
 export default function HanabiBoard(): JSX.Element {
 	const gameData = useGameData();
 	const userId = useUserId();
-	const userIsPlayer = !!(userId && gameData.players[userId]);
 
 	const playerDisplayOrder = rotateArrayToItem(gameData.turnOrder, userId);
 
@@ -69,41 +66,16 @@ export default function HanabiBoard(): JSX.Element {
 		}
 	}, [gameFinishedReasonChanged, gameData.finishedReason]);
 
-	// When a new action happens, scroll the actions container to the top.
-	const latestActions = useLatestActions();
-	const latestActionId = latestActions.length ? latestActions[latestActions.length - 1].id : null;
-	const actionsContainerRef = useRef<HTMLDivElement | null>(null);
-	useEffect(() => {
-		if (latestActionId) {
-			actionsContainerRef.current?.scrollTo(0, 0);
-			hideNotesForTile();
-		}
-	}, [hideNotesForTile, latestActionId]);
-
-	// Actions Filter:
-	const [actionsFilter, setActionsFilter] = useState<ActionsFilterOption>('all');
-
-	const actionsContainer = (
-		<div
-			className={classNames('grid border-4 border-black rounded-xl mb-6 overflow-hidden', {
-				'bg-white': gameData.actions.length % 2 === 1,
-				'bg-gray-200': gameData.actions.length % 2 === 0,
-			})}
-			style={{ maxHeight: breakpoints.lg ? 320 : 240, gridTemplateRows: 'auto 1fr auto' }}
-			ref={actionsContainerRef}
-		>
-			<div className="border-solid border-gray-600 border-b-2 bg-gray-300">
-				<HanabiActionsFilter filter={actionsFilter} onChange={setActionsFilter} />
-			</div>
-			<div className="overflow-y-auto">
-				<HanabiActions filter={actionsFilter} />
-			</div>
-			{userIsPlayer && (
-				<div className="border-solid border-gray-600 border-t-2 bg-gray-300">
-					<HanabiChatInput />
-				</div>
-			)}
-		</div>
+	// When a new action happens, clear the note.
+	useLatestActionEffect(
+		useCallback(
+			(latestAction: HanabiGameAction | null) => {
+				if (latestAction) {
+					hideNotesForTile();
+				}
+			},
+			[hideNotesForTile],
+		),
 	);
 
 	return (
@@ -111,7 +83,7 @@ export default function HanabiBoard(): JSX.Element {
 			<div>
 				{!breakpoints.lg && (
 					<>
-						{actionsContainer}
+						<HanabiActionsPanel />
 						<div className="grid grid-flow-row border-4 border-black bg-white rounded-xl p-4 gap-3 mb-6">
 							<div className="grid grid-flow-col gap-2 justify-start">
 								<HanabiRemainingTiles />
@@ -172,7 +144,7 @@ export default function HanabiBoard(): JSX.Element {
 				</div>
 			</div>
 			{breakpoints.lg && (
-				<div className="grid grid-flow-row gap-y-6 content-start max-w-lg">
+				<div className="grid grid-flow-row gap-y-6 content-start" style={{ width: 488 }}>
 					<div className="border-4 border-black bg-white rounded-xl p-4 grid grid-flow-row xl:grid-flow-col gap-2 xl:gap-4 justify-start items-center">
 						<HanabiRemainingTiles />
 						<HanabiClues />
@@ -189,7 +161,7 @@ export default function HanabiBoard(): JSX.Element {
 							}
 						/>
 					</div>
-					{actionsContainer}
+					<HanabiActionsPanel />
 				</div>
 			)}
 
