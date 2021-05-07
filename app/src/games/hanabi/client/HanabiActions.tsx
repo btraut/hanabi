@@ -31,16 +31,18 @@ function filterActions(
 	if (filter === 'to-me') {
 		return actions.filter(
 			(a) =>
-				a.type === HanabiGameActionType.GiveColorClue ||
-				(a.type === HanabiGameActionType.GiveNumberClue && a.recipientId === userId),
+				(a.type === HanabiGameActionType.GiveColorClue ||
+					a.type === HanabiGameActionType.GiveNumberClue) &&
+				a.recipientId === userId,
 		);
 	}
 
 	if (filter === 'from-me') {
 		return actions.filter(
 			(a) =>
-				a.type === HanabiGameActionType.GiveColorClue ||
-				(a.type === HanabiGameActionType.GiveNumberClue && a.playerId === userId),
+				(a.type === HanabiGameActionType.GiveColorClue ||
+					a.type === HanabiGameActionType.GiveNumberClue) &&
+				a.playerId === userId,
 		);
 	}
 
