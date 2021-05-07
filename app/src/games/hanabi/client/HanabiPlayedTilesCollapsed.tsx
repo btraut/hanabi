@@ -1,4 +1,4 @@
-import { useGameData } from 'app/src/games/hanabi/client/HanabiContext';
+import { useGameData } from 'app/src/games/hanabi/client/HanabiGameContext';
 import { useHanabiHighlightContext } from 'app/src/games/hanabi/client/HanabiHighlightContext';
 import HanabiTileView, { TileViewSize } from 'app/src/games/hanabi/client/HanabiTileView';
 import { HanabiTileColor, HanabiTileNumber } from 'app/src/games/hanabi/HanabiGameData';

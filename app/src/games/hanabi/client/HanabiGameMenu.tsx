@@ -2,7 +2,7 @@ import { useUserId } from 'app/src/components/SocketContext';
 import HanabiLinkButton from 'app/src/games/hanabi/client/design-system/HanabiLinkButton';
 import HanabiMenuButton from 'app/src/games/hanabi/client/design-system/HanabiMenuButton';
 import HanabiPopup from 'app/src/games/hanabi/client/design-system/HanabiPopup';
-import { useGameData, useGameMessenger } from 'app/src/games/hanabi/client/HanabiContext';
+import { useGameData, useGameMessenger } from 'app/src/games/hanabi/client/HanabiGameContext';
 
 interface Props {
 	onOptions: () => void;

@@ -1,4 +1,4 @@
-import { useGameData } from 'app/src/games/hanabi/client/HanabiContext';
+import { useGameData } from 'app/src/games/hanabi/client/HanabiGameContext';
 import { HanabiGameAction, HanabiGameActionType } from 'app/src/games/hanabi/HanabiGameData';
 import { useEffect, useState } from 'react';
 

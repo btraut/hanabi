@@ -1,4 +1,4 @@
-import { useGameMessenger } from 'app/src/games/hanabi/client/HanabiContext';
+import { useGameMessenger } from 'app/src/games/hanabi/client/HanabiGameContext';
 import useFocusVisible from 'app/src/utils/client/useFocusVisible';
 import classNames from 'classnames';
 import { KeyboardEvent, useCallback, useRef } from 'react';

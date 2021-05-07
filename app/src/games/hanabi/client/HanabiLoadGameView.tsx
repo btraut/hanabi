@@ -6,7 +6,7 @@
 
 import { useSocket } from 'app/src/components/SocketContext';
 import EnsureGameLoaded from 'app/src/games/client/EnsureGameLoaded';
-import { useHanabiContext } from 'app/src/games/hanabi/client/HanabiContext';
+import { useHanabiGameContext } from 'app/src/games/hanabi/client/HanabiGameContext';
 import { useCallback } from 'react';
 import { useParams } from 'react-router';
 
@@ -15,20 +15,20 @@ interface Props {
 }
 
 export default function HanabiLoadGameView({ children }: Props): JSX.Element | null {
-	const hanabiContext = useHanabiContext();
+	const hanabiGameContext = useHanabiGameContext();
 	const { authSocketManager, socketManager } = useSocket();
 
 	const { code = '' } = useParams<{ code?: string }>();
 	const loadGameHandler = useCallback(async () => {
 		await socketManager.connect();
 		await authSocketManager.authenticate();
-		await hanabiContext.watch(code);
-	}, [authSocketManager, code, hanabiContext, socketManager]);
+		await hanabiGameContext.watch(code);
+	}, [authSocketManager, code, hanabiGameContext, socketManager]);
 
 	return (
 		<EnsureGameLoaded
 			redirectUrl="/"
-			gameLoaded={!!hanabiContext.gameData}
+			gameLoaded={!!hanabiGameContext.gameData}
 			fallback={
 				<div className="w-screen min-h-screen p-20 grid content-center justify-center">
 					<h1 className="text-3xl italic text-white">Loading…</h1>

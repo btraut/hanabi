@@ -2,7 +2,7 @@
 // HanabiBoard, but crowded up that component. It defines the data and handlers
 // pertaining to hovering over a tile to see its notes.
 
-import { useGameData } from 'app/src/games/hanabi/client/HanabiContext';
+import { useGameData } from 'app/src/games/hanabi/client/HanabiGameContext';
 import { HanabiTileNotes } from 'app/src/games/hanabi/HanabiGameData';
 import { useCallback, useState } from 'react';
 

@@ -1,5 +1,5 @@
 import HanabiCheckbox from 'app/src/games/hanabi/client/design-system/HanabiCheckbox';
-import { useGameMessenger } from 'app/src/games/hanabi/client/HanabiContext';
+import { useGameMessenger } from 'app/src/games/hanabi/client/HanabiGameContext';
 import { ChangeEvent, useCallback, useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 

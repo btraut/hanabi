@@ -1,5 +1,5 @@
 import HanabiMenuButton from 'app/src/games/hanabi/client/design-system/HanabiMenuButton';
-import { useHanabiContext } from 'app/src/games/hanabi/client/HanabiContext';
+import { useHanabiGameContext } from 'app/src/games/hanabi/client/HanabiGameContext';
 import HanabiTileView from 'app/src/games/hanabi/client/HanabiTileView';
 import { HanabiTileColor, HanabiTileNumber } from 'app/src/games/hanabi/HanabiGameData';
 import useForceRefresh from 'app/src/utils/client/useForceRefresh';
@@ -16,7 +16,7 @@ function generateRandomTile() {
 }
 
 export default function HanabiMainMenu(): JSX.Element {
-	const hanabiContext = useHanabiContext();
+	const hanabiGameContext = useHanabiGameContext();
 	const history = useHistory();
 
 	const loadingRef = useRef(false);
@@ -29,7 +29,7 @@ export default function HanabiMainMenu(): JSX.Element {
 		}
 
 		loadingRef.current = true;
-		const { code } = await hanabiContext.create();
+		const { code } = await hanabiGameContext.create();
 		loadingRef.current = false;
 
 		history.push(`/${code}`);

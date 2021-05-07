@@ -1,4 +1,4 @@
-import { useGameData } from 'app/src/games/hanabi/client/HanabiContext';
+import { useGameData } from 'app/src/games/hanabi/client/HanabiGameContext';
 import HanabiLife from 'app/src/games/hanabi/client/HanabiLife';
 import { HANABI_MAX_LIVES } from 'app/src/games/hanabi/HanabiGameData';
 import mapXTimes from 'app/src/utils/mapXTimes';

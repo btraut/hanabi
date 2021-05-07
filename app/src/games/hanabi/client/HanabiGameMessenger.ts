@@ -1,4 +1,3 @@
-import Game from 'app/src/games/client/Game';
 import {
 	HANABI_GAME_TITLE,
 	HanabiGameData,
@@ -27,7 +26,17 @@ import AuthSocketManager, { AuthenticationState } from 'app/src/utils/client/Aut
 import SocketManager, { ConnectionState } from 'app/src/utils/client/SocketManager';
 import DistributiveOmit from 'app/src/utils/DistributiveOmit';
 
-export default class HanabiGameMessenger extends Game {
+export default class HanabiGameMessenger {
+	protected _id: string;
+	public get id(): string {
+		return this._id;
+	}
+
+	protected _code: string;
+	public get code(): string {
+		return this._code;
+	}
+
 	private _connected = false;
 
 	private _socketManager: SocketManager<HanabiMessage>;
@@ -47,7 +56,8 @@ export default class HanabiGameMessenger extends Game {
 		authSocketManager: AuthSocketManager,
 		updateGameDataDelegate: (gameData: HanabiGameData) => void,
 	) {
-		super(id, code);
+		this._id = id;
+		this._code = code;
 
 		this._socketManager = socketManager;
 		this._socketManagerOnConnectSubscriptionId = socketManager.onConnect.subscribe(

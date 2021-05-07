@@ -2,28 +2,28 @@ import HanabiGameMessenger from 'app/src/games/hanabi/client/HanabiGameMessenger
 import { HanabiGameData } from 'app/src/games/hanabi/HanabiGameData';
 import { createContext, useContext } from 'react';
 
-export interface HanabiContext {
+export interface HanabiGameContext {
 	create(): Promise<HanabiGameMessenger>;
 	watch(code: string): Promise<HanabiGameMessenger>;
 	gameMessenger: HanabiGameMessenger | null;
 	gameData: HanabiGameData | null;
 }
 
-const context = createContext<HanabiContext | null>(null);
+const context = createContext<HanabiGameContext | null>(null);
 
-// Custom hook to grab all of HanabiContext.
-export function useHanabiContext(): HanabiContext {
+// Custom hook to grab all of HanabiGameContext.
+export function useHanabiGameContext(): HanabiGameContext {
 	const contextValue = useContext(context);
 
 	if (contextValue === null) {
-		throw new Error('useHanabiContext must be used within a HanabiContextProvider.');
+		throw new Error('useHanabiGameContext must be used within a HanabiGameContextProvider.');
 	}
 
 	return contextValue;
 }
 
 export function useGameMessenger(): HanabiGameMessenger {
-	const { gameMessenger } = useHanabiContext();
+	const { gameMessenger } = useHanabiGameContext();
 
 	if (!gameMessenger) {
 		throw new Error('No game data loaded.');
@@ -33,7 +33,7 @@ export function useGameMessenger(): HanabiGameMessenger {
 }
 
 export function useGameData(): HanabiGameData {
-	const { gameData } = useHanabiContext();
+	const { gameData } = useHanabiGameContext();
 
 	if (!gameData) {
 		throw new Error('No game data loaded.');
@@ -42,5 +42,5 @@ export function useGameData(): HanabiGameData {
 	return gameData;
 }
 
-export const HanabiContextConsumer = context.Consumer;
-export const HanabiContextProvider = context.Provider;
+export const HanabiGameContextConsumer = context.Consumer;
+export const HanabiGameContextProvider = context.Provider;

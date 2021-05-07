@@ -1,6 +1,6 @@
 import Portal from 'app/src/components/Portal';
 import Tooltip from 'app/src/components/Tooltip';
-import { useGameData } from 'app/src/games/hanabi/client/HanabiContext';
+import { useGameData } from 'app/src/games/hanabi/client/HanabiGameContext';
 import {
 	HanabiTile,
 	HanabiTileColor,

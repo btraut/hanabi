@@ -1,6 +1,6 @@
 import HanabiMenuButton from 'app/src/games/hanabi/client/design-system/HanabiMenuButton';
 import HanabiTextInput from 'app/src/games/hanabi/client/design-system/HanabiTextInput';
-import { useGameMessenger } from 'app/src/games/hanabi/client/HanabiContext';
+import { useGameMessenger } from 'app/src/games/hanabi/client/HanabiGameContext';
 import LOCAL_STORAGE_KEYS from 'app/src/games/hanabi/client/HanabiLocalStorageManager';
 import { useLocalStorage } from 'app/src/games/hanabi/client/useLocalStorage';
 import { ChangeEvent, FormEvent, useCallback, useEffect, useRef, useState } from 'react';

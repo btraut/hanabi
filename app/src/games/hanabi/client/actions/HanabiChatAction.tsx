@@ -1,4 +1,4 @@
-import { useGameData } from 'app/src/games/hanabi/client/HanabiContext';
+import { useGameData } from 'app/src/games/hanabi/client/HanabiGameContext';
 import { HanabiGameActionChat } from 'app/src/games/hanabi/HanabiGameData';
 
 interface Props {

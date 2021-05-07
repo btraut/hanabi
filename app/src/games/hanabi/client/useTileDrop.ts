@@ -1,5 +1,4 @@
 import { useUserId } from 'app/src/components/SocketContext';
-import { useGameData, useGameMessenger } from 'app/src/games/hanabi/client/HanabiContext';
 import {
 	getNewPositionsForTiles,
 	getPositionInContainer,
@@ -7,6 +6,7 @@ import {
 	isTileInTopHalf,
 } from 'app/src/games/hanabi/client/HanabiDragDropUtils';
 import { HANABI_DRAG_TYPES, HanabiDragTypes } from 'app/src/games/hanabi/client/HanabiDragTypes';
+import { useGameData, useGameMessenger } from 'app/src/games/hanabi/client/HanabiGameContext';
 import { Position } from 'app/src/games/hanabi/HanabiGameData';
 import { useRef } from 'react';
 import { DragElementWrapper, useDrop } from 'react-dnd';

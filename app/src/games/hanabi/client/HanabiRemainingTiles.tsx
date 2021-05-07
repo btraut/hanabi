@@ -1,4 +1,4 @@
-import { useGameData } from 'app/src/games/hanabi/client/HanabiContext';
+import { useGameData } from 'app/src/games/hanabi/client/HanabiGameContext';
 import HanabiTileView, { TileViewSize } from 'app/src/games/hanabi/client/HanabiTileView';
 import { HANABI_TILE_SIZE_SMALL } from 'app/src/games/hanabi/HanabiGameData';
 import mapXTimes from 'app/src/utils/mapXTimes';

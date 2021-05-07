@@ -4,7 +4,7 @@
 // actions.
 
 import { useUserId } from 'app/src/components/SocketContext';
-import { useGameData, useGameMessenger } from 'app/src/games/hanabi/client/HanabiContext';
+import { useGameData, useGameMessenger } from 'app/src/games/hanabi/client/HanabiGameContext';
 import { HanabiTileActionsTooltipType } from 'app/src/games/hanabi/client/HanabiTileActionsTooltip';
 import { HanabiTile, HanabiTileColor } from 'app/src/games/hanabi/HanabiGameData';
 import { useCallback, useState } from 'react';

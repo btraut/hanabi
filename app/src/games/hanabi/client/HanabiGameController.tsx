@@ -1,6 +1,9 @@
 import { useSocket } from 'app/src/components/SocketContext';
 import { useGameManager } from 'app/src/games/client/GameManagerContext';
-import { HanabiContext, HanabiContextProvider } from 'app/src/games/hanabi/client/HanabiContext';
+import {
+	HanabiGameContext,
+	HanabiGameContextProvider,
+} from 'app/src/games/hanabi/client/HanabiGameContext';
 import HanabiGameMessenger from 'app/src/games/hanabi/client/HanabiGameMessenger';
 import { HANABI_GAME_TITLE, HanabiGameData } from 'app/src/games/hanabi/HanabiGameData';
 import { HanabiMessage } from 'app/src/games/hanabi/HanabiMessages';
@@ -10,7 +13,7 @@ interface Props {
 	readonly children: JSX.Element | JSX.Element[] | null;
 }
 
-export default function HanabiController({ children }: Props): JSX.Element {
+export default function HanabiGameController({ children }: Props): JSX.Element {
 	// Game manager is used for watching or creating games.
 	const gameManager = useGameManager();
 
@@ -70,7 +73,7 @@ export default function HanabiController({ children }: Props): JSX.Element {
 
 	// We're passing an array through context, so we must memoize for the sake
 	// of stable rerenders.
-	const contextValue = useMemo<HanabiContext>(
+	const contextValue = useMemo<HanabiGameContext>(
 		() => ({
 			create,
 			watch,
@@ -80,5 +83,5 @@ export default function HanabiController({ children }: Props): JSX.Element {
 		[create, gameMessenger, watch, gameData],
 	);
 
-	return <HanabiContextProvider value={contextValue}>{children}</HanabiContextProvider>;
+	return <HanabiGameContextProvider value={contextValue}>{children}</HanabiGameContextProvider>;
 }

@@ -1,6 +1,6 @@
 import BreakpointController from 'app/src/components/BreakpointController';
 import HanabiBoard from 'app/src/games/hanabi/client/HanabiBoard';
-import { useGameData } from 'app/src/games/hanabi/client/HanabiContext';
+import { useGameData } from 'app/src/games/hanabi/client/HanabiGameContext';
 import HanabiHeader from 'app/src/games/hanabi/client/HanabiHeader';
 import HanabiHighlightTileController from 'app/src/games/hanabi/client/HanabiHighlightController';
 import HanabiLobby from 'app/src/games/hanabi/client/HanabiLobby';
