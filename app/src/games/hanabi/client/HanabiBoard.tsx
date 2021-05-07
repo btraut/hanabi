@@ -112,7 +112,7 @@ export default function HanabiBoard(): JSX.Element {
 				)}
 
 				<div
-					className="grid gap-y-6 content-start items-start"
+					className="pb-10 grid gap-y-6 content-start items-start"
 					style={{ gridTemplateColumns: 'auto auto' }}
 				>
 					{playerDisplayOrder.map((playerId) => {
