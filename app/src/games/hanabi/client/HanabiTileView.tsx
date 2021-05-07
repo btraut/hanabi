@@ -14,7 +14,6 @@ export enum TileViewSize {
 
 interface Props {
 	// Tile data:
-	id?: string;
 	color?: HanabiTileColor;
 	number?: HanabiTileNumber;
 

@@ -1,22 +1,29 @@
 import { useHanabiAnimationManager } from 'app/src/games/hanabi/client/HanabiContext';
 import { useHanabiHighlightContext } from 'app/src/games/hanabi/client/HanabiHighlightContext';
+import HanabiInteractiveTileView from 'app/src/games/hanabi/client/HanabiInteractiveTileView';
 import HanabiTileView, { TileViewSize } from 'app/src/games/hanabi/client/HanabiTileView';
 import {
 	HANABI_TILE_SIZE,
 	HANABI_TILE_SIZE_SMALL,
 	HanabiTileColor,
 	HanabiTileNumber,
+	Position,
 } from 'app/src/games/hanabi/HanabiGameData';
 import classNames from 'classnames';
 
 const TILE_NUMBERS: HanabiTileNumber[] = [1, 2, 3, 4, 5];
+const IDENTITY_POSITION: Position = { x: 0, y: 0, z: 0 };
 
 interface Props {
 	readonly tileSize?: TileViewSize;
+	readonly onTileMouseOver?: (event: React.MouseEvent<HTMLDivElement>, tileId: string) => void;
+	readonly onTileMouseOut?: (event: React.MouseEvent<HTMLDivElement>, tileId: string) => void;
 }
 
 export default function HanabiPlayedTiles({
 	tileSize: tileViewSize = TileViewSize.Regular,
+	onTileMouseOver,
+	onTileMouseOut,
 }: Props): JSX.Element {
 	const animationManager = useHanabiAnimationManager();
 	const { displayGameData: gameData } = animationManager;
@@ -82,13 +89,18 @@ export default function HanabiPlayedTiles({
 													'opacity-20': !playedTile,
 												})}
 											>
-												<HanabiTileView
-													id={playedTile ? playedTile.id : undefined}
-													color={color}
-													number={number}
-													highlight={playedTile && highlightedTiles.has(playedTile.id)}
-													size={tileViewSize}
-												/>
+												{playedTile ? (
+													<HanabiInteractiveTileView
+														tile={playedTile}
+														position={IDENTITY_POSITION}
+														onMouseOver={onTileMouseOver}
+														onMouseOut={onTileMouseOut}
+														highlight={playedTile && highlightedTiles.has(playedTile.id)}
+														size={tileViewSize}
+													/>
+												) : (
+													<HanabiTileView color={color} number={number} />
+												)}
 											</div>
 										</div>
 									</div>
@@ -98,11 +110,12 @@ export default function HanabiPlayedTiles({
 						{discardedTiles.length > 0 && (
 							<div className="grid grid-flow-col justify-start gap-0.5 xl:gap-1">
 								{discardedTiles.map((tile) => (
-									<HanabiTileView
-										id={tile.id}
-										color={tile.color}
-										number={tile.number}
+									<HanabiInteractiveTileView
 										key={`discarded-${tile.id}`}
+										tile={tile}
+										position={IDENTITY_POSITION}
+										onMouseOver={onTileMouseOver}
+										onMouseOut={onTileMouseOut}
 										highlight={highlightedTiles.has(tile.id)}
 										size={tileViewSize}
 									/>

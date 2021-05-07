@@ -168,6 +168,12 @@ export default function HanabiBoard(): JSX.Element {
 					<div className="border-4 border-black bg-white rounded-xl p-4 grid grid-flow-row gap-y-6">
 						<HanabiPlayedTiles
 							tileSize={breakpoints.xl ? TileViewSize.Regular : TileViewSize.Small}
+							onTileMouseOver={
+								gameData.showNotes && !showMenuForTile ? handleTileMouseOver : undefined
+							}
+							onTileMouseOut={
+								gameData.showNotes && !showMenuForTile ? handleTileMouseOut : undefined
+							}
 						/>
 					</div>
 					<div
