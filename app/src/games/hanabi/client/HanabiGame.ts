@@ -120,21 +120,17 @@ export default class HanabiGame extends Game {
 		this.onUpdate.emit();
 	}
 
-	private async _expectRefreshGameData(): Promise<void> {
-		const getStateResponseMessage = await this._socketManager.expectMessageOfType<RefreshGameDataMessage>(
-			'RefreshGameDataMessage',
-		);
-
-		this._gameData = getStateResponseMessage.data;
-	}
-
 	public async refreshGameData(): Promise<void> {
 		this._sendMessage({
 			type: 'GetGameDataMessage',
 			data: undefined,
 		});
 
-		await this._expectRefreshGameData();
+		const getStateResponseMessage = await this._socketManager.expectMessageOfType<RefreshGameDataMessage>(
+			'RefreshGameDataMessage',
+		);
+
+		this._gameData = getStateResponseMessage.data;
 
 		this.onUpdate.emit();
 	}
