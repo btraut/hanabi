@@ -17,10 +17,7 @@ export default function HanabiClues(): JSX.Element {
 					key={`clue-${index}`}
 					className={classNames({ 'opacity-20': index >= remainingClues })}
 				>
-					<HanabiClue
-						animateBackground={remainingClues <= 3 && index < remainingClues}
-						index={index}
-					/>
+					<HanabiClue animateBackground={remainingClues <= 3 && index < remainingClues} />
 				</div>
 			))}
 		</div>
