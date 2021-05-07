@@ -551,7 +551,7 @@ export default class HanabiGame extends Game {
 			this._pickUpNextTile(userId);
 		}
 
-		// Check if the tile is valid.
+		// Check if the tile is valid. If so, play it.
 		const duplicate = !!this._gameData.playedTiles.find(
 			(tid) => tiles[tid].color === tile.color && tiles[tid].number === tile.number,
 		);
@@ -580,6 +580,11 @@ export default class HanabiGame extends Game {
 
 			this._gameData.discardedTiles = [...this._gameData.discardedTiles, tile.id];
 		}
+
+		// Remove the tile position.
+		const newPositions = { ...this._gameData.tilePositions };
+		delete newPositions[tile.id];
+		this._gameData.tilePositions = newPositions;
 
 		// Detect if the game is over due to the wrong tile being discarded.
 		if (this._gameData.criticalGameOver && !tileIsValid && this._discardedTileIsFatal(tile)) {
@@ -713,6 +718,11 @@ export default class HanabiGame extends Game {
 		if (this._gameData.remainingTiles.length) {
 			this._pickUpNextTile(userId);
 		}
+
+		// Remove the tile position.
+		const newPositions = { ...this._gameData.tilePositions };
+		delete newPositions[tile.id];
+		this._gameData.tilePositions = newPositions;
 
 		// Record the action.
 		this._gameData.actions = [

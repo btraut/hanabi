@@ -39,6 +39,7 @@ export default function HanabiBoard(): JSX.Element {
 	const { displayGameData: gameData } = animationManager;
 
 	const userId = useUserId();
+	const userIsPlayer = !!(userId && gameData.players[userId]);
 
 	const playerDisplayOrder = rotateArrayToItem(gameData.turnOrder, userId);
 
@@ -99,9 +100,11 @@ export default function HanabiBoard(): JSX.Element {
 			<div className="overflow-y-auto">
 				<HanabiActions filter={actionsFilter} />
 			</div>
-			<div className="border-solid border-gray-600 border-t-2 bg-gray-300">
-				<HanabiChatInput />
-			</div>
+			{userIsPlayer && (
+				<div className="border-solid border-gray-600 border-t-2 bg-gray-300">
+					<HanabiChatInput />
+				</div>
+			)}
 		</div>
 	);
 
