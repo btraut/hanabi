@@ -84,21 +84,33 @@ export default function HanabiBoard(): JSX.Element {
 	// Actions Filter:
 	const [actionsFilter, setActionsFilter] = useState<ActionsFilterOption>('all');
 
+	const actionsContainer = (
+		<div
+			className={classNames('grid border-4 border-black rounded-xl mb-6 overflow-hidden', {
+				'bg-white': gameData.actions.length % 2 === 1,
+				'bg-gray-200': gameData.actions.length % 2 === 0,
+			})}
+			style={{ maxHeight: breakpoints.lg ? 320 : 240, gridTemplateRows: 'auto 1fr auto' }}
+			ref={actionsContainerRef}
+		>
+			<div className="border-solid border-gray-600 border-b-2 bg-gray-300">
+				<HanabiActionsFilter filter={actionsFilter} onChange={setActionsFilter} />
+			</div>
+			<div className="overflow-y-auto">
+				<HanabiActions filter={actionsFilter} />
+			</div>
+			<div className="border-solid border-gray-600 border-t-2 bg-gray-300">
+				<HanabiChatInput />
+			</div>
+		</div>
+	);
+
 	return (
 		<div className="grid grid-flow-row lg:grid-flow-col gap-6 relative">
 			<div>
 				{!breakpoints.lg && (
 					<>
-						<div
-							className={classNames('border-4 border-black rounded-xl overflow-y-auto mb-6', {
-								'bg-white': gameData.actions.length % 2 === 1,
-								'bg-gray-200': gameData.actions.length % 2 === 0,
-							})}
-							style={{ maxHeight: 160 }}
-							ref={actionsContainerRef}
-						>
-							<HanabiActions />
-						</div>
+						{actionsContainer}
 						<div className="grid grid-flow-row border-4 border-black bg-white rounded-xl p-4 gap-3 mb-6">
 							<div className="grid grid-flow-col gap-2 justify-start">
 								<HanabiRemainingTiles />
@@ -176,24 +188,7 @@ export default function HanabiBoard(): JSX.Element {
 							}
 						/>
 					</div>
-					<div
-						className={classNames('grid border-4 border-black rounded-xl mb-6 overflow-hidden', {
-							'bg-white': gameData.actions.length % 2 === 1,
-							'bg-gray-200': gameData.actions.length % 2 === 0,
-						})}
-						style={{ maxHeight: 320, gridTemplateRows: 'auto 1fr auto' }}
-						ref={actionsContainerRef}
-					>
-						<div className="border-solid border-gray-600 border-b-2 bg-gray-300">
-							<HanabiActionsFilter filter={actionsFilter} onChange={setActionsFilter} />
-						</div>
-						<div className="overflow-y-auto">
-							<HanabiActions filter={actionsFilter} />
-						</div>
-						<div className="border-solid border-gray-600 border-t-2 bg-gray-300">
-							<HanabiChatInput />
-						</div>
-					</div>
+					{actionsContainer}
 				</div>
 			)}
 
