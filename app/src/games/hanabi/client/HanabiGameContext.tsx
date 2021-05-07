@@ -3,10 +3,12 @@ import { HanabiGameData } from 'app/src/games/hanabi/HanabiGameData';
 import { createContext, useContext } from 'react';
 
 export interface HanabiGameContext {
-	create(): Promise<HanabiGameMessenger>;
-	watch(code: string): Promise<HanabiGameMessenger>;
+	create(): Promise<string>;
+	watch(code: string): Promise<void>;
+
 	gameMessenger: HanabiGameMessenger | null;
 	gameData: HanabiGameData | null;
+	code: string | null;
 }
 
 const context = createContext<HanabiGameContext | null>(null);

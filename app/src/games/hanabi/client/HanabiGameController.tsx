@@ -29,44 +29,45 @@ export default function HanabiGameController({ children }: Props): JSX.Element {
 	// animations should be done down-stream.
 	const [gameData, setGameData] = useState<HanabiGameData | null>(null);
 
+	// Store the code of the loaded game.
+	const [code, setCode] = useState<string | null>(null);
+
 	// If the game messenger has changed, clean up the old one.
 	useEffect(() => () => gameMessenger?.cleanUp(), [gameMessenger]);
 
 	// Make a callback for creating a game. This will create the game on the
 	// server, set the game as the current one here in the controller.
 	const create = useCallback(async () => {
-		const { id: gameId, code } = await gameManager.create(HANABI_GAME_TITLE);
+		const { id: gameId, code: newCode } = await gameManager.create(HANABI_GAME_TITLE);
 		const newGameMessenger = new HanabiGameMessenger(
 			gameId,
-			code,
 			socketManager,
 			authSocketManager,
 			setGameData,
 		);
 		await newGameMessenger.refreshGameData();
+		setCode(newCode);
 
 		setGameMessenger(newGameMessenger);
 
-		return newGameMessenger;
+		return newCode;
 	}, [authSocketManager, gameManager, socketManager]);
 
 	// Make a callback for watching a game. This will set the user as a watcher,
 	// set the game as the current one here in the controller.
 	const watch = useCallback(
-		async (code: string) => {
-			const { id: gameId } = await gameManager.watch(code);
+		async (newCode: string) => {
+			const { id: gameId } = await gameManager.watch(newCode);
 			const newGameMessenger = new HanabiGameMessenger(
 				gameId,
-				code,
 				socketManager,
 				authSocketManager,
 				setGameData,
 			);
 			await newGameMessenger.refreshGameData();
+			setCode(newCode);
 
 			setGameMessenger(newGameMessenger);
-
-			return newGameMessenger;
 		},
 		[authSocketManager, gameManager, socketManager],
 	);
@@ -79,8 +80,9 @@ export default function HanabiGameController({ children }: Props): JSX.Element {
 			watch,
 			gameMessenger,
 			gameData,
+			code,
 		}),
-		[create, gameMessenger, watch, gameData],
+		[create, watch, gameMessenger, gameData, code],
 	);
 
 	return <HanabiGameContextProvider value={contextValue}>{children}</HanabiGameContextProvider>;

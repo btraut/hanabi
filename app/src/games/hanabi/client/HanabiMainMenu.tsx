@@ -29,7 +29,7 @@ export default function HanabiMainMenu(): JSX.Element {
 		}
 
 		loadingRef.current = true;
-		const { code } = await hanabiGameContext.create();
+		const code = await hanabiGameContext.create();
 		loadingRef.current = false;
 
 		history.push(`/${code}`);

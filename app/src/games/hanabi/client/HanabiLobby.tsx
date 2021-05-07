@@ -2,7 +2,11 @@ import { useUserId } from 'app/src/components/SocketContext';
 import HanabiMenuButton from 'app/src/games/hanabi/client/design-system/HanabiMenuButton';
 import HanabiChooseRuleSetForm from 'app/src/games/hanabi/client/HanabiChooseRuleSetForm';
 import HanabiCopyLinkButton from 'app/src/games/hanabi/client/HanabiCopyLinkButton';
-import { useGameData, useGameMessenger } from 'app/src/games/hanabi/client/HanabiGameContext';
+import {
+	useGameData,
+	useGameMessenger,
+	useHanabiGameContext,
+} from 'app/src/games/hanabi/client/HanabiGameContext';
 import HanabiHeader from 'app/src/games/hanabi/client/HanabiHeader';
 import HanabiJoinForm from 'app/src/games/hanabi/client/HanabiJoinForm';
 import HanabiLobbyGameOptionsForm from 'app/src/games/hanabi/client/HanabiLobbyGameOptionsForm';
@@ -15,6 +19,7 @@ declare const NODE_ENV: string;
 export default function HanabiLobby(): JSX.Element {
 	const gameMessenger = useGameMessenger();
 	const gameData = useGameData();
+	const { code } = useHanabiGameContext();
 	const userId = useUserId();
 
 	const handleLeaveClick = async () => {
@@ -29,7 +34,7 @@ export default function HanabiLobby(): JSX.Element {
 	const enoughPlayers =
 		Object.keys(gameData.players).length >= (NODE_ENV === 'development' ? 1 : HANABI_MIN_PLAYERS);
 	const domainBase = typeof window === 'undefined' ? DOMAIN_BASE : window.location.origin;
-	const link = `${domainBase}/${gameMessenger.code}`;
+	const link = `${domainBase}/${code}`;
 
 	const players = Object.values(gameData.players);
 

@@ -5,7 +5,7 @@ import { ChangeEvent, FormEvent, useCallback, useState } from 'react';
 import { useHistory } from 'react-router';
 
 export default function HanabiWatchForm(): JSX.Element {
-	const hanabiGameContext = useHanabiGameContext();
+	const { code } = useHanabiGameContext();
 	const history = useHistory();
 
 	const [watchGameError, setWatchGameError] = useState('');
@@ -20,8 +20,7 @@ export default function HanabiWatchForm(): JSX.Element {
 
 		if (codeValue) {
 			try {
-				const watchedGame = await hanabiGameContext.watch(codeValue);
-				history.push(`/${watchedGame.code}`);
+				history.push(`/${code}`);
 			} catch (error) {
 				setWatchGameError(error?.message || '');
 			}

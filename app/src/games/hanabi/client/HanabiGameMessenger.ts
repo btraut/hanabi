@@ -27,15 +27,7 @@ import SocketManager, { ConnectionState } from 'app/src/utils/client/SocketManag
 import DistributiveOmit from 'app/src/utils/DistributiveOmit';
 
 export default class HanabiGameMessenger {
-	protected _id: string;
-	public get id(): string {
-		return this._id;
-	}
-
-	protected _code: string;
-	public get code(): string {
-		return this._code;
-	}
+	private _id: string;
 
 	private _connected = false;
 
@@ -51,13 +43,11 @@ export default class HanabiGameMessenger {
 
 	constructor(
 		id: string,
-		code: string,
 		socketManager: SocketManager<HanabiMessage>,
 		authSocketManager: AuthSocketManager,
 		updateGameDataDelegate: (gameData: HanabiGameData) => void,
 	) {
 		this._id = id;
-		this._code = code;
 
 		this._socketManager = socketManager;
 		this._socketManagerOnConnectSubscriptionId = socketManager.onConnect.subscribe(
