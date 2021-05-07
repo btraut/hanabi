@@ -1,10 +1,10 @@
-import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
+import { useGameMessenger } from 'app/src/games/hanabi/client/HanabiContext';
 import useFocusVisible from 'app/src/utils/client/useFocusVisible';
 import classNames from 'classnames';
 import { KeyboardEvent, useCallback, useRef } from 'react';
 
 export default function HanabiChatInput(): JSX.Element {
-	const game = useHanabiGame();
+	const gameMessenger = useGameMessenger();
 	const isFocusVisible = useFocusVisible();
 
 	const inputRef = useRef<HTMLInputElement | null>(null);
@@ -17,8 +17,8 @@ export default function HanabiChatInput(): JSX.Element {
 		const message = inputRef.current.value;
 		inputRef.current.value = '';
 
-		game.sendChat(message);
-	}, [game]);
+		gameMessenger.sendChat(message);
+	}, [gameMessenger]);
 
 	const handleKeyDown = useCallback(
 		(event: KeyboardEvent<HTMLInputElement>) => {

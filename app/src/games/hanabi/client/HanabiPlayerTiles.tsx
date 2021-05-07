@@ -1,5 +1,5 @@
 import { useUserId } from 'app/src/components/SocketContext';
-import { useHanabiAnimationManager } from 'app/src/games/hanabi/client/HanabiContext';
+import { useGameData } from 'app/src/games/hanabi/client/HanabiContext';
 import { useHanabiHighlightContext } from 'app/src/games/hanabi/client/HanabiHighlightContext';
 import HanabiInteractiveTileView from 'app/src/games/hanabi/client/HanabiInteractiveTileView';
 import HanabiPlayerTilesDragLayer from 'app/src/games/hanabi/client/HanabiPlayerTilesDragLayer';
@@ -23,8 +23,7 @@ export default function HanabiPlayerTiles({
 	onTileMouseOut,
 	onTileMouseDown,
 }: Props): JSX.Element {
-	const animationManager = useHanabiAnimationManager();
-	const { displayGameData: gameData } = animationManager;
+	const gameData = useGameData();
 	const userId = useUserId();
 
 	const { highlightedTiles } = useHanabiHighlightContext();

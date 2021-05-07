@@ -1,5 +1,5 @@
 import HanabiDropdown from 'app/src/games/hanabi/client/design-system/HanabiDropdown';
-import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
+import { useGameMessenger } from 'app/src/games/hanabi/client/HanabiContext';
 import { HanabiRuleSet } from 'app/src/games/hanabi/HanabiGameData';
 import { ChangeEvent, useCallback, useEffect, useState } from 'react';
 
@@ -14,7 +14,7 @@ const OPTIONS: { [label: string]: HanabiRuleSet } = {
 };
 
 export default function HanabiChooseRuleSetForm({ ruleSet }: Props): JSX.Element {
-	const game = useHanabiGame();
+	const gameMessenger = useGameMessenger();
 
 	const [displayedRuleSet, setDisplayedRuleSet] = useState(ruleSet);
 
@@ -25,11 +25,11 @@ export default function HanabiChooseRuleSetForm({ ruleSet }: Props): JSX.Element
 			const newRuleSet = event.target.value as HanabiRuleSet;
 			setDisplayedRuleSet(newRuleSet);
 
-			game.changeSettings({
+			gameMessenger.changeSettings({
 				ruleSet: newRuleSet,
 			});
 		},
-		[game],
+		[gameMessenger],
 	);
 
 	// If the server sends a different ruleSet, replace our local one.

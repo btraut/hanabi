@@ -1,4 +1,4 @@
-import { useHanabiAnimationManager } from 'app/src/games/hanabi/client/HanabiContext';
+import { useGameData } from 'app/src/games/hanabi/client/HanabiContext';
 import { HanabiGameActionChat } from 'app/src/games/hanabi/HanabiGameData';
 
 interface Props {
@@ -6,8 +6,7 @@ interface Props {
 }
 
 export default function HanabiChatAction({ action }: Props): JSX.Element {
-	const animationManager = useHanabiAnimationManager();
-	const { displayGameData: gameData } = animationManager;
+	const gameData = useGameData();
 
 	const player = gameData.players[action.playerId];
 

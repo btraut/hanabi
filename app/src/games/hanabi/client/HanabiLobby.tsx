@@ -1,7 +1,7 @@
 import { useUserId } from 'app/src/components/SocketContext';
 import HanabiMenuButton from 'app/src/games/hanabi/client/design-system/HanabiMenuButton';
 import HanabiChooseRuleSetForm from 'app/src/games/hanabi/client/HanabiChooseRuleSetForm';
-import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
+import { useGameData, useGameMessenger } from 'app/src/games/hanabi/client/HanabiContext';
 import HanabiCopyLinkButton from 'app/src/games/hanabi/client/HanabiCopyLinkButton';
 import HanabiHeader from 'app/src/games/hanabi/client/HanabiHeader';
 import HanabiJoinForm from 'app/src/games/hanabi/client/HanabiJoinForm';
@@ -13,25 +13,25 @@ declare const DOMAIN_BASE: string;
 declare const NODE_ENV: string;
 
 export default function HanabiLobby(): JSX.Element {
-	const game = useHanabiGame();
+	const gameMessenger = useGameMessenger();
+	const gameData = useGameData();
 	const userId = useUserId();
 
 	const handleLeaveClick = async () => {
-		await game.leave();
+		await gameMessenger.leave();
 	};
 
 	const handleStartClick = async () => {
-		await game.start();
+		await gameMessenger.start();
 	};
 
-	const userIsJoined = !!(userId && game.gameData.players[userId]);
+	const userIsJoined = !!(userId && gameData.players[userId]);
 	const enoughPlayers =
-		Object.keys(game.gameData.players).length >=
-		(NODE_ENV === 'development' ? 1 : HANABI_MIN_PLAYERS);
+		Object.keys(gameData.players).length >= (NODE_ENV === 'development' ? 1 : HANABI_MIN_PLAYERS);
 	const domainBase = typeof window === 'undefined' ? DOMAIN_BASE : window.location.origin;
-	const link = `${domainBase}/${game.code}`;
+	const link = `${domainBase}/${gameMessenger.code}`;
 
-	const players = Object.values(game.gameData.players);
+	const players = Object.values(gameData.players);
 
 	return (
 		<div className="w-screen min-h-screen grid grid-flow-row gap-6 content-start">
@@ -52,9 +52,9 @@ export default function HanabiLobby(): JSX.Element {
 								Game Rules:
 							</div>
 							<div className="justify-self-start grid gap-3">
-								<HanabiChooseRuleSetForm ruleSet={game.gameData.ruleSet} />
+								<HanabiChooseRuleSetForm ruleSet={gameData.ruleSet} />
 								<HanabiLobbyGameOptionsForm
-									checked={game.gameData.criticalGameOver}
+									checked={gameData.criticalGameOver}
 									label="Discarding a critical tile ends the game"
 									settingsKey="criticalGameOver"
 								/>
@@ -65,12 +65,12 @@ export default function HanabiLobby(): JSX.Element {
 							</div>
 							<div className="justify-self-start grid gap-2">
 								<HanabiLobbyGameOptionsForm
-									checked={game.gameData.allowDragging}
+									checked={gameData.allowDragging}
 									label="Allow reordering of tiles"
 									settingsKey="allowDragging"
 								/>
 								<HanabiLobbyGameOptionsForm
-									checked={game.gameData.showNotes}
+									checked={gameData.showNotes}
 									label="Show notes on tiles"
 									settingsKey="showNotes"
 								/>

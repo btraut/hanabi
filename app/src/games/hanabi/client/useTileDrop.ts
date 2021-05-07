@@ -1,5 +1,5 @@
 import { useUserId } from 'app/src/components/SocketContext';
-import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
+import { useGameData, useGameMessenger } from 'app/src/games/hanabi/client/HanabiContext';
 import {
 	getNewPositionsForTiles,
 	getPositionInContainer,
@@ -12,7 +12,8 @@ import { useRef } from 'react';
 import { DragElementWrapper, useDrop } from 'react-dnd';
 
 export default function useTileDrop(): DragElementWrapper<any> {
-	const game = useHanabiGame();
+	const gameMessenger = useGameMessenger();
+	const gameData = useGameData();
 	const userId = useUserId();
 
 	const previousIsTopHalfRef = useRef<boolean | null>(null);
@@ -24,7 +25,7 @@ export default function useTileDrop(): DragElementWrapper<any> {
 	const [, dropRef] = useDrop<HanabiDragTypes, void, void>({
 		accept: [HANABI_DRAG_TYPES.TILE],
 		hover: (item, monitor) => {
-			const originalPosition = game.gameData.tilePositions[item.id];
+			const originalPosition = gameData.tilePositions[item.id];
 
 			const delta = monitor.getDifferenceFromInitialOffset()!;
 			const newPosition = getPositionInContainer(originalPosition, delta);
@@ -37,9 +38,9 @@ export default function useTileDrop(): DragElementWrapper<any> {
 				(isTopHalf && tileSlotX !== previousTileSlotX.current)
 			) {
 				const tilePositions: { [tileId: string]: Position } = {};
-				for (const tileId of game.gameData.playerTiles[userId]) {
+				for (const tileId of gameData.playerTiles[userId]) {
 					if (tileId !== item.id) {
-						tilePositions[tileId] = game.gameData.tilePositions[tileId];
+						tilePositions[tileId] = gameData.tilePositions[tileId];
 					}
 				}
 
@@ -50,29 +51,29 @@ export default function useTileDrop(): DragElementWrapper<any> {
 					false,
 				);
 
-				game.moveTilesLocally(newPositions);
+				gameMessenger.moveTilesLocally(newPositions);
 			}
 
 			previousIsTopHalfRef.current = isTopHalf;
 			previousTileSlotX.current = tileSlotX;
 		},
 		drop: (item, monitor) => {
-			const originalPosition = game.gameData.tilePositions[item.id];
+			const originalPosition = gameData.tilePositions[item.id];
 
 			const delta = monitor.getDifferenceFromInitialOffset()!;
 			const newPosition = getPositionInContainer(originalPosition, delta);
 
 			const tilePositions: { [tileId: string]: Position } = {};
-			for (const tileId of game.gameData.playerTiles[userId]) {
+			for (const tileId of gameData.playerTiles[userId]) {
 				if (tileId !== item.id) {
-					tilePositions[tileId] = game.gameData.tilePositions[tileId];
+					tilePositions[tileId] = gameData.tilePositions[tileId];
 				}
 			}
 
 			const newPositions = getNewPositionsForTiles({ [item.id]: newPosition }, tilePositions, true);
 
-			game.moveTilesLocally(newPositions);
-			game.commitTileMoves(userId);
+			gameMessenger.moveTilesLocally(newPositions);
+			gameMessenger.commitTileMoves(userId);
 
 			previousIsTopHalfRef.current = null;
 			previousTileSlotX.current = null;

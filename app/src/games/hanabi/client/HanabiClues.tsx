@@ -1,12 +1,11 @@
 import HanabiClue from 'app/src/games/hanabi/client/HanabiClue';
-import { useHanabiAnimationManager } from 'app/src/games/hanabi/client/HanabiContext';
+import { useGameData } from 'app/src/games/hanabi/client/HanabiContext';
 import { HANABI_MAX_CLUES } from 'app/src/games/hanabi/HanabiGameData';
 import mapXTimes from 'app/src/utils/mapXTimes';
 import classNames from 'classnames';
 
 export default function HanabiClues(): JSX.Element {
-	const animationManager = useHanabiAnimationManager();
-	const { displayGameData: gameData } = animationManager;
+	const gameData = useGameData();
 
 	const remainingClues = gameData.clues;
 

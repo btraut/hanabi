@@ -1,10 +1,9 @@
-import { useHanabiAnimationManager } from 'app/src/games/hanabi/client/HanabiContext';
+import { useGameData } from 'app/src/games/hanabi/client/HanabiContext';
 import { HanabiGameAction, HanabiGameActionType } from 'app/src/games/hanabi/HanabiGameData';
 import { useEffect, useState } from 'react';
 
 export default function useLatestActions(): readonly HanabiGameAction[] {
-	const animationManager = useHanabiAnimationManager();
-	const { displayGameData: gameData } = animationManager;
+	const gameData = useGameData();
 
 	const { actions } = gameData;
 	const actionsLength = gameData.actions.length;

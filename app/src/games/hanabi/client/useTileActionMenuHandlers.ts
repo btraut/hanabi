@@ -3,9 +3,10 @@
 // handlers pertaining to clicking on tiles and following action tooltip
 // actions.
 
-import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
+import { useUserId } from 'app/src/components/SocketContext';
+import { useGameData, useGameMessenger } from 'app/src/games/hanabi/client/HanabiContext';
 import { HanabiTileActionsTooltipType } from 'app/src/games/hanabi/client/HanabiTileActionsTooltip';
-import { HanabiGameData, HanabiTile, HanabiTileColor } from 'app/src/games/hanabi/HanabiGameData';
+import { HanabiTile, HanabiTileColor } from 'app/src/games/hanabi/HanabiGameData';
 import { useCallback, useState } from 'react';
 
 type ActionMenuDetails = {
@@ -17,10 +18,7 @@ type ActionMenuDetails = {
 	};
 };
 
-export default function useTileActionMenuHandlers(
-	gameData: HanabiGameData,
-	userId: string,
-): {
+export default function useTileActionMenuHandlers(): {
 	showMenuForTile: ActionMenuDetails | null;
 	handleTileClick: (event: React.MouseEvent<HTMLDivElement>, tileId: string) => void;
 	handleActionsTooltipAction: (
@@ -30,7 +28,9 @@ export default function useTileActionMenuHandlers(
 	) => void;
 	handleActionsTooltipOnClose: () => void;
 } {
-	const game = useHanabiGame();
+	const gameMessenger = useGameMessenger();
+	const gameData = useGameData();
+	const userId = useUserId();
 
 	const [showMenuForTile, setShowMenuForTile] = useState<ActionMenuDetails | null>(null);
 
@@ -80,22 +80,22 @@ export default function useTileActionMenuHandlers(
 
 			switch (action) {
 				case 'discard':
-					game.discardTile(tile);
+					gameMessenger.discardTile(tile);
 					break;
 				case 'play':
-					game.playTile(tile);
+					gameMessenger.playTile(tile);
 					break;
 				case 'color':
-					game.giveColorClue(tileOwner, details?.color ?? tile.color);
+					gameMessenger.giveColorClue(tileOwner, details?.color ?? tile.color);
 					break;
 				case 'number':
-					game.giveNumberClue(tileOwner, tile.number);
+					gameMessenger.giveNumberClue(tileOwner, tile.number);
 					break;
 			}
 
 			setShowMenuForTile(null);
 		},
-		[game, gameData],
+		[gameMessenger, gameData],
 	);
 
 	const handleActionsTooltipOnClose = useCallback(() => {

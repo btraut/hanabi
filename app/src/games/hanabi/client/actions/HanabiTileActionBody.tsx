@@ -1,4 +1,4 @@
-import { useHanabiAnimationManager } from 'app/src/games/hanabi/client/HanabiContext';
+import { useGameData } from 'app/src/games/hanabi/client/HanabiContext';
 import HanabiTileView, { TileViewSize } from 'app/src/games/hanabi/client/HanabiTileView';
 import {
 	HanabiGameActionDiscard,
@@ -16,8 +16,7 @@ interface Props {
 const ENGLISH_NUMBERS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six'];
 
 export default function HanabiTileActionBody({ action }: Props): JSX.Element | null {
-	const animationManager = useHanabiAnimationManager();
-	const { displayGameData: gameData } = animationManager;
+	const gameData = useGameData();
 
 	const player = gameData.players[action.playerId];
 

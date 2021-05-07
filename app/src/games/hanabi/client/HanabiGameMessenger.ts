@@ -1,6 +1,5 @@
 import Game from 'app/src/games/client/Game';
 import {
-	generateHanabiGameData,
 	HANABI_GAME_TITLE,
 	HanabiGameData,
 	HanabiRuleSet,
@@ -16,7 +15,7 @@ import {
 	getScope,
 	GiveClueResponseMessage,
 	HanabiMessage,
-	MoveTilesResponseMessage,
+	// MoveTilesResponseMessage,
 	PlayTileResponseMessage,
 	RefreshGameDataMessage,
 	RemovePlayerResponseMessage,
@@ -27,16 +26,8 @@ import {
 import AuthSocketManager, { AuthenticationState } from 'app/src/utils/client/AuthSocketManager';
 import SocketManager, { ConnectionState } from 'app/src/utils/client/SocketManager';
 import DistributiveOmit from 'app/src/utils/DistributiveOmit';
-import PubSub from 'app/src/utils/PubSub';
 
-export default class HanabiGame extends Game {
-	public onUpdate = new PubSub<void>();
-
-	private _gameData: HanabiGameData = generateHanabiGameData();
-	public get gameData(): Readonly<HanabiGameData> {
-		return this._gameData;
-	}
-
+export default class HanabiGameMessenger extends Game {
 	private _connected = false;
 
 	private _socketManager: SocketManager<HanabiMessage>;
@@ -47,11 +38,14 @@ export default class HanabiGame extends Game {
 	private _authSocketManager: AuthSocketManager;
 	private _socketManagerOnAuthenticateSubscriptionId: number;
 
+	private _updateGameDataDelegate: (gameData: HanabiGameData) => void;
+
 	constructor(
 		id: string,
 		code: string,
 		socketManager: SocketManager<HanabiMessage>,
 		authSocketManager: AuthSocketManager,
+		updateGameDataDelegate: (gameData: HanabiGameData) => void,
 	) {
 		super(id, code);
 
@@ -74,6 +68,8 @@ export default class HanabiGame extends Game {
 		this._connected =
 			this._socketManager.connectionState === ConnectionState.Connected &&
 			this._authSocketManager.authenticationState === AuthenticationState.Authenticated;
+
+		this._updateGameDataDelegate = updateGameDataDelegate;
 	}
 
 	public cleanUp(): void {
@@ -115,9 +111,7 @@ export default class HanabiGame extends Game {
 	};
 
 	private _handleRefreshGameDataMessage({ data }: RefreshGameDataMessage) {
-		this._gameData = data;
-
-		this.onUpdate.emit();
+		this._updateGameDataDelegate(data);
 	}
 
 	public async refreshGameData(): Promise<void> {
@@ -126,13 +120,10 @@ export default class HanabiGame extends Game {
 			data: undefined,
 		});
 
-		const getStateResponseMessage = await this._socketManager.expectMessageOfType<RefreshGameDataMessage>(
-			'RefreshGameDataMessage',
-		);
+		await this._socketManager.expectMessageOfType<RefreshGameDataMessage>('RefreshGameDataMessage');
 
-		this._gameData = getStateResponseMessage.data;
-
-		this.onUpdate.emit();
+		// After responding to our initial message, the server will also send a
+		// RefreshGameData message. We'll handle that in a separate handler.
 	}
 
 	public async join(name: string): Promise<void> {
@@ -247,7 +238,10 @@ export default class HanabiGame extends Game {
 		// RefreshGameData message. We'll handle that in a separate handler.
 	}
 
-	public moveTilesLocally(positions: { [tileId: string]: Position }): void {
+	public moveTilesLocally(_positions: { [tileId: string]: Position }): void {
+		/*
+		// TODO!
+		
 		// Validate tile ids.
 		for (const tileId of Object.keys(positions)) {
 			if (!this._gameData.tiles[tileId]) {
@@ -261,9 +255,13 @@ export default class HanabiGame extends Game {
 		// Emit an early onUpdate so clients update with the moved tile. We'll
 		// update again after the server response.
 		this.onUpdate.emit();
+		*/
 	}
 
-	public async commitTileMoves(userId: string): Promise<void> {
+	public async commitTileMoves(_userId: string): Promise<void> {
+		/*
+		// TODO!
+		
 		const newTileLocations: { [tileId: string]: Position } = {};
 
 		for (const tileId of this._gameData.playerTiles[userId]) {
@@ -285,6 +283,7 @@ export default class HanabiGame extends Game {
 
 		// After responding to our initial message, the server will also send a
 		// RefreshGameData message. We'll handle that in a separate handler.
+		*/
 	}
 
 	public async discardTile(tile: HanabiTile): Promise<void> {

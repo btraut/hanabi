@@ -1,5 +1,5 @@
 import HanabiCheckbox from 'app/src/games/hanabi/client/design-system/HanabiCheckbox';
-import { useHanabiGame } from 'app/src/games/hanabi/client/HanabiContext';
+import { useGameMessenger } from 'app/src/games/hanabi/client/HanabiContext';
 import { ChangeEvent, useCallback, useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -14,7 +14,7 @@ export default function HanabiLobbyGameOptionsForm({
 	label,
 	settingsKey,
 }: Props): JSX.Element {
-	const game = useHanabiGame();
+	const gameMessenger = useGameMessenger();
 
 	const [displayedChecked, setDisplayedChecked] = useState(checked);
 
@@ -27,11 +27,11 @@ export default function HanabiLobbyGameOptionsForm({
 			const newAllowDragging = event.target.checked;
 			setDisplayedChecked(newAllowDragging);
 
-			game.changeSettings({
+			gameMessenger.changeSettings({
 				[settingsKey]: newAllowDragging,
 			});
 		},
-		[game, settingsKey],
+		[gameMessenger, settingsKey],
 	);
 
 	// If the server sends a different ruleSet, replace our local one.

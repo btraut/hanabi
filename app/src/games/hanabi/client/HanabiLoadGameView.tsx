@@ -28,7 +28,7 @@ export default function HanabiLoadGameView({ children }: Props): JSX.Element | n
 	return (
 		<EnsureGameLoaded
 			redirectUrl="/"
-			game={hanabiContext.game && hanabiContext.animationManager}
+			gameLoaded={!!hanabiContext.gameData}
 			fallback={
 				<div className="w-screen min-h-screen p-20 grid content-center justify-center">
 					<h1 className="text-3xl italic text-white">Loading…</h1>

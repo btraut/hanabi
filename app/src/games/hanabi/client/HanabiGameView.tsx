@@ -1,6 +1,6 @@
 import BreakpointController from 'app/src/components/BreakpointController';
 import HanabiBoard from 'app/src/games/hanabi/client/HanabiBoard';
-import { useHanabiAnimationManager } from 'app/src/games/hanabi/client/HanabiContext';
+import { useGameData } from 'app/src/games/hanabi/client/HanabiContext';
 import HanabiHeader from 'app/src/games/hanabi/client/HanabiHeader';
 import HanabiHighlightTileController from 'app/src/games/hanabi/client/HanabiHighlightController';
 import HanabiLobby from 'app/src/games/hanabi/client/HanabiLobby';
@@ -8,8 +8,7 @@ import useTileDrop from 'app/src/games/hanabi/client/useTileDrop';
 import { HanabiStage } from 'app/src/games/hanabi/HanabiGameData';
 
 export default function HanabiGameView(): JSX.Element | null {
-	const animationManager = useHanabiAnimationManager();
-	const { displayGameData: gameData } = animationManager;
+	const gameData = useGameData();
 
 	const dropRef = useTileDrop();
 

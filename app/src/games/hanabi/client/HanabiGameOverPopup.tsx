@@ -1,10 +1,7 @@
 import { useUserId } from 'app/src/components/SocketContext';
 import HanabiMenuButton from 'app/src/games/hanabi/client/design-system/HanabiMenuButton';
 import HanabiPopup from 'app/src/games/hanabi/client/design-system/HanabiPopup';
-import {
-	useHanabiAnimationManager,
-	useHanabiGame,
-} from 'app/src/games/hanabi/client/HanabiContext';
+import { useGameData, useGameMessenger } from 'app/src/games/hanabi/client/HanabiContext';
 import { HanabiFinishedReason } from 'app/src/games/hanabi/HanabiGameData';
 
 const GAME_OVER_TITLES: { [key in HanabiFinishedReason]: string } = {
@@ -26,9 +23,8 @@ interface Props {
 }
 
 export default function HanabiGameOverPopup({ onClose }: Props): JSX.Element | null {
-	const game = useHanabiGame();
-	const animationManager = useHanabiAnimationManager();
-	const { displayGameData: gameData } = animationManager;
+	const gameMessenger = useGameMessenger();
+	const gameData = useGameData();
 	const userId = useUserId();
 
 	const { finishedReason } = gameData;
@@ -54,7 +50,7 @@ export default function HanabiGameOverPopup({ onClose }: Props): JSX.Element | n
 									onClose();
 								}
 
-								game.reset();
+								gameMessenger.reset();
 							}}
 						/>
 					)}

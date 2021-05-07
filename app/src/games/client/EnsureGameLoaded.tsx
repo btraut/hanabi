@@ -1,26 +1,26 @@
 import useAsyncEffect from 'app/src/utils/client/useAsyncEffect';
 import { useHistory } from 'react-router';
 
-interface Props<GameType> {
-	readonly game: GameType | null | undefined;
+interface Props {
+	readonly gameLoaded: boolean;
 	readonly redirectUrl: string;
 	readonly fallback?: JSX.Element | JSX.Element[] | null;
 	readonly children: JSX.Element | JSX.Element[] | null;
 	readonly loadGameHandler: () => Promise<void>;
 }
 
-export default function EnsureGameLoaded<GameType>({
-	game,
+export default function EnsureGameLoaded({
+	gameLoaded,
 	children,
 	fallback = null,
 	redirectUrl,
 	loadGameHandler,
-}: Props<GameType>): JSX.Element | null {
+}: Props): JSX.Element | null {
 	const history = useHistory();
 
 	useAsyncEffect(async () => {
 		// No need to load if we already have a game.
-		if (game) {
+		if (gameLoaded) {
 			return;
 		}
 
@@ -31,9 +31,9 @@ export default function EnsureGameLoaded<GameType>({
 		} catch (error) {
 			history.replace(redirectUrl);
 		}
-	}, [redirectUrl, game, history, loadGameHandler]);
+	}, [redirectUrl, gameLoaded, history, loadGameHandler]);
 
-	if (!game) {
+	if (!gameLoaded) {
 		return <>{fallback}</>;
 	}
 

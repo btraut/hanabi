@@ -2,10 +2,7 @@ import { useUserId } from 'app/src/components/SocketContext';
 import HanabiLinkButton from 'app/src/games/hanabi/client/design-system/HanabiLinkButton';
 import HanabiMenuButton from 'app/src/games/hanabi/client/design-system/HanabiMenuButton';
 import HanabiPopup from 'app/src/games/hanabi/client/design-system/HanabiPopup';
-import {
-	useHanabiAnimationManager,
-	useHanabiGame,
-} from 'app/src/games/hanabi/client/HanabiContext';
+import { useGameData, useGameMessenger } from 'app/src/games/hanabi/client/HanabiContext';
 
 interface Props {
 	onOptions: () => void;
@@ -13,9 +10,8 @@ interface Props {
 }
 
 export default function HanabiGameMenu({ onClose, onOptions }: Props): JSX.Element | null {
-	const game = useHanabiGame();
-	const animationManager = useHanabiAnimationManager();
-	const { displayGameData: gameData } = animationManager;
+	const gameMessenger = useGameMessenger();
+	const gameData = useGameData();
 	const userId = useUserId();
 
 	return (
@@ -28,7 +24,7 @@ export default function HanabiGameMenu({ onClose, onOptions }: Props): JSX.Eleme
 							label="New Game"
 							onClick={() => {
 								onClose();
-								game.reset();
+								gameMessenger.reset();
 							}}
 						/>
 					) : (

@@ -1,6 +1,6 @@
 import Portal from 'app/src/components/Portal';
 import Tooltip from 'app/src/components/Tooltip';
-import { useHanabiAnimationManager } from 'app/src/games/hanabi/client/HanabiContext';
+import { useGameData } from 'app/src/games/hanabi/client/HanabiContext';
 import {
 	HanabiTile,
 	HanabiTileColor,
@@ -35,8 +35,7 @@ export default function HanabiTileActionsTooltip({
 	onAction,
 	onClose,
 }: Props): JSX.Element {
-	const animationManager = useHanabiAnimationManager();
-	const { displayGameData: gameData } = animationManager;
+	const gameData = useGameData();
 
 	const tile = gameData.tiles[tileId];
 

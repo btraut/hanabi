@@ -4,7 +4,7 @@ import HanabiActions from 'app/src/games/hanabi/client/HanabiActions';
 import HanabiActionsFilter from 'app/src/games/hanabi/client/HanabiActionsFilter';
 import HanabiChatInput from 'app/src/games/hanabi/client/HanabiChatInput';
 import HanabiClues from 'app/src/games/hanabi/client/HanabiClues';
-import { useHanabiAnimationManager } from 'app/src/games/hanabi/client/HanabiContext';
+import { useGameData } from 'app/src/games/hanabi/client/HanabiContext';
 import HanabiDiscardedTilesCollapsed from 'app/src/games/hanabi/client/HanabiDiscardedTilesCollapsed';
 import HanabiGameOverPopup from 'app/src/games/hanabi/client/HanabiGameOverPopup';
 import HanabiLives from 'app/src/games/hanabi/client/HanabiLives';
@@ -35,9 +35,7 @@ function rotateArrayToItem<T>(arr: readonly T[], item: T): readonly T[] {
 }
 
 export default function HanabiBoard(): JSX.Element {
-	const animationManager = useHanabiAnimationManager();
-	const { displayGameData: gameData } = animationManager;
-
+	const gameData = useGameData();
 	const userId = useUserId();
 	const userIsPlayer = !!(userId && gameData.players[userId]);
 
@@ -51,7 +49,7 @@ export default function HanabiBoard(): JSX.Element {
 		handleTileClick,
 		handleActionsTooltipAction,
 		handleActionsTooltipOnClose,
-	} = useTileActionMenuHandlers(gameData, userId);
+	} = useTileActionMenuHandlers();
 
 	// Build handlers and data pertaining to the notes menu (hover for tiles).
 	const {
@@ -60,7 +58,7 @@ export default function HanabiBoard(): JSX.Element {
 		handleTileMouseOver,
 		handleTileMouseOut,
 		handleTileMouseDown,
-	} = useTileNotesHandlers(gameData);
+	} = useTileNotesHandlers();
 
 	// Show the game over popup when the game ends for any reason.
 	const [showGameOverPopup, setShowGameOverPopup] = useState(!!gameData.finishedReason);

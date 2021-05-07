@@ -1,3 +1,5 @@
+// TODO: Kill this file.
+
 export default class Game {
 	protected _id: string;
 	public get id(): string {

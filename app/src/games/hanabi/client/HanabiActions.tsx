@@ -1,6 +1,6 @@
 import { useUserId } from 'app/src/components/SocketContext';
 import HanabiAction from 'app/src/games/hanabi/client/HanabiAction';
-import { useHanabiAnimationManager } from 'app/src/games/hanabi/client/HanabiContext';
+import { useGameData } from 'app/src/games/hanabi/client/HanabiContext';
 import { useHanabiOptionsContext } from 'app/src/games/hanabi/client/HanabiOptionsContext';
 import useActionHighlighter from 'app/src/games/hanabi/client/useActionHighlighter';
 import useActionSounds from 'app/src/games/hanabi/client/useActionSounds';
@@ -54,8 +54,7 @@ function filterActions(
 }
 
 export default function HanabiActions({ filter = 'all' }: Props): JSX.Element {
-	const animationManager = useHanabiAnimationManager();
-	const { displayGameData: gameData } = animationManager;
+	const gameData = useGameData();
 
 	const userId = useUserId();
 

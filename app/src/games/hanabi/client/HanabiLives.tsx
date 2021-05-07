@@ -1,12 +1,11 @@
-import { useHanabiAnimationManager } from 'app/src/games/hanabi/client/HanabiContext';
+import { useGameData } from 'app/src/games/hanabi/client/HanabiContext';
 import HanabiLife from 'app/src/games/hanabi/client/HanabiLife';
 import { HANABI_MAX_LIVES } from 'app/src/games/hanabi/HanabiGameData';
 import mapXTimes from 'app/src/utils/mapXTimes';
 import classNames from 'classnames';
 
 export default function HanabiLives(): JSX.Element {
-	const animationManager = useHanabiAnimationManager();
-	const { displayGameData: gameData } = animationManager;
+	const gameData = useGameData();
 
 	const remainingLives = gameData.lives;
 

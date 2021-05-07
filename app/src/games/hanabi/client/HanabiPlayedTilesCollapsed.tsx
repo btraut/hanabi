@@ -1,4 +1,4 @@
-import { useHanabiAnimationManager } from 'app/src/games/hanabi/client/HanabiContext';
+import { useGameData } from 'app/src/games/hanabi/client/HanabiContext';
 import { useHanabiHighlightContext } from 'app/src/games/hanabi/client/HanabiHighlightContext';
 import HanabiTileView, { TileViewSize } from 'app/src/games/hanabi/client/HanabiTileView';
 import { HanabiTileColor, HanabiTileNumber } from 'app/src/games/hanabi/HanabiGameData';
@@ -7,8 +7,7 @@ import classNames from 'classnames';
 const TILE_NUMBERS: HanabiTileNumber[] = [1, 2, 3, 4, 5];
 
 export default function HanabiPlayedTiles(): JSX.Element {
-	const animationManager = useHanabiAnimationManager();
-	const { displayGameData: gameData } = animationManager;
+	const gameData = useGameData();
 
 	const { highlightedTiles } = useHanabiHighlightContext();
 
