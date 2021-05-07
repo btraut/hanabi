@@ -132,6 +132,7 @@ export default function HanabiInteractiveTileView({
 				border={border}
 				highlight={highlight}
 				notesIndicator={hidden && notesIndicator}
+				size={size}
 			/>
 		</Comp>
 	);

@@ -99,7 +99,7 @@ export default function HanabiPlayedTiles({
 														size={tileViewSize}
 													/>
 												) : (
-													<HanabiTileView color={color} number={number} />
+													<HanabiTileView color={color} number={number} size={tileViewSize} />
 												)}
 											</div>
 										</div>
