@@ -31,6 +31,12 @@ export default function HanabiStyles(): JSX.Element {
 	}
 }
 
+@keyframes bg-blue-to-red {
+  0% { background-color: #1e3a8a; }
+  50% { background-color: #be123d; }
+  100% { background-color: #1e3a8a; }
+}
+
 .text-rainbow {
 	background: linear-gradient(to top, #3b83f6 24%, #10b981 36%, #f59f0b 66%, #f43f5d 76%);
 	-webkit-background-clip: text;

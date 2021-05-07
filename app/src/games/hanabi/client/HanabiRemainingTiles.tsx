@@ -1,6 +1,7 @@
 import { useHanabiAnimationManager } from 'app/src/games/hanabi/client/HanabiContext';
 import HanabiTileView, { TileViewSize } from 'app/src/games/hanabi/client/HanabiTileView';
 import { HANABI_TILE_SIZE_SMALL } from 'app/src/games/hanabi/HanabiGameData';
+import mapXTimes from 'app/src/utils/mapXTimes';
 import classNames from 'classnames';
 
 const TILE_OFFSET = 4;
@@ -32,7 +33,7 @@ export default function HanabiRemainingTiles(): JSX.Element {
 						height: HANABI_TILE_SIZE_SMALL.height,
 					}}
 				>
-					{new Array(visibleRemainingTiles).fill('').map((_, index) => (
+					{mapXTimes(visibleRemainingTiles, (index) => (
 						<div
 							key={`remaining-${index}`}
 							className="absolute"
