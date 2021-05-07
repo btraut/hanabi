@@ -9,6 +9,7 @@ type Props = {
 
 const FILTER_OPTIONS: { [key: string]: string } = {
 	all: 'All',
+	clues: 'Clues',
 	'to-me': 'To Me',
 	'from-me': 'From Me',
 	chat: 'Chat',

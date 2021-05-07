@@ -20,6 +20,14 @@ function filterActions(
 	filter: ActionsFilterOption,
 	userId: string,
 ): HanabiGameAction[] {
+	if (filter === 'clues') {
+		return actions.filter(
+			(a) =>
+				a.type === HanabiGameActionType.GiveColorClue ||
+				a.type === HanabiGameActionType.GiveNumberClue,
+		);
+	}
+
 	if (filter === 'to-me') {
 		return actions.filter(
 			(a) =>
