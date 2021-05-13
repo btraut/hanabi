@@ -43,32 +43,15 @@ export default function useTileNotesHandlers(): {
 	);
 
 	const hideNotesForTile = useCallback(() => {
+		console.log('hideNotesForTile');
 		setShowNotesForTile(null);
 	}, []);
-
-	const handleTileMouseOut = useCallback(
-		(_event: React.MouseEvent<HTMLDivElement>, tileId: string) => {
-			if (showNotesForTile?.tileId === tileId) {
-				setShowNotesForTile(null);
-			}
-		},
-		[showNotesForTile?.tileId],
-	);
-
-	const handleTileMouseDown = useCallback(
-		(_event: React.MouseEvent<HTMLDivElement>, tileId: string) => {
-			if (showNotesForTile?.tileId === tileId) {
-				setShowNotesForTile(null);
-			}
-		},
-		[showNotesForTile?.tileId],
-	);
 
 	return {
 		showNotesForTile,
 		hideNotesForTile,
 		handleTileMouseOver,
-		handleTileMouseOut,
-		handleTileMouseDown,
+		handleTileMouseOut: hideNotesForTile,
+		handleTileMouseDown: hideNotesForTile,
 	};
 }
