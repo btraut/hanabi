@@ -33,6 +33,7 @@ module.exports = {
 				yellow: colors.amber,
 			},
 			borderWidth: {
+				3: '3px',
 				6: '6px',
 			},
 			gridTemplateColumns: {

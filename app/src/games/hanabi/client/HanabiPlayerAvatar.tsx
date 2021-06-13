@@ -1,5 +1,5 @@
-import User from 'app/src/games/hanabi/client/icons/User';
 import { HanabiPlayer } from 'app/src/games/hanabi/HanabiGameData';
+import Avatar from 'boring-avatars';
 import classNames from 'classnames';
 
 interface Props {
@@ -23,7 +23,14 @@ export default function HanabiPlayerAvatar({
 			)}
 			key={player.id}
 		>
-			<User color={color} size={size === 'lg' ? 102 : 48} />
+			<div className="border-3 border-black rounded-full">
+				<Avatar
+					size={size === 'lg' ? 102 : 36}
+					name={player.name}
+					variant="beam"
+					colors={['#f43f5d', '#3b83f6', '#10b981', '#f59f0b', '#8a5cf6']}
+				/>
+			</div>
 			<p
 				className="text-lg font-bold truncate text-center"
 				style={{

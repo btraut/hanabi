@@ -15,6 +15,7 @@
 	},
 	"dependencies": {
 		"body-parser": "^1.19.0",
+		"boring-avatars": "^1.5.5",
 		"classnames": "^2.2.6",
 		"compression": "^1.7.4",
 		"cookie-parser": "^1.4.5",
