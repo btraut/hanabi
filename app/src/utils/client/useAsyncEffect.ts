@@ -2,7 +2,7 @@
 // effects functions.
 //
 // The effect passed to useAsyncEffect will be called with a single prop, a
-// isMounted functiont that can be called to determine if the component is still
+// isMounted function that can be called to determine if the component is still
 // mounted. This allows children to take async actions and then halt should the
 // component ever unmount.
 //
@@ -40,7 +40,7 @@ function _useAsyncEffect<T>(
 				destroy(result);
 			}
 		};
-	}, deps); // eslint-disable-line
+	}, deps);
 }
 
 export default function useAsyncEffect<T>(

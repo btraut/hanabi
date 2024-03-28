@@ -81,7 +81,7 @@ export default class AuthSocketManager {
 		});
 
 		// Get a token via AJAX (with session cookie).
-		const { token } = await Ajax.get(AUTH_PATH);
+		const { token } = await Ajax.get<{ token: string }>(AUTH_PATH);
 
 		// Authenticate the socket connection by sending the token.
 		this._socketManager.send({
@@ -91,9 +91,10 @@ export default class AuthSocketManager {
 		});
 
 		// Wait for a socket response to authentication.
-		const message = await this._socketManager.expectMessageOfType<AuthenticateSocketResponseMessage>(
-			'AuthenticateSocketResponseMessage',
-		);
+		const message =
+			await this._socketManager.expectMessageOfType<AuthenticateSocketResponseMessage>(
+				'AuthenticateSocketResponseMessage',
+			);
 
 		if (message.data.error) {
 			throw new Error(message.data.error);

@@ -1,8 +1,5 @@
-/* global __dirname, process */
-
-/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-
 import dotenv from 'dotenv';
+import ESLintPlugin from 'eslint-webpack-plugin';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import path from 'path';
@@ -19,7 +16,7 @@ const SERVER_BUILD_PATH = path.resolve(BUILD_PATH, 'server');
 const baseConfig: Partial<Configuration> = {
 	context: ROOT_PATH,
 	devtool: 'source-map',
-	mode: process.env.NODE_ENV as 'development' | 'production',
+	mode: (process.env.NODE_ENV as 'development' | 'production') ?? 'production',
 	resolve: {
 		extensions: ['.ts', '.tsx', '.js'],
 		modules: [path.resolve(ROOT_PATH, 'node_modules'), ROOT_PATH],
@@ -42,12 +39,6 @@ const clientConfig: Configuration = {
 	},
 	module: {
 		rules: [
-			{
-				enforce: 'pre',
-				test: /\.ts(x?)$/,
-				exclude: /node_modules/,
-				loader: 'eslint-loader',
-			},
 			{
 				test: /\.(png|jpg|jpeg|gif|svg|ico)$/,
 				use: [
@@ -85,6 +76,10 @@ const clientConfig: Configuration = {
 		],
 	},
 	plugins: [
+		new ESLintPlugin({
+			extensions: ['ts', 'tsx'],
+			exclude: '**/node_modules/**',
+		}),
 		new MiniCssExtractPlugin({
 			filename: 'css/main-[chunkhash].css',
 		}),
@@ -119,12 +114,6 @@ const serverConfig: Configuration = {
 	module: {
 		rules: [
 			{
-				enforce: 'pre',
-				test: /\.ts(x?)$/,
-				exclude: /node_modules/,
-				loader: 'eslint-loader',
-			},
-			{
 				test: /\.ts(x?)$/,
 				exclude: /node_modules/,
 				use: ['babel-loader', 'ts-loader'],
@@ -132,6 +121,10 @@ const serverConfig: Configuration = {
 		],
 	},
 	plugins: [
+		new ESLintPlugin({
+			extensions: ['ts', 'tsx'],
+			exclude: '**/node_modules/**',
+		}),
 		new webpack.DefinePlugin({
 			DOMAIN_BASE: JSON.stringify(process.env.DOMAIN_BASE),
 			NODE_ENV: JSON.stringify(process.env.NODE_ENV),

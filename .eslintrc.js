@@ -1,33 +1,41 @@
 module.exports = {
+	parser: '@typescript-eslint/parser',
+	root: true,
+	plugins: ['@typescript-eslint', 'simple-import-sort', 'import', 'react', 'unused-imports'],
+	extends: [
+		'eslint:recommended',
+		'plugin:@typescript-eslint/recommended',
+		'plugin:eslint-comments/recommended',
+		'plugin:react-hooks/recommended',
+		'prettier',
+	],
+	ignorePatterns: ['**/*.js'],
+	parserOptions: {
+		ecmaVersion: 2020,
+		sourceType: 'module',
+		ecmaFeatures: {
+			jsx: true,
+		},
+		warnOnUnsupportedTypeScriptVersion: true,
+		tsconfigRootDir: __dirname,
+		project: ['./tsconfig.json'],
+	},
 	env: {
+		node: true,
 		browser: true,
 		es6: true,
-	},
-	parser: '@typescript-eslint/parser',
-	parserOptions: {
-		project: 'tsconfig.json',
-		sourceType: 'module',
 	},
 	settings: {
 		'import/parsers': {
 			'@typescript-eslint/parser': ['.ts', '.tsx'],
 		},
 		'import/resolver': {
-			typescript: {},
-		},
-		react: {
-			version: 'detect',
+			typescript: {
+				alwaysTryTypes: true,
+				project: ['tsconfig.json'],
+			},
 		},
 	},
-	plugins: ['@typescript-eslint', 'react', 'react-hooks', 'simple-import-sort'],
-	extends: [
-		'eslint:recommended',
-		'plugin:@typescript-eslint/recommended',
-		'plugin:react/recommended',
-		'prettier/@typescript-eslint',
-		'prettier',
-	],
-	ignorePatterns: ['.eslintrc.js', 'postcss.config.js', 'tailwind.config.js'],
 	rules: {
 		'react-hooks/rules-of-hooks': 'error',
 		'react-hooks/exhaustive-deps': 'warn',
