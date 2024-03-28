@@ -1,24 +1,19 @@
 // Place your settings in this file to overwrite default and user settings.
 {
-  // Specifies the folder path containing the tsserver and lib*.d.ts files to use.
-  "typescript.tsdk": "./node_modules/typescript/lib",
+	// Specifies the folder path containing the tsserver and lib*.d.ts files to use.
+	"typescript.tsdk": "./node_modules/typescript/lib",
 
-  // Insert spaces when pressing Tab. This setting is overriden based on the file contents when `editor.detectIndentation` is on.
-  "editor.insertSpaces": false,
+	// Insert spaces when pressing Tab. This setting is overriden based on the file contents when `editor.detectIndentation` is on.
+	"editor.insertSpaces": false,
 
-  // The number of spaces a tab is equal to. This setting is overridden based on the file contents when `editor.detectIndentation` is on.
-  "editor.tabSize": 4,
-  
-  // Remove trailing auto inserted whitespace
-  "editor.trimAutoWhitespace": false,
-  "spellright.language": [
-    "en"
-  ],
-  "spellright.documentTypes": [
-    "latex",
-    "plaintext"
-  ],
-  "files.exclude": {
-    "**/.build": true
-  },
+	// The number of spaces a tab is equal to. This setting is overridden based on the file contents when `editor.detectIndentation` is on.
+	"editor.tabSize": 2,
+
+	// Remove trailing auto inserted whitespace
+	"editor.trimAutoWhitespace": false,
+	"spellright.language": ["en"],
+	"spellright.documentTypes": ["latex", "plaintext"],
+	"files.exclude": {
+		"**/.build": true
+	}
 }

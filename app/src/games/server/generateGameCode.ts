@@ -10,6 +10,5 @@ export function generateGameCode(length = CODE_GENERATION_LENGTH): string {
 		);
 	}
 
-	this._code = code;
-	return this._code;
+	return code;
 }
