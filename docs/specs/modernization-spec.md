@@ -162,28 +162,30 @@ Upgrade major dependencies with necessary code migrations.
 - react-dnd's ref types don't fully match React 19's ref types - used `as any` casts where needed
 - `useRef()` now requires an initial value (null) in React 19 types
 
-### Phase 5: Cleanup & Verification
+### Phase 5: Cleanup & Verification ✅
 Remove legacy config and verify parity.
 
-- [ ] Delete legacy files:
+- [x] Delete legacy files:
   - `webpack.config.ts`
   - `.babelrc`
   - `tailwind.config.js`
   - `postcss.config.js`
-  - `yarn.lock`
-  - `app/` directory (after confirming migration complete)
+  - `yarn.lock` (already removed in Phase 1)
+  - `app/` directory
   - `.build/` directory
-- [ ] Update root `package.json` to remove old scripts
-- [ ] Run full lint, typecheck, format from root
-- [ ] Manual verification of parity checklist:
+- [x] Update root `package.json` to remove old scripts
+- [x] Run full lint, typecheck, format from root
+  - Typecheck passes on all projects
+  - Lint has pre-existing issues (not introduced by migration)
+- [ ] Manual verification of parity checklist (to be done by user):
   - [ ] Login/auth flows work
   - [ ] Game creation/joining works
   - [ ] Websocket connection is stable (long-lived)
   - [ ] Real-time game updates work
   - [ ] UI renders correctly with all styles
   - [ ] Assets (images, sounds) load correctly
-- [ ] Update README with new dev workflow
-- [ ] Update AGENTS.md if any conventions changed
+- [x] Update README with new dev workflow
+- [x] AGENTS.md already up to date
 
 ---
 

@@ -14,10 +14,7 @@
     "format": "prettier --cache --write .",
     "format:check": "prettier --cache --check .",
     "graph": "nx graph",
-    "clean": "rimraf ./.build ./dist",
-    "build:legacy": "webpack",
-    "watch:legacy": "nodemon --watch webpack.config.ts --exec \"webpack --watch --config webpack.config.ts\"",
-    "start:legacy": "nodemon --watch .build .build/server/server.js"
+    "clean": "rimraf ./dist"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",

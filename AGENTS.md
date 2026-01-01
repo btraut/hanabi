@@ -2,15 +2,18 @@
 
 ## Repo snapshot
 
-- Hanabi is an online games platform with a React SPA and a Node/Express server that uses websockets for real-time gameplay.
-- The project is being modernized to a pnpm + Nx monorepo with Vite for web and a Node server app; see the modernization spec for details. (Note to agents: update this section when migration is complete)
-- Runtime/tooling target: Node v24.11.1 with mise/direnv.
+- Hanabi is an online multiplayer Hanabi game with a React 19 SPA and a Node/Express server using Socket.IO v4 for real-time gameplay.
+- pnpm + Nx monorepo with Vite for web (`apps/web/`) and tsx/tsc for server (`apps/server/`).
+- Shared types and utilities in `packages/shared/`.
+- Runtime target: Node v24.11.1 with mise/direnv.
 
 ## Tooling expectations
 
 - Use mise with `.tool-versions`; load via direnv when present (`mise install`, then `direnv allow`).
 - Run commands from repo root `/Users/btraut/Development/hanabi`.
-- Use the repo's package manager and scripts; once modernization lands, prefer `pnpm`.
+- Use `pnpm` for all package operations.
+- Use `pnpm dev` to run both web and server in development mode.
+- Use `pnpm typecheck` and `pnpm lint` to verify code quality.
 
 ## Coding guardrails
 
