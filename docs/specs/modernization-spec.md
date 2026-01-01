@@ -78,19 +78,19 @@ packages/
 
 ## Migration Phases
 
-### Phase 1: Monorepo Scaffolding
+### Phase 1: Monorepo Scaffolding ✅
 Set up the monorepo structure without moving code yet.
 
-- [ ] Install pnpm globally, remove yarn.lock
-- [ ] Create `pnpm-workspace.yaml` with `apps/*` pattern
-- [ ] Create root `package.json` with workspace scripts
-- [ ] Create `nx.json` with named inputs, target defaults, and caching config
-- [ ] Create `tsconfig.base.json` with shared compiler options and path aliases
-- [ ] Create `.tool-versions` (Node 24.11.1, pnpm latest)
-- [ ] Create `.envrc` for mise/direnv integration
-- [ ] Create `eslint.config.mjs` (ESLint 9 flat config)
-- [ ] Create `scripts/run-pnpm.sh` helper
-- [ ] Scaffold empty `apps/web/` and `apps/server/` directories with `package.json` and `project.json`
+- [x] Install pnpm globally, remove yarn.lock
+- [x] Create `pnpm-workspace.yaml` with `apps/*` pattern
+- [x] Create root `package.json` with workspace scripts
+- [x] Create `nx.json` with named inputs, target defaults, and caching config
+- [x] Create `tsconfig.base.json` with shared compiler options and path aliases
+- [x] Create `.tool-versions` (Node 24.11.1, pnpm latest)
+- [x] Create `.envrc` for mise/direnv integration
+- [x] Create `eslint.config.mjs` (ESLint 9 flat config)
+- [x] Create `scripts/run-pnpm.sh` helper
+- [x] Scaffold empty `apps/web/` and `apps/server/` directories with `package.json` and `project.json`
 
 ### Phase 2: Server App Migration
 Move and modernize the server code.
