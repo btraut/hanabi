@@ -1,0 +1,6 @@
+const LOCAL_STORAGE_KEYS = {
+	USER_NAME: 'USER_NAME',
+	PLAY_SOUNDS: 'PLAY_SOUNDS',
+};
+
+export default LOCAL_STORAGE_KEYS;

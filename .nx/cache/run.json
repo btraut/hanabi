@@ -1,18 +1,18 @@
 {
   "run": {
-    "command": "nx run shared:build",
-    "startTime": "2026-01-01T22:34:06.136Z",
-    "endTime": "2026-01-01T22:34:06.634Z",
+    "command": "nx run web:typecheck",
+    "startTime": "2026-01-01T23:24:11.391Z",
+    "endTime": "2026-01-01T23:24:12.486Z",
     "inner": false
   },
   "tasks": [
     {
-      "taskId": "shared:build",
-      "target": "build",
-      "projectName": "shared",
-      "hash": "6048470249268950436",
-      "startTime": "2026-01-01T22:34:06.206Z",
-      "endTime": "2026-01-01T22:34:06.630Z",
+      "taskId": "web:typecheck",
+      "target": "typecheck",
+      "projectName": "web",
+      "hash": "16184234878650365938",
+      "startTime": "2026-01-01T23:24:11.456Z",
+      "endTime": "2026-01-01T23:24:12.484Z",
       "params": "",
       "cacheStatus": "cache-miss",
       "status": 0

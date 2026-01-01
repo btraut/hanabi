@@ -1,0 +1,11 @@
+> tsc --noEmit -p apps/web/tsconfig.json
+
+apps/web/src/games/hanabi/client/HanabiDragTypes.ts(2,10): error TS2305: Module '"react-dnd"' has no exported member 'DragObjectWithType'.
+apps/web/src/games/hanabi/client/HanabiGameMessenger.ts(27,8): error TS2613: Module '"/Users/btraut/Development/hanabi/packages/shared/src/index"' has no default export. Did you mean to use 'import { DistributiveOmit } from "/Users/btraut/Development/hanabi/packages/shared/src/index"' instead?
+apps/web/src/games/hanabi/client/HanabiJoinForm.tsx(30,30): error TS2339: Property 'message' does not exist on type '{}'.
+apps/web/src/games/hanabi/client/HanabiWatchForm.tsx(25,30): error TS2339: Property 'message' does not exist on type '{}'.
+apps/web/src/games/hanabi/client/useTileDrag.ts(25,4): error TS2353: Object literal may only specify known properties, and 'type' does not exist in type 'HanabiTileDragItem | DragObjectFactory<HanabiTileDragItem>'.
+apps/web/src/utils/client/AuthSocketManager.ts(12,8): error TS2613: Module '"/Users/btraut/Development/hanabi/packages/shared/src/index"' has no default export. Did you mean to use 'import { PubSub } from "/Users/btraut/Development/hanabi/packages/shared/src/index"' instead?
+apps/web/src/utils/client/AuthSocketManager.ts(39,10): error TS2564: Property '_authenticatePromise' has no initializer and is not definitely assigned in the constructor.
+apps/web/src/utils/client/SocketManager.ts(4,8): error TS2613: Module '"/Users/btraut/Development/hanabi/packages/shared/src/index"' has no default export. Did you mean to use 'import { PubSub } from "/Users/btraut/Development/hanabi/packages/shared/src/index"' instead?
+apps/web/src/utils/client/SocketManager.ts(33,10): error TS2564: Property '_connectPromise' has no initializer and is not definitely assigned in the constructor.

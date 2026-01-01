@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+/* Custom theme extensions */
+@theme {
+	--font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+
+	/* Custom shadows */
+	--shadow-dark: 0 0 50px -20px black;
+	--shadow-light: 0 0 0 1px white;
+
+	/* Custom border widths */
+	--border-width-3: 3px;
+	--border-width-6: 6px;
+}
+
+/* Text shadow utility */
+.text-shadow {
+	text-shadow: 4px 5px 0 black;
+}
+
+/* Custom cursor utilities */
+.cursor-zoom-in {
+	cursor: zoom-in;
+}
+
+.cursor-zoom-out {
+	cursor: zoom-out;
+}
+
+/* Rainbow gradient for hanabi tiles */
+.bg-rainbow {
+	background: linear-gradient(
+		135deg,
+		#f87171 0%,
+		#fbbf24 20%,
+		#34d399 40%,
+		#60a5fa 60%,
+		#a78bfa 80%,
+		#f87171 100%
+	);
+}
+
+.text-rainbow {
+	background: linear-gradient(
+		135deg,
+		#f87171 0%,
+		#fbbf24 20%,
+		#34d399 40%,
+		#60a5fa 60%,
+		#a78bfa 80%,
+		#f87171 100%
+	);
+	-webkit-background-clip: text;
+	background-clip: text;
+	-webkit-text-fill-color: transparent;
+}

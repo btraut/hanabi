@@ -1,0 +1,57 @@
+> tsc --noEmit -p apps/web/tsconfig.json
+
+apps/web/src/components/SocketContext.ts(1,35): error TS2307: Cannot find module '~/models/SocketMessage' or its corresponding type declarations.
+apps/web/src/components/SocketController.tsx(2,35): error TS2307: Cannot find module '~/models/SocketMessage' or its corresponding type declarations.
+apps/web/src/components/Tooltip.tsx(1,24): error TS2307: Cannot find module 'classnames' or its corresponding type declarations.
+apps/web/src/games/client/EnsureGameLoaded.tsx(2,28): error TS2307: Cannot find module 'react-router' or its corresponding type declarations.
+apps/web/src/games/client/GameManager.ts(6,8): error TS2307: Cannot find module '~/games/GameManagerMessages' or its corresponding type declarations.
+apps/web/src/games/client/GameManagerController.tsx(4,36): error TS2307: Cannot find module '~/games/GameManagerMessages' or its corresponding type declarations.
+apps/web/src/games/hanabi/client/actions/HanabiTileAction.tsx(12,24): error TS2307: Cannot find module 'classnames' or its corresponding type declarations.
+apps/web/src/games/hanabi/client/actions/HanabiTileActionBody.tsx(10,24): error TS2307: Cannot find module 'classnames' or its corresponding type declarations.
+apps/web/src/games/hanabi/client/design-system/HanabiCheckbox.tsx(2,24): error TS2307: Cannot find module 'classnames' or its corresponding type declarations.
+apps/web/src/games/hanabi/client/design-system/HanabiCheckbox.tsx(4,30): error TS2307: Cannot find module 'uuid' or its corresponding type declarations.
+apps/web/src/games/hanabi/client/design-system/HanabiDropdown.tsx(2,24): error TS2307: Cannot find module 'classnames' or its corresponding type declarations.
+apps/web/src/games/hanabi/client/design-system/HanabiDropdown.tsx(4,30): error TS2307: Cannot find module 'uuid' or its corresponding type declarations.
+apps/web/src/games/hanabi/client/design-system/HanabiLinkButton.tsx(2,24): error TS2307: Cannot find module 'classnames' or its corresponding type declarations.
+apps/web/src/games/hanabi/client/design-system/HanabiMenuButton.tsx(2,24): error TS2307: Cannot find module 'classnames' or its corresponding type declarations.
+apps/web/src/games/hanabi/client/design-system/HanabiPopup.tsx(3,24): error TS2307: Cannot find module 'classnames' or its corresponding type declarations.
+apps/web/src/games/hanabi/client/design-system/HanabiPopup.tsx(5,23): error TS2307: Cannot find module 'react-focus-lock' or its corresponding type declarations.
+apps/web/src/games/hanabi/client/HanabiActions.tsx(12,24): error TS2307: Cannot find module 'classnames' or its corresponding type declarations.
+apps/web/src/games/hanabi/client/HanabiActionsFilter.tsx(2,24): error TS2307: Cannot find module 'classnames' or its corresponding type declarations.
+apps/web/src/games/hanabi/client/HanabiActionsPanel.tsx(9,24): error TS2307: Cannot find module 'classnames' or its corresponding type declarations.
+apps/web/src/games/hanabi/client/HanabiBoard.tsx(22,24): error TS2307: Cannot find module 'classnames' or its corresponding type declarations.
+apps/web/src/games/hanabi/client/HanabiChatInput.tsx(3,24): error TS2307: Cannot find module 'classnames' or its corresponding type declarations.
+apps/web/src/games/hanabi/client/HanabiClues.tsx(5,24): error TS2307: Cannot find module 'classnames' or its corresponding type declarations.
+apps/web/src/games/hanabi/client/HanabiCopyLinkButton.tsx(1,24): error TS2307: Cannot find module 'classnames' or its corresponding type declarations.
+apps/web/src/games/hanabi/client/HanabiDragTypes.ts(2,10): error TS2305: Module '"react-dnd"' has no exported member 'DragObjectWithType'.
+apps/web/src/games/hanabi/client/HanabiHeader.tsx(3,24): error TS2307: Cannot find module 'classnames' or its corresponding type declarations.
+apps/web/src/games/hanabi/client/HanabiInteractiveTileView.tsx(9,24): error TS2307: Cannot find module 'classnames' or its corresponding type declarations.
+apps/web/src/games/hanabi/client/HanabiJoinForm.tsx(30,30): error TS2339: Property 'message' does not exist on type '{}'.
+apps/web/src/games/hanabi/client/HanabiLives.tsx(5,24): error TS2307: Cannot find module 'classnames' or its corresponding type declarations.
+apps/web/src/games/hanabi/client/HanabiLoadGameView.tsx(11,27): error TS2307: Cannot find module 'react-router' or its corresponding type declarations.
+apps/web/src/games/hanabi/client/HanabiLobbyGameOptionsForm.tsx(4,30): error TS2307: Cannot find module 'uuid' or its corresponding type declarations.
+apps/web/src/games/hanabi/client/HanabiMainMenu.tsx(7,28): error TS2307: Cannot find module 'react-router' or its corresponding type declarations.
+apps/web/src/games/hanabi/client/HanabiPlayedTiles.tsx(11,24): error TS2307: Cannot find module 'classnames' or its corresponding type declarations.
+apps/web/src/games/hanabi/client/HanabiPlayedTilesCollapsed.tsx(5,24): error TS2307: Cannot find module 'classnames' or its corresponding type declarations.
+apps/web/src/games/hanabi/client/HanabiPlayerAvatar.tsx(2,20): error TS2307: Cannot find module 'boring-avatars' or its corresponding type declarations.
+apps/web/src/games/hanabi/client/HanabiPlayerAvatar.tsx(3,24): error TS2307: Cannot find module 'classnames' or its corresponding type declarations.
+apps/web/src/games/hanabi/client/HanabiPlayerTiles.tsx(9,24): error TS2307: Cannot find module 'classnames' or its corresponding type declarations.
+apps/web/src/games/hanabi/client/HanabiRemainingTiles.tsx(5,24): error TS2307: Cannot find module 'classnames' or its corresponding type declarations.
+apps/web/src/games/hanabi/client/HanabiTileActionsTooltip.tsx(10,24): error TS2307: Cannot find module 'classnames' or its corresponding type declarations.
+apps/web/src/games/hanabi/client/HanabiTileNotesTooltip.tsx(10,24): error TS2307: Cannot find module 'classnames' or its corresponding type declarations.
+apps/web/src/games/hanabi/client/HanabiTileView.tsx(9,24): error TS2307: Cannot find module 'classnames' or its corresponding type declarations.
+apps/web/src/games/hanabi/client/HanabiWatchForm.tsx(5,28): error TS2307: Cannot find module 'react-router' or its corresponding type declarations.
+apps/web/src/games/hanabi/client/HanabiWatchForm.tsx(25,30): error TS2339: Property 'message' does not exist on type '{}'.
+apps/web/src/games/hanabi/client/useLocalStorage.ts(2,19): error TS2307: Cannot find module 'store' or its corresponding type declarations.
+apps/web/src/games/hanabi/client/useTileDrag.ts(25,4): error TS2353: Object literal may only specify known properties, and 'type' does not exist in type 'HanabiTileDragItem | DragObjectFactory<HanabiTileDragItem>'.
+apps/web/src/models/UserManager.ts(1,32): error TS2307: Cannot find module '~/models/User' or its corresponding type declarations.
+apps/web/src/pages/Page.tsx(2,28): error TS2307: Cannot find module 'react-router' or its corresponding type declarations.
+apps/web/src/routes.tsx(4,28): error TS2307: Cannot find module 'react-router' or its corresponding type declarations.
+apps/web/src/utils/AuthSocketManagerMessages.ts(1,31): error TS2307: Cannot find module '~/models/SocketMessage' or its corresponding type declarations.
+apps/web/src/utils/client/AuthSocketManager.ts(39,10): error TS2564: Property '_authenticatePromise' has no initializer and is not definitely assigned in the constructor.
+apps/web/src/utils/client/SocketManager.ts(3,35): error TS2307: Cannot find module '~/models/SocketMessage' or its corresponding type declarations.
+apps/web/src/utils/client/SocketManager.ts(33,10): error TS2564: Property '_connectPromise' has no initializer and is not definitely assigned in the constructor.
+apps/web/src/utils/PubSub.ts(27,29): error TS2345: Argument of type '[NonNullable<T>] | []' is not assignable to parameter of type '[data: T]'.
+  Type '[]' is not assignable to type '[data: T]'.
+    Source has 0 element(s) but target requires 1.
+apps/web/src/utils/shuffle.ts(1,24): error TS2307: Cannot find module 'seedrandom' or its corresponding type declarations.

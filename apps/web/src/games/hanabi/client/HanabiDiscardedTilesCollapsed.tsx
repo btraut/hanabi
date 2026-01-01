@@ -1,0 +1,43 @@
+import { useGameData } from '~/games/hanabi/client/HanabiGameContext';
+import { useHanabiHighlightContext } from '~/games/hanabi/client/HanabiHighlightContext';
+import HanabiTileView, { TileViewSize } from '~/games/hanabi/client/HanabiTileView';
+import { HanabiTileColor } from '@hanabi/shared';
+import { Fragment } from 'react';
+
+export default function HanabiPlayedTiles(): JSX.Element {
+	const gameData = useGameData();
+
+	const { highlightedTiles } = useHanabiHighlightContext();
+
+	const colors: HanabiTileColor[] = ['red', 'blue', 'green', 'yellow', 'white'];
+	if (gameData.ruleSet === 'rainbow') {
+		colors.push('rainbow');
+	} else if (gameData.ruleSet === '6-color') {
+		colors.push('purple');
+	}
+
+	return (
+		<div className="grid grid-flow-col justify-start gap-1 items-center">
+			{colors.map((color) => {
+				const coloredTiles = gameData.discardedTiles
+					.map((tid) => gameData.tiles[tid])
+					.filter((t) => t.color === color)
+					.sort((a, b) => (a.number < b.number ? -1 : 1));
+
+				return (
+					<Fragment key={`color-${color}`}>
+						{coloredTiles.map((tile) => (
+							<HanabiTileView
+								key={`tile-${tile.id}`}
+								color={tile.color}
+								number={tile.number}
+								size={TileViewSize.Small}
+								highlight={highlightedTiles.has(tile.id)}
+							/>
+						))}
+					</Fragment>
+				);
+			})}
+		</div>
+	);
+}

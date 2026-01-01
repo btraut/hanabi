@@ -113,20 +113,27 @@ Move and modernize the server code.
 - Redis client upgraded to v4 API (async connect)
 - TypeScript project references for cross-package imports
 
-### Phase 3: Web App Migration
+### Phase 3: Web App Migration ✅
 Move and modernize the client code.
 
-- [ ] Create `apps/web/vite.config.ts` with React plugin, tsconfig-paths, Tailwind v4
-- [ ] Move client source files from `app/src/` to `apps/web/src/`
+- [x] Create `apps/web/vite.config.ts` with React plugin, tsconfig-paths, Tailwind v4
+- [x] Move client source files from `app/src/` to `apps/web/src/`
   - `client.tsx` → `apps/web/src/main.tsx`
   - Components, pages, client utilities
-- [ ] Move `app/index.html` → `apps/web/index.html` (update script src)
-- [ ] Move static assets (`app/images/`, `app/sounds/`) → `apps/web/public/`
-- [ ] Create `apps/web/tsconfig.json` (extends base, ESNext module, Bundler resolution)
-- [ ] Set up `apps/web/package.json` with scripts: dev, build, preview
-- [ ] Create `apps/web/project.json` with Nx targets
-- [ ] Create `apps/web/.env.example` with `VITE_` prefixed vars
-- [ ] Create `apps/web/src/env.ts` for client env access
+- [x] Move `app/index.html` → `apps/web/index.html` (update script src)
+- [x] Move static assets (`app/images/`, `app/sounds/`) → `apps/web/public/`
+- [x] Create `apps/web/tsconfig.json` (extends base, ESNext module, Bundler resolution)
+- [x] Set up `apps/web/package.json` with scripts: dev, build, preview
+- [x] Create `apps/web/project.json` with Nx targets
+- [ ] Create `apps/web/.env.example` with `VITE_` prefixed vars (deferred - no client env vars needed yet)
+- [ ] Create `apps/web/src/env.ts` for client env access (deferred - no client env vars needed yet)
+
+**Implementation Notes:**
+- Updated imports to use `~/` path alias for local imports and `@hanabi/shared` for shared types
+- Fixed react-dnd v14 API changes (useDrag now takes a factory function)
+- Tailwind v4 uses CSS-first config via `@import "tailwindcss"` and `@theme`
+- Removed duplicate types/utilities that now live in @hanabi/shared
+- Added missing dependencies: classnames, boring-avatars, react-focus-lock, tailbreak, store
 
 ### Phase 4: Dependency Upgrades
 Upgrade major dependencies with necessary code migrations.
