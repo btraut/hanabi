@@ -1,15 +1,21 @@
-import { Route, RouteProps, Switch } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
+import { ReactNode } from 'react';
+
+interface RouteConfig {
+	path?: string;
+	element: ReactNode;
+}
 
 interface Props {
-	readonly routes: RouteProps[];
+	readonly routes: RouteConfig[];
 }
 
 export default function App({ routes }: Props): JSX.Element {
 	return (
-		<Switch>
+		<Routes>
 			{routes.map((route) => (
-				<Route key={String(route.path)} {...route} />
+				<Route key={route.path ?? 'fallback'} path={route.path} element={route.element} />
 			))}
-		</Switch>
+		</Routes>
 	);
 }

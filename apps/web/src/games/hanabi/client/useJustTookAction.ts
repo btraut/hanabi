@@ -6,7 +6,7 @@ import { useGameData } from '~/games/hanabi/client/HanabiGameContext';
 import { useEffect, useRef } from 'react';
 
 export default function useJustTookAction(duration = 200): boolean {
-	const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+	const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	const gameData = useGameData();
 
@@ -20,7 +20,7 @@ export default function useJustTookAction(duration = 200): boolean {
 		}
 
 		timeoutRef.current = setTimeout(() => {
-			timeoutRef.current = undefined;
+			timeoutRef.current = null;
 			lastActionsLengthRef.current = actionsLength;
 		}, duration);
 

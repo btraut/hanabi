@@ -23,7 +23,8 @@ export default function HanabiGameView(): JSX.Element | null {
 					<BreakpointController>
 						<div
 							className="w-screen min-h-screen grid grid-flow-row gap-6 content-start"
-							ref={dropRef}
+							// eslint-disable-next-line @typescript-eslint/no-explicit-any
+							ref={dropRef as any}
 						>
 							<HanabiHeader />
 							<div className="justify-self-center">

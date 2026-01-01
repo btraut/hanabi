@@ -4,7 +4,7 @@ import HanabiTileView from '~/games/hanabi/client/HanabiTileView';
 import { HanabiTileColor, HanabiTileNumber } from '@hanabi/shared';
 import useForceRefresh from '~/utils/client/useForceRefresh';
 import { useEffect, useRef } from 'react';
-import { useHistory } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 
 const randomColorChoices: HanabiTileColor[] = ['red', 'blue', 'green', 'yellow', 'white'];
 
@@ -17,7 +17,7 @@ function generateRandomTile() {
 
 export default function HanabiMainMenu(): JSX.Element {
 	const hanabiGameContext = useHanabiGameContext();
-	const history = useHistory();
+	const navigate = useNavigate();
 
 	const loadingRef = useRef(false);
 
@@ -32,11 +32,11 @@ export default function HanabiMainMenu(): JSX.Element {
 		const code = await hanabiGameContext.create();
 		loadingRef.current = false;
 
-		history.push(`/${code}`);
+		navigate(`/${code}`);
 	};
 
 	const watchButtonHandler = () => {
-		history.push('/join');
+		navigate('/join');
 	};
 
 	useEffect(() => {

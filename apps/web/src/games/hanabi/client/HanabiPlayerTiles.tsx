@@ -11,10 +11,10 @@ import { useDragLayer } from 'react-dnd';
 
 interface Props {
 	id: string;
-	onTileClick?: (event: React.MouseEvent<HTMLDivElement>, tileId: string) => void;
-	onTileMouseOver?: (event: React.MouseEvent<HTMLDivElement>, tileId: string) => void;
-	onTileMouseOut?: (event: React.MouseEvent<HTMLDivElement>, tileId: string) => void;
-	onTileMouseDown?: (event: React.MouseEvent<HTMLDivElement>, tileId: string) => void;
+	onTileClick?: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
+	onTileMouseOver?: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
+	onTileMouseOut?: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
+	onTileMouseDown?: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
 }
 
 export default function HanabiPlayerTiles({

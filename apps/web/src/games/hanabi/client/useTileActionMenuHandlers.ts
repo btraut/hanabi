@@ -20,7 +20,7 @@ type ActionMenuDetails = {
 
 export default function useTileActionMenuHandlers(): {
 	showMenuForTile: ActionMenuDetails | null;
-	handleTileClick: (event: React.MouseEvent<HTMLDivElement>, tileId: string) => void;
+	handleTileClick: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
 	handleActionsTooltipAction: (
 		action: 'discard' | 'play' | 'color' | 'number',
 		tile: HanabiTile,
@@ -35,7 +35,7 @@ export default function useTileActionMenuHandlers(): {
 	const [showMenuForTile, setShowMenuForTile] = useState<ActionMenuDetails | null>(null);
 
 	const handleTileClick = useCallback(
-		(event: React.MouseEvent<HTMLDivElement>, tileId: string) => {
+		(event: React.MouseEvent<HTMLElement>, tileId: string) => {
 			const rect = (event.target as any).getBoundingClientRect();
 			const ownTile = !!gameData.playerTiles[userId].includes(tileId);
 

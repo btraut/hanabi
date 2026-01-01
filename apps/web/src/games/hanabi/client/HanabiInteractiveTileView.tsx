@@ -35,10 +35,10 @@ interface Props {
 	notesIndicator?: boolean;
 
 	// Specify custom event handlers.
-	onClick?: (event: React.MouseEvent<HTMLDivElement>, tileId: string) => void;
-	onMouseOver?: (event: React.MouseEvent<HTMLDivElement>, tileId: string) => void;
-	onMouseOut?: (event: React.MouseEvent<HTMLDivElement>, tileId: string) => void;
-	onMouseDown?: (event: React.MouseEvent<HTMLDivElement>, tileId: string) => void;
+	onClick?: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
+	onMouseOver?: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
+	onMouseOut?: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
+	onMouseDown?: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
 
 	// Optionally show a 1px border on this tile.
 	border?: boolean;
@@ -64,7 +64,7 @@ export default function HanabiInteractiveTileView({
 	const { isDragging, dragRef } = useTileDrag(tile.id, highlight, notesIndicator, draggable);
 
 	const handleClick = useCallback(
-		(event) => {
+		(event: React.MouseEvent<HTMLElement>) => {
 			if (onClick) {
 				onClick(event, tile.id);
 			}
@@ -72,7 +72,7 @@ export default function HanabiInteractiveTileView({
 		[onClick, tile],
 	);
 	const handleMouseOver = useCallback(
-		(event) => {
+		(event: React.MouseEvent<HTMLElement>) => {
 			if (onMouseOver) {
 				onMouseOver(event, tile.id);
 			}
@@ -80,7 +80,7 @@ export default function HanabiInteractiveTileView({
 		[onMouseOver, tile],
 	);
 	const handleMouseOut = useCallback(
-		(event) => {
+		(event: React.MouseEvent<HTMLElement>) => {
 			if (onMouseOut) {
 				onMouseOut(event, tile.id);
 			}
@@ -89,7 +89,7 @@ export default function HanabiInteractiveTileView({
 	);
 
 	const handleMouseDown = useCallback(
-		(event) => {
+		(event: React.MouseEvent<HTMLElement>) => {
 			if (onMouseDown) {
 				onMouseDown(event, tile.id);
 			}
@@ -101,7 +101,8 @@ export default function HanabiInteractiveTileView({
 
 	return (
 		<Comp
-			ref={dragRef}
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			ref={dragRef as any}
 			style={size === TileViewSize.Regular ? HANABI_TILE_SIZE : HANABI_TILE_SIZE_SMALL}
 			className={classNames([
 				'rounded-lg focus:outline-none',

@@ -18,16 +18,16 @@ type NotesDetails = {
 export default function useTileNotesHandlers(): {
 	showNotesForTile: NotesDetails | null;
 	hideNotesForTile: () => void;
-	handleTileMouseOver: (event: React.MouseEvent<HTMLDivElement>, tileId: string) => void;
-	handleTileMouseOut: (event: React.MouseEvent<HTMLDivElement>, tileId: string) => void;
-	handleTileMouseDown: (event: React.MouseEvent<HTMLDivElement>, tileId: string) => void;
+	handleTileMouseOver: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
+	handleTileMouseOut: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
+	handleTileMouseDown: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
 } {
 	const gameData = useGameData();
 
 	const [showNotesForTile, setShowNotesForTile] = useState<NotesDetails | null>(null);
 
 	const handleTileMouseOver = useCallback(
-		(event: React.MouseEvent<HTMLDivElement>, tileId: string) => {
+		(event: React.MouseEvent<HTMLElement>, tileId: string) => {
 			const rect = (event.target as any).getBoundingClientRect();
 
 			setShowNotesForTile({

@@ -14,8 +14,8 @@ const TILE_NUMBERS: HanabiTileNumber[] = [1, 2, 3, 4, 5];
 
 interface Props {
 	readonly tileSize?: TileViewSize;
-	readonly onTileMouseOver?: (event: React.MouseEvent<HTMLDivElement>, tileId: string) => void;
-	readonly onTileMouseOut?: (event: React.MouseEvent<HTMLDivElement>, tileId: string) => void;
+	readonly onTileMouseOver?: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
+	readonly onTileMouseOut?: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
 }
 
 export default function HanabiPlayedTiles({

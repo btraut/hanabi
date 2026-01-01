@@ -8,7 +8,7 @@ import { useSocket } from '~/components/SocketContext';
 import EnsureGameLoaded from '~/games/client/EnsureGameLoaded';
 import { useHanabiGameContext } from '~/games/hanabi/client/HanabiGameContext';
 import { useCallback } from 'react';
-import { useParams } from 'react-router';
+import { useParams } from 'react-router-dom';
 
 interface Props {
 	children: JSX.Element;

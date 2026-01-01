@@ -9,7 +9,7 @@ interface Props {
 }
 
 export default function GameManagerController({ children }: Props): JSX.Element {
-	const gameManagerRef = useRef<GameManager>();
+	const gameManagerRef = useRef<GameManager | null>(null);
 	const { socketManager } = useSocket<GameManagerMessage>();
 
 	if (!gameManagerRef.current) {

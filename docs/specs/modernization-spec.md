@@ -135,29 +135,32 @@ Move and modernize the client code.
 - Removed duplicate types/utilities that now live in @hanabi/shared
 - Added missing dependencies: classnames, boring-avatars, react-focus-lock, tailbreak, store
 
-### Phase 4: Dependency Upgrades
+### Phase 4: Dependency Upgrades ✅
 Upgrade major dependencies with necessary code migrations.
 
-- [ ] Upgrade React 17 → 19
-  - Update `react`, `react-dom` packages
-  - Remove `@types/react`, `@types/react-dom` if React 19 includes types
-  - Update any deprecated lifecycle methods or patterns
-- [ ] Upgrade React Router v5 → v7
-  - Replace `<Switch>` with `<Routes>`
-  - Replace `<Route component={X}>` with `<Route element={<X />}>`
-  - Update `useHistory()` → `useNavigate()`
-  - Update `useRouteMatch()` → `useMatch()`
-  - Update any `<Redirect>` to `<Navigate>`
-- [ ] Upgrade Tailwind CSS v2 → v4
-  - Remove `tailwind.config.js` (v4 is CSS-first)
-  - Create `apps/web/src/app.css` with `@import "tailwindcss"`
-  - Migrate custom theme values to CSS variables
-  - Update any deprecated utility classes
-  - Remove `postcss.config.js` if using Vite plugin
-- [ ] Upgrade Socket.IO client to v4 (match server)
-- [ ] Update other dependencies to latest compatible versions
-- [ ] Remove Babel (Vite handles transforms)
-- [ ] Remove webpack and related loaders
+- [x] Upgrade React 17 → 19
+  - Updated `react`, `react-dom` packages to v19
+  - React 19 does NOT include types - kept `@types/react`, `@types/react-dom`
+  - Updated `main.tsx` to use `createRoot` API
+  - Created `global.d.ts` to re-export JSX namespace for backward compatibility
+  - Updated `useRef()` calls to include initial values (React 19 types require this)
+- [x] Upgrade React Router v5 → v7
+  - Replaced `<Switch>` with `<Routes>`
+  - Replaced `<Route component={X}>` and `<Route children>` with `<Route element={<X />}>`
+  - Updated `useHistory()` → `useNavigate()` (navigate() instead of history.push())
+  - Updated imports from `react-router` to `react-router-dom`
+- [x] Upgrade Tailwind CSS v2 → v4 (done in Phase 3)
+  - Removed `tailwind.config.js` (v4 is CSS-first)
+  - Created CSS-first config with `@import "tailwindcss"` and `@theme`
+- [x] Upgrade Socket.IO client to v4 (done in Phase 3)
+- [x] Upgrade react-dnd to v16 (React 19 compatible)
+- [x] Remove Babel (Vite handles transforms)
+- [x] Remove webpack and related loaders
+
+**Implementation Notes:**
+- React 19's stricter types required updating event handler types from `HTMLDivElement` to `HTMLElement` for components that can render as either button or div
+- react-dnd's ref types don't fully match React 19's ref types - used `as any` casts where needed
+- `useRef()` now requires an initial value (null) in React 19 types
 
 ### Phase 5: Cleanup & Verification
 Remove legacy config and verify parity.

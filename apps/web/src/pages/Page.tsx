@@ -1,7 +1,6 @@
 import { ComponentClass, FunctionComponent } from 'react';
-import { RouteProps } from 'react-router';
 
-type Page = (ComponentClass<RouteProps> | FunctionComponent<RouteProps>) & {
+type Page = (ComponentClass | FunctionComponent) & {
 	preload?: () => Promise<void>;
 	title?: string | (() => Promise<string>);
 };

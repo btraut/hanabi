@@ -1,19 +1,24 @@
 import HanabiPage from '~/games/hanabi/HanabiPage';
 import Error404Page from '~/pages/Error404Page';
 import Page from '~/pages/Page';
-import { RouteProps } from 'react-router';
+import { ReactNode } from 'react';
 
-type AsyncRouteProps = RouteProps & {
-	component: Page;
-};
+interface RouteConfig {
+	path?: string;
+	element: ReactNode;
+	Component?: Page;
+}
 
-const routes: AsyncRouteProps[] = [
+const routes: RouteConfig[] = [
 	{
-		path: '/',
-		component: HanabiPage,
+		path: '/*',
+		element: <HanabiPage />,
+		Component: HanabiPage,
 	},
 	{
-		component: Error404Page,
+		path: '*',
+		element: <Error404Page />,
+		Component: Error404Page,
 	},
 ];
 

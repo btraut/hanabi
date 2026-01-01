@@ -13,8 +13,8 @@ interface Props {
 export default function SocketManagerController<MessageType extends SocketMessageBase>({
 	children,
 }: Props): JSX.Element {
-	const socketManagerRef = useRef<SocketManager<MessageType>>();
-	const authSocketManagerRef = useRef<AuthSocketManager>();
+	const socketManagerRef = useRef<SocketManager<MessageType> | null>(null);
+	const authSocketManagerRef = useRef<AuthSocketManager | null>(null);
 
 	const socketManagerOnConnectSubscriptionId = useRef<number | null>(null);
 	const socketManagerOnDisconnectSubscriptionId = useRef<number | null>(null);

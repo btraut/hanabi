@@ -14,9 +14,9 @@ function playAudio(ele: HTMLAudioElement) {
 }
 
 export default function useActionSounds(enabled = true): void {
-	const rightRef = useRef<HTMLAudioElement | null>();
-	const wrongRef = useRef<HTMLAudioElement | null>();
-	const beepRef = useRef<HTMLAudioElement | null>();
+	const rightRef = useRef<HTMLAudioElement | null>(null);
+	const wrongRef = useRef<HTMLAudioElement | null>(null);
+	const beepRef = useRef<HTMLAudioElement | null>(null);
 
 	if (!rightRef.current) {
 		rightRef.current = new Audio('/sounds/hanabi/right.wav');

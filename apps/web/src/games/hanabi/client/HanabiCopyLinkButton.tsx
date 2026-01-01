@@ -8,7 +8,7 @@ interface Props {
 export default function HanabiCopyLinkButton({ link }: Props): JSX.Element {
 	const copyButtonRef = useRef<HTMLButtonElement | null>(null);
 	const [showCopiedButton, setShowCopiedButton] = useState(false);
-	const showCopiedButtonTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+	const showCopiedButtonTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const handleLinkClick = () => {
 		const textArea = document.createElement('textarea');
 		textArea.style.width = '1px';
@@ -27,7 +27,7 @@ export default function HanabiCopyLinkButton({ link }: Props): JSX.Element {
 			showCopiedButtonTimeoutRef.current = setTimeout(() => {
 				setShowCopiedButton(false);
 			}, 3000);
-			showCopiedButtonTimeoutRef.current = undefined;
+			showCopiedButtonTimeoutRef.current = null;
 		}
 
 		copyButtonRef.current?.focus();

@@ -1,5 +1,5 @@
 import useAsyncEffect from '~/utils/client/useAsyncEffect';
-import { useHistory } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 
 interface Props {
 	readonly gameLoaded: boolean;
@@ -16,7 +16,7 @@ export default function EnsureGameLoaded({
 	redirectUrl,
 	loadGameHandler,
 }: Props): JSX.Element | null {
-	const history = useHistory();
+	const navigate = useNavigate();
 
 	useAsyncEffect(async () => {
 		// No need to load if we already have a game.
@@ -29,9 +29,9 @@ export default function EnsureGameLoaded({
 		try {
 			await loadGameHandler();
 		} catch (error) {
-			history.replace(redirectUrl);
+			navigate(redirectUrl, { replace: true });
 		}
-	}, [redirectUrl, gameLoaded, history, loadGameHandler]);
+	}, [redirectUrl, gameLoaded, navigate, loadGameHandler]);
 
 	if (!gameLoaded) {
 		return <>{fallback}</>;

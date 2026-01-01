@@ -2,11 +2,11 @@ import HanabiMenuButton from '~/games/hanabi/client/design-system/HanabiMenuButt
 import HanabiTextInput from '~/games/hanabi/client/design-system/HanabiTextInput';
 import { useHanabiGameContext } from '~/games/hanabi/client/HanabiGameContext';
 import { ChangeEvent, FormEvent, useCallback, useState } from 'react';
-import { useHistory } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 
 export default function HanabiWatchForm(): JSX.Element {
 	const { code } = useHanabiGameContext();
-	const history = useHistory();
+	const navigate = useNavigate();
 
 	const [watchGameError, setWatchGameError] = useState('');
 
@@ -20,7 +20,7 @@ export default function HanabiWatchForm(): JSX.Element {
 
 		if (codeValue) {
 			try {
-				history.push(`/${code}`);
+				navigate(`/${code}`);
 			} catch (error) {
 				setWatchGameError(error instanceof Error ? error.message : '');
 			}
