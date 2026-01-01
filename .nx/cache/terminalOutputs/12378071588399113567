@@ -1,0 +1,70 @@
+> tsc --noEmit -p apps/server/tsconfig.json
+
+apps/server/src/games/hanabi/HanabiGameFactory.ts(1,50): error TS6059: File '/Users/btraut/Development/hanabi/packages/shared/src/index.ts' is not under 'rootDir' '/Users/btraut/Development/hanabi/apps/server/src'. 'rootDir' is expected to contain all source files.
+  The file is in the program because:
+    Imported via '@hanabi/shared' from file '/Users/btraut/Development/hanabi/apps/server/src/games/hanabi/HanabiGameFactory.ts'
+    Imported via '@hanabi/shared' from file '/Users/btraut/Development/hanabi/apps/server/src/games/hanabi/HanabiGame.ts'
+    Imported via '@hanabi/shared' from file '/Users/btraut/Development/hanabi/apps/server/src/games/server/GameMessenger.ts'
+    Imported via '@hanabi/shared' from file '/Users/btraut/Development/hanabi/apps/server/src/utils/SocketManager.ts'
+    Imported via '@hanabi/shared' from file '/Users/btraut/Development/hanabi/apps/server/src/games/server/GameManager.ts'
+  File is ECMAScript module because '/Users/btraut/Development/hanabi/packages/shared/package.json' has field "type" with value "module"
+apps/server/src/games/server/GameMessenger.ts(16,4): error TS2345: Argument of type '(data: { userId: string | undefined; message: MessageType; }) => void' is not assignable to parameter of type 'PubSubHandler<{ userId: string | undefined; message: MessageTypeWithAuth<MessageType>; }>'.
+  Types of parameters 'data' and 'data' are incompatible.
+    Type '{ userId: string | undefined; message: MessageTypeWithAuth<MessageType>; }' is not assignable to type '{ userId: string | undefined; message: MessageType; }'.
+      Types of property 'message' are incompatible.
+        Type 'MessageTypeWithAuth<MessageType>' is not assignable to type 'MessageType'.
+          'MessageTypeWithAuth<MessageType>' is assignable to the constraint of type 'MessageType', but 'MessageType' could be instantiated with a different subtype of constraint 'SocketMessage<string, unknown>'.
+            Type 'AuthenticateSocketMessage' is not assignable to type 'MessageType'.
+              'AuthenticateSocketMessage' is assignable to the constraint of type 'MessageType', but 'MessageType' could be instantiated with a different subtype of constraint 'SocketMessage<string, unknown>'.
+apps/server/src/games/server/GameMessenger.ts(16,65): error TS2345: Argument of type '(data: { userId: string; message: MessageType; }) => void' is not assignable to parameter of type '(data: { userId: string; message: SocketMessage<string, unknown>; }) => void'.
+  Types of parameters 'data' and 'data' are incompatible.
+    Type '{ userId: string; message: SocketMessage<string, unknown>; }' is not assignable to type '{ userId: string; message: MessageType; }'.
+      Types of property 'message' are incompatible.
+        Type 'SocketMessage<string, unknown>' is not assignable to type 'MessageType'.
+          'SocketMessage<string, unknown>' is assignable to the constraint of type 'MessageType', but 'MessageType' could be instantiated with a different subtype of constraint 'SocketMessage<string, unknown>'.
+apps/server/src/utils/SocketManager.ts(50,3): error TS2322: Type 'PubSub<{ userId: string; message: MessageTypeWithAuth<MessageType>; }>' is not assignable to type 'PubSub<{ userId: string | undefined; message: MessageTypeWithAuth<MessageType>; }>'.
+  Types of property '_subscriptions' are incompatible.
+    Type '{ [token: string]: PubSubHandler<{ userId: string; message: MessageTypeWithAuth<MessageType>; }>; }' is not assignable to type '{ [token: string]: PubSubHandler<{ userId: string | undefined; message: MessageTypeWithAuth<MessageType>; }>; }'.
+      'string' index signatures are incompatible.
+        Type 'PubSubHandler<{ userId: string; message: MessageTypeWithAuth<MessageType>; }>' is not assignable to type 'PubSubHandler<{ userId: string | undefined; message: MessageTypeWithAuth<MessageType>; }>'.
+          Type '{ userId: string | undefined; message: MessageTypeWithAuth<MessageType>; }' is not assignable to type '{ userId: string; message: MessageTypeWithAuth<MessageType>; }'.
+            Types of property 'userId' are incompatible.
+              Type 'string | undefined' is not assignable to type 'string'.
+                Type 'undefined' is not assignable to type 'string'.
+packages/shared/src/index.ts(2,15): error TS6059: File '/Users/btraut/Development/hanabi/packages/shared/src/models/SocketMessage.ts' is not under 'rootDir' '/Users/btraut/Development/hanabi/apps/server/src'. 'rootDir' is expected to contain all source files.
+  The file is in the program because:
+    Imported via './models/SocketMessage.js' from file '/Users/btraut/Development/hanabi/packages/shared/src/index.ts'
+    Imported via '../models/SocketMessage.js' from file '/Users/btraut/Development/hanabi/packages/shared/src/utils/AuthSocketManagerMessages.ts'
+    Imported via '../models/SocketMessage.js' from file '/Users/btraut/Development/hanabi/packages/shared/src/games/GameManagerMessages.ts'
+    Imported via '../../models/SocketMessage.js' from file '/Users/btraut/Development/hanabi/packages/shared/src/games/hanabi/HanabiMessages.ts'
+  File is ECMAScript module because '/Users/btraut/Development/hanabi/packages/shared/package.json' has field "type" with value "module"
+packages/shared/src/index.ts(3,15): error TS6059: File '/Users/btraut/Development/hanabi/packages/shared/src/models/User.ts' is not under 'rootDir' '/Users/btraut/Development/hanabi/apps/server/src'. 'rootDir' is expected to contain all source files.
+  File is ECMAScript module because '/Users/btraut/Development/hanabi/packages/shared/package.json' has field "type" with value "module"
+packages/shared/src/index.ts(6,35): error TS6059: File '/Users/btraut/Development/hanabi/packages/shared/src/utils/PubSub.ts' is not under 'rootDir' '/Users/btraut/Development/hanabi/apps/server/src'. 'rootDir' is expected to contain all source files.
+  File is ECMAScript module because '/Users/btraut/Development/hanabi/packages/shared/package.json' has field "type" with value "module"
+packages/shared/src/index.ts(7,15): error TS6059: File '/Users/btraut/Development/hanabi/packages/shared/src/utils/shuffle.ts' is not under 'rootDir' '/Users/btraut/Development/hanabi/apps/server/src'. 'rootDir' is expected to contain all source files.
+  The file is in the program because:
+    Imported via './utils/shuffle.js' from file '/Users/btraut/Development/hanabi/packages/shared/src/index.ts'
+    Imported via '../../utils/shuffle.js' from file '/Users/btraut/Development/hanabi/packages/shared/src/games/hanabi/HanabiGameData.ts'
+  File is ECMAScript module because '/Users/btraut/Development/hanabi/packages/shared/package.json' has field "type" with value "module"
+packages/shared/src/index.ts(8,45): error TS6059: File '/Users/btraut/Development/hanabi/packages/shared/src/utils/DistributiveOmit.ts' is not under 'rootDir' '/Users/btraut/Development/hanabi/apps/server/src'. 'rootDir' is expected to contain all source files.
+  File is ECMAScript module because '/Users/btraut/Development/hanabi/packages/shared/package.json' has field "type" with value "module"
+packages/shared/src/index.ts(9,15): error TS6059: File '/Users/btraut/Development/hanabi/packages/shared/src/utils/AuthSocketManagerMessages.ts' is not under 'rootDir' '/Users/btraut/Development/hanabi/apps/server/src'. 'rootDir' is expected to contain all source files.
+  File is ECMAScript module because '/Users/btraut/Development/hanabi/packages/shared/package.json' has field "type" with value "module"
+packages/shared/src/index.ts(12,15): error TS6059: File '/Users/btraut/Development/hanabi/packages/shared/src/games/GameManagerMessages.ts' is not under 'rootDir' '/Users/btraut/Development/hanabi/apps/server/src'. 'rootDir' is expected to contain all source files.
+  File is ECMAScript module because '/Users/btraut/Development/hanabi/packages/shared/package.json' has field "type" with value "module"
+packages/shared/src/index.ts(13,15): error TS6059: File '/Users/btraut/Development/hanabi/packages/shared/src/games/hanabi/HanabiGameData.ts' is not under 'rootDir' '/Users/btraut/Development/hanabi/apps/server/src'. 'rootDir' is expected to contain all source files.
+  The file is in the program because:
+    Imported via './games/hanabi/HanabiGameData.js' from file '/Users/btraut/Development/hanabi/packages/shared/src/index.ts'
+    Imported via './HanabiGameData.js' from file '/Users/btraut/Development/hanabi/packages/shared/src/games/hanabi/HanabiMessages.ts'
+    Imported via './HanabiGameData.js' from file '/Users/btraut/Development/hanabi/packages/shared/src/games/hanabi/HanabiDragDropUtils.ts'
+  File is ECMAScript module because '/Users/btraut/Development/hanabi/packages/shared/package.json' has field "type" with value "module"
+packages/shared/src/index.ts(14,15): error TS6059: File '/Users/btraut/Development/hanabi/packages/shared/src/games/hanabi/HanabiMessages.ts' is not under 'rootDir' '/Users/btraut/Development/hanabi/apps/server/src'. 'rootDir' is expected to contain all source files.
+  File is ECMAScript module because '/Users/btraut/Development/hanabi/packages/shared/package.json' has field "type" with value "module"
+packages/shared/src/index.ts(15,15): error TS6059: File '/Users/btraut/Development/hanabi/packages/shared/src/games/hanabi/HanabiAnimatables.ts' is not under 'rootDir' '/Users/btraut/Development/hanabi/apps/server/src'. 'rootDir' is expected to contain all source files.
+  File is ECMAScript module because '/Users/btraut/Development/hanabi/packages/shared/package.json' has field "type" with value "module"
+packages/shared/src/index.ts(16,15): error TS6059: File '/Users/btraut/Development/hanabi/packages/shared/src/games/hanabi/HanabiDragDropUtils.ts' is not under 'rootDir' '/Users/btraut/Development/hanabi/apps/server/src'. 'rootDir' is expected to contain all source files.
+  File is ECMAScript module because '/Users/btraut/Development/hanabi/packages/shared/package.json' has field "type" with value "module"
+packages/shared/src/utils/PubSub.ts(27,29): error TS2345: Argument of type '[NonNullable<T>] | []' is not assignable to parameter of type '[data: T]'.
+  Type '[]' is not assignable to type '[data: T]'.
+    Source has 0 element(s) but target requires 1.

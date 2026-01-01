@@ -4,9 +4,11 @@
     "module": "Node16",
     "moduleResolution": "node16",
     "outDir": "../../dist/apps/server",
-    "rootDir": "src",
+    "rootDir": "../..",
     "tsBuildInfoFile": "../../dist/apps/server/.tsbuildinfo"
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "references": [
+    { "path": "../../packages/shared" }
+  ]
 }

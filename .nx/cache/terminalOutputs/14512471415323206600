@@ -1,0 +1,21 @@
+> tsc --noEmit -p apps/server/tsconfig.json
+
+apps/server/src/games/hanabi/HanabiGame.ts(33,8): error TS6305: Output file '/Users/btraut/Development/hanabi/dist/packages/shared/index.d.ts' has not been built from source file '/Users/btraut/Development/hanabi/packages/shared/src/index.ts'.
+apps/server/src/games/hanabi/HanabiGame.ts(380,19): error TS18046: 'player' is of type 'unknown'.
+apps/server/src/games/hanabi/HanabiGame.ts(384,20): error TS18046: 'player' is of type 'unknown'.
+apps/server/src/games/hanabi/HanabiGame.ts(396,57): error TS18046: 'p' is of type 'unknown'.
+apps/server/src/games/hanabi/HanabiGame.ts(447,6): error TS7006: Parameter 'tid' implicitly has an 'any' type.
+apps/server/src/games/hanabi/HanabiGame.ts(456,6): error TS7006: Parameter 'tid' implicitly has an 'any' type.
+apps/server/src/games/hanabi/HanabiGame.ts(464,22): error TS18046: 'playerTiles' is of type 'unknown'.
+apps/server/src/games/hanabi/HanabiGame.ts(538,69): error TS7006: Parameter 'tid' implicitly has an 'any' type.
+apps/server/src/games/hanabi/HanabiGame.ts(548,5): error TS7006: Parameter 'tid' implicitly has an 'any' type.
+apps/server/src/games/hanabi/HanabiGame.ts(553,6): error TS7006: Parameter 'tid' implicitly has an 'any' type.
+apps/server/src/games/hanabi/HanabiGame.ts(703,69): error TS7006: Parameter 'tid' implicitly has an 'any' type.
+apps/server/src/games/hanabi/HanabiGame.ts(851,10): error TS7006: Parameter 'tid' implicitly has an 'any' type.
+apps/server/src/games/hanabi/HanabiGame.ts(852,13): error TS7006: Parameter 't' implicitly has an 'any' type.
+apps/server/src/games/hanabi/HanabiGameFactory.ts(1,50): error TS6305: Output file '/Users/btraut/Development/hanabi/dist/packages/shared/index.d.ts' has not been built from source file '/Users/btraut/Development/hanabi/packages/shared/src/index.ts'.
+apps/server/src/games/server/GameManager.ts(1,56): error TS6305: Output file '/Users/btraut/Development/hanabi/dist/packages/shared/index.d.ts' has not been built from source file '/Users/btraut/Development/hanabi/packages/shared/src/index.ts'.
+apps/server/src/games/server/GameMessenger.ts(1,49): error TS6305: Output file '/Users/btraut/Development/hanabi/dist/packages/shared/index.d.ts' has not been built from source file '/Users/btraut/Development/hanabi/packages/shared/src/index.ts'.
+apps/server/src/games/server/GameMessenger.ts(16,5): error TS7006: Parameter 'data' implicitly has an 'any' type.
+apps/server/src/utils/SocketManager.ts(7,8): error TS6305: Output file '/Users/btraut/Development/hanabi/dist/packages/shared/index.d.ts' has not been built from source file '/Users/btraut/Development/hanabi/packages/shared/src/index.ts'.
+apps/server/src/utils/SocketManager.ts(149,36): error TS7006: Parameter 'd' implicitly has an 'any' type.

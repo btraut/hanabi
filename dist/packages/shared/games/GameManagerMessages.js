@@ -1,0 +1,1 @@
+export const GAME_MANAGER_SCOPE = '__GAME_MANAGER_SCOPE__';

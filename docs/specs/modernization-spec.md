@@ -92,20 +92,26 @@ Set up the monorepo structure without moving code yet.
 - [x] Create `scripts/run-pnpm.sh` helper
 - [x] Scaffold empty `apps/web/` and `apps/server/` directories with `package.json` and `project.json`
 
-### Phase 2: Server App Migration
+### Phase 2: Server App Migration ✅
 Move and modernize the server code.
 
-- [ ] Move server source files from `app/src/` to `apps/server/src/`
+- [x] Move server source files from `app/src/` to `apps/server/src/`
   - `server.tsx` → `apps/server/src/main.ts`
   - Server-side utilities, models, game logic
-- [ ] Create `apps/server/tsconfig.json` (extends base, Node16 module)
-- [ ] Create `apps/server/tsconfig.build.json` for production builds
-- [ ] Set up `apps/server/package.json` with scripts: dev (tsx watch), build (tsc), start
-- [ ] Create `apps/server/project.json` with Nx targets
-- [ ] Upgrade Socket.IO from v3 to v4 (minimal API changes)
-- [ ] Create `apps/server/.env.example` with server env vars
-- [ ] Create `apps/server/src/env.ts` for centralized env access
-- [ ] Verify server starts and accepts websocket connections
+- [x] Create `apps/server/tsconfig.json` (extends base, Node16 module)
+- [x] Create `apps/server/tsconfig.build.json` for production builds
+- [x] Set up `apps/server/package.json` with scripts: dev (tsx watch), build (tsc), start
+- [x] Create `apps/server/project.json` with Nx targets
+- [x] Upgrade Socket.IO from v3 to v4 (minimal API changes)
+- [x] Create `apps/server/.env.example` with server env vars
+- [x] Create `apps/server/src/env.ts` for centralized env access
+- [x] Verify server starts and accepts websocket connections
+
+**Implementation Notes:**
+- Created `packages/shared/` for shared types/utilities (HanabiGameData, SocketMessage, PubSub, etc.)
+- Using `express.json()` instead of body-parser (built into express 4.16+)
+- Redis client upgraded to v4 API (async connect)
+- TypeScript project references for cross-package imports
 
 ### Phase 3: Web App Migration
 Move and modernize the client code.

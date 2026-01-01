@@ -1,0 +1,10 @@
+import Game from './Game.js';
+
+export interface SaveGameDelegate {
+	saveGame: (game: Game) => Promise<void>;
+	deleteGame: (game: Game) => Promise<void>;
+}
+
+export interface GameStore extends SaveGameDelegate {
+	loadGameData: () => Promise<{ [title: string]: string[] }>;
+}

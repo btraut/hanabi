@@ -14,9 +14,11 @@
     "rootDir": ".",
     "baseUrl": ".",
     "paths": {
+      "@hanabi/shared": ["packages/shared/src/index.ts"],
+      "@hanabi/shared/*": ["packages/shared/src/*"],
       "~/*": ["apps/web/src/*"]
     }
   },
-  "include": ["apps/**/*", "scripts/**/*", "eslint.config.mjs"],
+  "include": ["apps/**/*", "packages/**/*", "scripts/**/*", "eslint.config.mjs"],
   "exclude": ["node_modules", "dist", ".build"]
 }

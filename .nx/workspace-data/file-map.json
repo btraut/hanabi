@@ -1,0 +1,1056 @@
+{
+  "version": "6.0",
+  "nxVersion": "20.8.3",
+  "pathMappings": {
+    "@hanabi/shared": [
+      "packages/shared/src/index.ts"
+    ],
+    "@hanabi/shared/*": [
+      "packages/shared/src/*"
+    ],
+    "~/*": [
+      "apps/web/src/*"
+    ]
+  },
+  "nxJsonPlugins": [],
+  "fileMap": {
+    "nonProjectFiles": [],
+    "projectFileMap": {
+      "hanabi": [
+        {
+          "file": ".babelrc",
+          "hash": "6302796952259933114"
+        },
+        {
+          "file": ".env.example",
+          "hash": "12534341122557691824"
+        },
+        {
+          "file": ".envrc",
+          "hash": "1793925678456247221"
+        },
+        {
+          "file": ".eslintrc.js",
+          "hash": "4257434709006053074"
+        },
+        {
+          "file": ".gitignore",
+          "hash": "12696263211773662251"
+        },
+        {
+          "file": ".prettierignore",
+          "hash": "12720005029202697182"
+        },
+        {
+          "file": ".prettierrc.js",
+          "hash": "1219914091619770840"
+        },
+        {
+          "file": ".stylelintrc.js",
+          "hash": "4872164738183615414"
+        },
+        {
+          "file": ".tool-versions",
+          "hash": "15732706028906635423"
+        },
+        {
+          "file": "AGENTS.md",
+          "hash": "11033179026005177049"
+        },
+        {
+          "file": "CLAUDE.md",
+          "hash": "13810932929442405996"
+        },
+        {
+          "file": "Procfile",
+          "hash": "8975417413110126247"
+        },
+        {
+          "file": "README.md",
+          "hash": "7331854209618193524"
+        },
+        {
+          "file": "app/humans.txt",
+          "hash": "3204705377811124075"
+        },
+        {
+          "file": "app/images/favicon-16x16.png",
+          "hash": "9083576857728300779"
+        },
+        {
+          "file": "app/images/favicon-32x32.png",
+          "hash": "8612535678098308755"
+        },
+        {
+          "file": "app/images/favicon.ico",
+          "hash": "11951019695529794787"
+        },
+        {
+          "file": "app/index.html",
+          "hash": "8966606402334799794"
+        },
+        {
+          "file": "app/robots.txt",
+          "hash": "17294017471658718075"
+        },
+        {
+          "file": "app/sounds/hanabi/beep.wav",
+          "hash": "4739880474159767399"
+        },
+        {
+          "file": "app/sounds/hanabi/right.wav",
+          "hash": "3494586468368520968"
+        },
+        {
+          "file": "app/sounds/hanabi/wrong.wav",
+          "hash": "4417422254947344168"
+        },
+        {
+          "file": "app/src/client.tsx",
+          "hash": "6736978860139917188"
+        },
+        {
+          "file": "app/src/components/App.tsx",
+          "hash": "3004427167691580423"
+        },
+        {
+          "file": "app/src/components/BreakpointContext.tsx",
+          "hash": "3404194344387458263"
+        },
+        {
+          "file": "app/src/components/BreakpointController.tsx",
+          "hash": "11548942655145860780"
+        },
+        {
+          "file": "app/src/components/Portal.tsx",
+          "hash": "1605649013931083928"
+        },
+        {
+          "file": "app/src/components/SocketContext.ts",
+          "hash": "13923602178213174082"
+        },
+        {
+          "file": "app/src/components/SocketController.tsx",
+          "hash": "14115832933962226416"
+        },
+        {
+          "file": "app/src/components/Tooltip.tsx",
+          "hash": "9654602771395926120"
+        },
+        {
+          "file": "app/src/games/GameManagerMessages.ts",
+          "hash": "15348397652855163139"
+        },
+        {
+          "file": "app/src/games/client/EnsureGameLoaded.tsx",
+          "hash": "1032236166565416173"
+        },
+        {
+          "file": "app/src/games/client/GameManager.ts",
+          "hash": "11405363866167759066"
+        },
+        {
+          "file": "app/src/games/client/GameManagerContext.tsx",
+          "hash": "18118644996682185468"
+        },
+        {
+          "file": "app/src/games/client/GameManagerController.tsx",
+          "hash": "13017031230475939751"
+        },
+        {
+          "file": "app/src/games/hanabi/HanabiAnimatables.ts",
+          "hash": "7655342954154568114"
+        },
+        {
+          "file": "app/src/games/hanabi/HanabiGameData.ts",
+          "hash": "5419922620541939370"
+        },
+        {
+          "file": "app/src/games/hanabi/HanabiMessages.ts",
+          "hash": "39544477408841645"
+        },
+        {
+          "file": "app/src/games/hanabi/HanabiPage.tsx",
+          "hash": "16015295031307823339"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiAction.tsx",
+          "hash": "11831638091164447251"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiActions.tsx",
+          "hash": "6854949594395294098"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiActionsFilter.tsx",
+          "hash": "13719359379638031806"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiActionsPanel.tsx",
+          "hash": "1877507708849040480"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiAnimatableBuilder.ts",
+          "hash": "5352852782689045075"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiBoard.tsx",
+          "hash": "14124350092243055649"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiChatInput.tsx",
+          "hash": "18124140674127582849"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiChooseRuleSetForm.tsx",
+          "hash": "16650898320900981285"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiClue.tsx",
+          "hash": "5420558107890037719"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiClues.tsx",
+          "hash": "16758491320985001704"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiCopyLinkButton.tsx",
+          "hash": "14726869582668429236"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiDiscardedTilesCollapsed.tsx",
+          "hash": "9544019425016531554"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiDragDropUtils.ts",
+          "hash": "1922137729889333680"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiDragTypes.ts",
+          "hash": "711809220411222725"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiGameContext.tsx",
+          "hash": "11921758136568173372"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiGameController.tsx",
+          "hash": "16269299185858051404"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiGameMenu.tsx",
+          "hash": "7019968508194122913"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiGameMessenger.ts",
+          "hash": "6118710713542060341"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiGameOverPopup.tsx",
+          "hash": "3492122873758536004"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiGameView.tsx",
+          "hash": "14718625346161670000"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiHamburgerButton.tsx",
+          "hash": "5730109747157806436"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiHeader.tsx",
+          "hash": "6221559897004686764"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiHeaderMenuButton.tsx",
+          "hash": "11021335598701088685"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiHighlightContext.tsx",
+          "hash": "12630031009410703461"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiHighlightController.tsx",
+          "hash": "11762106488217060438"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiInteractiveTileView.tsx",
+          "hash": "12549850180527283529"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiJoinForm.tsx",
+          "hash": "14484200035932391868"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiLife.tsx",
+          "hash": "8695686553850325832"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiLives.tsx",
+          "hash": "11969756545711028350"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiLoadGameView.tsx",
+          "hash": "11232728076214198438"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiLobby.tsx",
+          "hash": "7129390280530260769"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiLobbyGameOptionsForm.tsx",
+          "hash": "899483654496113260"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiLocalStorageManager.ts",
+          "hash": "16974731149526448753"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiMainMenu.tsx",
+          "hash": "6266753170856220332"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiMoveTileContext.tsx",
+          "hash": "14570660949151308730"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiMoveTileController.tsx",
+          "hash": "10447835047724059277"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiOptionsContext.tsx",
+          "hash": "13178333105502630816"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiOptionsController.tsx",
+          "hash": "1442640060499037253"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiOptionsMenu.tsx",
+          "hash": "6132590833821568049"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiPlayedTiles.tsx",
+          "hash": "18219809420030331174"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiPlayedTilesCollapsed.tsx",
+          "hash": "367509863581651067"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiPlayerAvatar.tsx",
+          "hash": "17590183906752511333"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiPlayerTiles.tsx",
+          "hash": "42543941883615980"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiPlayerTilesDragLayer.tsx",
+          "hash": "2030402065783726659"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiRemainingTiles.tsx",
+          "hash": "10472516260625114204"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiRouter.tsx",
+          "hash": "4202443848693487111"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiStyles.tsx",
+          "hash": "3857426709448158223"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiTileActionsTooltip.tsx",
+          "hash": "14466474214147411171"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiTileNotesTooltip.tsx",
+          "hash": "10999238861188686496"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiTileView.tsx",
+          "hash": "8334223715192861762"
+        },
+        {
+          "file": "app/src/games/hanabi/client/HanabiWatchForm.tsx",
+          "hash": "18044633097909632793"
+        },
+        {
+          "file": "app/src/games/hanabi/client/actions/HanabiChatAction.tsx",
+          "hash": "18281971311714996674"
+        },
+        {
+          "file": "app/src/games/hanabi/client/actions/HanabiGameFinishedAction.tsx",
+          "hash": "6344450350972856484"
+        },
+        {
+          "file": "app/src/games/hanabi/client/actions/HanabiGameStartedAction.tsx",
+          "hash": "1092217813607885044"
+        },
+        {
+          "file": "app/src/games/hanabi/client/actions/HanabiShotClockStartedAction.tsx",
+          "hash": "3698008246106920201"
+        },
+        {
+          "file": "app/src/games/hanabi/client/actions/HanabiShotClockTickedDownAction.tsx",
+          "hash": "5722058865913176277"
+        },
+        {
+          "file": "app/src/games/hanabi/client/actions/HanabiTileAction.tsx",
+          "hash": "13170097987531343260"
+        },
+        {
+          "file": "app/src/games/hanabi/client/actions/HanabiTileActionBody.tsx",
+          "hash": "7008533053508739003"
+        },
+        {
+          "file": "app/src/games/hanabi/client/design-system/HanabiCheckbox.tsx",
+          "hash": "14702074938111336235"
+        },
+        {
+          "file": "app/src/games/hanabi/client/design-system/HanabiDropdown.tsx",
+          "hash": "5942336492263644126"
+        },
+        {
+          "file": "app/src/games/hanabi/client/design-system/HanabiLinkButton.tsx",
+          "hash": "9437673573135888755"
+        },
+        {
+          "file": "app/src/games/hanabi/client/design-system/HanabiMenuButton.tsx",
+          "hash": "10861573562099885577"
+        },
+        {
+          "file": "app/src/games/hanabi/client/design-system/HanabiPopup.tsx",
+          "hash": "6480813121353672603"
+        },
+        {
+          "file": "app/src/games/hanabi/client/design-system/HanabiTextInput.tsx",
+          "hash": "3287445818943637762"
+        },
+        {
+          "file": "app/src/games/hanabi/client/design-system/HanabiXButton.tsx",
+          "hash": "1749541973703234905"
+        },
+        {
+          "file": "app/src/games/hanabi/client/icons/Clock.tsx",
+          "hash": "12563714309769529"
+        },
+        {
+          "file": "app/src/games/hanabi/client/icons/Eye.tsx",
+          "hash": "4109733986730137632"
+        },
+        {
+          "file": "app/src/games/hanabi/client/icons/EyeOff.tsx",
+          "hash": "11412342314267998219"
+        },
+        {
+          "file": "app/src/games/hanabi/client/icons/Hamburger.tsx",
+          "hash": "8807148431184444650"
+        },
+        {
+          "file": "app/src/games/hanabi/client/icons/Heart.tsx",
+          "hash": "4022743557774586884"
+        },
+        {
+          "file": "app/src/games/hanabi/client/icons/MagnifyingGlass.tsx",
+          "hash": "15693209914930098625"
+        },
+        {
+          "file": "app/src/games/hanabi/client/icons/X.tsx",
+          "hash": "13319112053911115102"
+        },
+        {
+          "file": "app/src/games/hanabi/client/useActionHighlighter.tsx",
+          "hash": "3121336881731768063"
+        },
+        {
+          "file": "app/src/games/hanabi/client/useActionSounds.tsx",
+          "hash": "9891692410590874054"
+        },
+        {
+          "file": "app/src/games/hanabi/client/useJustTookAction.ts",
+          "hash": "10993868288767133278"
+        },
+        {
+          "file": "app/src/games/hanabi/client/useLatestActions.tsx",
+          "hash": "15707944090168593844"
+        },
+        {
+          "file": "app/src/games/hanabi/client/useLocalStorage.ts",
+          "hash": "12668845392755830497"
+        },
+        {
+          "file": "app/src/games/hanabi/client/useTileActionMenuHandlers.ts",
+          "hash": "14085211708766329877"
+        },
+        {
+          "file": "app/src/games/hanabi/client/useTileDrag.ts",
+          "hash": "15270440429542135918"
+        },
+        {
+          "file": "app/src/games/hanabi/client/useTileDrop.ts",
+          "hash": "1565189163563206937"
+        },
+        {
+          "file": "app/src/games/hanabi/client/useTileNotesHandlers.ts",
+          "hash": "13799301731659382442"
+        },
+        {
+          "file": "app/src/games/hanabi/server/HanabiGame.ts",
+          "hash": "5287557146617576438"
+        },
+        {
+          "file": "app/src/games/hanabi/server/HanabiGameFactory.ts",
+          "hash": "15925331836401796599"
+        },
+        {
+          "file": "app/src/games/server/Game.ts",
+          "hash": "5334729337708998758"
+        },
+        {
+          "file": "app/src/games/server/GameFactory.ts",
+          "hash": "14474634694096562514"
+        },
+        {
+          "file": "app/src/games/server/GameManager.ts",
+          "hash": "4128427682239063394"
+        },
+        {
+          "file": "app/src/games/server/GameMessenger.ts",
+          "hash": "9990571255068342690"
+        },
+        {
+          "file": "app/src/games/server/GameStore.ts",
+          "hash": "12139880326408971549"
+        },
+        {
+          "file": "app/src/games/server/LocalFileGameStore.ts",
+          "hash": "11827186583359509690"
+        },
+        {
+          "file": "app/src/games/server/RedisGameStore.ts",
+          "hash": "12023782489109546266"
+        },
+        {
+          "file": "app/src/games/server/UserConnectionListener.ts",
+          "hash": "4744111298349601903"
+        },
+        {
+          "file": "app/src/games/server/generateGameCode.ts",
+          "hash": "17124633246198383055"
+        },
+        {
+          "file": "app/src/models/SocketMessage.ts",
+          "hash": "3480641723950478316"
+        },
+        {
+          "file": "app/src/models/User.ts",
+          "hash": "4032887217586858917"
+        },
+        {
+          "file": "app/src/models/UserManager.ts",
+          "hash": "15146992293794714168"
+        },
+        {
+          "file": "app/src/pages/Error404Page.tsx",
+          "hash": "8878921971291239537"
+        },
+        {
+          "file": "app/src/pages/Page.tsx",
+          "hash": "5344222929871161730"
+        },
+        {
+          "file": "app/src/routes.tsx",
+          "hash": "13921860530191589976"
+        },
+        {
+          "file": "app/src/server.tsx",
+          "hash": "11052664308465211656"
+        },
+        {
+          "file": "app/src/types/tailbreak.d.ts",
+          "hash": "5281095161919998295"
+        },
+        {
+          "file": "app/src/utils/AuthSocketManagerMessages.ts",
+          "hash": "10613829876191655756"
+        },
+        {
+          "file": "app/src/utils/DistributiveOmit.ts",
+          "hash": "13287491777645684761"
+        },
+        {
+          "file": "app/src/utils/PubSub.ts",
+          "hash": "10891500409250019538"
+        },
+        {
+          "file": "app/src/utils/client/Ajax.ts",
+          "hash": "4350626186203590802"
+        },
+        {
+          "file": "app/src/utils/client/AuthSocketManager.ts",
+          "hash": "8688510100838028"
+        },
+        {
+          "file": "app/src/utils/client/SocketManager.ts",
+          "hash": "13581563661037575371"
+        },
+        {
+          "file": "app/src/utils/client/useAsyncEffect.ts",
+          "hash": "3257575558729790577"
+        },
+        {
+          "file": "app/src/utils/client/useAudioUnlock.ts",
+          "hash": "11120915741699085358"
+        },
+        {
+          "file": "app/src/utils/client/useFocusVisible.ts",
+          "hash": "12676134854218809366"
+        },
+        {
+          "file": "app/src/utils/client/useForceRefresh.ts",
+          "hash": "6533697732942260235"
+        },
+        {
+          "file": "app/src/utils/client/useMounted.ts",
+          "hash": "16259426158374726359"
+        },
+        {
+          "file": "app/src/utils/client/useSetTitle.ts",
+          "hash": "16719508486287618013"
+        },
+        {
+          "file": "app/src/utils/client/useValueChanged.ts",
+          "hash": "17787130038518221226"
+        },
+        {
+          "file": "app/src/utils/mapXTimes.ts",
+          "hash": "8428596837938208397"
+        },
+        {
+          "file": "app/src/utils/server/Logger.ts",
+          "hash": "38033123773419247"
+        },
+        {
+          "file": "app/src/utils/server/RedisClient.ts",
+          "hash": "10847343426298969345"
+        },
+        {
+          "file": "app/src/utils/server/SocketManager.ts",
+          "hash": "13811538732641745190"
+        },
+        {
+          "file": "app/src/utils/shuffle.ts",
+          "hash": "4369916111751268236"
+        },
+        {
+          "file": "design/Hanabi.sketch",
+          "hash": "6442553951113014302"
+        },
+        {
+          "file": "dist/packages/shared/games/GameManagerMessages.d.ts",
+          "hash": "2915115681817094452"
+        },
+        {
+          "file": "dist/packages/shared/games/GameManagerMessages.d.ts.map",
+          "hash": "473883362619241759"
+        },
+        {
+          "file": "dist/packages/shared/games/GameManagerMessages.js",
+          "hash": "14266906811184129047"
+        },
+        {
+          "file": "dist/packages/shared/games/hanabi/HanabiAnimatables.d.ts",
+          "hash": "14056461365932569736"
+        },
+        {
+          "file": "dist/packages/shared/games/hanabi/HanabiAnimatables.d.ts.map",
+          "hash": "5022984495249991892"
+        },
+        {
+          "file": "dist/packages/shared/games/hanabi/HanabiAnimatables.js",
+          "hash": "4595979742548113990"
+        },
+        {
+          "file": "dist/packages/shared/games/hanabi/HanabiDragDropUtils.d.ts",
+          "hash": "4320479028065296861"
+        },
+        {
+          "file": "dist/packages/shared/games/hanabi/HanabiDragDropUtils.d.ts.map",
+          "hash": "17917101498987821425"
+        },
+        {
+          "file": "dist/packages/shared/games/hanabi/HanabiDragDropUtils.js",
+          "hash": "15305975376700693826"
+        },
+        {
+          "file": "dist/packages/shared/games/hanabi/HanabiGameData.d.ts",
+          "hash": "17144684076974652587"
+        },
+        {
+          "file": "dist/packages/shared/games/hanabi/HanabiGameData.d.ts.map",
+          "hash": "7713484505490212255"
+        },
+        {
+          "file": "dist/packages/shared/games/hanabi/HanabiGameData.js",
+          "hash": "7626297920318595012"
+        },
+        {
+          "file": "dist/packages/shared/games/hanabi/HanabiMessages.d.ts",
+          "hash": "13603243826578205316"
+        },
+        {
+          "file": "dist/packages/shared/games/hanabi/HanabiMessages.d.ts.map",
+          "hash": "11909837612699742728"
+        },
+        {
+          "file": "dist/packages/shared/games/hanabi/HanabiMessages.js",
+          "hash": "5714151415217187137"
+        },
+        {
+          "file": "dist/packages/shared/index.d.ts",
+          "hash": "11247695267470009440"
+        },
+        {
+          "file": "dist/packages/shared/index.d.ts.map",
+          "hash": "6618177816233937572"
+        },
+        {
+          "file": "dist/packages/shared/index.js",
+          "hash": "7834841365895056919"
+        },
+        {
+          "file": "dist/packages/shared/models/SocketMessage.d.ts",
+          "hash": "5181207455271521567"
+        },
+        {
+          "file": "dist/packages/shared/models/SocketMessage.d.ts.map",
+          "hash": "634731221095423626"
+        },
+        {
+          "file": "dist/packages/shared/models/SocketMessage.js",
+          "hash": "4595979742548113990"
+        },
+        {
+          "file": "dist/packages/shared/models/User.d.ts",
+          "hash": "11367980871114013400"
+        },
+        {
+          "file": "dist/packages/shared/models/User.d.ts.map",
+          "hash": "4098316345107133341"
+        },
+        {
+          "file": "dist/packages/shared/models/User.js",
+          "hash": "14577266069384303723"
+        },
+        {
+          "file": "dist/packages/shared/utils/AuthSocketManagerMessages.d.ts",
+          "hash": "5136834875583303359"
+        },
+        {
+          "file": "dist/packages/shared/utils/AuthSocketManagerMessages.d.ts.map",
+          "hash": "3019007190607975905"
+        },
+        {
+          "file": "dist/packages/shared/utils/AuthSocketManagerMessages.js",
+          "hash": "14432626968994147325"
+        },
+        {
+          "file": "dist/packages/shared/utils/DistributiveOmit.d.ts",
+          "hash": "10228632181841768303"
+        },
+        {
+          "file": "dist/packages/shared/utils/DistributiveOmit.d.ts.map",
+          "hash": "18126452279852425978"
+        },
+        {
+          "file": "dist/packages/shared/utils/DistributiveOmit.js",
+          "hash": "4595979742548113990"
+        },
+        {
+          "file": "dist/packages/shared/utils/PubSub.d.ts",
+          "hash": "7366045323470583031"
+        },
+        {
+          "file": "dist/packages/shared/utils/PubSub.d.ts.map",
+          "hash": "17060982643820174608"
+        },
+        {
+          "file": "dist/packages/shared/utils/PubSub.js",
+          "hash": "16761983685983793002"
+        },
+        {
+          "file": "dist/packages/shared/utils/shuffle.d.ts",
+          "hash": "9956827044760359358"
+        },
+        {
+          "file": "dist/packages/shared/utils/shuffle.d.ts.map",
+          "hash": "4847343976580274117"
+        },
+        {
+          "file": "dist/packages/shared/utils/shuffle.js",
+          "hash": "2250326742782905172"
+        },
+        {
+          "file": "dist/packages/tsconfig.tsbuildinfo",
+          "hash": "15939886861522120775"
+        },
+        {
+          "file": "docs/specs/modernization-spec.md",
+          "hash": "4899987670884452536"
+        },
+        {
+          "file": "eslint.config.mjs",
+          "hash": "9894829046971930528"
+        },
+        {
+          "file": "nx.json",
+          "hash": "380717400519569264"
+        },
+        {
+          "file": "package.json",
+          "hash": "14427166978468147780",
+          "deps": [
+            "npm:@eslint/js",
+            "npm:@nx/eslint",
+            "npm:@types/node",
+            "npm:eslint",
+            "npm:eslint-config-prettier",
+            "npm:eslint-plugin-react-hooks",
+            "npm:nx",
+            "npm:prettier",
+            "npm:rimraf",
+            "npm:tsx",
+            "npm:typescript",
+            "npm:typescript-eslint"
+          ]
+        },
+        {
+          "file": "pnpm-lock.yaml",
+          "hash": "12966838889861018289"
+        },
+        {
+          "file": "pnpm-workspace.yaml",
+          "hash": "5037882014171965205"
+        },
+        {
+          "file": "postcss.config.js",
+          "hash": "15393001805051324338"
+        },
+        {
+          "file": "scripts/run-pnpm.sh",
+          "hash": "14545448854089502301"
+        },
+        {
+          "file": "tailwind.config.js",
+          "hash": "15269188003504621551"
+        },
+        {
+          "file": "tsconfig.base.json",
+          "hash": "10836386175564111991"
+        },
+        {
+          "file": "tsconfig.json",
+          "hash": "14494709083026894171"
+        },
+        {
+          "file": "webpack.config.ts",
+          "hash": "8204879320321691635"
+        }
+      ],
+      "shared": [
+        {
+          "file": "packages/shared/package.json",
+          "hash": "15324256243645684273",
+          "deps": [
+            "npm:@types/seedrandom",
+            "npm:@types/uuid@8.3.4",
+            "npm:seedrandom",
+            "npm:uuid@8.3.2"
+          ]
+        },
+        {
+          "file": "packages/shared/project.json",
+          "hash": "11738822909891403758"
+        },
+        {
+          "file": "packages/shared/src/games/GameManagerMessages.ts",
+          "hash": "8585823666783613142"
+        },
+        {
+          "file": "packages/shared/src/games/hanabi/HanabiAnimatables.ts",
+          "hash": "287614888153009883"
+        },
+        {
+          "file": "packages/shared/src/games/hanabi/HanabiDragDropUtils.ts",
+          "hash": "4768598390351131692"
+        },
+        {
+          "file": "packages/shared/src/games/hanabi/HanabiGameData.ts",
+          "hash": "16847926893400012294"
+        },
+        {
+          "file": "packages/shared/src/games/hanabi/HanabiMessages.ts",
+          "hash": "15460555592189679843"
+        },
+        {
+          "file": "packages/shared/src/index.ts",
+          "hash": "8248679498775361819"
+        },
+        {
+          "file": "packages/shared/src/models/SocketMessage.ts",
+          "hash": "3480641723950478316"
+        },
+        {
+          "file": "packages/shared/src/models/User.ts",
+          "hash": "4032887217586858917"
+        },
+        {
+          "file": "packages/shared/src/utils/AuthSocketManagerMessages.ts",
+          "hash": "16663421567425589194"
+        },
+        {
+          "file": "packages/shared/src/utils/DistributiveOmit.ts",
+          "hash": "16233706439447075941"
+        },
+        {
+          "file": "packages/shared/src/utils/PubSub.ts",
+          "hash": "16168592890369024994"
+        },
+        {
+          "file": "packages/shared/src/utils/shuffle.ts",
+          "hash": "4369916111751268236"
+        },
+        {
+          "file": "packages/shared/tsconfig.json",
+          "hash": "14419956808076190861"
+        }
+      ],
+      "server": [
+        {
+          "file": "apps/server/.env.example",
+          "hash": "693929640883137956"
+        },
+        {
+          "file": "apps/server/package.json",
+          "hash": "807758735749213821",
+          "deps": [
+            "npm:@types/compression",
+            "npm:@types/cookie-parser",
+            "npm:@types/express",
+            "npm:@types/method-override",
+            "npm:@types/morgan",
+            "npm:@types/uuid@10.0.0",
+            "shared",
+            "npm:compression",
+            "npm:cookie-parser",
+            "npm:dotenv",
+            "npm:express",
+            "npm:method-override",
+            "npm:morgan",
+            "npm:redis",
+            "npm:socket.io",
+            "npm:uuid@11.1.0",
+            "npm:winston"
+          ]
+        },
+        {
+          "file": "apps/server/project.json",
+          "hash": "6553489421304282257"
+        },
+        {
+          "file": "apps/server/src/env.ts",
+          "hash": "14989366616549230438"
+        },
+        {
+          "file": "apps/server/src/games/hanabi/HanabiGame.ts",
+          "hash": "5864036693667311636"
+        },
+        {
+          "file": "apps/server/src/games/hanabi/HanabiGameFactory.ts",
+          "hash": "16394244891327109300"
+        },
+        {
+          "file": "apps/server/src/games/server/Game.ts",
+          "hash": "5887980730054128117"
+        },
+        {
+          "file": "apps/server/src/games/server/GameFactory.ts",
+          "hash": "2437898095276078470"
+        },
+        {
+          "file": "apps/server/src/games/server/GameManager.ts",
+          "hash": "86006361077149922"
+        },
+        {
+          "file": "apps/server/src/games/server/GameMessenger.ts",
+          "hash": "9624191744719206235"
+        },
+        {
+          "file": "apps/server/src/games/server/GameStore.ts",
+          "hash": "6207569544062345086"
+        },
+        {
+          "file": "apps/server/src/games/server/LocalFileGameStore.ts",
+          "hash": "12869860328607385632"
+        },
+        {
+          "file": "apps/server/src/games/server/RedisGameStore.ts",
+          "hash": "3318359260177885680"
+        },
+        {
+          "file": "apps/server/src/games/server/UserConnectionListener.ts",
+          "hash": "1449982532586718587"
+        },
+        {
+          "file": "apps/server/src/games/server/generateGameCode.ts",
+          "hash": "17124633246198383055"
+        },
+        {
+          "file": "apps/server/src/main.ts",
+          "hash": "1798906838656823459"
+        },
+        {
+          "file": "apps/server/src/utils/Logger.ts",
+          "hash": "17132388329171907471"
+        },
+        {
+          "file": "apps/server/src/utils/RedisClient.ts",
+          "hash": "1002692538764433227"
+        },
+        {
+          "file": "apps/server/src/utils/SocketManager.ts",
+          "hash": "1589950690042622645"
+        },
+        {
+          "file": "apps/server/tsconfig.build.json",
+          "hash": "142755813917407303"
+        },
+        {
+          "file": "apps/server/tsconfig.json",
+          "hash": "5718663985926060916"
+        }
+      ],
+      "web": [
+        {
+          "file": "apps/web/package.json",
+          "hash": "15001480793904533269"
+        },
+        {
+          "file": "apps/web/project.json",
+          "hash": "11595686626720539526"
+        },
+        {
+          "file": "apps/web/src/main.tsx",
+          "hash": "42420920820251256"
+        },
+        {
+          "file": "apps/web/tsconfig.json",
+          "hash": "10745490835440138552"
+        }
+      ]
+    }
+  }
+}
