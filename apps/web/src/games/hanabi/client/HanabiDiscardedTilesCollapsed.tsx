@@ -1,11 +1,13 @@
-import { useGameData } from '~/games/hanabi/client/HanabiGameContext';
+import { useGameData, useTransitioningTileId } from '~/games/hanabi/client/HanabiGameContext';
 import { useHanabiHighlightContext } from '~/games/hanabi/client/HanabiHighlightContext';
+import { getTileViewTransitionName } from '~/games/hanabi/client/HanabiActionTransition';
 import HanabiTileView, { TileViewSize } from '~/games/hanabi/client/HanabiTileView';
 import { getHanabiRuleSetColors } from '@hanabi/shared';
 import { Fragment } from 'react';
 
 export default function HanabiPlayedTiles(): JSX.Element {
 	const gameData = useGameData();
+	const transitioningTileId = useTransitioningTileId();
 
 	const { highlightedTiles } = useHanabiHighlightContext();
 
@@ -28,6 +30,9 @@ export default function HanabiPlayedTiles(): JSX.Element {
 								number={tile.number}
 								size={TileViewSize.Small}
 								highlight={highlightedTiles.has(tile.id)}
+								viewTransitionName={
+									transitioningTileId === tile.id ? getTileViewTransitionName(tile.id) : undefined
+								}
 							/>
 						))}
 					</Fragment>

@@ -8,6 +8,7 @@ export interface HanabiGameContext {
 
 	gameMessenger: HanabiGameMessenger | null;
 	gameData: HanabiGameData | null;
+	transitioningTileId: string | null;
 	code: string | null;
 }
 
@@ -42,6 +43,10 @@ export function useGameData(): HanabiGameData {
 	}
 
 	return gameData;
+}
+
+export function useTransitioningTileId(): string | null {
+	return useHanabiGameContext().transitioningTileId;
 }
 
 export const HanabiGameContextConsumer = context.Consumer;

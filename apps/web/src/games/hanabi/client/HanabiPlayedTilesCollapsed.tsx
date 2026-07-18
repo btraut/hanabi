@@ -1,5 +1,5 @@
-import { useGameData } from '~/games/hanabi/client/HanabiGameContext';
-import { useHanabiHighlightContext } from '~/games/hanabi/client/HanabiHighlightContext';
+import { useGameData, useTransitioningTileId } from '~/games/hanabi/client/HanabiGameContext';
+import { getTileViewTransitionName } from '~/games/hanabi/client/HanabiActionTransition';
 import HanabiTileView, { TileViewSize } from '~/games/hanabi/client/HanabiTileView';
 import {
 	getHanabiFireworkSequence,
@@ -11,8 +11,7 @@ import classNames from 'classnames';
 
 export default function HanabiPlayedTiles(): JSX.Element {
 	const gameData = useGameData();
-
-	const { highlightedTiles } = useHanabiHighlightContext();
+	const transitioningTileId = useTransitioningTileId();
 
 	const colors = getHanabiRuleSetColors(gameData.ruleSet);
 	const score = getHanabiScore(gameData);
@@ -38,8 +37,12 @@ export default function HanabiPlayedTiles(): JSX.Element {
 						<HanabiTileView
 							color={color}
 							number={topTile === null ? fireworkSequence[0] : topTile.number}
-							highlight={topTile !== null && highlightedTiles.has(topTile.id)}
 							size={TileViewSize.Small}
+							viewTransitionName={
+								topTile !== null && transitioningTileId === topTile.id
+									? getTileViewTransitionName(topTile.id)
+									: undefined
+							}
 						/>
 					</div>
 				);

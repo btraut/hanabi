@@ -4,11 +4,13 @@ import {
 	HanabiGameContext,
 	HanabiGameContextProvider,
 } from '~/games/hanabi/client/HanabiGameContext';
+import { HanabiActionTransitionCoordinator } from '~/games/hanabi/client/HanabiActionTransition';
 import HanabiGameMessenger from '~/games/hanabi/client/HanabiGameMessenger';
 import { HANABI_GAME_TITLE, HanabiGameData } from '@hanabi/shared';
 import { HanabiMessage } from '@hanabi/shared';
 import { initializeGameMessenger } from './initializeGameMessenger';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 
 interface Props {
 	readonly children: JSX.Element | JSX.Element[] | null;
@@ -29,12 +31,48 @@ export default function HanabiGameController({ children }: Props): JSX.Element {
 	// mirror from the server, and any augmentation such as local edits or
 	// animations should be done down-stream.
 	const [gameData, setGameData] = useState<HanabiGameData | null>(null);
+	const [transitioningTileId, setTransitioningTileId] = useState<string | null>(null);
+	const actionTransitionCoordinatorRef =
+		useRef<HanabiActionTransitionCoordinator<HanabiGameData>>(null);
+	if (actionTransitionCoordinatorRef.current === null) {
+		actionTransitionCoordinatorRef.current = new HanabiActionTransitionCoordinator({
+			applyState: (nextGameData, tileId) => {
+				flushSync(() => {
+					setTransitioningTileId(tileId);
+					setGameData(nextGameData);
+				});
+			},
+			markTransitioningTile: (tileId) => {
+				flushSync(() => {
+					setTransitioningTileId(tileId);
+				});
+			},
+			clearTransitioningTile: () => {
+				setTransitioningTileId(null);
+			},
+			prefersReducedMotion: () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+			startTransition:
+				'startViewTransition' in document
+					? (update) => document.startViewTransition(update)
+					: undefined,
+		});
+	}
+
+	const updateGameData = useCallback((nextGameData: HanabiGameData) => {
+		actionTransitionCoordinatorRef.current?.update(nextGameData);
+	}, []);
 
 	// Store the code of the loaded game.
 	const [code, setCode] = useState<string | null>(null);
 
 	// If the game messenger has changed, clean up the old one.
 	useEffect(() => () => gameMessenger?.cleanUp(), [gameMessenger]);
+	useEffect(
+		() => () => {
+			actionTransitionCoordinatorRef.current?.cleanUp();
+		},
+		[],
+	);
 
 	// Make a callback for creating a game. This will create the game on the
 	// server, set the game as the current one here in the controller.
@@ -46,7 +84,7 @@ export default function HanabiGameController({ children }: Props): JSX.Element {
 			gameId,
 			socketManager,
 			authSocketManager,
-			setGameData,
+			updateGameData,
 		);
 		await initializeGameMessenger(newGameMessenger);
 		setCode(newCode);
@@ -54,7 +92,7 @@ export default function HanabiGameController({ children }: Props): JSX.Element {
 		setGameMessenger(newGameMessenger);
 
 		return newCode;
-	}, [authSocketManager, gameManager, socketManager]);
+	}, [authSocketManager, gameManager, socketManager, updateGameData]);
 
 	// Make a callback for watching a game. This will set the user as a watcher,
 	// set the game as the current one here in the controller.
@@ -65,14 +103,14 @@ export default function HanabiGameController({ children }: Props): JSX.Element {
 				gameId,
 				socketManager,
 				authSocketManager,
-				setGameData,
+				updateGameData,
 			);
 			await initializeGameMessenger(newGameMessenger);
 			setCode(newCode);
 
 			setGameMessenger(newGameMessenger);
 		},
-		[authSocketManager, gameManager, socketManager],
+		[authSocketManager, gameManager, socketManager, updateGameData],
 	);
 
 	// We're passing an array through context, so we must memoize for the sake
@@ -83,9 +121,10 @@ export default function HanabiGameController({ children }: Props): JSX.Element {
 			watch,
 			gameMessenger,
 			gameData,
+			transitioningTileId,
 			code,
 		}),
-		[create, watch, gameMessenger, gameData, code],
+		[create, watch, gameMessenger, gameData, transitioningTileId, code],
 	);
 
 	return <HanabiGameContextProvider value={contextValue}>{children}</HanabiGameContextProvider>;
