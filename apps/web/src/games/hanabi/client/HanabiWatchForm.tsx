@@ -1,10 +1,11 @@
 import HanabiMenuButton from '~/games/hanabi/client/design-system/HanabiMenuButton';
 import HanabiTextInput from '~/games/hanabi/client/design-system/HanabiTextInput';
 import { ChangeEvent, FormEvent, useCallback, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 export default function HanabiWatchForm(): JSX.Element {
 	const navigate = useNavigate();
+	const { search } = useLocation();
 
 	const [watchGameError, setWatchGameError] = useState('');
 
@@ -17,9 +18,11 @@ export default function HanabiWatchForm(): JSX.Element {
 		event.preventDefault();
 
 		if (codeValue) {
-			void Promise.resolve(navigate(`/${codeValue.trim()}`)).catch((error: unknown) => {
-				setWatchGameError(error instanceof Error ? error.message : '');
-			});
+			void Promise.resolve(navigate({ pathname: `/${codeValue.trim()}`, search })).catch(
+				(error: unknown) => {
+					setWatchGameError(error instanceof Error ? error.message : '');
+				},
+			);
 		}
 	};
 

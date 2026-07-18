@@ -32,6 +32,7 @@ async function main(): Promise<void> {
 		redirectUrlProtocolAndSubdomain: env.REDIRECT_URL_PROTOCOL_AND_SUBDOMAIN,
 		domainBase: env.DOMAIN_BASE,
 		minimumPlayers: env.NODE_ENV === 'development' ? 1 : HANABI_MIN_PLAYERS,
+		debugPlayerControls: env.DEBUG_PLAYER_CONTROLS,
 	});
 	await runtime.start(Number(env.PORT));
 

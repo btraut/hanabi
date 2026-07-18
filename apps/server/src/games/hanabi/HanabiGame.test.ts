@@ -2,6 +2,7 @@ import {
 	HANABI_MAX_ACTIONS,
 	HANABI_MAX_CHAT_LENGTH,
 	HANABI_MAX_PLAYERS,
+	HANABI_MIN_PLAYERS,
 	HanabiGameData,
 	HanabiFinishedReason,
 	HanabiGameActionType,
@@ -16,6 +17,7 @@ import {
 } from '@hanabi/shared';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import HanabiGame, { HanabiGameSerialized } from './HanabiGame.js';
+import HanabiGameFactory from './HanabiGameFactory.js';
 import ServerSocketManager from '../../utils/SocketManager.js';
 
 class FakeSocketManager {
@@ -73,6 +75,15 @@ function playingData(data: Partial<HanabiGameData> = {}): HanabiGameData {
 	});
 }
 
+function emitDebugMessage(
+	sockets: FakeSocketManager,
+	userId: string,
+	scope: string,
+	message: object,
+) {
+	sockets.emit(userId, { scope, ...message } as unknown as HanabiMessage);
+}
+
 describe('HanabiGame characterization', () => {
 	let sockets: FakeSocketManager;
 	let game: HanabiGame;
@@ -106,6 +117,7 @@ describe('HanabiGame characterization', () => {
 		sockets.emit('alice', { scope, type: 'StartGameMessage', data: undefined });
 
 		const data = serializedData(game);
+		expect(data.creatorId).toBe('creator');
 		expect(data.stage).toBe(HanabiStage.Playing);
 		expect(data.players).toMatchObject({
 			alice: { name: 'Alice', connected: true },
@@ -731,5 +743,334 @@ describe('HanabiGame characterization', () => {
 			},
 		});
 		hydrated.cleanUp();
+	});
+
+	it('repairs creator identity when hydrating legacy game data', () => {
+		const legacy = JSON.parse(game.serialize()!) as HanabiGameSerialized;
+		delete (legacy.data as Partial<HanabiGameData>).creatorId;
+
+		const hydrated = new HanabiGame(legacy, sockets as unknown as ServerSocketManager, {
+			saveGame: vi.fn(),
+			deleteGame: vi.fn(),
+		});
+
+		expect(serializedData(hydrated).creatorId).toBe('creator');
+		hydrated.cleanUp();
+	});
+
+	describe('debug player controls', () => {
+		function createDebugGame(enabled = true) {
+			const debugSockets = new FakeSocketManager();
+			const saveGame = vi.fn().mockResolvedValue(undefined);
+			const debugGame = new HanabiGameFactory(HANABI_MIN_PLAYERS, enabled).create(
+				'creator',
+				debugSockets as unknown as ServerSocketManager,
+				{
+					saveGame,
+					deleteGame: vi.fn().mockResolvedValue(undefined),
+				},
+			);
+			const scope = getScope(debugGame.title, debugGame.id);
+			debugSockets.emit('creator', {
+				scope,
+				type: 'AddPlayerMessage',
+				data: { name: 'Creator' },
+			});
+			return { debugGame, debugSockets, saveGame, scope };
+		}
+
+		function addDebugPlayer(debugSockets: FakeSocketManager, scope: string) {
+			emitDebugMessage(debugSockets, 'creator', scope, {
+				type: 'CreateDebugPlayerMessage',
+				data: undefined,
+			});
+		}
+
+		function startDebugGame(debugSockets: FakeSocketManager, scope: string) {
+			debugSockets.emit('creator', { scope, type: 'StartGameMessage', data: undefined });
+		}
+
+		it('lets the joined host create one deterministic debug player idempotently', () => {
+			const { debugGame, debugSockets, scope } = createDebugGame();
+
+			addDebugPlayer(debugSockets, scope);
+			addDebugPlayer(debugSockets, scope);
+
+			expect(serializedData(debugGame).players).toMatchObject({
+				creator: { name: 'Creator' },
+				'debug:creator': { id: 'debug:creator', name: 'Debug Player', connected: true },
+			});
+			expect(Object.keys(serializedData(debugGame).players)).toHaveLength(2);
+			const responses = debugSockets.sent.filter(
+				({ recipients, message }) =>
+					recipients === 'creator' && message.type === 'CreateDebugPlayerResponseMessage',
+			);
+			expect(responses).toHaveLength(2);
+			for (const { message } of responses) {
+				if (message.type !== 'CreateDebugPlayerResponseMessage') {
+					throw new Error('Expected a create debug player response.');
+				}
+				expect(message.data).toEqual({ playerId: 'debug:creator' });
+			}
+		});
+
+		it('rejects creation when disabled, from a non-host, or before the host joins', () => {
+			const disabled = createDebugGame(false);
+			addDebugPlayer(disabled.debugSockets, disabled.scope);
+			expect(disabled.debugSockets.sent.at(-1)?.message).toMatchObject({
+				type: 'CreateDebugPlayerResponseMessage',
+				data: { error: 'Debug player controls are disabled.' },
+			});
+
+			const enabled = createDebugGame();
+			emitDebugMessage(enabled.debugSockets, 'other', enabled.scope, {
+				type: 'CreateDebugPlayerMessage',
+				data: undefined,
+			});
+			expect(enabled.debugSockets.sent.at(-1)?.message).toMatchObject({
+				type: 'CreateDebugPlayerResponseMessage',
+				data: { error: 'Only the joined host can create a debug player.' },
+			});
+
+			const socketsBeforeJoin = new FakeSocketManager();
+			const gameBeforeJoin = new HanabiGameFactory(HANABI_MIN_PLAYERS, true).create(
+				'creator',
+				socketsBeforeJoin as unknown as ServerSocketManager,
+				{ saveGame: vi.fn(), deleteGame: vi.fn() },
+			);
+			const scopeBeforeJoin = getScope(gameBeforeJoin.title, gameBeforeJoin.id);
+			addDebugPlayer(socketsBeforeJoin, scopeBeforeJoin);
+			expect(socketsBeforeJoin.sent.at(-1)?.message).toMatchObject({
+				type: 'CreateDebugPlayerResponseMessage',
+				data: { error: 'Only the joined host can create a debug player.' },
+			});
+		});
+
+		it('rejects malformed and unsupported debug actions without mutating game state', () => {
+			const { debugGame, debugSockets, scope } = createDebugGame();
+			addDebugPlayer(debugSockets, scope);
+			startDebugGame(debugSockets, scope);
+			const before = debugGame.serialize();
+
+			for (const data of [null, {}, { action: null }, { action: { type: 'dance' } }]) {
+				emitDebugMessage(debugSockets, 'creator', scope, {
+					type: 'DebugPlayerActionMessage',
+					data,
+				});
+				expect(debugSockets.sent.at(-1)?.message).toMatchObject({
+					type: 'DebugPlayerActionResponseMessage',
+					data: { error: 'Invalid debug player action.' },
+				});
+				expect(debugGame.serialize()).toBe(before);
+			}
+		});
+
+		it('returns normal action validation errors through the dedicated debug acknowledgement', () => {
+			const { debugGame, debugSockets, scope } = createDebugGame();
+			addDebugPlayer(debugSockets, scope);
+			startDebugGame(debugSockets, scope);
+			const serialized = JSON.parse(debugGame.serialize()!) as HanabiGameSerialized;
+			serialized.data.currentPlayerId = 'debug:creator';
+			debugGame.cleanUp();
+			const controlledGame = new HanabiGameFactory(HANABI_MIN_PLAYERS, true).hydrate(
+				JSON.stringify(serialized),
+				debugSockets as unknown as ServerSocketManager,
+				{ saveGame: vi.fn(), deleteGame: vi.fn() },
+			);
+			const controlledScope = getScope(controlledGame.title, controlledGame.id);
+			const before = controlledGame.serialize();
+
+			emitDebugMessage(debugSockets, 'creator', controlledScope, {
+				type: 'DebugPlayerActionMessage',
+				data: { action: { type: 'play', tileId: 'missing-tile' } },
+			});
+
+			expect(debugSockets.sent.at(-1)?.message).toMatchObject({
+				type: 'DebugPlayerActionResponseMessage',
+				data: { error: "That tile isn't in your hand!" },
+			});
+			expect(controlledGame.serialize()).toBe(before);
+
+			emitDebugMessage(debugSockets, 'creator', controlledScope, {
+				type: 'DebugPlayerActionMessage',
+				data: { action: { type: 'clue', to: '__proto__', number: 1 } },
+			});
+			expect(debugSockets.sent.at(-1)?.message).toMatchObject({
+				type: 'DebugPlayerActionResponseMessage',
+				data: { error: 'Invalid player!' },
+			});
+			expect(controlledGame.serialize()).toBe(before);
+			controlledGame.cleanUp();
+		});
+
+		it('rejects control from a non-host and preserves ordinary anti-impersonation behavior', () => {
+			const { debugGame, debugSockets, scope } = createDebugGame();
+			addDebugPlayer(debugSockets, scope);
+			startDebugGame(debugSockets, scope);
+			const serialized = JSON.parse(debugGame.serialize()!) as HanabiGameSerialized;
+			serialized.data.currentPlayerId = 'creator';
+			debugGame.cleanUp();
+			const controlledGame = new HanabiGameFactory(HANABI_MIN_PLAYERS, true).hydrate(
+				JSON.stringify(serialized),
+				debugSockets as unknown as ServerSocketManager,
+				{ saveGame: vi.fn(), deleteGame: vi.fn() },
+			);
+			const controlledScope = getScope(controlledGame.title, controlledGame.id);
+			const tileId = serialized.data.playerTiles['debug:creator'][0];
+			const before = controlledGame.serialize();
+
+			emitDebugMessage(debugSockets, 'other', controlledScope, {
+				type: 'DebugPlayerActionMessage',
+				data: { action: { type: 'play', tileId } },
+			});
+			expect(debugSockets.sent.at(-1)?.message).toMatchObject({
+				type: 'DebugPlayerActionResponseMessage',
+				data: { error: 'Only the joined host can control the debug player.' },
+			});
+
+			debugSockets.emit('creator', {
+				scope: controlledScope,
+				type: 'PlayTileMessage',
+				data: { id: tileId },
+			});
+			const regularResponse = debugSockets.sent.at(-1)?.message;
+			expect(regularResponse?.type).toBe('PlayTileResponseMessage');
+			if (regularResponse?.type !== 'PlayTileResponseMessage') {
+				throw new Error('Expected a play tile response.');
+			}
+			expect(regularResponse.data.error).toBe("That tile isn't in your hand!");
+			expect(controlledGame.serialize()).toBe(before);
+
+			const disabledSerialized = JSON.parse(controlledGame.serialize()!) as HanabiGameSerialized;
+			disabledSerialized.data.currentPlayerId = 'debug:creator';
+			controlledGame.cleanUp();
+			const disabledGame = new HanabiGameFactory(HANABI_MIN_PLAYERS, false).hydrate(
+				JSON.stringify(disabledSerialized),
+				debugSockets as unknown as ServerSocketManager,
+				{ saveGame: vi.fn(), deleteGame: vi.fn() },
+			);
+			emitDebugMessage(debugSockets, 'creator', getScope(disabledGame.title, disabledGame.id), {
+				type: 'DebugPlayerActionMessage',
+				data: { action: { type: 'play', tileId } },
+			});
+			expect(debugSockets.sent.at(-1)?.message).toMatchObject({
+				type: 'DebugPlayerActionResponseMessage',
+				data: { error: 'Debug player controls are disabled.' },
+			});
+			disabledGame.cleanUp();
+		});
+
+		it.each([
+			['play', HanabiGameActionType.Play],
+			['discard', HanabiGameActionType.Discard],
+		] as const)(
+			'runs fake %s through the normal action handler',
+			async (type, expectedActionType) => {
+				const { debugGame, debugSockets, scope } = createDebugGame();
+				addDebugPlayer(debugSockets, scope);
+				startDebugGame(debugSockets, scope);
+				const serialized = JSON.parse(debugGame.serialize()!) as HanabiGameSerialized;
+				serialized.data.currentPlayerId = 'debug:creator';
+				debugGame.cleanUp();
+				const saveGame = vi.fn().mockResolvedValue(undefined);
+				const controlledGame = new HanabiGameFactory(HANABI_MIN_PLAYERS, true).hydrate(
+					JSON.stringify(serialized),
+					debugSockets as unknown as ServerSocketManager,
+					{ saveGame, deleteGame: vi.fn() },
+				);
+				const controlledScope = getScope(controlledGame.title, controlledGame.id);
+				const tileId = serialized.data.playerTiles['debug:creator'][0];
+				debugSockets.sent.length = 0;
+
+				emitDebugMessage(debugSockets, 'creator', controlledScope, {
+					type: 'DebugPlayerActionMessage',
+					data: { action: { type, tileId } },
+				});
+
+				const after = serializedData(controlledGame);
+				expect(after.currentPlayerId).toBe('creator');
+				expect(after.actions).toEqual(
+					expect.arrayContaining([
+						expect.objectContaining({ type: expectedActionType, playerId: 'debug:creator' }),
+					]),
+				);
+				expect(
+					debugSockets.sent.some(
+						({ recipients, message }) =>
+							recipients === 'creator' &&
+							message.type === 'DebugPlayerActionResponseMessage' &&
+							message.data.error === undefined,
+					),
+				).toBe(true);
+				expect(
+					debugSockets.sent.some(({ message }) => message.type === 'RefreshGameDataMessage'),
+				).toBe(true);
+				expect(
+					debugSockets.sent.some(
+						({ recipients, message }) =>
+							recipients === 'debug:creator' &&
+							(message.type === 'PlayTileResponseMessage' ||
+								message.type === 'DiscardTileResponseMessage'),
+					),
+				).toBe(false);
+				await vi.waitFor(() => expect(saveGame).toHaveBeenCalledWith(controlledGame));
+				controlledGame.cleanUp();
+			},
+		);
+
+		it.each(['number', 'color'] as const)(
+			'runs fake %s clues through the normal clue handler',
+			(kind) => {
+				const { debugGame, debugSockets, scope } = createDebugGame();
+				addDebugPlayer(debugSockets, scope);
+				startDebugGame(debugSockets, scope);
+				const serialized = JSON.parse(debugGame.serialize()!) as HanabiGameSerialized;
+				serialized.data.currentPlayerId = 'debug:creator';
+				const targetTile = serialized.data.tiles[serialized.data.playerTiles.creator[0]];
+				debugGame.cleanUp();
+				const controlledGame = new HanabiGameFactory(HANABI_MIN_PLAYERS, true).hydrate(
+					JSON.stringify(serialized),
+					debugSockets as unknown as ServerSocketManager,
+					{ saveGame: vi.fn(), deleteGame: vi.fn() },
+				);
+				const controlledScope = getScope(controlledGame.title, controlledGame.id);
+				debugSockets.sent.length = 0;
+
+				emitDebugMessage(debugSockets, 'creator', controlledScope, {
+					type: 'DebugPlayerActionMessage',
+					data: {
+						action:
+							kind === 'number'
+								? { type: 'clue', to: 'creator', number: targetTile.number }
+								: { type: 'clue', to: 'creator', color: targetTile.color },
+					},
+				});
+
+				const after = serializedData(controlledGame);
+				expect(after.currentPlayerId).toBe('creator');
+				expect(after.clues).toBe(7);
+				expect(after.actions).toEqual(
+					expect.arrayContaining([
+						expect.objectContaining({
+							type:
+								kind === 'number'
+									? HanabiGameActionType.GiveNumberClue
+									: HanabiGameActionType.GiveColorClue,
+							playerId: 'debug:creator',
+							recipientId: 'creator',
+						}),
+					]),
+				);
+				expect(
+					debugSockets.sent.some(
+						({ recipients, message }) =>
+							recipients === 'creator' &&
+							message.type === 'DebugPlayerActionResponseMessage' &&
+							message.data.error === undefined,
+					),
+				).toBe(true);
+				controlledGame.cleanUp();
+			},
+		);
 	});
 });

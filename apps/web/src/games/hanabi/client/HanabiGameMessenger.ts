@@ -8,6 +8,9 @@ import {
 	Position,
 	AddPlayerResponseMessage,
 	ChangeGameSettingsResponseMessage,
+	CreateDebugPlayerResponseMessage,
+	DebugPlayerAction,
+	DebugPlayerActionResponseMessage,
 	DiscardTileResponseMessage,
 	getScope,
 	GiveClueResponseMessage,
@@ -145,6 +148,45 @@ export default class HanabiGameMessenger {
 
 		// After responding to our initial message, the server will also send a
 		// RefreshGameData message. We'll handle that in a separate handler.
+	}
+
+	public async createDebugPlayer(): Promise<string> {
+		this._sendMessage({
+			type: 'CreateDebugPlayerMessage',
+			data: undefined,
+		});
+
+		const response =
+			await this._socketManager.expectMessageOfType<CreateDebugPlayerResponseMessage>(
+				'CreateDebugPlayerResponseMessage',
+				this._scope,
+			);
+
+		if (response.data.error) {
+			throw new Error(response.data.error);
+		}
+		if (!response.data.playerId) {
+			throw new Error('The server did not return a debug player.');
+		}
+
+		return response.data.playerId;
+	}
+
+	public async debugPlayerAction(action: DebugPlayerAction): Promise<void> {
+		this._sendMessage({
+			type: 'DebugPlayerActionMessage',
+			data: { action },
+		});
+
+		const response =
+			await this._socketManager.expectMessageOfType<DebugPlayerActionResponseMessage>(
+				'DebugPlayerActionResponseMessage',
+				this._scope,
+			);
+
+		if (response.data.error) {
+			throw new Error(response.data.error);
+		}
 	}
 
 	public async leave(): Promise<void> {

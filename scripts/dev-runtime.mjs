@@ -261,6 +261,7 @@ export async function start() {
 			PORT: String(serverPort),
 			HANABI_DEV_WEB_PORT: String(webPort),
 			HANABI_DEV_SERVER_URL: urls.server,
+			DEBUG_PLAYER_CONTROLS: 'true',
 		};
 		const spawnOptions = {
 			cwd: worktreeRoot,

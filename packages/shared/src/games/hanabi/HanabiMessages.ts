@@ -28,6 +28,30 @@ export type RemovePlayerResponseMessage = SocketMessage<
 	{ error?: string }
 >;
 
+export type CreateDebugPlayerMessage = SocketMessage<'CreateDebugPlayerMessage', void>;
+export type CreateDebugPlayerResponseMessage = SocketMessage<
+	'CreateDebugPlayerResponseMessage',
+	{ playerId?: string; error?: string }
+>;
+
+export type DebugPlayerAction =
+	| { type: 'play'; tileId: string }
+	| { type: 'discard'; tileId: string }
+	| {
+			type: 'clue';
+			to: string;
+			color?: HanabiClueColor;
+			number?: HanabiTileNumber;
+	  };
+export type DebugPlayerActionMessage = SocketMessage<
+	'DebugPlayerActionMessage',
+	{ action: DebugPlayerAction }
+>;
+export type DebugPlayerActionResponseMessage = SocketMessage<
+	'DebugPlayerActionResponseMessage',
+	{ error?: string }
+>;
+
 // State Management
 export type ChangeGameSettingsMessage = SocketMessage<
 	'ChangeGameSettingsMessage',
@@ -87,6 +111,10 @@ export type HanabiMessage =
 	| AddPlayerResponseMessage
 	| RemovePlayerMessage
 	| RemovePlayerResponseMessage
+	| CreateDebugPlayerMessage
+	| CreateDebugPlayerResponseMessage
+	| DebugPlayerActionMessage
+	| DebugPlayerActionResponseMessage
 	| ChangeGameSettingsMessage
 	| ChangeGameSettingsResponseMessage
 	| SendChatMessage
