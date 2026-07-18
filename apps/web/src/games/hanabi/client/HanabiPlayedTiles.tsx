@@ -5,12 +5,9 @@ import HanabiTileView, { TileViewSize } from '~/games/hanabi/client/HanabiTileVi
 import {
 	HANABI_TILE_SIZE,
 	HANABI_TILE_SIZE_SMALL,
-	HanabiTileColor,
-	HanabiTileNumber,
+	getHanabiFireworkSequence,
+	getHanabiRuleSetColors,
 } from '@hanabi/shared';
-import classNames from 'classnames';
-
-const TILE_NUMBERS: HanabiTileNumber[] = [1, 2, 3, 4, 5];
 
 interface Props {
 	readonly tileSize?: TileViewSize;
@@ -30,34 +27,12 @@ export default function HanabiPlayedTiles({
 	const tileSize =
 		tileViewSize === TileViewSize.Regular ? HANABI_TILE_SIZE : HANABI_TILE_SIZE_SMALL;
 
-	const colors: HanabiTileColor[] = ['red', 'blue', 'green', 'yellow', 'white'];
-	if (gameData.ruleSet === 'rainbow') {
-		colors.push('rainbow');
-	} else if (gameData.ruleSet === '6-color') {
-		colors.push('purple');
-	}
-
-	const greatestPlayedForEachColor: Partial<Record<HanabiTileColor, HanabiTileNumber | null>> = {};
-
-	for (const color of colors) {
-		greatestPlayedForEachColor[color] = null;
-
-		for (const number of TILE_NUMBERS) {
-			if (
-				gameData.playedTiles
-					.map((tid) => gameData.tiles[tid])
-					.find((t) => t.color === color && t.number === number)
-			) {
-				greatestPlayedForEachColor[color] = number;
-			} else {
-				break;
-			}
-		}
-	}
+	const colors = getHanabiRuleSetColors(gameData.ruleSet);
 
 	return (
 		<div className="grid grid-flow-row justify-start gap-1 xl:gap-2">
 			{colors.map((color) => {
+				const stackNumbers = getHanabiFireworkSequence(color);
 				const discardedTiles = gameData.discardedTiles
 					.map((tid) => gameData.tiles[tid])
 					.filter((t) => t.color === color);
@@ -69,7 +44,7 @@ export default function HanabiPlayedTiles({
 						style={{ height: tileSize.height }}
 					>
 						<div className="grid grid-flow-col justify-start gap-0.5 xl:gap-1">
-							{TILE_NUMBERS.map((number) => {
+							{stackNumbers.map((number) => {
 								const playedTile = gameData.playedTiles
 									.map((tid) => gameData.tiles[tid])
 									.find((t) => t.color === color && t.number === number);
@@ -81,11 +56,7 @@ export default function HanabiPlayedTiles({
 										style={{ width: tileSize.height, height: tileSize.width }}
 									>
 										<div className="transform rotate-90 absolute">
-											<div
-												className={classNames({
-													'opacity-20': !playedTile,
-												})}
-											>
+											<div>
 												{playedTile ? (
 													<HanabiInteractiveTileView
 														tile={playedTile}
@@ -95,7 +66,12 @@ export default function HanabiPlayedTiles({
 														size={tileViewSize}
 													/>
 												) : (
-													<HanabiTileView color={color} number={number} size={tileViewSize} />
+													<HanabiTileView
+														color={color}
+														number={number}
+														size={tileViewSize}
+														placeholder
+													/>
 												)}
 											</div>
 										</div>

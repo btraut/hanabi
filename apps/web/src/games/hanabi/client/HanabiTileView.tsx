@@ -30,6 +30,9 @@ interface Props {
 
 	// Optionally show a 1px border on this tile.
 	border?: boolean;
+
+	// Render an empty firework position while keeping its required number legible.
+	placeholder?: boolean;
 }
 
 export default function HanabiTileView({
@@ -39,6 +42,7 @@ export default function HanabiTileView({
 	highlight = false,
 	notesIndicator = false,
 	border = true,
+	placeholder = false,
 }: Props): JSX.Element | null {
 	return (
 		<div
@@ -46,6 +50,8 @@ export default function HanabiTileView({
 			className={classNames([
 				'bg-black rounded-lg flex items-center justify-center select-none relative',
 				{
+					'hanabi-tile-black': color === 'black' && number !== undefined,
+					'hanabi-firework-placeholder': placeholder,
 					'marquee-highlight': highlight,
 					'shadow-light': border,
 				},
@@ -54,8 +60,9 @@ export default function HanabiTileView({
 			{!!(color && number) && (
 				<div
 					className={classNames(
-						'font-bold pointer-events-none',
+						'hanabi-tile-number font-bold pointer-events-none relative z-10',
 						{
+							'hanabi-tile-black-number': color === 'black',
 							'text-xl': size === TileViewSize.Small,
 							'text-3xl': size === TileViewSize.Regular,
 						},

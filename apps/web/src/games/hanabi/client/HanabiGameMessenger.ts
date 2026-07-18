@@ -1,9 +1,9 @@
 import {
 	HANABI_GAME_TITLE,
+	HanabiClueColor,
 	HanabiGameData,
 	HanabiRuleSet,
 	HanabiTile,
-	HanabiTileColor,
 	HanabiTileNumber,
 	Position,
 	AddPlayerResponseMessage,
@@ -312,7 +312,7 @@ export default class HanabiGameMessenger {
 		// RefreshGameData message. We'll handle that in a separate handler.
 	}
 
-	public async giveColorClue(to: string, color: HanabiTileColor): Promise<void> {
+	public async giveColorClue(to: string, color: HanabiClueColor): Promise<void> {
 		this._sendMessage({
 			type: 'GiveClueMessage',
 			data: { to, color },

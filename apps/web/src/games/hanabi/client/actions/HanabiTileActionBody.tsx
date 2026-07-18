@@ -5,6 +5,7 @@ import {
 	HanabiGameActionGiveClue,
 	HanabiGameActionPlay,
 	HanabiGameActionType,
+	isHanabiFireworkCompletion,
 	tileBackgroundClasses,
 } from '@hanabi/shared';
 import classNames from 'classnames';
@@ -34,7 +35,9 @@ export default function HanabiTileActionBody({ action }: Props): JSX.Element | n
 							size={TileViewSize.Small}
 						/>
 					</div>
-					<span className="align-middle">{action.tile.number === 5 && 'and created a clue'}</span>
+					<span className="align-middle">
+						{isHanabiFireworkCompletion(action.tile) && 'and completed a firework'}
+					</span>
 				</>
 			);
 		} else {

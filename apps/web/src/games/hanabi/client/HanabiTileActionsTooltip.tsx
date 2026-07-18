@@ -1,7 +1,12 @@
 import Portal from '~/components/Portal';
 import Tooltip from '~/components/Tooltip';
 import { useGameData } from '~/games/hanabi/client/HanabiGameContext';
-import { HanabiTile, HanabiTileColor, tileBackgroundClasses } from '@hanabi/shared';
+import {
+	HanabiClueColor,
+	HanabiTile,
+	isHanabiRainbowRuleSet,
+	tileBackgroundClasses,
+} from '@hanabi/shared';
 import useFocusVisible from '~/utils/client/useFocusVisible';
 import classNames from 'classnames';
 import { useEffect, useRef } from 'react';
@@ -19,7 +24,7 @@ interface Props {
 	onAction: (
 		action: 'discard' | 'play' | 'color' | 'number',
 		tile: HanabiTile,
-		details?: { color?: HanabiTileColor },
+		details?: { color?: HanabiClueColor },
 	) => void;
 	onClose: () => void;
 }
@@ -34,6 +39,7 @@ export default function HanabiTileActionsTooltip({
 	const gameData = useGameData();
 
 	const tile = gameData.tiles[tileId];
+	const isBlackTile = tile.color === 'black';
 
 	const isFocusVisible = useFocusVisible();
 
@@ -59,8 +65,9 @@ export default function HanabiTileActionsTooltip({
 		};
 	}, [onClose]);
 
-	const showMultipleColorOptions = tile.color === 'rainbow' && gameData.ruleSet === 'rainbow';
-	const rainbowButtonColors: HanabiTileColor[] = ['red', 'blue', 'green', 'yellow', 'white'];
+	const showMultipleColorOptions =
+		tile.color === 'rainbow' && isHanabiRainbowRuleSet(gameData.ruleSet);
+	const rainbowButtonColors: HanabiClueColor[] = ['red', 'blue', 'green', 'yellow', 'white'];
 	if (gameData.ruleSet === '6-color') {
 		rainbowButtonColors.push('purple');
 	}
@@ -112,49 +119,53 @@ export default function HanabiTileActionsTooltip({
 						)}
 						{type === HanabiTileActionsTooltipType.OtherPlayer && (
 							<div className="grid grid-flow-col gap-x-3 items-center">
-								{showMultipleColorOptions ? (
-									<div>
-										{rainbowButtonColors.map((buttonColor) => (
+								{!isBlackTile && (
+									<>
+										{showMultipleColorOptions ? (
+											<div>
+												{rainbowButtonColors.map((buttonColor) => (
+													<button
+														key={buttonColor}
+														className={classNames(
+															'w-6 h-6 rounded-full border-black border-4 focus:outline-none hover:border-red-600',
+															{
+																'focus:border-red-600': isFocusVisible,
+															},
+															tileBackgroundClasses[buttonColor],
+														)}
+														onClick={() => {
+															onAction('color', tile, { color: buttonColor });
+														}}
+														ref={firstButtonRef}
+													/>
+												))}
+											</div>
+										) : (
 											<button
-												key={buttonColor}
 												className={classNames(
 													'w-6 h-6 rounded-full border-black border-4 focus:outline-none hover:border-red-600',
 													{
 														'focus:border-red-600': isFocusVisible,
 													},
-													tileBackgroundClasses[buttonColor],
+													tileBackgroundClasses[tile.color],
 												)}
 												onClick={() => {
-													onAction('color', tile, { color: buttonColor });
+													onAction('color', tile);
 												}}
 												ref={firstButtonRef}
 											/>
-										))}
-									</div>
-								) : (
-									<button
-										className={classNames(
-											'w-6 h-6 rounded-full border-black border-4 focus:outline-none hover:border-red-600',
-											{
-												'focus:border-red-600': isFocusVisible,
-											},
-											tileBackgroundClasses[tile.color],
 										)}
-										onClick={() => {
-											onAction('color', tile);
-										}}
-										ref={firstButtonRef}
-									/>
+										<div
+											className="border-solid h-6"
+											style={{
+												borderRightWidth: 1,
+												borderRightColor: '#ccc',
+												borderLeftWidth: 1,
+												borderLeftColor: '#777',
+											}}
+										/>
+									</>
 								)}
-								<div
-									className="border-solid h-6"
-									style={{
-										borderRightWidth: 1,
-										borderRightColor: '#ccc',
-										borderLeftWidth: 1,
-										borderLeftColor: '#777',
-									}}
-								/>
 								<button
 									className={classNames(
 										'font-bold text-xl text-white focus:outline-none hover:text-red-600',
@@ -165,6 +176,7 @@ export default function HanabiTileActionsTooltip({
 									onClick={() => {
 										onAction('number', tile);
 									}}
+									ref={isBlackTile ? firstButtonRef : undefined}
 								>
 									{tile.number}
 								</button>

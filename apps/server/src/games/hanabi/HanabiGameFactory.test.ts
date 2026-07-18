@@ -50,6 +50,38 @@ describe('HanabiGameFactory', () => {
 		hydrated.cleanUp();
 	});
 
+	it('hydrates a started combined Rainbow and Black Powder game', () => {
+		const factory = new HanabiGameFactory(1);
+		const { onMessage, socketManager, store } = dependencies();
+		const game = factory.create('creator', socketManager, store);
+		const scope = getScope(game.title, game.id);
+		onMessage.emit({
+			userId: 'alice',
+			message: { scope, type: 'AddPlayerMessage', data: { name: 'Alice' } },
+		});
+		onMessage.emit({
+			userId: 'alice',
+			message: {
+				scope,
+				type: 'ChangeGameSettingsMessage',
+				data: { ruleSet: 'rainbow-black-powder' },
+			},
+		});
+		onMessage.emit({
+			userId: 'alice',
+			message: { scope, type: 'StartGameMessage', data: undefined },
+		});
+
+		const hydrated = factory.hydrate(game.serialize()!, socketManager, store);
+		const persisted = JSON.parse(hydrated.serialize()!) as {
+			data: { ruleSet: string; tiles: Record<string, unknown> };
+		};
+		expect(persisted.data.ruleSet).toBe('rainbow-black-powder');
+		expect(Object.keys(persisted.data.tiles)).toHaveLength(70);
+		game.cleanUp();
+		hydrated.cleanUp();
+	});
+
 	it('rejects invalid JSON with a useful hydration error', () => {
 		const factory = new HanabiGameFactory();
 		const { socketManager, store } = dependencies();

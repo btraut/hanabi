@@ -6,7 +6,7 @@
 import { useUserId } from '~/components/SocketContext';
 import { useGameData, useGameMessenger } from '~/games/hanabi/client/HanabiGameContext';
 import { HanabiTileActionsTooltipType } from '~/games/hanabi/client/HanabiTileActionsTooltip';
-import { HanabiTile, HanabiTileColor } from '@hanabi/shared';
+import { HanabiClueColor, HanabiTile, isHanabiClueColor } from '@hanabi/shared';
 import { useCallback, useState } from 'react';
 
 type ActionMenuDetails = {
@@ -24,7 +24,7 @@ export default function useTileActionMenuHandlers(): {
 	handleActionsTooltipAction: (
 		action: 'discard' | 'play' | 'color' | 'number',
 		tile: HanabiTile,
-		details?: { color?: HanabiTileColor },
+		details?: { color?: HanabiClueColor },
 	) => void;
 	handleActionsTooltipOnClose: () => void;
 } {
@@ -63,7 +63,7 @@ export default function useTileActionMenuHandlers(): {
 		(
 			action: 'discard' | 'play' | 'color' | 'number',
 			tile: HanabiTile,
-			details?: { color?: HanabiTileColor },
+			details?: { color?: HanabiClueColor },
 		) => {
 			let tileOwner: string | null = null;
 
@@ -89,13 +89,18 @@ export default function useTileActionMenuHandlers(): {
 						console.error('Could not play the tile:', error);
 					});
 					break;
-				case 'color':
-					void gameMessenger
-						.giveColorClue(tileOwner, details?.color ?? tile.color)
-						.catch((error: unknown) => {
-							console.error('Could not give the color clue:', error);
-						});
+				case 'color': {
+					const clueColor =
+						details?.color ?? (isHanabiClueColor(tile.color) ? tile.color : undefined);
+					if (clueColor === undefined) {
+						console.error(`Cannot give a color clue for a ${tile.color} tile.`);
+						break;
+					}
+					void gameMessenger.giveColorClue(tileOwner, clueColor).catch((error: unknown) => {
+						console.error('Could not give the color clue:', error);
+					});
 					break;
+				}
 				case 'number':
 					void gameMessenger.giveNumberClue(tileOwner, tile.number).catch((error: unknown) => {
 						console.error('Could not give the number clue:', error);
