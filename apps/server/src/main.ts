@@ -1,160 +1,161 @@
 import HanabiGameFactory from './games/hanabi/HanabiGameFactory.js';
+import { GameManagerMessage } from '@hanabi/shared';
 import GameManager from './games/server/GameManager.js';
 import { GameStore } from './games/server/GameStore.js';
 import LocalFileGameStore from './games/server/LocalFileGameStore.js';
 import RedisGameStore from './games/server/RedisGameStore.js';
+import { createApp } from './app.js';
 import Logger from './utils/Logger.js';
 import RedisClient from './utils/RedisClient.js';
-import SocketManager from './utils/SocketManager.js';
 import { env } from './env.js';
-import compress from 'compression';
-import cookieParser from 'cookie-parser';
 import express from 'express';
-import * as http from 'http';
-import methodOverride from 'method-override';
-import morgan from 'morgan';
 import path from 'path';
 import * as url from 'url';
-import { v4 as uuidv4 } from 'uuid';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const SHUTDOWN_TIMEOUT_MS = 10_000;
 
-const SESSION_COOKIE_NAME = 'SESSION';
+async function main(): Promise<void> {
+	// Enable logs.
+	Logger.init();
 
-// Wrap remaining startup in an async function so we can use await.
-try {
-	(async () => {
-		// Set up process exit handler.
-		process.on('SIGTERM', () => {
-			Logger.error(`Shutting down server.`);
-			process.exit();
-		});
+	const runtime = createApp<GameManagerMessage>({
+		nodeEnv: env.NODE_ENV,
+		sessionCookieSecret: env.SESSION_COOKIE_SECRET,
+	});
+	const { app, httpServer: server, socketManager } = runtime;
+	let ready = false;
+	app.set('port', env.PORT);
 
-		// Enable logs.
-		Logger.init();
-
-		// Create Express server.
-		const app = express();
-
-		// Express Configuration
-		app.enable('strict routing');
-		app.enable('trust proxy');
-		app.set('port', env.PORT);
-		app.use(compress());
-		app.use(morgan('dev'));
-		app.use(express.json());
-		app.use(express.urlencoded({ extended: true }));
-		app.use(methodOverride());
-
-		// Optionally remove www from the domain name.
-		if (env.REDIRECT_URL_PROTOCOL_AND_SUBDOMAIN) {
-			app.use((req, res, next) => {
-				if (req.headers.host!.match(/^www\..*/i)) {
-					res.redirect(301, url.parse(env.DOMAIN_BASE + req.url).href!);
-					return;
-				} else if (req.url.slice(-1) === '/' && req.url.length > 1) {
-					res.redirect(301, url.parse(env.DOMAIN_BASE + req.url.slice(0, -1)).href!);
-					return;
-				}
-
-				next();
-			});
-		}
-
-		// Handle cookies.
-		app.use(cookieParser(env.SESSION_COOKIE_SECRET));
+	// Optionally remove www from the domain name.
+	if (env.REDIRECT_URL_PROTOCOL_AND_SUBDOMAIN) {
 		app.use((req, res, next) => {
-			// Check if the user has a cookie.
-			const sessionCookie = req.cookies && req.cookies[SESSION_COOKIE_NAME];
-			if (!sessionCookie) {
-				res.cookie(SESSION_COOKIE_NAME, uuidv4(), { expires: new Date(253402300000000) });
+			if (req.headers.host!.match(/^www\..*/i)) {
+				res.redirect(301, url.parse(env.DOMAIN_BASE + req.url).href);
+				return;
+			} else if (req.url.slice(-1) === '/' && req.url.length > 1) {
+				res.redirect(301, url.parse(env.DOMAIN_BASE + req.url.slice(0, -1)).href);
+				return;
 			}
 
 			next();
 		});
+	}
 
-		// Create an http server for use in Express and socket.io.
-		const server = http.createServer(app);
-		server.on('error', (error) => {
-			Logger.error('HTTP server error:', error);
+	server.on('error', (error) => {
+		Logger.error('HTTP server error:', error);
+	});
+	app.get('/api/readyz', (_req, res) => {
+		res.status(ready ? 200 : 503).json({ ready });
+	});
+
+	// In production, serve static files and render client
+	// In development, Vite dev server handles the client
+	if (env.NODE_ENV === 'production') {
+		const webDistPath = path.resolve(__dirname, '../../../dist/apps/web');
+		app.use(
+			'/assets',
+			express.static(path.join(webDistPath, 'assets'), {
+				immutable: true,
+				maxAge: '1y',
+			}),
+		);
+		app.use(
+			express.static(webDistPath, {
+				index: false,
+				setHeaders: (res) => res.setHeader('Cache-Control', 'no-cache'),
+			}),
+		);
+		app.get('*', (_req, res) => {
+			res.set('Cache-Control', 'no-cache');
+			res.sendFile(path.join(webDistPath, 'index.html'));
 		});
-
-		// Start a socket manager.
-		const socketManager = new SocketManager<any>(server);
-		socketManager.start();
-
-		app.get('/api/auth-socket', async (req: express.Request, res: express.Response) => {
-			if (!req.cookies || !req.cookies[SESSION_COOKIE_NAME]) {
-				res.json({ error: 'Must enable cookies.' });
-				return;
-			}
-
-			const token = socketManager.addTokenForUser(req.cookies[SESSION_COOKIE_NAME]);
-			res.json({ token });
+	} else {
+		// In development, just return a message - Vite serves the client
+		app.get('*', (_req, res) => {
+			res.json({ message: 'Hanabi API Server - Use Vite dev server for client' });
 		});
+	}
 
-		// In production, serve static files and render client
-		// In development, Vite dev server handles the client
-		if (env.NODE_ENV === 'production') {
-			const webDistPath = path.resolve(__dirname, '../../../dist/apps/web');
-			app.use(express.static(webDistPath, { maxAge: 31557600000 }));
-			app.get('*', (_req, res) => {
-				res.sendFile(path.join(webDistPath, 'index.html'));
-			});
-		} else {
-			// In development, just return a message - Vite serves the client
-			app.get('*', (_req, res) => {
-				res.json({ message: 'Hanabi API Server - Use Vite dev server for client' });
-			});
+	// Prune old socket connections.
+	socketManager.prune();
+	const socketPruneInterval = setInterval(() => socketManager.prune(), 1000 * 60);
+	socketPruneInterval.unref();
+
+	// Build a game store, whichever the server is configured to use.
+	let gameStore: GameStore;
+	if (env.GAME_STORE === 'redis') {
+		// Connect to Redis.
+		const redisClient = new RedisClient();
+		await redisClient.connect(env.REDIS_URL);
+
+		gameStore = new RedisGameStore(redisClient);
+	} else {
+		const savedGamesPath = path.resolve(__dirname, '../../../.saved-games');
+		gameStore = new LocalFileGameStore(savedGamesPath);
+	}
+
+	// Start a game manager.
+	const gameManager = new GameManager(socketManager, gameStore);
+
+	// Add games.
+	gameManager.addGameFactory(new HanabiGameFactory());
+
+	// Restore existing games.
+	await gameManager.restoreGames();
+
+	// Prune old games.
+	gameManager.prune();
+	const gamePruneInterval = setInterval(() => gameManager.prune(), 1000 * 60);
+	gamePruneInterval.unref();
+
+	await runtime.listen(Number(env.PORT));
+	ready = true;
+
+	let shuttingDown = false;
+	const shutdown = async () => {
+		if (shuttingDown) return;
+		shuttingDown = true;
+		ready = false;
+		Logger.info('Shutting down server.');
+		const forcedShutdown = setTimeout(() => {
+			Logger.error(`Shutdown exceeded ${SHUTDOWN_TIMEOUT_MS}ms; forcing process exit.`);
+			process.exit(1);
+		}, SHUTDOWN_TIMEOUT_MS);
+		clearInterval(socketPruneInterval);
+		clearInterval(gamePruneInterval);
+		try {
+			await runtime.close();
+			await gameManager.close();
+		} finally {
+			clearTimeout(forcedShutdown);
 		}
+	};
+	for (const signal of ['SIGTERM', 'SIGINT'] as const) {
+		process.once(signal, () => {
+			void shutdown().catch((error: unknown) => {
+				Logger.error('There was an error shutting down the server.', error);
+				process.exitCode = 1;
+			});
+		});
+	}
 
-		server.listen(Number(env.PORT));
+	// URLs.
+	const port = env.PORT;
+	const localUrl = `http://localhost:${port}`;
 
-		// Prune old socket connections.
-		socketManager.prune();
-		setInterval(() => socketManager.prune(), 1000 * 60);
-
-		// Build a game store, whichever the server is configured to use.
-		let gameStore: GameStore;
-		if (env.GAME_STORE === 'redis') {
-			// Connect to Redis.
-			const redisClient = new RedisClient();
-			await redisClient.connect(env.REDIS_URL);
-
-			gameStore = new RedisGameStore(redisClient);
-		} else {
-			const savedGamesPath = path.resolve(__dirname, '../../../.saved-games');
-			gameStore = new LocalFileGameStore(savedGamesPath);
-		}
-
-		// Start a game manager.
-		const gameManager = new GameManager(socketManager, gameStore);
-
-		// Add games.
-		gameManager.addGameFactory(new HanabiGameFactory());
-
-		// Restore existing games.
-		await gameManager.restoreGames();
-
-		// Prune old games.
-		gameManager.prune();
-		setInterval(() => gameManager.prune(), 1000 * 60);
-
-		// URLs.
-		const port = env.PORT;
-		const localUrl = `http://localhost:${port}`;
-
-		// Notify!
-		Logger.info(`
+	// Notify!
+	Logger.info(`
 ———————————————————————————————————————————————————————————————————
  Hanabi Server
  ${localUrl}
  Listening for requests in ${env.NODE_ENV} mode.
 ———————————————————————————————————————————————————————————————————
 `);
-	})();
-} catch (error) {
+}
+
+void main().catch((error: unknown) => {
 	Logger.error('There was an error starting up the server.', error);
 	process.exit(1);
-}
+});

@@ -1,7 +1,6 @@
 import HanabiCheckbox from '~/games/hanabi/client/design-system/HanabiCheckbox';
 import { useGameMessenger } from '~/games/hanabi/client/HanabiGameContext';
 import { ChangeEvent, useCallback, useEffect, useState } from 'react';
-import { v4 as uuidv4 } from 'uuid';
 
 interface Props {
 	checked: boolean;
@@ -18,7 +17,7 @@ export default function HanabiLobbyGameOptionsForm({
 
 	const [displayedChecked, setDisplayedChecked] = useState(checked);
 
-	const [id] = useState(uuidv4());
+	const [id] = useState(() => crypto.randomUUID());
 
 	// This will set the local input value optimistically and also update the
 	// server.
@@ -27,9 +26,13 @@ export default function HanabiLobbyGameOptionsForm({
 			const newAllowDragging = event.target.checked;
 			setDisplayedChecked(newAllowDragging);
 
-			gameMessenger.changeSettings({
-				[settingsKey]: newAllowDragging,
-			});
+			void gameMessenger
+				.changeSettings({
+					[settingsKey]: newAllowDragging,
+				})
+				.catch((error: unknown) => {
+					console.error('Could not change the game options:', error);
+				});
 		},
 		[gameMessenger, settingsKey],
 	);

@@ -16,7 +16,7 @@ interface Props {
 
 export default function HanabiLoadGameView({ children }: Props): JSX.Element | null {
 	const hanabiGameContext = useHanabiGameContext();
-	const { authSocketManager, socketManager } = useSocket();
+	const { authSocketManager, socketManager, userId } = useSocket();
 
 	const { code = '' } = useParams<{ code?: string }>();
 	const loadGameHandler = useCallback(async () => {
@@ -29,7 +29,12 @@ export default function HanabiLoadGameView({ children }: Props): JSX.Element | n
 		<EnsureGameLoaded
 			redirectUrl="/"
 			gameLoaded={
-				!!(hanabiGameContext.gameData && hanabiGameContext.gameMessenger && hanabiGameContext.code)
+				!!(
+					userId &&
+					hanabiGameContext.gameData &&
+					hanabiGameContext.gameMessenger &&
+					hanabiGameContext.code
+				)
 			}
 			fallback={
 				<div className="w-screen min-h-screen p-20 grid content-center justify-center">

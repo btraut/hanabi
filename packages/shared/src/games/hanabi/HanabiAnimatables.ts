@@ -14,6 +14,4 @@ export interface HanabiAnimatableDrawTile {
 }
 
 export type HanabiAnimatable =
-	| HanabiAnimatablePlayTile
-	| HanabiAnimatableDiscardTile
-	| HanabiAnimatableDrawTile;
+	HanabiAnimatablePlayTile | HanabiAnimatableDiscardTile | HanabiAnimatableDrawTile;

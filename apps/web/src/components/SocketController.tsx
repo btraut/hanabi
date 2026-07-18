@@ -1,10 +1,9 @@
 import { SocketContextProvider } from '~/components/SocketContext';
-import { SocketMessageBase } from '@hanabi/shared';
-import AuthSocketManager from '~/utils/client/AuthSocketManager';
+import { AuthSocketManagerMessage, SocketMessageBase } from '@hanabi/shared';
+import AuthSocketManager, { AuthenticationState } from '~/utils/client/AuthSocketManager';
 import SocketManager from '~/utils/client/SocketManager';
-import useAsyncEffect from '~/utils/client/useAsyncEffect';
 import useForceRefresh from '~/utils/client/useForceRefresh';
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 
 interface Props {
 	readonly children: JSX.Element | JSX.Element[] | null;
@@ -16,29 +15,16 @@ export default function SocketManagerController<MessageType extends SocketMessag
 	const socketManagerRef = useRef<SocketManager<MessageType> | null>(null);
 	const authSocketManagerRef = useRef<AuthSocketManager | null>(null);
 
-	const socketManagerOnConnectSubscriptionId = useRef<number | null>(null);
-	const socketManagerOnDisconnectSubscriptionId = useRef<number | null>(null);
-	const authSocketManagerOnAuthenticateSubscriptionId = useRef<number | null>(null);
-
 	const forceRefresh = useForceRefresh();
 
 	// Initialize the managers.
 	if (!socketManagerRef.current) {
 		socketManagerRef.current = new SocketManager<MessageType>();
-
-		socketManagerOnConnectSubscriptionId.current = socketManagerRef.current.onConnect.subscribe(
-			forceRefresh,
-		);
-		socketManagerOnDisconnectSubscriptionId.current = socketManagerRef.current.onDisconnect.subscribe(
-			forceRefresh,
-		);
 	}
 
 	if (!authSocketManagerRef.current) {
-		authSocketManagerRef.current = new AuthSocketManager(socketManagerRef.current as any);
-
-		authSocketManagerOnAuthenticateSubscriptionId.current = authSocketManagerRef.current.onAuthenticate.subscribe(
-			forceRefresh,
+		authSocketManagerRef.current = new AuthSocketManager(
+			socketManagerRef.current as unknown as SocketManager<AuthSocketManagerMessage>,
 		);
 	}
 
@@ -48,14 +34,37 @@ export default function SocketManagerController<MessageType extends SocketMessag
 	const authenticationState = authSocketManager.authenticationState;
 	const userId = authSocketManager.userId;
 
-	useAsyncEffect(async () => {
-		await socketManager.connect();
-		await authSocketManager.authenticate();
+	useEffect(() => {
+		let active = true;
+		const handleConnect = () => {
+			forceRefresh();
+			if (authSocketManager.authenticationState === AuthenticationState.Unauthenticated) {
+				void authSocketManager.authenticate().catch((error: unknown) => {
+					if (active) {
+						console.error('Socket authentication failed:', error);
+					}
+				});
+			}
+		};
+
+		const onConnectSubscriptionId = socketManager.onConnect.subscribe(handleConnect);
+		const onDisconnectSubscriptionId = socketManager.onDisconnect.subscribe(forceRefresh);
+		const onAuthenticateSubscriptionId = authSocketManager.onAuthenticate.subscribe(forceRefresh);
+
+		void socketManager.connect().catch((error: unknown) => {
+			if (active) {
+				console.error('Socket connection failed:', error);
+			}
+		});
 
 		return () => {
+			active = false;
+			socketManager.onConnect.unsubscribe(onConnectSubscriptionId);
+			socketManager.onDisconnect.unsubscribe(onDisconnectSubscriptionId);
+			authSocketManager.onAuthenticate.unsubscribe(onAuthenticateSubscriptionId);
 			socketManager.disconnect();
 		};
-	}, [socketManager, authSocketManager]);
+	}, [socketManager, authSocketManager, forceRefresh]);
 
 	const contextValue = useMemo(
 		() => ({

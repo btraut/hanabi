@@ -52,7 +52,9 @@ export default function useTileDrop(): ConnectDropTarget {
 					false,
 				);
 
-				moveTiles(newPositions, false);
+				void moveTiles(newPositions, false).catch((error: unknown) => {
+					console.error('Could not preview the tile positions:', error);
+				});
 			}
 
 			previousIsTopHalfRef.current = isTopHalf;
@@ -73,7 +75,9 @@ export default function useTileDrop(): ConnectDropTarget {
 
 			const newPositions = getNewPositionsForTiles({ [item.id]: newPosition }, tilePositions, true);
 
-			moveTiles(newPositions, true);
+			void moveTiles(newPositions, true).catch((error: unknown) => {
+				console.error('Could not save the tile positions:', error);
+			});
 
 			previousIsTopHalfRef.current = null;
 			previousTileSlotX.current = null;

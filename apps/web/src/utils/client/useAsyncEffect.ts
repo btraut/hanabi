@@ -19,7 +19,7 @@ import { DependencyList, useEffect } from 'react';
 type EffectFunc<T> = (isMounted: () => boolean) => Promise<T>;
 type DestroyFunc<T> = (result: T | undefined) => void;
 
-function _useAsyncEffect<T>(
+function useAsyncEffectInternal<T>(
 	effect: EffectFunc<T>,
 	destroy: DestroyFunc<T> | null,
 	deps: DependencyList = [],
@@ -29,7 +29,7 @@ function _useAsyncEffect<T>(
 		let result: T | undefined;
 
 		const maybePromise = effect(() => isMounted);
-		Promise.resolve(maybePromise).then((value) => {
+		void Promise.resolve(maybePromise).then((value) => {
 			result = value;
 		});
 
@@ -48,9 +48,7 @@ export default function useAsyncEffect<T>(
 	destroyOrDeps?: DestroyFunc<T> | DependencyList,
 	deps?: DependencyList,
 ): void {
-	if (typeof destroyOrDeps === 'function') {
-		_useAsyncEffect(effect, destroyOrDeps, deps);
-	} else {
-		_useAsyncEffect(effect, null, destroyOrDeps);
-	}
+	const destroy = typeof destroyOrDeps === 'function' ? destroyOrDeps : null;
+	const dependencies = typeof destroyOrDeps === 'function' ? deps : destroyOrDeps;
+	useAsyncEffectInternal(effect, destroy, dependencies);
 }

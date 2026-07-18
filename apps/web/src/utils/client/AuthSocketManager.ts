@@ -8,8 +8,8 @@ import {
 	SOCKET_MANAGER_SCOPE,
 	PubSub,
 } from '@hanabi/shared';
-import Ajax from '~/utils/client/Ajax';
-import SocketManager, { ConnectionState } from '~/utils/client/SocketManager';
+import Ajax from './Ajax';
+import SocketManager, { ConnectionState } from './SocketManager';
 
 export enum AuthenticationState {
 	Unauthenticated,
@@ -35,13 +35,12 @@ export default class AuthSocketManager {
 	// PubSubs
 	public readonly onAuthenticate = new PubSub<void>();
 
-	// Promise for tracking whether or not the user has finished authenticating.
+	// One shared operation for callers waiting on the current authentication attempt.
 	private _authenticatePromise: Promise<void> | null = null;
-	private _authenticatePromiseResolve: (() => void) | null = null;
-	private _authenticatePromiseReject: (() => void) | null = null;
+	private _authenticationAttempt = 0;
 
 	// SocketManager used for all comms.
-	private _socketManager: SocketManager<AuthSocketManagerMessage> | null;
+	private readonly _socketManager: SocketManager<AuthSocketManagerMessage>;
 
 	// Track if the user wants to reconnect after disconnecting.
 	private _keepAlive = true;
@@ -54,9 +53,9 @@ export default class AuthSocketManager {
 		this._socketManager.onDisconnect.subscribe(this._handleDisconnect);
 	}
 
-	public async authenticate(keepAlive = true): Promise<void> {
-		if (this._socketManager?.connectionState !== ConnectionState.Connected) {
-			throw new Error('Can’t authenticate on a disconnected socket.');
+	public authenticate(keepAlive = true): Promise<void> {
+		if (this._socketManager.connectionState !== ConnectionState.Connected) {
+			return Promise.reject(new Error('Can’t authenticate on a disconnected socket.'));
 		}
 
 		// Save the "keep alive" setting. We do this even if the user is already
@@ -65,7 +64,7 @@ export default class AuthSocketManager {
 		this._authenticateCalledAtLeastOnce = true;
 
 		if (this._authenticationState === AuthenticationState.Authenticated) {
-			return;
+			return Promise.resolve();
 		}
 
 		if (
@@ -75,69 +74,91 @@ export default class AuthSocketManager {
 			return this._authenticatePromise;
 		}
 
-		this._authenticatePromise = new Promise<void>((resolve, reject) => {
-			this._authenticatePromiseResolve = resolve;
-			this._authenticatePromiseReject = reject;
-		});
+		this._authenticationState = AuthenticationState.Authenticating;
+		const attempt = ++this._authenticationAttempt;
+		const authentication = this._performAuthentication(attempt);
+		this._authenticatePromise = authentication;
 
-		// Get a token via AJAX (with session cookie).
-		const { token } = await Ajax.get<{ token: string }>(AUTH_PATH);
+		// Clear only the operation that just settled. Supplying both handlers keeps
+		// this bookkeeping chain fulfilled even when authentication fails.
+		void authentication.then(
+			() => this._clearAuthenticationPromise(authentication),
+			() => this._clearAuthenticationPromise(authentication),
+		);
 
-		// Authenticate the socket connection by sending the token.
-		this._socketManager.send({
-			scope: SOCKET_MANAGER_SCOPE,
-			type: 'AuthenticateSocketMessage',
-			data: token,
-		});
+		return authentication;
+	}
 
-		// Wait for a socket response to authentication.
-		const message =
-			await this._socketManager.expectMessageOfType<AuthenticateSocketResponseMessage>(
-				'AuthenticateSocketResponseMessage',
-			);
+	private async _performAuthentication(attempt: number): Promise<void> {
+		try {
+			// Get a token via AJAX (with session cookie).
+			const { token } = await Ajax.get<{ token: string }>(AUTH_PATH);
+			this._assertCurrentAttempt(attempt);
 
-		if (message.data.error) {
-			throw new Error(message.data.error);
+			// Authenticate the socket connection by sending the token.
+			this._socketManager.send({
+				scope: SOCKET_MANAGER_SCOPE,
+				type: 'AuthenticateSocketMessage',
+				data: token,
+			});
+
+			// Wait for a socket response to authentication.
+			const message =
+				await this._socketManager.expectMessageOfType<AuthenticateSocketResponseMessage>(
+					'AuthenticateSocketResponseMessage',
+					SOCKET_MANAGER_SCOPE,
+				);
+			this._assertCurrentAttempt(attempt);
+
+			if (message.data.error) {
+				throw new Error(message.data.error);
+			}
+
+			this._authenticationState = AuthenticationState.Authenticated;
+			this._userId = message.data.userId!;
+
+			console.log(`socket.io authenticated, user id: ${this._userId}`);
+
+			// Notify others of the connect. Note that we've already
+			// been connected for a while, but we don't want to notify
+			// externally until our connection has been authenticated.
+			this.onAuthenticate.emit();
+		} catch (error) {
+			if (attempt === this._authenticationAttempt) {
+				this._authenticationState = AuthenticationState.Unauthenticated;
+				this._userId = null;
+			}
+			throw error;
 		}
+	}
 
-		this._authenticationState = AuthenticationState.Authenticated;
-		this._userId = message.data.userId!;
-
-		console.log(`socket.io authenticated, user id: ${this._userId}`);
-
-		// Notify others of the connect. Note that we've already
-		// been connected for a while, but we don't want to notify
-		// externally until our connection has been authenticated.
-		this.onAuthenticate.emit();
-
-		// Resolve the authentication promise.
-		if (this._authenticatePromiseResolve) {
-			this._authenticatePromiseResolve();
+	private _assertCurrentAttempt(attempt: number): void {
+		if (
+			attempt !== this._authenticationAttempt ||
+			this._socketManager.connectionState !== ConnectionState.Connected
+		) {
+			throw new Error('Socket authentication was interrupted.');
 		}
+	}
 
-		// Clean up the promise callbacks.
-		this._authenticatePromise = null;
-		this._authenticatePromiseResolve = null;
-		this._authenticatePromiseReject = null;
+	private _clearAuthenticationPromise(authentication: Promise<void>): void {
+		if (this._authenticatePromise === authentication) {
+			this._authenticatePromise = null;
+		}
 	}
 
 	private _handleConnect = () => {
 		if (this._keepAlive && this._authenticateCalledAtLeastOnce) {
-			this.authenticate(this._keepAlive);
+			void this.authenticate(this._keepAlive).catch((error: unknown) => {
+				console.error('Socket reauthentication failed:', error);
+			});
 		}
 	};
 
 	private _handleDisconnect = () => {
+		this._authenticationAttempt += 1;
 		this._authenticationState = AuthenticationState.Unauthenticated;
-
-		// If there's a lingering authenticate promise, reject it.
-		if (this._authenticatePromiseReject) {
-			this._authenticatePromiseReject();
-		}
-
-		// Clean up the promise callbacks.
+		this._userId = null;
 		this._authenticatePromise = null;
-		this._authenticatePromiseResolve = null;
-		this._authenticatePromiseReject = null;
 	};
 }

@@ -1,2 +1,0 @@
-> tsc -p packages/shared/tsconfig.json
-

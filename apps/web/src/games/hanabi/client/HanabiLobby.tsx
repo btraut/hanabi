@@ -13,28 +13,28 @@ import HanabiLobbyGameOptionsForm from '~/games/hanabi/client/HanabiLobbyGameOpt
 import HanabiPlayerAvatar from '~/games/hanabi/client/HanabiPlayerAvatar';
 import { HANABI_MIN_PLAYERS } from '@hanabi/shared';
 
-declare const DOMAIN_BASE: string;
-declare const NODE_ENV: string;
-
 export default function HanabiLobby(): JSX.Element {
 	const gameMessenger = useGameMessenger();
 	const gameData = useGameData();
 	const { code } = useHanabiGameContext();
 	const userId = useUserId();
 
-	const handleLeaveClick = async () => {
-		await gameMessenger.leave();
+	const handleLeaveClick = () => {
+		void gameMessenger.leave().catch((error: unknown) => {
+			console.error('Could not leave the game:', error);
+		});
 	};
 
-	const handleStartClick = async () => {
-		await gameMessenger.start();
+	const handleStartClick = () => {
+		void gameMessenger.start().catch((error: unknown) => {
+			console.error('Could not start the game:', error);
+		});
 	};
 
 	const userIsJoined = !!(userId && gameData.players[userId]);
 	const enoughPlayers =
-		Object.keys(gameData.players).length >= (NODE_ENV === 'development' ? 1 : HANABI_MIN_PLAYERS);
-	const domainBase = typeof window === 'undefined' ? DOMAIN_BASE : window.location.origin;
-	const link = `${domainBase}/${code}`;
+		Object.keys(gameData.players).length >= (import.meta.env.DEV ? 1 : HANABI_MIN_PLAYERS);
+	const link = `${window.location.origin}/${code}`;
 
 	const players = Object.values(gameData.players);
 

@@ -1,10 +1,6 @@
 import HanabiTileView from '~/games/hanabi/client/HanabiTileView';
 import useTileDrag from '~/games/hanabi/client/useTileDrag';
-import {
-	HANABI_TILE_SIZE,
-	HANABI_TILE_SIZE_SMALL,
-	HanabiTile,
-} from '@hanabi/shared';
+import { HANABI_TILE_SIZE, HANABI_TILE_SIZE_SMALL, HanabiTile } from '@hanabi/shared';
 import useFocusVisible from '~/utils/client/useFocusVisible';
 import classNames from 'classnames';
 import { useCallback } from 'react';
@@ -20,6 +16,7 @@ interface Props {
 
 	// Optionally hide the value of the tile.
 	hidden?: boolean;
+	ariaLabel?: string;
 
 	// Control tile size including overall size and font size.
 	size?: TileViewSize;
@@ -47,6 +44,7 @@ interface Props {
 export default function HanabiInteractiveTileView({
 	tile,
 	hidden = false,
+	ariaLabel,
 	size = TileViewSize.Regular,
 	onClick,
 	onMouseOver,
@@ -117,6 +115,7 @@ export default function HanabiInteractiveTileView({
 			onMouseOver={onMouseOver ? handleMouseOver : undefined}
 			onMouseOut={onMouseOut ? handleMouseOut : undefined}
 			onMouseDown={onMouseDown ? handleMouseDown : undefined}
+			aria-label={onClick ? ariaLabel : undefined}
 		>
 			<HanabiTileView
 				color={hidden ? undefined : tile.color}

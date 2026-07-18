@@ -25,9 +25,13 @@ export default function HanabiChooseRuleSetForm({ ruleSet }: Props): JSX.Element
 			const newRuleSet = event.target.value as HanabiRuleSet;
 			setDisplayedRuleSet(newRuleSet);
 
-			gameMessenger.changeSettings({
-				ruleSet: newRuleSet,
-			});
+			void gameMessenger
+				.changeSettings({
+					ruleSet: newRuleSet,
+				})
+				.catch((error: unknown) => {
+					console.error('Could not change the rule set:', error);
+				});
 		},
 		[gameMessenger],
 	);

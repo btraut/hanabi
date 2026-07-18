@@ -17,7 +17,9 @@ export default function HanabiChatInput(): JSX.Element {
 		const message = inputRef.current.value;
 		inputRef.current.value = '';
 
-		gameMessenger.sendChat(message);
+		void gameMessenger.sendChat(message).catch((error: unknown) => {
+			console.error('Could not send chat message:', error);
+		});
 	}, [gameMessenger]);
 
 	const handleKeyDown = useCallback(
@@ -32,6 +34,7 @@ export default function HanabiChatInput(): JSX.Element {
 	return (
 		<div className="p-2 grid items-stretch" style={{ gridTemplateColumns: '1fr auto' }}>
 			<input
+				aria-label="Chat message"
 				className="p-2 bg-gray-100 border-2 border-gray-800 text-black text-sm focus:outline-none focus:border-red-600 focus:bg-white"
 				style={{
 					borderTopLeftRadius: 4,

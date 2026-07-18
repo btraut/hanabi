@@ -48,7 +48,11 @@ export default function HanabiJoinForm(): JSX.Element {
 			{addPlayerError && (
 				<p className="mb-10 text-lg font-bold bg-red-900 text-white px-2 py-1">{addPlayerError}</p>
 			)}
-			<form onSubmit={handleAddPlayerSubmit}>
+			<form
+				onSubmit={(event) => {
+					void handleAddPlayerSubmit(event);
+				}}
+			>
 				<div className="mb-10 grid grid-cols-form gap-4 items-center w-full">
 					<label
 						className="text-white font-bold text-2xl justify-end"

@@ -9,5 +9,4 @@ export type AuthenticateSocketResponseMessage = SocketMessage<
 >;
 
 export type AuthSocketManagerMessage =
-	| AuthenticateSocketMessage
-	| AuthenticateSocketResponseMessage;
+	AuthenticateSocketMessage | AuthenticateSocketResponseMessage;

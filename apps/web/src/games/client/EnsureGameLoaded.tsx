@@ -28,8 +28,10 @@ export default function EnsureGameLoaded({
 		// Otherwise, forward the user away.
 		try {
 			await loadGameHandler();
-		} catch (error) {
-			navigate(redirectUrl, { replace: true });
+		} catch (_error) {
+			void Promise.resolve(navigate(redirectUrl, { replace: true })).catch((error: unknown) => {
+				console.error('Could not redirect after loading the game failed:', error);
+			});
 		}
 	}, [redirectUrl, gameLoaded, navigate, loadGameHandler]);
 

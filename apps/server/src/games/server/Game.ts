@@ -1,6 +1,7 @@
 import { SaveGameDelegate } from './GameStore.js';
 import { generateGameCode } from './generateGameCode.js';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'node:crypto';
+import Logger from '../../utils/Logger.js';
 
 export interface GameSerialized {
 	id: string;
@@ -46,12 +47,16 @@ export default class Game {
 	}
 
 	protected _saveGameDelegate: SaveGameDelegate;
+	private _saveLoop: Promise<void> | null = null;
+	private _saveRequested = false;
+	private _saveError: unknown = null;
+	private _acceptingSaves = true;
 
 	constructor(creatorId: string, saveGameDelegate: SaveGameDelegate) {
 		this._creatorId = creatorId;
 		this._saveGameDelegate = saveGameDelegate;
 
-		this._id = uuidv4();
+		this._id = randomUUID();
 		this._code = generateGameCode();
 	}
 
@@ -74,7 +79,58 @@ export default class Game {
 	// Subclasses should call this method whenever data or state changes.
 	protected _update(): void {
 		this._updated = new Date();
-		this._saveGameDelegate.saveGame(this);
+		if (!this._acceptingSaves) {
+			return;
+		}
+
+		this._saveRequested = true;
+		this._startSaveLoop();
+	}
+
+	private _startSaveLoop(): void {
+		if (this._saveLoop) {
+			return;
+		}
+
+		this._saveLoop = Promise.resolve()
+			.then(async () => {
+				while (this._saveRequested) {
+					this._saveRequested = false;
+					try {
+						await this._saveGameDelegate.saveGame(this);
+					} catch (error) {
+						this._saveError = error;
+						Logger.error(`Failed to save ${this.title} game ${this.id}.`, error);
+					}
+				}
+			})
+			.finally(() => {
+				this._saveLoop = null;
+				if (this._saveRequested) {
+					this._startSaveLoop();
+				}
+			});
+	}
+
+	public async flushSaves(): Promise<void> {
+		while (this._saveLoop || this._saveRequested) {
+			if (!this._saveLoop) {
+				this._startSaveLoop();
+			}
+			await this._saveLoop;
+		}
+
+		if (this._saveError) {
+			const error = this._saveError;
+			this._saveError = null;
+			throw error instanceof Error
+				? error
+				: new Error('Game save failed with a non-Error value.', { cause: error });
+		}
+	}
+
+	public stopSaving(): void {
+		this._acceptingSaves = false;
 	}
 
 	// This game is being deleted and it should clean up all subscriptions and

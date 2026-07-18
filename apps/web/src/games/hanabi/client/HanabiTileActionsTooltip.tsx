@@ -1,11 +1,7 @@
 import Portal from '~/components/Portal';
 import Tooltip from '~/components/Tooltip';
 import { useGameData } from '~/games/hanabi/client/HanabiGameContext';
-import {
-	HanabiTile,
-	HanabiTileColor,
-	tileBackgroundClasses,
-} from '@hanabi/shared';
+import { HanabiTile, HanabiTileColor, tileBackgroundClasses } from '@hanabi/shared';
 import useFocusVisible from '~/utils/client/useFocusVisible';
 import classNames from 'classnames';
 import { useEffect, useRef } from 'react';

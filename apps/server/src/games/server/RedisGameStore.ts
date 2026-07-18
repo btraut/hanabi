@@ -7,9 +7,15 @@ const GAME_LIST_KEY = 'gameData.__all__';
 
 export default class RedisGameStore implements GameStore {
 	private _redisClient: RedisClient;
+	private _mutationQueue: Promise<void> = Promise.resolve();
 
 	constructor(redisClient: RedisClient) {
 		this._redisClient = redisClient;
+	}
+
+	public async close(): Promise<void> {
+		await this._mutationQueue;
+		await this._redisClient.disconnect();
 	}
 
 	public async saveGame(game: Game): Promise<void> {
@@ -21,36 +27,39 @@ export default class RedisGameStore implements GameStore {
 			return;
 		}
 
-		Logger.info(`Saving game: ${scope}`);
-		await this._redisClient.set(scope, serialized);
+		await this._enqueueMutation(async () => {
+			Logger.info(`Saving game: ${scope}`);
+			await this._redisClient.set(scope, serialized);
 
-		Logger.info(`Updating game list`);
-		const gameList = await this._getGameList();
-		let titleList = gameList[title] || [];
-		if (!titleList.find((i) => i === id)) {
-			titleList = [...titleList, id];
-		}
-		await this._setGameList({
-			...gameList,
-			[title]: titleList,
+			Logger.info(`Updating game list`);
+			const gameList = await this._getGameList();
+			let titleList = gameList[title] || [];
+			if (!titleList.includes(id)) {
+				titleList = [...titleList, id];
+			}
+			await this._setGameList({
+				...gameList,
+				[title]: titleList,
+			});
 		});
 	}
 
 	public async deleteGame(game: Game): Promise<void> {
-		// Delete the game data.
 		const { title, id } = game;
 		const scope = this._getScope(title, id);
-		await this._redisClient.del(scope);
+		await this._enqueueMutation(async () => {
+			await this._redisClient.del(scope);
 
-		// Delete the game from the list.
-		const gameList = await this._getGameList();
-		await this._setGameList({
-			...gameList,
-			[title]: (gameList[title] || []).filter((i) => i !== id),
+			const gameList = await this._getGameList();
+			await this._setGameList({
+				...gameList,
+				[title]: (gameList[title] || []).filter((i) => i !== id),
+			});
 		});
 	}
 
 	public async loadGameData(): Promise<{ [title: string]: string[] }> {
+		await this._mutationQueue;
 		const gameList = await this._getGameList();
 
 		const gameData: { [title: string]: string[] } = {};
@@ -88,11 +97,17 @@ export default class RedisGameStore implements GameStore {
 			return {};
 		}
 
-		return JSON.parse(listRaw);
+		return JSON.parse(listRaw) as { [title: string]: string[] };
 	}
 
 	private async _setGameList(gameList: { [title: string]: string[] }): Promise<void> {
 		await this._redisClient.set(GAME_LIST_KEY, JSON.stringify(gameList));
+	}
+
+	private _enqueueMutation(operation: () => Promise<void>): Promise<void> {
+		const result = this._mutationQueue.then(operation);
+		this._mutationQueue = result.catch(() => undefined);
+		return result;
 	}
 
 	private _getScope(title: string, id: string) {

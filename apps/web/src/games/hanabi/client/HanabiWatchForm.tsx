@@ -1,11 +1,9 @@
 import HanabiMenuButton from '~/games/hanabi/client/design-system/HanabiMenuButton';
 import HanabiTextInput from '~/games/hanabi/client/design-system/HanabiTextInput';
-import { useHanabiGameContext } from '~/games/hanabi/client/HanabiGameContext';
 import { ChangeEvent, FormEvent, useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function HanabiWatchForm(): JSX.Element {
-	const { code } = useHanabiGameContext();
 	const navigate = useNavigate();
 
 	const [watchGameError, setWatchGameError] = useState('');
@@ -15,15 +13,13 @@ export default function HanabiWatchForm(): JSX.Element {
 		setCodeValue(event.target.value);
 	}, []);
 
-	const handleWatchGameSubmit = async (event: FormEvent) => {
+	const handleWatchGameSubmit = (event: FormEvent) => {
 		event.preventDefault();
 
 		if (codeValue) {
-			try {
-				navigate(`/${code}`);
-			} catch (error) {
+			void Promise.resolve(navigate(`/${codeValue.trim()}`)).catch((error: unknown) => {
 				setWatchGameError(error instanceof Error ? error.message : '');
-			}
+			});
 		}
 	};
 

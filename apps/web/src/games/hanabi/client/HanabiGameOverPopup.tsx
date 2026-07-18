@@ -50,7 +50,9 @@ export default function HanabiGameOverPopup({ onClose }: Props): JSX.Element | n
 									onClose();
 								}
 
-								gameMessenger.reset();
+								void gameMessenger.reset().catch((error: unknown) => {
+									console.error('Could not reset the game:', error);
+								});
 							}}
 						/>
 					)}

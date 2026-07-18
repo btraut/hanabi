@@ -3,6 +3,7 @@ import HanabiLoadGameView from '~/games/hanabi/client/HanabiLoadGameView';
 import HanabiMainMenu from '~/games/hanabi/client/HanabiMainMenu';
 import HanabiMoveTileController from '~/games/hanabi/client/HanabiMoveTileController';
 import HanabiWatchForm from '~/games/hanabi/client/HanabiWatchForm';
+import Error404Page from '~/pages/Error404Page';
 import { Route, Routes } from 'react-router-dom';
 
 export default function HanabiRouter(): JSX.Element {
@@ -20,6 +21,7 @@ export default function HanabiRouter(): JSX.Element {
 					</HanabiLoadGameView>
 				}
 			/>
+			<Route path="*" element={<Error404Page />} />
 		</Routes>
 	);
 }

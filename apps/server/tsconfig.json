@@ -1,14 +1,11 @@
 {
-  "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "module": "Node16",
-    "moduleResolution": "node16",
-    "outDir": "../../dist/apps/server",
-    "rootDir": "../..",
-    "tsBuildInfoFile": "../../dist/apps/server/.tsbuildinfo"
-  },
-  "include": ["src/**/*"],
-  "references": [
-    { "path": "../../packages/shared" }
-  ]
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		"module": "Node16",
+		"moduleResolution": "node16",
+		"outDir": "../../dist/apps/server",
+		"rootDir": "../..",
+		"tsBuildInfoFile": "../../dist/apps/server/.tsbuildinfo"
+	},
+	"include": ["src/**/*"]
 }

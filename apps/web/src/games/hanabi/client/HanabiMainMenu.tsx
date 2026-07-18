@@ -23,20 +23,27 @@ export default function HanabiMainMenu(): JSX.Element {
 
 	const forceRefresh = useForceRefresh();
 
-	const hostButtonHandler = async () => {
+	const hostButtonHandler = () => {
 		if (loadingRef.current) {
 			return;
 		}
 
 		loadingRef.current = true;
-		const code = await hanabiGameContext.create();
-		loadingRef.current = false;
-
-		navigate(`/${code}`);
+		void hanabiGameContext
+			.create()
+			.then((code) => navigate(`/${code}`))
+			.catch((error: unknown) => {
+				console.error('Could not create a game:', error);
+			})
+			.finally(() => {
+				loadingRef.current = false;
+			});
 	};
 
 	const watchButtonHandler = () => {
-		navigate('/join');
+		void Promise.resolve(navigate('/join')).catch((error: unknown) => {
+			console.error('Could not open the join page:', error);
+		});
 	};
 
 	useEffect(() => {

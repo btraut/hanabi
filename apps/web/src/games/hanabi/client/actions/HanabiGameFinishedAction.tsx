@@ -1,7 +1,4 @@
-import {
-	HanabiFinishedReason,
-	HanabiGameActionGameFinished,
-} from '@hanabi/shared';
+import { HanabiFinishedReason, HanabiGameActionGameFinished } from '@hanabi/shared';
 
 interface Props {
 	action: HanabiGameActionGameFinished;

@@ -23,6 +23,7 @@ export default class GameManager {
 
 		const response = await this._socketManager.expectMessageOfType<CreateGameResponseMessage>(
 			'CreateGameResponseMessage',
+			GAME_MANAGER_SCOPE,
 		);
 
 		if (response.data.error) {
@@ -43,6 +44,7 @@ export default class GameManager {
 
 		const response = await this._socketManager.expectMessageOfType<WatchGameResponseMessage>(
 			'WatchGameResponseMessage',
+			GAME_MANAGER_SCOPE,
 		);
 
 		if (response.data.error) {
