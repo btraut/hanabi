@@ -1,7 +1,7 @@
 ---
 title: 'refactor: Restore a trustworthy Hanabi runtime'
 type: refactor
-status: active
+status: completed
 date: 2026-07-16
 origin: docs/brainstorms/2026-07-16-hanabi-rebuild-requirements.md
 ---
@@ -436,7 +436,7 @@ flowchart LR
 
 **Verification:**
 
-- The in-app browser and a separately isolated Chrome session completed the shared two-player flow. Four screenshots are captured and inspectable; no uncaught browser/server errors occurred. A repeatable Playwright reconnect/reset suite remains a follow-up rather than a completed claim in this milestone.
+- The in-app browser and a separately isolated Chrome session completed the shared two-player flow without uncaught browser/server errors. The screenshots were intentionally kept as ignored, ephemeral proof; automated game, HTTP, Socket.IO, reconnect, and production-route tests are the durable regression evidence.
 
 ---
 

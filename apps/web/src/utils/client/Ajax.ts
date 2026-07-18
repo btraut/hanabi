@@ -1,6 +1,10 @@
 export default class Ajax {
-	public static get<T>(url: string, headers?: Record<string, string>): Promise<T> {
-		return this._request('get', url, null, headers);
+	public static get<T>(
+		url: string,
+		headers?: Record<string, string>,
+		timeout = 10_000,
+	): Promise<T> {
+		return this._request('get', url, undefined, headers, timeout);
 	}
 
 	public static post<T>(url: string, body?: unknown, headers?: Record<string, string>): Promise<T> {
@@ -12,7 +16,7 @@ export default class Ajax {
 	}
 
 	public static delete<T>(url: string, headers?: Record<string, string>): Promise<T> {
-		return this._request('delete', url, null, headers);
+		return this._request('delete', url, undefined, headers);
 	}
 
 	private static async _request<T>(
@@ -20,12 +24,15 @@ export default class Ajax {
 		url: string,
 		body?: unknown,
 		headers: Record<string, string> = {},
+		timeout = 10_000,
 	): Promise<T> {
+		const abortController = new AbortController();
+		const timeoutToken = setTimeout(() => abortController.abort(), timeout);
 		try {
-			let bodyString = null;
+			let bodyString: string | null = null;
 
-			if (body) {
-				bodyString = typeof body === 'object' ? JSON.stringify(body) : body;
+			if (body !== undefined) {
+				bodyString = typeof body === 'string' ? body : (JSON.stringify(body) ?? null);
 			}
 
 			const headersObj = new Headers();
@@ -37,10 +44,11 @@ export default class Ajax {
 				}
 			}
 
-			const fetchParams: { [key: string]: any } = {
+			const fetchParams: RequestInit = {
 				method,
 				headers: headersObj,
 				credentials: 'same-origin',
+				signal: abortController.signal,
 			};
 
 			if (bodyString) {
@@ -48,12 +56,21 @@ export default class Ajax {
 			}
 
 			const response = await fetch(url, fetchParams);
+			if (!response.ok) {
+				throw new Error(`Request failed with HTTP ${response.status}.`);
+			}
 
-			const json = await response.json();
-
-			return json;
+			return (await response.json()) as T;
 		} catch (error) {
-			throw new Error('The connection to Ten Four Games was lost.');
+			if (abortController.signal.aborted) {
+				throw new Error('The request timed out.', { cause: error });
+			}
+			if (error instanceof Error && error.message.startsWith('Request failed with HTTP ')) {
+				throw error;
+			}
+			throw new Error('The connection to Ten Four Games was lost.', { cause: error });
+		} finally {
+			clearTimeout(timeoutToken);
 		}
 	}
 }

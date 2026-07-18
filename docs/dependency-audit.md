@@ -1,6 +1,6 @@
 # Dependency audit
 
-Checked 2026-07-17 with `pnpm outdated -r` on Node 24.11.1.
+Checked 2026-07-18 with `pnpm outdated -r` and `pnpm audit` on Node 24.11.1.
 
 ## Updated or removed
 
@@ -9,6 +9,7 @@ Checked 2026-07-17 with `pnpm outdated -r` on Node 24.11.1.
 - `store` was replaced by native `localStorage`, removing its direct-`eval` production warning.
 - `tailbreak`, `method-override`, legacy PostCSS packages, and their type packages were removed as unused or obsolete.
 - Current compatible releases of Prettier 3, tsx 4, typescript-eslint 8, eslint-config-prettier 10, react-hooks lint rules 7, Morgan 1, and dotenv 17 were installed.
+- Compatible patch releases for Socket.IO parser, `ws`, Express's `path-to-regexp`, Nx's `minimatch`, and tooling's `picomatch` remove the known audit findings. `pnpm audit` reports no known vulnerabilities.
 
 ## Intentional major-version holds
 

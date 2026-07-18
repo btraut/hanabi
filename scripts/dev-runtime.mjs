@@ -11,6 +11,8 @@ export const repoRoot = resolve(scriptDirectory, '..');
 export const runtimeDirectory = resolve(repoRoot, '.context/dev');
 export const manifestPath = resolve(runtimeDirectory, 'current.json');
 export const lockPath = resolve(runtimeDirectory, 'lock.json');
+const SHUTDOWN_GRACE_MS = 5_000;
+const SHUTDOWN_KILL_WAIT_MS = 1_000;
 
 export const portRanges = {
 	server: { min: 3000, max: 3199 },
@@ -70,55 +72,133 @@ function processIsRunning(pid) {
 	}
 }
 
-async function acquireLock(worktreeRoot, runId) {
-	await mkdir(runtimeDirectory, { recursive: true });
+export async function acquireLock(worktreeRoot, runId, options = {}) {
+	const target = options.target ?? lockPath;
+	const isRunning = options.isRunning ?? processIsRunning;
+	await mkdir(dirname(target), { recursive: true });
 	try {
-		await access(lockPath, constants.F_OK);
-		const lock = await readJson(lockPath);
-		if (lock.worktreeRoot === worktreeRoot && processIsRunning(lock.launcherPid)) {
+		await access(target, constants.F_OK);
+		const lock = await readJson(target);
+		if (lock.worktreeRoot === worktreeRoot && isRunning(lock.launcherPid)) {
 			throw new Error(`Hanabi is already running for this worktree (PID ${lock.launcherPid}).`);
 		}
-		await rm(lockPath, { force: true });
+		await rm(target, { force: true });
 	} catch (error) {
 		if (error?.code !== 'ENOENT') throw error;
 	}
 
 	await writeFile(
-		lockPath,
+		target,
 		`${JSON.stringify({ runId, worktreeRoot, launcherPid: process.pid }, null, 2)}\n`,
 		{ encoding: 'utf8', flag: 'wx' },
 	);
 }
 
-async function waitForUrl(url, timeoutMs = 60_000, signal) {
+export async function releaseLock(runId, target = lockPath) {
+	try {
+		const lock = await readJson(target);
+		if (lock.runId !== runId) return false;
+		await rm(target, { force: true });
+		return true;
+	} catch (error) {
+		if (error?.code === 'ENOENT') return false;
+		throw error;
+	}
+}
+
+export async function waitForUrl(url, timeoutMs = 60_000, signal, fetchImpl = fetch) {
 	const deadline = Date.now() + timeoutMs;
 	let lastError;
 	while (Date.now() < deadline) {
 		if (signal?.aborted) throw new Error(`Stopped waiting for ${url}.`);
+		const requestController = new AbortController();
+		const abortRequest = () => requestController.abort();
+		signal?.addEventListener('abort', abortRequest, { once: true });
+		const requestTimeout = setTimeout(
+			abortRequest,
+			Math.max(1, Math.min(5_000, deadline - Date.now())),
+		);
 		try {
-			const response = await fetch(url, { signal });
+			const response = await fetchImpl(url, { signal: requestController.signal });
 			if (response.ok) return;
 			lastError = new Error(`${url} returned ${response.status}`);
 		} catch (error) {
 			lastError = error;
+		} finally {
+			clearTimeout(requestTimeout);
+			signal?.removeEventListener('abort', abortRequest);
 		}
-		await new Promise((resolveWait) => setTimeout(resolveWait, 300));
+		if (Date.now() < deadline) {
+			await new Promise((resolveWait) =>
+				setTimeout(resolveWait, Math.min(300, deadline - Date.now())),
+			);
+		}
 	}
 	throw new Error(`Timed out waiting for ${url}: ${lastError?.message ?? 'not reachable'}`);
 }
 
-function waitForChildExit(child) {
-	if (!child || child.exitCode !== null || child.signalCode !== null) return Promise.resolve();
-	return new Promise((resolveExit) => child.once('exit', resolveExit));
+function childHasExited(child) {
+	return !child || child.pid == null || child.exitCode !== null || child.signalCode !== null;
 }
 
-function terminate(child) {
-	if (!child || child.exitCode !== null || child.signalCode !== null) return;
+function waitForChildExit(child) {
+	if (childHasExited(child)) return Promise.resolve();
+	return new Promise((resolveExit) => child.once('close', resolveExit));
+}
+
+function signalChild(child, signal, options = {}) {
+	if (childHasExited(child)) return;
+	const platform = options.platform ?? process.platform;
+	const killProcess = options.killProcess ?? process.kill.bind(process);
 	try {
-		if (process.platform !== 'win32' && child.pid) process.kill(-child.pid, 'SIGTERM');
-		else child.kill('SIGTERM');
+		if (platform !== 'win32' && child.pid) killProcess(-child.pid, signal);
+		else child.kill(signal);
 	} catch {
-		child.kill('SIGTERM');
+		child.kill(signal);
+	}
+}
+
+async function waitAtMost(promise, timeoutMs) {
+	let timeoutToken;
+	try {
+		await Promise.race([
+			promise,
+			new Promise((resolveTimeout) => {
+				timeoutToken = setTimeout(resolveTimeout, timeoutMs);
+			}),
+		]);
+	} finally {
+		clearTimeout(timeoutToken);
+	}
+}
+
+export async function terminateChildren(children, options = {}) {
+	const graceMs = options.graceMs ?? SHUTDOWN_GRACE_MS;
+	const killWaitMs = options.killWaitMs ?? SHUTDOWN_KILL_WAIT_MS;
+	for (const child of children) signalChild(child, 'SIGTERM', options);
+	await waitAtMost(Promise.all(children.map(waitForChildExit)), graceMs);
+
+	const stuckChildren = children.filter((child) => !childHasExited(child));
+	for (const child of stuckChildren) signalChild(child, 'SIGKILL', options);
+	await waitAtMost(Promise.all(stuckChildren.map(waitForChildExit)), killWaitMs);
+}
+
+export function monitorChild(child, name, onFailure) {
+	child.once('error', (error) => {
+		onFailure(`${name} failed to spawn: ${error instanceof Error ? error.message : String(error)}`);
+	});
+	child.once('exit', (code, signal) => {
+		onFailure(`${name} exited before shutdown (${signal ?? code ?? 'unknown'}).`);
+	});
+}
+
+export async function reportRuntimeFailure(manifest, message, shutdown, write = writeManifest) {
+	manifest.status = 'failed';
+	manifest.error = message;
+	try {
+		await write(manifest);
+	} finally {
+		await shutdown(1, true);
 	}
 }
 
@@ -128,81 +208,82 @@ export async function start() {
 	await acquireLock(worktreeRoot, runId);
 	let server = null;
 	let web = null;
+	let manifest = null;
 	let shuttingDown = false;
+	let failureReported = false;
 	const readinessAbortController = new AbortController();
 	const shutdown = async (exitCode = 0, keepManifest = false) => {
 		if (shuttingDown) return;
 		shuttingDown = true;
 		readinessAbortController.abort();
-		terminate(server);
-		terminate(web);
-		await Promise.all([waitForChildExit(server), waitForChildExit(web)]);
-		await rm(lockPath, { force: true });
-		if (!keepManifest) await rm(manifestPath, { force: true });
-		process.exitCode = exitCode;
+		try {
+			await terminateChildren([server, web]);
+		} finally {
+			await releaseLock(runId);
+			if (!keepManifest) await rm(manifestPath, { force: true });
+			process.exitCode = exitCode;
+		}
 	};
 	for (const signal of ['SIGINT', 'SIGTERM']) {
 		process.once(signal, () => void shutdown(0));
 	}
 
-	const reserved = new Set();
-	const serverPort = await allocatePort(worktreeRoot, 'server', { reserved });
-	reserved.add(serverPort);
-	const webPort = await allocatePort(worktreeRoot, 'web', { reserved });
-	const urls = {
-		server: `http://127.0.0.1:${serverPort}`,
-		web: `http://127.0.0.1:${webPort}`,
-	};
-	const manifest = {
-		schemaVersion: 1,
-		runId,
-		status: 'starting',
-		worktreeRoot,
-		launcherPid: process.pid,
-		startedAt: new Date().toISOString(),
-		ports: { web: webPort, server: serverPort },
-		urls,
-		services: {
-			web: { pid: null, ready: false },
-			server: { pid: null, ready: false },
-		},
-		error: null,
-	};
-	if (shuttingDown) return;
-	await writeManifest(manifest);
-	if (shuttingDown) return;
-
-	const environment = {
-		...process.env,
-		PORT: String(serverPort),
-		HANABI_DEV_WEB_PORT: String(webPort),
-		HANABI_DEV_SERVER_URL: urls.server,
-	};
-	const spawnOptions = {
-		cwd: worktreeRoot,
-		env: environment,
-		stdio: 'inherit',
-		detached: process.platform !== 'win32',
-	};
-	server = spawn('pnpm', ['--dir', 'apps/server', 'dev'], spawnOptions);
-	web = spawn('pnpm', ['--dir', 'apps/web', 'dev'], spawnOptions);
-	manifest.services.server.pid = server.pid ?? null;
-	manifest.services.web.pid = web.pid ?? null;
-	await writeManifest(manifest);
-
-	for (const [name, child] of [
-		['server', server],
-		['web', web],
-	]) {
-		child.once('exit', (code, signal) => {
-			if (shuttingDown) return;
-			manifest.status = 'failed';
-			manifest.error = `${name} exited before shutdown (${signal ?? code ?? 'unknown'}).`;
-			void writeManifest(manifest).finally(() => shutdown(1, true));
-		});
-	}
-
 	try {
+		const reserved = new Set();
+		const serverPort = await allocatePort(worktreeRoot, 'server', { reserved });
+		reserved.add(serverPort);
+		const webPort = await allocatePort(worktreeRoot, 'web', { reserved });
+		const urls = {
+			server: `http://127.0.0.1:${serverPort}`,
+			web: `http://127.0.0.1:${webPort}`,
+		};
+		manifest = {
+			schemaVersion: 1,
+			runId,
+			status: 'starting',
+			worktreeRoot,
+			launcherPid: process.pid,
+			startedAt: new Date().toISOString(),
+			ports: { web: webPort, server: serverPort },
+			urls,
+			services: {
+				web: { pid: null, ready: false },
+				server: { pid: null, ready: false },
+			},
+			error: null,
+		};
+		if (shuttingDown) return;
+		await writeManifest(manifest);
+		if (shuttingDown) return;
+
+		const environment = {
+			...process.env,
+			PORT: String(serverPort),
+			HANABI_DEV_WEB_PORT: String(webPort),
+			HANABI_DEV_SERVER_URL: urls.server,
+		};
+		const spawnOptions = {
+			cwd: worktreeRoot,
+			env: environment,
+			stdio: 'inherit',
+			detached: process.platform !== 'win32',
+		};
+		const reportChildFailure = (message) => {
+			if (shuttingDown || failureReported) return;
+			failureReported = true;
+			void reportRuntimeFailure(manifest, message, shutdown).catch((error) =>
+				console.error(error instanceof Error ? error.message : error),
+			);
+		};
+
+		server = spawn('pnpm', ['--dir', 'apps/server', 'dev'], spawnOptions);
+		monitorChild(server, 'server', reportChildFailure);
+		web = spawn('pnpm', ['--dir', 'apps/web', 'dev'], spawnOptions);
+		monitorChild(web, 'web', reportChildFailure);
+		manifest.services.server.pid = server.pid ?? null;
+		manifest.services.web.pid = web.pid ?? null;
+		await writeManifest(manifest);
+
 		await Promise.all([
 			waitForUrl(`${urls.server}/api/readyz`, 60_000, readinessAbortController.signal),
 			waitForUrl(urls.web, 60_000, readinessAbortController.signal),
@@ -215,11 +296,17 @@ export async function start() {
 		console.log(`Hanabi server: ${urls.server}`);
 		await Promise.all([waitForChildExit(server), waitForChildExit(web)]);
 	} catch (error) {
-		if (shuttingDown) return;
-		manifest.status = 'failed';
-		manifest.error = error instanceof Error ? error.message : String(error);
-		await writeManifest(manifest);
-		await shutdown(1, true);
+		if (!shuttingDown) {
+			if (manifest) {
+				await reportRuntimeFailure(
+					manifest,
+					error instanceof Error ? error.message : String(error),
+					shutdown,
+				);
+			} else {
+				await shutdown(1, true);
+			}
+		}
 		throw error;
 	}
 }
@@ -253,7 +340,6 @@ async function main() {
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
 	main().catch(async (error) => {
-		await rm(lockPath, { force: true });
 		console.error(error instanceof Error ? error.message : error);
 		process.exitCode = 1;
 	});

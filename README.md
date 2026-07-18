@@ -93,11 +93,16 @@ packages/
 `dist/apps/server/main.js`. The Heroku-compatible process is:
 
 ```bash
-NODE_ENV=production SESSION_COOKIE_SECRET=<strong-secret> node dist/apps/server/main.js
+NODE_ENV=production \
+SESSION_COOKIE_SECRET=<at-least-32-character-secret> \
+GAME_STORE=redis \
+REDIS_URL=<redis-or-rediss-url> \
+node dist/apps/server/main.js
 ```
 
-Production refuses the development cookie secret. Set `GAME_STORE=redis` and `REDIS_URL` for Redis;
-the default file store is intended for local use.
+Production requires an explicit store and refuses weak cookie secrets. The file store is intended for
+local use; an intentional single-process production run must set both `GAME_STORE=file` and
+`ALLOW_FILE_GAME_STORE=true`.
 
 ## VS Code
 

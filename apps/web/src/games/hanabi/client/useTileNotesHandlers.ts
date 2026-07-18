@@ -28,7 +28,7 @@ export default function useTileNotesHandlers(): {
 
 	const handleTileMouseOver = useCallback(
 		(event: React.MouseEvent<HTMLElement>, tileId: string) => {
-			const rect = (event.target as any).getBoundingClientRect();
+			const rect = event.currentTarget.getBoundingClientRect();
 
 			setShowNotesForTile({
 				tileId,

@@ -1,6 +1,6 @@
 import useFocusVisible from '~/utils/client/useFocusVisible';
 import classNames from 'classnames';
-import { ChangeEventHandler, forwardRef, useState } from 'react';
+import { ChangeEventHandler, ForwardedRef, forwardRef, useState } from 'react';
 
 interface Props {
 	id?: string;
@@ -8,7 +8,10 @@ interface Props {
 	checked: boolean;
 }
 
-function HanabiCheckbox({ id, onChange, checked }: Props, ref: any): JSX.Element {
+function HanabiCheckbox(
+	{ id, onChange, checked }: Props,
+	ref: ForwardedRef<HTMLInputElement>,
+): JSX.Element {
 	const isFocusVisible = useFocusVisible();
 
 	const [finalId] = useState(() => id ?? `checkbox-${crypto.randomUUID()}`);

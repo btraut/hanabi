@@ -22,26 +22,27 @@ export default function HanabiTileAction({ action }: Props): JSX.Element {
 
 	const isFocusVisible = useFocusVisible();
 
-	const { highlightTiles, highlightAction, highlightedAction } = useHanabiHighlightContext();
+	const highlightContext = useHanabiHighlightContext();
+	const { highlightedAction } = highlightContext;
 	const thisActionHighlighted = highlightedAction === action.id;
 
 	const handleClick = () => {
 		if (thisActionHighlighted) {
-			highlightAction(null);
-			highlightTiles(new Set());
+			highlightContext.highlightAction(null);
+			highlightContext.highlightTiles(new Set());
 		} else {
-			highlightAction(action.id);
+			highlightContext.highlightAction(action.id);
 
 			if (
 				action.type === HanabiGameActionType.Play ||
 				action.type === HanabiGameActionType.Discard
 			) {
-				highlightTiles(new Set([action.tile.id]));
+				highlightContext.highlightTiles(new Set([action.tile.id]));
 			} else if (
 				action.type === HanabiGameActionType.GiveColorClue ||
 				action.type === HanabiGameActionType.GiveNumberClue
 			) {
-				highlightTiles(new Set(action.tiles.map((a) => a.id)));
+				highlightContext.highlightTiles(new Set(action.tiles.map((a) => a.id)));
 			}
 		}
 	};

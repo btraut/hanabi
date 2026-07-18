@@ -1,6 +1,6 @@
 import useFocusVisible from '~/utils/client/useFocusVisible';
 import classNames from 'classnames';
-import { forwardRef, SyntheticEvent } from 'react';
+import { ForwardedRef, forwardRef, SyntheticEvent } from 'react';
 
 interface Props {
 	onClick?: (event: SyntheticEvent) => void;
@@ -8,7 +8,10 @@ interface Props {
 	disabled?: boolean;
 }
 
-function HanabiMenuButton({ onClick, label, disabled = false }: Props, ref: any): JSX.Element {
+function HanabiMenuButton(
+	{ onClick, label, disabled = false }: Props,
+	ref: ForwardedRef<HTMLButtonElement>,
+): JSX.Element {
 	const isFocusVisible = useFocusVisible();
 
 	return (

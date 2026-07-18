@@ -1,6 +1,6 @@
 import useFocusVisible from '~/utils/client/useFocusVisible';
 import classNames from 'classnames';
-import { ChangeEventHandler, forwardRef, useState } from 'react';
+import { ChangeEventHandler, ForwardedRef, forwardRef, useState } from 'react';
 
 interface Props {
 	id?: string;
@@ -9,7 +9,10 @@ interface Props {
 	value: string;
 }
 
-function HanabiDropdown({ id, onChange, options, value }: Props, ref: any): JSX.Element {
+function HanabiDropdown(
+	{ id, onChange, options, value }: Props,
+	ref: ForwardedRef<HTMLSelectElement>,
+): JSX.Element {
 	const isFocusVisible = useFocusVisible();
 
 	const [finalId] = useState(() => id ?? `dropdown-${crypto.randomUUID()}`);

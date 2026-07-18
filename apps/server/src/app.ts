@@ -2,13 +2,16 @@ import compress from 'compression';
 import cookieParser from 'cookie-parser';
 import express from 'express';
 import morgan from 'morgan';
-import { SocketMessageBase } from '@hanabi/shared';
 import { randomUUID } from 'node:crypto';
 import { createServer, Server as HTTPServer } from 'node:http';
 import SocketManager from './utils/SocketManager.js';
+import {
+	assertValidProductionSessionSecret,
+	DEVELOPMENT_SESSION_COOKIE_SECRET,
+} from './sessionSecret.js';
 
 export const SESSION_COOKIE_NAME = 'SESSION';
-export const DEVELOPMENT_SESSION_COOKIE_SECRET = 'dev-secret';
+export { DEVELOPMENT_SESSION_COOKIE_SECRET };
 const AUTH_TOKEN_RATE_LIMIT = 60;
 const AUTH_TOKEN_RATE_WINDOW_MS = 60_000;
 const MAX_RATE_LIMIT_KEYS = 10_000;
@@ -23,23 +26,16 @@ export interface CreateAppOptions {
 	sessionCookieSecret: string;
 }
 
-export interface ServerRuntime<MessageType extends SocketMessageBase = SocketMessageBase> {
+export interface ServerRuntime {
 	app: express.Express;
 	httpServer: HTTPServer;
-	socketManager: SocketManager<MessageType>;
+	socketManager: SocketManager;
 	listen(port: number, hostname?: string): Promise<void>;
 	close(): Promise<void>;
 }
 
-export function createApp<MessageType extends SocketMessageBase = SocketMessageBase>(
-	options: CreateAppOptions,
-): ServerRuntime<MessageType> {
-	if (
-		options.nodeEnv === 'production' &&
-		options.sessionCookieSecret === DEVELOPMENT_SESSION_COOKIE_SECRET
-	) {
-		throw new Error('SESSION_COOKIE_SECRET must be configured in production.');
-	}
+export function createApp(options: CreateAppOptions): ServerRuntime {
+	assertValidProductionSessionSecret(options.nodeEnv, options.sessionCookieSecret);
 
 	const app = express();
 	app.enable('strict routing');
@@ -51,11 +47,12 @@ export function createApp<MessageType extends SocketMessageBase = SocketMessageB
 	app.use(cookieParser(options.sessionCookieSecret));
 
 	const httpServer = createServer(app);
-	const socketManager = new SocketManager<MessageType>(httpServer);
+	const socketManager = new SocketManager(httpServer);
 	socketManager.start();
 	const authTokenRateLimits = new Map<string, RateLimitEntry>();
 
 	app.get('/api/auth-socket', (req, res) => {
+		res.set('Cache-Control', 'no-store');
 		const now = Date.now();
 		const rateLimitKey = req.ip || req.socket.remoteAddress || 'unknown';
 		let rateLimit = authTokenRateLimits.get(rateLimitKey);
@@ -99,7 +96,7 @@ export function createApp<MessageType extends SocketMessageBase = SocketMessageB
 			});
 		}
 
-		res.json({ token: socketManager.addTokenForUser(userId) });
+		res.json({ token: socketManager.addTokenForUser(userId, rateLimitKey) });
 	});
 
 	return {

@@ -11,12 +11,12 @@ import SocketManager from './SocketManager.js';
 
 const sockets: Socket[] = [];
 const servers: HTTPServer[] = [];
-const managers: SocketManager<SocketMessageBase>[] = [];
+const managers: SocketManager[] = [];
 
 async function createSocketManager() {
 	const httpServer = createServer();
 	servers.push(httpServer);
-	const manager = new SocketManager<SocketMessageBase>(httpServer);
+	const manager = new SocketManager(httpServer);
 	managers.push(manager);
 	manager.start();
 	await new Promise<void>((resolve) => httpServer.listen(0, '127.0.0.1', resolve));
@@ -126,5 +126,56 @@ describe('SocketManager', () => {
 		await finalDisconnect;
 
 		expect(disconnectedUsers).toEqual(['player-one']);
+	});
+
+	it('removes the old user association when a socket authenticates as another user', async () => {
+		const { manager, url } = await createSocketManager();
+		const disconnectedUsers: string[] = [];
+		manager.onDisconnect.subscribe(({ userId }) => disconnectedUsers.push(userId));
+		const socket = await connect(url);
+
+		await authenticate(socket, manager.addTokenForUser('player-one'));
+		await authenticate(socket, manager.addTokenForUser('player-two'));
+
+		expect(disconnectedUsers).toEqual(['player-one']);
+		const received: SocketMessageBase[] = [];
+		socket.on('message', (message: SocketMessageBase) => received.push(message));
+		manager.send('player-one', { scope: 'test', type: 'OldUserMessage', data: undefined });
+		manager.send('player-two', { scope: 'test', type: 'NewUserMessage', data: undefined });
+		await new Promise((resolve) => setTimeout(resolve, 25));
+
+		expect(received.map(({ type }) => type)).toEqual(['NewUserMessage']);
+	});
+
+	it('rate limits repeated full-state requests from an authenticated socket', async () => {
+		const { manager, url } = await createSocketManager();
+		const socket = await connect(url);
+		await authenticate(socket, manager.addTokenForUser('player-one'));
+		const receivedTypes: string[] = [];
+		manager.onMessage.subscribe(({ message }) => receivedTypes.push(message.type));
+
+		for (let index = 0; index < 6; index += 1) {
+			socket.emit('message', {
+				scope: 'game.hanabi.test',
+				type: 'GetGameDataMessage',
+				data: undefined,
+			});
+		}
+		await new Promise((resolve) => setTimeout(resolve, 25));
+
+		expect(receivedTypes).toHaveLength(4);
+
+		socket.disconnect();
+		await new Promise((resolve) => setTimeout(resolve, 25));
+		const reconnectedSocket = await connect(url);
+		await authenticate(reconnectedSocket, manager.addTokenForUser('player-one'));
+		reconnectedSocket.emit('message', {
+			scope: 'game.hanabi.test',
+			type: 'GetGameDataMessage',
+			data: undefined,
+		});
+		await new Promise((resolve) => setTimeout(resolve, 25));
+
+		expect(receivedTypes).toHaveLength(4);
 	});
 });

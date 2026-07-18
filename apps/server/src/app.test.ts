@@ -10,7 +10,7 @@ const sockets: Socket[] = [];
 async function startRuntime(nodeEnv: 'development' | 'production' = 'development') {
 	const runtime = createApp({
 		nodeEnv,
-		sessionCookieSecret: 'integration-test-secret',
+		sessionCookieSecret: 'integration-test-secret-at-least-32-chars',
 	});
 	runtimes.push(runtime);
 
@@ -65,6 +65,7 @@ describe('createApp', () => {
 		const { token } = (await authResponse.json()) as { token: string };
 
 		expect(authResponse.status).toBe(200);
+		expect(authResponse.headers.get('cache-control')).toBe('no-store');
 		expect(cookie).toMatch(/^SESSION=s%3A/);
 		expect(cookie).toContain('HttpOnly');
 		expect(cookie).toContain('SameSite=Lax');
@@ -117,6 +118,15 @@ describe('createApp', () => {
 		expect(() => createApp({ nodeEnv: 'production', sessionCookieSecret: 'dev-secret' })).toThrow(
 			'SESSION_COOKIE_SECRET',
 		);
+		expect(() =>
+			createApp({ nodeEnv: 'production', sessionCookieSecret: 'still-too-short' }),
+		).toThrow('at least 32 characters');
+		expect(() =>
+			createApp({
+				nodeEnv: 'production',
+				sessionCookieSecret: 'replace-with-at-least-32-random-characters',
+			}),
+		).toThrow('documented placeholder');
 	});
 
 	it('rate limits unauthenticated token issuance', async () => {

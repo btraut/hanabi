@@ -22,15 +22,7 @@ export default function Tooltip({
 
 	const handleBodyClick = useCallback(
 		(event: MouseEvent) => {
-			let isTooltip = false;
-			let ele: any = event.target;
-			while (ele) {
-				if (ele === tooltipRef.current) {
-					isTooltip = true;
-					break;
-				}
-				ele = ele.parentNode;
-			}
+			const isTooltip = event.target instanceof Node && tooltipRef.current?.contains(event.target);
 
 			if (onClose && !isTooltip) {
 				onClose();

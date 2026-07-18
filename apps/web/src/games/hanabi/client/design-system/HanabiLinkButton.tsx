@@ -1,13 +1,16 @@
 import useFocusVisible from '~/utils/client/useFocusVisible';
 import classNames from 'classnames';
-import { forwardRef } from 'react';
+import { ForwardedRef, forwardRef } from 'react';
 
 interface Props {
 	href: string;
 	label: string;
 }
 
-function HanabiLinkButton({ href, label }: Props, ref: any): JSX.Element {
+function HanabiLinkButton(
+	{ href, label }: Props,
+	ref: ForwardedRef<HTMLAnchorElement>,
+): JSX.Element {
 	const isFocusVisible = useFocusVisible();
 
 	return (

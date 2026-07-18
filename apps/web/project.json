@@ -28,7 +28,7 @@
 			"outputs": ["{options.outputFile}"],
 			"options": {
 				"lintFilePatterns": ["apps/web/src/**/*.{ts,tsx}"],
-				"maxWarnings": 55
+				"maxWarnings": 0
 			}
 		},
 		"typecheck": {

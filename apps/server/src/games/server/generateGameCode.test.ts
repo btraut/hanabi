@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { generateGameCode } from './generateGameCode.js';
 
 describe('generateGameCode', () => {
-	it('uses the current four-character default and unambiguous alphabet', () => {
+	it('uses a six-character default, a cryptographic generator, and an unambiguous alphabet', () => {
 		for (let index = 0; index < 100; index += 1) {
-			expect(generateGameCode()).toMatch(/^[23456789abdegjkmnpqrvwxyz]{4}$/);
+			expect(generateGameCode()).toMatch(/^[23456789abdegjkmnpqrvwxyz]{6}$/);
 		}
 	});
 

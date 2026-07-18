@@ -1,11 +1,11 @@
-import { getPositionInContainer } from '~/games/hanabi/client/HanabiDragDropUtils';
+import { getPositionInContainer } from '@hanabi/shared';
 import { HANABI_DRAG_TYPES, HanabiDragTypes } from '~/games/hanabi/client/HanabiDragTypes';
 import HanabiTileView from '~/games/hanabi/client/HanabiTileView';
 import { useDragLayer } from 'react-dnd';
 
 export default function HanabiPlayerTilesDragLayer(): JSX.Element | null {
 	const { itemType, isDragging, item, delta } = useDragLayer((monitor) => ({
-		item: monitor.getItem() as HanabiDragTypes,
+		item: monitor.getItem<HanabiDragTypes>(),
 		itemType: monitor.getItemType(),
 		delta: monitor.getDifferenceFromInitialOffset(),
 		isDragging: monitor.isDragging(),

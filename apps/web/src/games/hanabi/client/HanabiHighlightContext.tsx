@@ -1,11 +1,11 @@
 import { createContext, useContext } from 'react';
 
 export interface HanabiHighlightContext {
-	highlightTiles(tiles: Set<string>): void;
-	highlightedTiles: Set<string>;
+	readonly highlightTiles: (tiles: Set<string>) => void;
+	readonly highlightedTiles: Set<string>;
 
-	highlightAction(id: string | null): void;
-	highlightedAction: string | null;
+	readonly highlightAction: (id: string | null) => void;
+	readonly highlightedAction: string | null;
 }
 
 const context = createContext<HanabiHighlightContext | null>(null);
