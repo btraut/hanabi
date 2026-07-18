@@ -1,5 +1,6 @@
-import { useGameData } from '~/games/hanabi/client/HanabiGameContext';
+import { useGameData, useTransitioningTileId } from '~/games/hanabi/client/HanabiGameContext';
 import { useHanabiHighlightContext } from '~/games/hanabi/client/HanabiHighlightContext';
+import { getTileViewTransitionName } from '~/games/hanabi/client/HanabiActionTransition';
 import HanabiInteractiveTileView from '~/games/hanabi/client/HanabiInteractiveTileView';
 import HanabiTileView, { TileViewSize } from '~/games/hanabi/client/HanabiTileView';
 import {
@@ -21,6 +22,7 @@ export default function HanabiPlayedTiles({
 	onTileMouseOut,
 }: Props): JSX.Element {
 	const gameData = useGameData();
+	const transitioningTileId = useTransitioningTileId();
 
 	const { highlightedTiles } = useHanabiHighlightContext();
 
@@ -56,22 +58,26 @@ export default function HanabiPlayedTiles({
 										style={{ width: tileSize.height, height: tileSize.width }}
 									>
 										<div className="transform rotate-90 absolute">
-											<div>
-												{playedTile ? (
-													<HanabiInteractiveTileView
-														tile={playedTile}
-														onMouseOver={onTileMouseOver}
-														onMouseOut={onTileMouseOut}
-														highlight={playedTile && highlightedTiles.has(playedTile.id)}
-														size={tileViewSize}
-													/>
-												) : (
-													<HanabiTileView
-														color={color}
-														number={number}
-														size={tileViewSize}
-														placeholder
-													/>
+											<div className="relative">
+												<HanabiTileView
+													color={color}
+													number={number}
+													size={tileViewSize}
+													placeholder
+												/>
+												{playedTile && (
+													<div className="absolute inset-0">
+														<HanabiTileView
+															color={playedTile.color}
+															number={playedTile.number}
+															size={tileViewSize}
+															viewTransitionName={
+																transitioningTileId === playedTile.id
+																	? getTileViewTransitionName(playedTile.id)
+																	: undefined
+															}
+														/>
+													</div>
 												)}
 											</div>
 										</div>
@@ -89,6 +95,11 @@ export default function HanabiPlayedTiles({
 										onMouseOut={onTileMouseOut}
 										highlight={highlightedTiles.has(tile.id)}
 										size={tileViewSize}
+										viewTransitionName={
+											transitioningTileId === tile.id
+												? getTileViewTransitionName(tile.id)
+												: undefined
+										}
 									/>
 								))}
 							</div>

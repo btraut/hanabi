@@ -1,8 +1,9 @@
 import { useUserId } from '~/components/SocketContext';
-import { useGameData } from '~/games/hanabi/client/HanabiGameContext';
+import { useGameData, useTransitioningTileId } from '~/games/hanabi/client/HanabiGameContext';
 import { useHanabiHighlightContext } from '~/games/hanabi/client/HanabiHighlightContext';
 import HanabiInteractiveTileView from '~/games/hanabi/client/HanabiInteractiveTileView';
 import { useHanabiMoveTileContext } from '~/games/hanabi/client/HanabiMoveTileContext';
+import { getTileViewTransitionName } from '~/games/hanabi/client/HanabiActionTransition';
 import HanabiPlayerTilesDragLayer from '~/games/hanabi/client/HanabiPlayerTilesDragLayer';
 import useJustTookAction from '~/games/hanabi/client/useJustTookAction';
 import { HANABI_BOARD_SIZE } from '@hanabi/shared';
@@ -25,6 +26,7 @@ export default function HanabiPlayerTiles({
 	onTileMouseDown,
 }: Props): JSX.Element {
 	const gameData = useGameData();
+	const transitioningTileId = useTransitioningTileId();
 	const userId = useUserId();
 	const { tilePositions } = useHanabiMoveTileContext();
 
@@ -48,37 +50,48 @@ export default function HanabiPlayerTiles({
 				<div className="absolute bottom-0 left-0 right-0 h-1/2 bg-black opacity-5" />
 			)}
 			<div style={HANABI_BOARD_SIZE} className="relative z-0">
-				{gameData.playerTiles[id].map((tileId, index) => (
-					<div
-						key={`TileContainer-${tileId}`}
-						className={classNames('absolute top-0 left-0', {
-							'duration-100': !ownTiles || isDragging || justTookAction,
-						})}
-						style={{
-							transform: `translate(${tilePositions[tileId].x}px, ${tilePositions[tileId].y}px)`,
-							zIndex: tilePositions[tileId].z,
-						}}
-					>
-						<HanabiInteractiveTileView
-							tile={gameData.tiles[tileId]}
-							ariaLabel={
-								ownTiles
-									? `Your tile ${index + 1}`
-									: `${gameData.players[id].name}'s tile ${index + 1}`
-							}
-							hidden={gameStillPlaying && ownTiles}
-							onClick={enableOnClick ? onTileClick : undefined}
-							onMouseOver={onTileMouseOver}
-							onMouseOut={onTileMouseOut}
-							onMouseDown={onTileMouseDown}
-							draggable={gameData.allowDragging && gameStillPlaying && ownTiles}
-							notesIndicator={
-								gameStillPlaying && ownTiles && gameData.showNotes && !!gameData.tileNotes[tileId]
-							}
-							highlight={highlightedTiles.has(tileId)}
-						/>
-					</div>
-				))}
+				{gameData.playerTiles[id].map((tileId, index) => {
+					const isTransitioning = transitioningTileId === tileId;
+
+					return (
+						<div
+							key={`TileContainer-${tileId}`}
+							className={classNames('absolute top-0 left-0', {
+								'duration-100': !ownTiles || isDragging || justTookAction,
+							})}
+							style={{
+								transform: `translate(${tilePositions[tileId].x}px, ${tilePositions[tileId].y}px)`,
+								zIndex: tilePositions[tileId].z,
+							}}
+						>
+							<HanabiInteractiveTileView
+								tile={gameData.tiles[tileId]}
+								ariaLabel={
+									ownTiles
+										? `Your tile ${index + 1}`
+										: `${gameData.players[id].name}'s tile ${index + 1}`
+								}
+								hidden={gameStillPlaying && ownTiles}
+								onClick={enableOnClick ? onTileClick : undefined}
+								onMouseOver={isTransitioning ? undefined : onTileMouseOver}
+								onMouseOut={isTransitioning ? undefined : onTileMouseOut}
+								onMouseDown={isTransitioning ? undefined : onTileMouseDown}
+								draggable={
+									!isTransitioning && gameData.allowDragging && gameStillPlaying && ownTiles
+								}
+								notesIndicator={
+									!isTransitioning &&
+									gameStillPlaying &&
+									ownTiles &&
+									gameData.showNotes &&
+									!!gameData.tileNotes[tileId]
+								}
+								highlight={!isTransitioning && highlightedTiles.has(tileId)}
+								viewTransitionName={isTransitioning ? getTileViewTransitionName(tileId) : undefined}
+							/>
+						</div>
+					);
+				})}
 				{gameStillPlaying && ownTiles && <HanabiPlayerTilesDragLayer />}
 			</div>
 		</div>

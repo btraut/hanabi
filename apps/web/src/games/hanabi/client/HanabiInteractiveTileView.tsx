@@ -39,6 +39,9 @@ interface Props {
 
 	// Optionally show a 1px border on this tile.
 	border?: boolean;
+
+	// Give this rendered tile a stable identity across an action state update.
+	viewTransitionName?: string;
 }
 
 export default function HanabiInteractiveTileView({
@@ -54,6 +57,7 @@ export default function HanabiInteractiveTileView({
 	highlight = false,
 	notesIndicator = false,
 	border = true,
+	viewTransitionName,
 }: Props): JSX.Element | null {
 	const isFocusVisible = useFocusVisible();
 
@@ -129,6 +133,7 @@ export default function HanabiInteractiveTileView({
 				highlight={highlight}
 				notesIndicator={hidden && notesIndicator}
 				size={size}
+				viewTransitionName={viewTransitionName}
 			/>
 		</Comp>
 	);

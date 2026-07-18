@@ -30,9 +30,11 @@ interface Props {
 
 	// Optionally show a 1px border on this tile.
 	border?: boolean;
-
 	// Render an empty firework position while keeping its required number legible.
 	placeholder?: boolean;
+
+	// Give this rendered tile a stable identity across an action state update.
+	viewTransitionName?: string;
 }
 
 export default function HanabiTileView({
@@ -43,10 +45,14 @@ export default function HanabiTileView({
 	notesIndicator = false,
 	border = true,
 	placeholder = false,
+	viewTransitionName,
 }: Props): JSX.Element | null {
 	return (
 		<div
-			style={size === TileViewSize.Regular ? HANABI_TILE_SIZE : HANABI_TILE_SIZE_SMALL}
+			style={{
+				...(size === TileViewSize.Regular ? HANABI_TILE_SIZE : HANABI_TILE_SIZE_SMALL),
+				viewTransitionName,
+			}}
 			className={classNames([
 				'bg-black rounded-lg flex items-center justify-center select-none relative',
 				{
