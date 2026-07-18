@@ -1,0 +1,10 @@
+version = 1
+name = "hanabi"
+
+[setup]
+script = "pnpm install --frozen-lockfile"
+
+[[actions]]
+name = "Run"
+icon = "run"
+command = "pnpm dev"
