@@ -64,17 +64,9 @@ describe('AuthSocketManager', () => {
 			.mockResolvedValueOnce(authenticationResponse('user-1'))
 			.mockRejectedValueOnce(new Error('temporary failure'))
 			.mockResolvedValueOnce(authenticationResponse('user-1'));
-		const auth = new AuthSocketManager(manager);
+		const auth = new AuthSocketManager(manager, { reauthenticationDelays: [0] });
 
 		await auth.authenticate();
-		fake.onDisconnect.emit();
-		fake.onConnect.emit();
-
-		await vi.waitFor(() => {
-			expect(auth.authenticationState).toBe(AuthenticationState.Unauthenticated);
-			expect(console.error).toHaveBeenCalledTimes(1);
-		});
-
 		fake.onDisconnect.emit();
 		fake.onConnect.emit();
 
@@ -83,5 +75,50 @@ describe('AuthSocketManager', () => {
 			expect(auth.userId).toBe('user-1');
 		});
 		expect(fake.expectMessageOfType).toHaveBeenCalledTimes(3);
+		expect(console.error).not.toHaveBeenCalled();
+	});
+
+	it('retries an initial keep-alive authentication failure while connected', async () => {
+		const { fake, manager } = createSocketManager();
+		fake.expectMessageOfType
+			.mockRejectedValueOnce(new Error('temporary failure'))
+			.mockResolvedValueOnce(authenticationResponse('user-1'));
+		const auth = new AuthSocketManager(manager, { reauthenticationDelays: [0] });
+
+		await expect(auth.authenticate()).rejects.toThrow('temporary failure');
+
+		await vi.waitFor(() => {
+			expect(auth.authenticationState).toBe(AuthenticationState.Authenticated);
+			expect(auth.userId).toBe('user-1');
+		});
+		expect(fake.expectMessageOfType).toHaveBeenCalledTimes(2);
+	});
+
+	it('stops automatic reauthentication after bounded failures', async () => {
+		const { fake, manager } = createSocketManager();
+		fake.expectMessageOfType
+			.mockResolvedValueOnce(authenticationResponse('user-1'))
+			.mockRejectedValue(new Error('temporary failure'));
+		const auth = new AuthSocketManager(manager, { reauthenticationDelays: [0, 0] });
+
+		await auth.authenticate();
+		fake.onDisconnect.emit();
+		fake.onConnect.emit();
+
+		await vi.waitFor(() => {
+			expect(console.error).toHaveBeenCalledTimes(1);
+		});
+		expect(fake.expectMessageOfType).toHaveBeenCalledTimes(4);
+		expect(auth.authenticationState).toBe(AuthenticationState.Unauthenticated);
+		expect(auth.userId).toBeNull();
+	});
+
+	it('rejects an authentication response without a token', async () => {
+		const { manager } = createSocketManager();
+		vi.spyOn(Ajax, 'get').mockResolvedValue({ error: 'not a token' });
+		const auth = new AuthSocketManager(manager);
+
+		await expect(auth.authenticate(false)).rejects.toThrow('valid socket token');
+		expect(auth.authenticationState).toBe(AuthenticationState.Unauthenticated);
 	});
 });

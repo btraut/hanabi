@@ -7,15 +7,17 @@ import {
 	HANABI_BOARD_SIZE,
 	HANABI_DEFAULT_TILE_POSITIONS,
 	HANABI_GAME_TITLE,
+	HANABI_MAX_ACTIONS,
+	HANABI_MAX_CHAT_LENGTH,
 	HANABI_MAX_CLUES,
 	HANABI_MAX_PLAYERS,
 	HANABI_MIN_PLAYERS,
 	HANABI_TILE_SIZE,
 	HANABI_TILES_IN_HAND,
 	HanabiFinishedReason,
+	HanabiGameAction,
 	HanabiGameActionType,
 	HanabiGameData,
-	HanabiPlayer,
 	HanabiStage,
 	HanabiTile,
 	Position,
@@ -39,11 +41,13 @@ import { SaveGameDelegate } from '../server/GameStore.js';
 import UserConnectionListener, { UserConnectionChange } from '../server/UserConnectionListener.js';
 import ServerSocketManager from '../../utils/SocketManager.js';
 import { randomUUID } from 'node:crypto';
-import { env } from '../../env.js';
 
 export interface HanabiGameSerialized extends GameSerialized {
 	data: HanabiGameData;
 }
+
+const INVALID_MESSAGE_PAYLOAD = 'Invalid message payload.';
+const READ_ACTIVITY_SAVE_INTERVAL_MS = 60_000;
 
 export default class HanabiGame extends Game {
 	get title(): string {
@@ -54,11 +58,13 @@ export default class HanabiGame extends Game {
 
 	private _messenger: GameMessenger<HanabiMessage>;
 	private _userConnectionListener: UserConnectionListener;
+	private _lastReadActivitySaveAt = 0;
 
 	constructor(
 		creatorIdOrData: string | HanabiGameSerialized,
-		socketManager: ServerSocketManager<HanabiMessage>,
+		socketManager: ServerSocketManager,
 		saveGameDelegate: SaveGameDelegate,
+		private readonly _minimumPlayers = HANABI_MIN_PLAYERS,
 	) {
 		super(
 			typeof creatorIdOrData === 'string' ? creatorIdOrData : creatorIdOrData.creatorId,
@@ -71,7 +77,15 @@ export default class HanabiGame extends Game {
 			this._creatorId = creatorIdOrData.creatorId;
 			this._created = new Date(creatorIdOrData.created);
 			this._updated = new Date(creatorIdOrData.updated);
-			this._gameData = creatorIdOrData.data;
+			this._gameData = {
+				...creatorIdOrData.data,
+				players: Object.fromEntries(
+					Object.entries(creatorIdOrData.data.players).map(([id, player]) => [
+						id,
+						{ ...player, connected: false },
+					]),
+				),
+			};
 		}
 
 		this._messenger = new GameMessenger(socketManager, getScope(HANABI_GAME_TITLE, this.id));
@@ -99,6 +113,142 @@ export default class HanabiGame extends Game {
 		return [...new Set([...this.watchers, ...Object.keys(this._gameData.players)])];
 	}
 
+	private _isRecord(value: unknown): value is Record<string, unknown> {
+		return typeof value === 'object' && value !== null && !Array.isArray(value);
+	}
+
+	private _messagePayloadIsValid(message: HanabiMessage): boolean {
+		const data: unknown = message.data;
+		switch (message.type) {
+			case 'GetGameDataMessage':
+			case 'StartGameMessage':
+			case 'ResetGameMessage':
+				return data === undefined;
+			case 'AddPlayerMessage':
+				return this._isRecord(data) && typeof data.name === 'string';
+			case 'RemovePlayerMessage':
+				return (
+					this._isRecord(data) && (data.playerId === undefined || typeof data.playerId === 'string')
+				);
+			case 'ChangeGameSettingsMessage':
+				return (
+					this._isRecord(data) &&
+					Object.keys(data).every((key) =>
+						['ruleSet', 'allowDragging', 'showNotes', 'criticalGameOver'].includes(key),
+					) &&
+					(data.ruleSet === undefined ||
+						['5-color', '6-color', 'rainbow'].includes(data.ruleSet as string)) &&
+					(data.allowDragging === undefined || typeof data.allowDragging === 'boolean') &&
+					(data.showNotes === undefined || typeof data.showNotes === 'boolean') &&
+					(data.criticalGameOver === undefined || typeof data.criticalGameOver === 'boolean')
+				);
+			case 'SendChatMessage':
+				return typeof data === 'string';
+			case 'PlayTileMessage':
+			case 'DiscardTileMessage':
+				return this._isRecord(data) && typeof data.id === 'string';
+			case 'GiveClueMessage':
+				return (
+					this._isRecord(data) &&
+					typeof data.to === 'string' &&
+					(data.color === undefined || typeof data.color === 'string') &&
+					(data.number === undefined || typeof data.number === 'number')
+				);
+			case 'MoveTilesMessage':
+				return this._isRecord(data);
+			default:
+				return true;
+		}
+	}
+
+	private _sendInvalidPayloadResponse(userId: string, message: HanabiMessage): void {
+		const data = { error: INVALID_MESSAGE_PAYLOAD };
+		switch (message.type) {
+			case 'GetGameDataMessage':
+				this._sendGameData(userId);
+				break;
+			case 'AddPlayerMessage':
+				this._messenger.send(userId, { type: 'AddPlayerResponseMessage', data });
+				break;
+			case 'RemovePlayerMessage':
+				this._messenger.send(userId, { type: 'RemovePlayerResponseMessage', data });
+				break;
+			case 'ChangeGameSettingsMessage':
+				this._messenger.send(userId, { type: 'ChangeGameSettingsResponseMessage', data });
+				break;
+			case 'SendChatMessage':
+				this._messenger.send(userId, { type: 'SendChatResponseMessage', data });
+				break;
+			case 'StartGameMessage':
+				this._messenger.send(userId, { type: 'StartGameResponseMessage', data });
+				break;
+			case 'ResetGameMessage':
+				this._messenger.send(userId, { type: 'ResetGameResponseMessage', data });
+				break;
+			case 'PlayTileMessage':
+				this._messenger.send(userId, { type: 'PlayTileResponseMessage', data });
+				break;
+			case 'DiscardTileMessage':
+				this._messenger.send(userId, { type: 'DiscardTileResponseMessage', data });
+				break;
+			case 'GiveClueMessage':
+				this._messenger.send(userId, { type: 'GiveClueResponseMessage', data });
+				break;
+			case 'MoveTilesMessage':
+				this._messenger.send(userId, { type: 'MoveTilesResponseMessage', data });
+				break;
+		}
+	}
+
+	private _gameDataForRecipient(userId: string): HanabiGameData {
+		if (this._gameData.stage === HanabiStage.Finished) {
+			return this._gameData;
+		}
+
+		const concealedTileIds = new Set(this._gameData.remainingTiles);
+		for (const tileId of this._gameData.playerTiles[userId] ?? []) {
+			concealedTileIds.add(tileId);
+		}
+		const tiles = { ...this._gameData.tiles };
+		for (const tileId of concealedTileIds) {
+			if (tiles[tileId]) {
+				tiles[tileId] = { id: tileId, color: 'white', number: 1, concealed: true };
+			}
+		}
+		const actions = this._gameData.actions.map((action) => {
+			if (
+				action.type !== HanabiGameActionType.GiveColorClue &&
+				action.type !== HanabiGameActionType.GiveNumberClue
+			) {
+				return action;
+			}
+			return {
+				...action,
+				tiles: action.tiles.map(({ id }) => ({
+					id,
+					color: 'white' as const,
+					number: 1 as const,
+					concealed: true as const,
+				})),
+			};
+		});
+
+		return { ...this._gameData, seed: '', tiles, actions };
+	}
+
+	private _broadcastGameData(additionalUserIds: readonly string[] = []): void {
+		for (const userId of new Set([...additionalUserIds, ...this._getAllPlayerAndWatcherIds()])) {
+			this._messenger.send(userId, {
+				type: 'RefreshGameDataMessage',
+				data: this._gameDataForRecipient(userId),
+			});
+		}
+	}
+
+	private _appendActions(...actions: HanabiGameAction[]): void {
+		this._gameData.actions = [...this._gameData.actions, ...actions].slice(-HANABI_MAX_ACTIONS);
+	}
+
 	private _handleMessage = ({
 		userId,
 		message,
@@ -106,6 +256,11 @@ export default class HanabiGame extends Game {
 		userId: string;
 		message: HanabiMessage;
 	}): void => {
+		if (!this._messagePayloadIsValid(message)) {
+			this._sendInvalidPayloadResponse(userId, message);
+			return;
+		}
+
 		switch (message.type) {
 			case 'GetGameDataMessage':
 				this._sendGameData(userId);
@@ -150,10 +305,7 @@ export default class HanabiGame extends Game {
 
 		this._gameData.players[userId].connected = change === UserConnectionChange.Authenticated;
 
-		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
-			type: 'RefreshGameDataMessage',
-			data: this._gameData,
-		});
+		this._broadcastGameData();
 
 		// Touch the games last updated time.
 		this._update();
@@ -162,11 +314,17 @@ export default class HanabiGame extends Game {
 	private _sendGameData(playerId: string): void {
 		this._messenger.send(playerId, {
 			type: 'RefreshGameDataMessage',
-			data: this._gameData,
+			data: this._gameDataForRecipient(playerId),
 		});
 
-		// Touch the games last updated time.
-		this._update();
+		// Reads keep active games from being pruned, but persist that access at most
+		// once per minute so refresh storms cannot saturate the backing store.
+		const now = Date.now();
+		this._updated = new Date(now);
+		if (now - this._lastReadActivitySaveAt >= READ_ACTIVITY_SAVE_INTERVAL_MS) {
+			this._lastReadActivitySaveAt = now;
+			this._update();
+		}
 	}
 
 	private _handleAddPlayerMessage({ data: { name } }: AddPlayerMessage, playerId: string): void {
@@ -210,10 +368,7 @@ export default class HanabiGame extends Game {
 		});
 
 		// Send the updated state to all players/watchers.
-		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
-			type: 'RefreshGameDataMessage',
-			data: this._gameData,
-		});
+		this._broadcastGameData();
 
 		// Touch the games last updated time.
 		this._update();
@@ -252,10 +407,7 @@ export default class HanabiGame extends Game {
 		});
 
 		// Send the updated state to all players/watchers.
-		this._messenger.send([userId, ...this._getAllPlayerAndWatcherIds()], {
-			type: 'RefreshGameDataMessage',
-			data: this._gameData,
-		});
+		this._broadcastGameData([userId]);
 
 		// Touch the games last updated time.
 		this._update();
@@ -320,10 +472,7 @@ export default class HanabiGame extends Game {
 		});
 
 		// Send the updated state to all players/watchers.
-		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
-			type: 'RefreshGameDataMessage',
-			data: this._gameData,
-		});
+		this._broadcastGameData();
 
 		// Touch the games last updated time.
 		this._update();
@@ -331,24 +480,23 @@ export default class HanabiGame extends Game {
 
 	private _handleSendChatMessage(message: SendChatMessage, userId: string): void {
 		const chat = typeof message.data === 'string' ? message.data.trim() : '';
-		if (!this._gameData.players[userId] || !chat || chat.length > 500) {
+		if (!this._gameData.players[userId] || !chat || chat.length > HANABI_MAX_CHAT_LENGTH) {
 			this._messenger.send(userId, {
 				type: 'SendChatResponseMessage',
-				data: { error: 'Chat messages must be between 1 and 500 characters.' },
+				data: {
+					error: `Chat messages must be between 1 and ${HANABI_MAX_CHAT_LENGTH} characters.`,
+				},
 			});
 			return;
 		}
 
 		// Add the chat action.
-		this._gameData.actions = [
-			...this._gameData.actions,
-			{
-				id: randomUUID(),
-				type: HanabiGameActionType.Chat,
-				playerId: userId,
-				message: chat,
-			},
-		];
+		this._appendActions({
+			id: randomUUID(),
+			type: HanabiGameActionType.Chat,
+			playerId: userId,
+			message: chat,
+		});
 
 		// Success!
 		this._messenger.send(userId, {
@@ -357,10 +505,7 @@ export default class HanabiGame extends Game {
 		});
 
 		// Send the updated state to all players/watchers.
-		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
-			type: 'RefreshGameDataMessage',
-			data: this._gameData,
-		});
+		this._broadcastGameData();
 
 		// Touch the games last updated time.
 		this._update();
@@ -379,7 +524,7 @@ export default class HanabiGame extends Game {
 		}
 
 		const playerCount = Object.keys(this._gameData.players).length;
-		if (playerCount < (env.NODE_ENV === 'development' ? 1 : HANABI_MIN_PLAYERS)) {
+		if (playerCount < this._minimumPlayers) {
 			this._messenger.send(userId, {
 				type: 'StartGameResponseMessage',
 				data: {
@@ -410,7 +555,7 @@ export default class HanabiGame extends Game {
 		this._gameData.stage = HanabiStage.Playing;
 
 		// Generate a fresh deck and randomize the tiles.
-		const players = Object.values(this._gameData.players) as HanabiPlayer[];
+		const players = Object.values(this._gameData.players);
 		const [tiles, remainingTiles] = generateRandomDeck(this._gameData.ruleSet, this._gameData.seed);
 		const tilesInHand = HANABI_TILES_IN_HAND[players.length];
 
@@ -434,18 +579,15 @@ export default class HanabiGame extends Game {
 		this._gameData.remainingTiles = remainingTiles;
 
 		// Set up turn order.
-		this._gameData.turnOrder = shuffle(players.map((p: HanabiPlayer) => p.id));
+		this._gameData.turnOrder = shuffle(players.map((player) => player.id));
 		this._gameData.currentPlayerId = this._gameData.turnOrder[0];
 
 		// Record the action.
-		this._gameData.actions = [
-			...this._gameData.actions,
-			{
-				id: randomUUID(),
-				type: HanabiGameActionType.GameStarted,
-				startingPlayerId: this._gameData.currentPlayerId,
-			},
-		];
+		this._appendActions({
+			id: randomUUID(),
+			type: HanabiGameActionType.GameStarted,
+			startingPlayerId: this._gameData.currentPlayerId,
+		});
 
 		// Send success message.
 		this._messenger.send(userId, {
@@ -454,10 +596,7 @@ export default class HanabiGame extends Game {
 		});
 
 		// Send the updated state to all players/watchers.
-		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
-			type: 'RefreshGameDataMessage',
-			data: this._gameData,
-		});
+		this._broadcastGameData();
 
 		// Touch the games last updated time.
 		this._update();
@@ -501,7 +640,7 @@ export default class HanabiGame extends Game {
 		}
 
 		// Check players' hands for a copy.
-		for (const playerTiles of Object.values(this._gameData.playerTiles) as string[][]) {
+		for (const playerTiles of Object.values(this._gameData.playerTiles)) {
 			for (const tid of playerTiles) {
 				if (tiles[tid].color === tile.color && tiles[tid].number === tile.number) {
 					return false;
@@ -551,6 +690,55 @@ export default class HanabiGame extends Game {
 
 		const nextIndex = (currentIndex + 1) % turnOrder.length;
 		return turnOrder[nextIndex];
+	}
+
+	private _completeTurn(
+		userId: string,
+		options: { startShotClockIfDeckEmpty?: boolean; gameWon?: boolean } = {},
+	): void {
+		if (
+			this._gameData.remainingTurns === null &&
+			options.startShotClockIfDeckEmpty &&
+			this._gameData.remainingTiles.length === 0
+		) {
+			this._gameData.remainingTurns = Object.keys(this._gameData.players).length;
+			this._appendActions({
+				id: randomUUID(),
+				playerId: userId,
+				type: HanabiGameActionType.ShotClockStarted,
+				remainingTurns: this._gameData.remainingTurns,
+			});
+		} else if (this._gameData.remainingTurns !== null) {
+			this._gameData.remainingTurns -= 1;
+			if (this._gameData.remainingTurns === 0) {
+				this._gameData.stage = HanabiStage.Finished;
+				this._gameData.finishedReason = HanabiFinishedReason.OutOfTurns;
+			} else {
+				this._appendActions({
+					id: randomUUID(),
+					playerId: userId,
+					type: HanabiGameActionType.ShotClockTickedDown,
+					remainingTurns: this._gameData.remainingTurns,
+				});
+			}
+		}
+
+		if (options.gameWon) {
+			this._gameData.stage = HanabiStage.Finished;
+			this._gameData.finishedReason = HanabiFinishedReason.Won;
+		}
+
+		this._gameData.currentPlayerId = this._getNextUserId(
+			this._gameData.turnOrder,
+			this._gameData.currentPlayerId,
+		);
+		if (this._gameData.finishedReason !== null) {
+			this._appendActions({
+				id: randomUUID(),
+				type: HanabiGameActionType.GameFinished,
+				finishedReason: this._gameData.finishedReason,
+			});
+		}
 	}
 
 	private _handlePlayTileMessage(message: PlayTileMessage, userId: string): void {
@@ -628,83 +816,20 @@ export default class HanabiGame extends Game {
 		}
 
 		// Record the action.
-		this._gameData.actions = [
-			...this._gameData.actions,
-			{
-				id: randomUUID(),
-				playerId: userId,
-				type: HanabiGameActionType.Play,
-				tile,
-				valid: tileIsValid,
-				remainingLives: this._gameData.lives,
-			},
-		];
+		this._appendActions({
+			id: randomUUID(),
+			playerId: userId,
+			type: HanabiGameActionType.Play,
+			tile,
+			valid: tileIsValid,
+			remainingLives: this._gameData.lives,
+		});
 
-		// If there's no longer any remaining tiles, start the shot clock.
-		if (this._gameData.remainingTurns === null) {
-			// Did we run out of tiles?
-			if (this._gameData.remainingTiles.length === 0) {
-				// Start the shot clock.
-				this._gameData.remainingTurns = Object.keys(this._gameData.players).length;
-
-				// Notify the user.
-				this._gameData.actions = [
-					...this._gameData.actions,
-					{
-						id: randomUUID(),
-						playerId: userId,
-						type: HanabiGameActionType.ShotClockStarted,
-						remainingTurns: this._gameData.remainingTurns,
-					},
-				];
-			}
-		} else {
-			// Advance the shot clock.
-			this._gameData.remainingTurns -= 1;
-
-			// If it runs out, game over.
-			if (this._gameData.remainingTurns === 0) {
-				// End the game.
-				this._gameData.stage = HanabiStage.Finished;
-				this._gameData.finishedReason = HanabiFinishedReason.OutOfTurns;
-			} else {
-				// Notify the user.
-				this._gameData.actions = [
-					...this._gameData.actions,
-					{
-						id: randomUUID(),
-						playerId: userId,
-						type: HanabiGameActionType.ShotClockTickedDown,
-						remainingTurns: this._gameData.remainingTurns,
-					},
-				];
-			}
-		}
-
-		// Detect if the game has been won.
 		const maxPlayedTiles = this._gameData.ruleSet === '5-color' ? 25 : 30;
-		if (this._gameData.playedTiles.length === maxPlayedTiles) {
-			this._gameData.stage = HanabiStage.Finished;
-			this._gameData.finishedReason = HanabiFinishedReason.Won;
-		}
-
-		// If the game is over, notify the user.
-		if (this._gameData.finishedReason !== null) {
-			this._gameData.actions = [
-				...this._gameData.actions,
-				{
-					id: randomUUID(),
-					type: HanabiGameActionType.GameFinished,
-					finishedReason: this._gameData.finishedReason,
-				},
-			];
-		}
-
-		// Advance the turn.
-		this._gameData.currentPlayerId = this._getNextUserId(
-			this._gameData.turnOrder,
-			this._gameData.currentPlayerId,
-		);
+		this._completeTurn(userId, {
+			startShotClockIfDeckEmpty: true,
+			gameWon: this._gameData.playedTiles.length === maxPlayedTiles,
+		});
 
 		// Send success message.
 		this._messenger.send(userId, {
@@ -713,10 +838,7 @@ export default class HanabiGame extends Game {
 		});
 
 		// Send the updated state to all players/watchers.
-		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
-			type: 'RefreshGameDataMessage',
-			data: this._gameData,
-		});
+		this._broadcastGameData();
 
 		// Touch the games last updated time.
 		this._update();
@@ -762,15 +884,12 @@ export default class HanabiGame extends Game {
 		this._gameData.tilePositions = newPositions;
 
 		// Record the action.
-		this._gameData.actions = [
-			...this._gameData.actions,
-			{
-				id: randomUUID(),
-				playerId: userId,
-				type: HanabiGameActionType.Discard,
-				tile,
-			},
-		];
+		this._appendActions({
+			id: randomUUID(),
+			playerId: userId,
+			type: HanabiGameActionType.Discard,
+			tile,
+		});
 
 		// Detect if the game is over due to the wrong tile being discarded.
 		if (this._gameData.criticalGameOver && this._discardedTileIsFatal(tile)) {
@@ -778,68 +897,12 @@ export default class HanabiGame extends Game {
 			this._gameData.finishedReason = HanabiFinishedReason.DiscardedFatalTile;
 		}
 
-		// If there's no longer any remaining tiles, start the shot clock.
-		if (this._gameData.remainingTurns === null) {
-			// Did we run out of tiles?
-			if (this._gameData.remainingTiles.length === 0) {
-				// Start the shot clock.
-				this._gameData.remainingTurns = Object.keys(this._gameData.players).length;
-
-				// Notify the user.
-				this._gameData.actions = [
-					...this._gameData.actions,
-					{
-						id: randomUUID(),
-						playerId: userId,
-						type: HanabiGameActionType.ShotClockStarted,
-						remainingTurns: this._gameData.remainingTurns,
-					},
-				];
-			}
-		} else {
-			// Advance the shot clock.
-			this._gameData.remainingTurns -= 1;
-
-			// If it runs out, game over.
-			if (this._gameData.remainingTurns === 0) {
-				this._gameData.stage = HanabiStage.Finished;
-				this._gameData.finishedReason = HanabiFinishedReason.OutOfTurns;
-			} else {
-				// Notify the user.
-				this._gameData.actions = [
-					...this._gameData.actions,
-					{
-						id: randomUUID(),
-						playerId: userId,
-						type: HanabiGameActionType.ShotClockTickedDown,
-						remainingTurns: this._gameData.remainingTurns,
-					},
-				];
-			}
-		}
-
 		// Add a clue.
 		if (this._gameData.clues !== HANABI_MAX_CLUES) {
 			this._gameData.clues += 1;
 		}
 
-		// Advance the turn.
-		this._gameData.currentPlayerId = this._getNextUserId(
-			this._gameData.turnOrder,
-			this._gameData.currentPlayerId,
-		);
-
-		// If the game is over, notify the user.
-		if (this._gameData.finishedReason !== null) {
-			this._gameData.actions = [
-				...this._gameData.actions,
-				{
-					id: randomUUID(),
-					type: HanabiGameActionType.GameFinished,
-					finishedReason: this._gameData.finishedReason,
-				},
-			];
-		}
+		this._completeTurn(userId, { startShotClockIfDeckEmpty: true });
 
 		// Send success message.
 		this._messenger.send(userId, {
@@ -848,10 +911,7 @@ export default class HanabiGame extends Game {
 		});
 
 		// Send the updated state to all players/watchers.
-		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
-			type: 'RefreshGameDataMessage',
-			data: this._gameData,
-		});
+		this._broadcastGameData();
 
 		// Touch the games last updated time.
 		this._update();
@@ -889,9 +949,12 @@ export default class HanabiGame extends Game {
 			});
 			return;
 		}
+		const validClueColors = ['red', 'yellow', 'green', 'blue', 'white'];
+		if (this._gameData.ruleSet === '6-color') {
+			validClueColors.push('purple');
+		}
 		if (
-			(message.data.color !== undefined &&
-				!['red', 'yellow', 'green', 'blue', 'white'].includes(message.data.color)) ||
+			(message.data.color !== undefined && !validClueColors.includes(message.data.color)) ||
 			(message.data.number !== undefined && ![1, 2, 3, 4, 5].includes(message.data.number))
 		) {
 			this._messenger.send(userId, {
@@ -950,40 +1013,15 @@ export default class HanabiGame extends Game {
 		this._gameData.clues -= 1;
 
 		// Record the action.
-		this._gameData.actions = [
-			...this._gameData.actions,
-			{
-				id: randomUUID(),
-				playerId: userId,
-				type: actionType,
-				recipientId: message.data.to,
-				color: message.data.color,
-				number: message.data.number,
-				tiles: selectedTiles,
-			},
-		];
-
-		// If the shot clock was started, advance it.
-		if (this._gameData.remainingTurns !== null) {
-			this._gameData.remainingTurns -= 1;
-
-			// If it runs out, game over.
-			if (this._gameData.remainingTurns === 0) {
-				this._gameData.stage = HanabiStage.Finished;
-				this._gameData.finishedReason = HanabiFinishedReason.OutOfTurns;
-			} else {
-				// Notify the user.
-				this._gameData.actions = [
-					...this._gameData.actions,
-					{
-						id: randomUUID(),
-						playerId: userId,
-						type: HanabiGameActionType.ShotClockTickedDown,
-						remainingTurns: this._gameData.remainingTurns,
-					},
-				];
-			}
-		}
+		this._appendActions({
+			id: randomUUID(),
+			playerId: userId,
+			type: actionType,
+			recipientId: message.data.to,
+			color: message.data.color,
+			number: message.data.number,
+			tiles: selectedTiles,
+		});
 
 		// Record notes for the selected tiles.
 		for (const selectedTile of selectedTiles) {
@@ -999,23 +1037,7 @@ export default class HanabiGame extends Game {
 			};
 		}
 
-		// Advance the turn.
-		this._gameData.currentPlayerId = this._getNextUserId(
-			this._gameData.turnOrder,
-			this._gameData.currentPlayerId,
-		);
-
-		// If the game is over, notify the user.
-		if (this._gameData.finishedReason !== null) {
-			this._gameData.actions = [
-				...this._gameData.actions,
-				{
-					id: randomUUID(),
-					type: HanabiGameActionType.GameFinished,
-					finishedReason: this._gameData.finishedReason,
-				},
-			];
-		}
+		this._completeTurn(userId);
 
 		// Send success message.
 		this._messenger.send(userId, {
@@ -1024,10 +1046,7 @@ export default class HanabiGame extends Game {
 		});
 
 		// Send the updated state to all players/watchers.
-		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
-			type: 'RefreshGameDataMessage',
-			data: this._gameData,
-		});
+		this._broadcastGameData();
 
 		// Touch the games last updated time.
 		this._update();
@@ -1116,10 +1135,7 @@ export default class HanabiGame extends Game {
 		});
 
 		// Send the updated state to all players/watchers.
-		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
-			type: 'RefreshGameDataMessage',
-			data: this._gameData,
-		});
+		this._broadcastGameData();
 
 		// Touch the games last updated time.
 		this._update();
@@ -1147,10 +1163,7 @@ export default class HanabiGame extends Game {
 		});
 
 		// Send the updated state to all players/watchers.
-		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
-			type: 'RefreshGameDataMessage',
-			data: this._gameData,
-		});
+		this._broadcastGameData();
 
 		// Touch the games last updated time.
 		this._update();

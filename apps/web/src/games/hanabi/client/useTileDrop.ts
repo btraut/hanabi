@@ -4,11 +4,11 @@ import {
 	getPositionInContainer,
 	getSlotXForDraggingTile,
 	isTileInTopHalf,
-} from '~/games/hanabi/client/HanabiDragDropUtils';
+	Position,
+} from '@hanabi/shared';
 import { HANABI_DRAG_TYPES, HanabiDragTypes } from '~/games/hanabi/client/HanabiDragTypes';
 import { useGameData } from '~/games/hanabi/client/HanabiGameContext';
 import { useHanabiMoveTileContext } from '~/games/hanabi/client/HanabiMoveTileContext';
-import { Position } from '@hanabi/shared';
 import { useRef } from 'react';
 import { ConnectDropTarget, useDrop } from 'react-dnd';
 

@@ -1,8 +1,8 @@
 # Hanabi Modernization Spec
 
-## Context
+## Historical Context
 
-The current project uses a single-package layout with Webpack 5 for client + server builds, React 17, and legacy tooling (Tailwind v2, React Router v5, Socket.IO v3). The goal is a full modernization that preserves runtime behavior while upgrading tooling, dependency versions, and repository structure. The migration is a direct cutover; legacy build configs can be removed during the process.
+Before this completed migration, the project used a single-package layout with Webpack 5 for client + server builds, React 17, and legacy tooling (Tailwind v2, React Router v5, Socket.IO v3). The modernization preserved runtime behavior while upgrading tooling, dependency versions, and repository structure through a direct cutover.
 
 ## Goals
 
@@ -37,7 +37,7 @@ apps/
   web/          # Vite + React 19 SPA
   server/       # Node + Express + Socket.IO
 packages/
-  (none for now)
+  shared/       # Shared game types and runtime utilities
 ```
 
 ### Apps
@@ -51,7 +51,7 @@ packages/
 - **Monorepo**: Nx with `nx:run-commands` executor pattern (following decklist)
 - **Build**:
   - Web: Vite with `vite-tsconfig-paths`
-- Server: `tsx` for dev (watch mode), esbuild for a self-contained production entrypoint
+  - Server: `tsx` for dev (watch mode), esbuild for a self-contained production entrypoint
 - **Lint/format**: ESLint 9 flat config (`eslint.config.mjs`) + Prettier 3
 - **TypeScript**: 5.7+ with root `tsconfig.base.json` and per-app configs (build, typecheck variants)
 - **Runtime**: Node v24.11.1 enforced via `.tool-versions` + `.envrc` (mise/direnv)
@@ -81,9 +81,9 @@ packages/
 
 ## Development Workflow
 
-- `pnpm dev` → `nx run-many -t dev --projects web,server`
-- Explicit ports and HMR config for websocket stability
-- Helper script `scripts/run-pnpm.sh` for Nx executor commands
+- `pnpm dev` runs `scripts/dev-runtime.mjs`, which assigns worktree-safe ports, starts both apps, and publishes `.context/dev/current.json`.
+- Vite receives the resolved server URL for stable HTTP and websocket proxying.
+- `scripts/run-pnpm.sh` keeps Nx executor commands portable.
 
 ---
 

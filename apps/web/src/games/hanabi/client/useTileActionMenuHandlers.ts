@@ -36,7 +36,7 @@ export default function useTileActionMenuHandlers(): {
 
 	const handleTileClick = useCallback(
 		(event: React.MouseEvent<HTMLElement>, tileId: string) => {
-			const rect = (event.target as any).getBoundingClientRect();
+			const rect = event.currentTarget.getBoundingClientRect();
 			const ownTile = !!gameData.playerTiles[userId].includes(tileId);
 
 			// What menu should we display?

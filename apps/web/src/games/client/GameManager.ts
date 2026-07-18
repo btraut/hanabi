@@ -6,6 +6,8 @@ import {
 } from '@hanabi/shared';
 import SocketManager from '~/utils/client/SocketManager';
 
+export class GameWatchRejectedError extends Error {}
+
 export default class GameManager {
 	protected _socketManager: SocketManager<GameManagerMessage>;
 
@@ -48,7 +50,7 @@ export default class GameManager {
 		);
 
 		if (response.data.error) {
-			throw new Error(response.data.error);
+			throw new GameWatchRejectedError(response.data.error);
 		}
 
 		// Game watched!

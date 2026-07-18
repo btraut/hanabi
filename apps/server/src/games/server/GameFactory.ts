@@ -9,7 +9,7 @@ export default class GameFactory {
 
 	public create(
 		_creatorId: string,
-		_socketManager: ServerSocketManager<any>,
+		_socketManager: ServerSocketManager,
 		_saveGameDelegate: SaveGameDelegate,
 	): Game {
 		throw new Error('Subclasses must override.');
@@ -17,7 +17,7 @@ export default class GameFactory {
 
 	public hydrate(
 		_data: string,
-		_socketManager: ServerSocketManager<any>,
+		_socketManager: ServerSocketManager,
 		_saveGameDelegate: SaveGameDelegate,
 	): Game {
 		throw new Error('Subclasses must override.');

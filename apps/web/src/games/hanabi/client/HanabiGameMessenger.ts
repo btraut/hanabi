@@ -211,6 +211,7 @@ export default class HanabiGameMessenger {
 		ruleSet?: HanabiRuleSet;
 		allowDragging?: boolean;
 		showNotes?: boolean;
+		criticalGameOver?: boolean;
 	}): Promise<void> {
 		this._sendMessage({
 			type: 'ChangeGameSettingsMessage',

@@ -80,11 +80,15 @@ function setupGlobalFocusEvents() {
 	// However, we need to detect other cases when a focus event occurs without
 	// a preceding user event (e.g. screen reader focus). Overriding the focus
 	// method on HTMLElement.prototype is a bit hacky, but works.
-	const { focus } = HTMLElement.prototype;
+	const nativeFocus: unknown = Object.getOwnPropertyDescriptor(
+		HTMLElement.prototype,
+		'focus',
+	)?.value;
+	if (typeof nativeFocus !== 'function') return;
 	// $FlowIssue[cannot-write]
 	HTMLElement.prototype.focus = function focusElement(...args) {
 		hasEventBeforeFocus = true;
-		focus.apply(this, args);
+		Reflect.apply(nativeFocus, this, args);
 	};
 
 	document.addEventListener('keydown', handleKeyboardEvent, true);

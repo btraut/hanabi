@@ -1,7 +1,6 @@
 import {
 	SocketMessageBase,
 	AuthenticateSocketMessage,
-	AuthenticateSocketResponseMessage,
 	SOCKET_MANAGER_SCOPE,
 	PubSub,
 } from '@hanabi/shared';
@@ -15,33 +14,48 @@ const AUTH_TOKEN_TTL_MS = 5 * 60 * 1000;
 const MAX_OUTSTANDING_TOKENS_PER_USER = 5;
 const MAX_OUTSTANDING_TOKENS = 10_000;
 const MAX_FAILED_AUTH_ATTEMPTS_PER_SOCKET = 5;
+const MAX_SOCKET_MESSAGE_BYTES = 64 * 1024;
+const MESSAGE_BUDGET_CAPACITY = 120;
+const MESSAGE_BUDGET_REFILL_PER_SECOND = 30;
+const FULL_STATE_MESSAGE_COST = 30;
+const MESSAGE_BUDGET_RETENTION_MS = 60_000;
+const RATE_LIMIT_WARNING_INTERVAL_MS = 10_000;
 
 interface AuthToken {
+	abuseKey: string;
 	created: Date;
 	userId: string;
 	token: string;
 }
 
-type MessageTypeWithAuth<MessageType extends SocketMessageBase> =
-	MessageType | AuthenticateSocketMessage | AuthenticateSocketResponseMessage;
+interface MessageBudget {
+	tokens: number;
+	updatedAt: number;
+	expiresAt?: number;
+	lastWarningAt?: number;
+}
 
-export default class ServerSocketManager<MessageType extends SocketMessageBase> {
+export default class ServerSocketManager {
 	private _server: SocketServer;
 
 	private _authenticatedUsers: { [socketId: string]: string } = {};
 	private _authenticatedSockets: { [userId: string]: string[] } = {};
+	private _authenticatedAbuseKeys: { [socketId: string]: string } = {};
 
 	public _onConnect = new PubSub<{ socketId: string }>();
 	public _onAuthenticate = new PubSub<{ userId: string }>();
 	public _onDisconnect = new PubSub<{ userId: string }>();
 	public _onMessage = new PubSub<{
+		abuseKey: string;
+		socketId: string;
 		userId: string | undefined;
-		message: MessageTypeWithAuth<MessageType>;
+		message: SocketMessageBase;
 	}>();
 
 	private _tokens = new Map<string, AuthToken>();
 	private _tokensByUser = new Map<string, Set<string>>();
 	private _failedAuthAttempts = new Map<string, number>();
+	private _messageBudgets = new Map<string, MessageBudget>();
 	private _lastTokenPruneAt = 0;
 
 	public get onConnect(): PubSub<{ socketId: string }> {
@@ -54,17 +68,21 @@ export default class ServerSocketManager<MessageType extends SocketMessageBase> 
 		return this._onDisconnect;
 	}
 	public get onMessage(): PubSub<{
+		abuseKey: string;
+		socketId: string;
 		userId: string | undefined;
-		message: MessageTypeWithAuth<MessageType>;
+		message: SocketMessageBase;
 	}> {
 		return this._onMessage;
 	}
 
 	constructor(httpServer: HTTPServer) {
-		this._server = new SocketServer(httpServer);
+		this._server = new SocketServer(httpServer, {
+			maxHttpBufferSize: MAX_SOCKET_MESSAGE_BYTES,
+		});
 	}
 
-	public addTokenForUser(userId: string): string {
+	public addTokenForUser(userId: string, abuseKey = 'unknown'): string {
 		if (Date.now() - this._lastTokenPruneAt >= 30_000) {
 			this.prune();
 		}
@@ -81,7 +99,7 @@ export default class ServerSocketManager<MessageType extends SocketMessageBase> 
 		}
 
 		const token = randomBytes(AUTH_TOKEN_BYTES).toString('base64url');
-		this._tokens.set(token, { token, userId, created: new Date() });
+		this._tokens.set(token, { token, userId, abuseKey, created: new Date() });
 		userTokens.add(token);
 		this._tokensByUser.set(userId, userTokens);
 		return token;
@@ -99,7 +117,7 @@ export default class ServerSocketManager<MessageType extends SocketMessageBase> 
 				this._handleDisconnect(connection.id);
 			});
 
-			connection.on('message', (data: MessageTypeWithAuth<MessageType>) => {
+			connection.on('message', (data: SocketMessageBase) => {
 				this._handleMessage(connection.id, data);
 			});
 		});
@@ -115,12 +133,17 @@ export default class ServerSocketManager<MessageType extends SocketMessageBase> 
 		Logger.debug(`socket.io disconnected: ${socketId}`);
 
 		this._failedAuthAttempts.delete(socketId);
+		this._removeSocketAuthentication(socketId);
+	};
+
+	private _removeSocketAuthentication(socketId: string): void {
 		const userId = this._authenticatedUsers[socketId];
 		if (!userId) {
 			return;
 		}
 
 		delete this._authenticatedUsers[socketId];
+		delete this._authenticatedAbuseKeys[socketId];
 
 		// Remove the socket from the user's list.
 		const remainingSocketIds = (this._authenticatedSockets[userId] || []).filter(
@@ -132,10 +155,12 @@ export default class ServerSocketManager<MessageType extends SocketMessageBase> 
 		}
 
 		delete this._authenticatedSockets[userId];
+		const budget = this._messageBudgets.get(userId);
+		if (budget) budget.expiresAt = Date.now() + MESSAGE_BUDGET_RETENTION_MS;
 		this._onDisconnect.emit({ userId });
-	};
+	}
 
-	private _handleMessage = (socketId: string, message: MessageTypeWithAuth<MessageType>) => {
+	private _handleMessage = (socketId: string, message: SocketMessageBase) => {
 		if (
 			typeof message !== 'object' ||
 			message === null ||
@@ -153,15 +178,78 @@ export default class ServerSocketManager<MessageType extends SocketMessageBase> 
 			// Capture all SocketManager messages. Emit the rest.
 			if (message.scope === SOCKET_MANAGER_SCOPE) {
 				this._handleSocketManagerMessage(socketId, message);
-			} else if (this._authenticatedUsers[socketId]) {
-				this._onMessage.emit({ userId: this._authenticatedUsers[socketId], message });
+			} else if (
+				this._authenticatedUsers[socketId] &&
+				this._consumeMessageBudget(this._authenticatedUsers[socketId], socketId, message)
+			) {
+				this._onMessage.emit({
+					abuseKey: this._authenticatedAbuseKeys[socketId] ?? 'unknown',
+					socketId,
+					userId: this._authenticatedUsers[socketId],
+					message,
+				});
 			}
 		} catch (error) {
 			Logger.error('Ignoring invalid socket message.', error);
 		}
 	};
 
-	private _handleSocketManagerMessage(socketId: string, message: MessageTypeWithAuth<MessageType>) {
+	private _consumeMessageBudget(
+		userId: string,
+		socketId: string,
+		message: SocketMessageBase,
+	): boolean {
+		const now = Date.now();
+		const retainedBudget = this._messageBudgets.get(userId);
+		const budget: MessageBudget =
+			retainedBudget?.expiresAt && retainedBudget.expiresAt <= now
+				? { tokens: MESSAGE_BUDGET_CAPACITY, updatedAt: now }
+				: (retainedBudget ?? { tokens: MESSAGE_BUDGET_CAPACITY, updatedAt: now });
+		budget.expiresAt = undefined;
+		budget.tokens = Math.min(
+			MESSAGE_BUDGET_CAPACITY,
+			budget.tokens + ((now - budget.updatedAt) / 1000) * MESSAGE_BUDGET_REFILL_PER_SECOND,
+		);
+		budget.updatedAt = now;
+		const cost = this._messageCost(message.type);
+		if (budget.tokens < cost) {
+			this._messageBudgets.set(userId, budget);
+			if (!budget.lastWarningAt || now - budget.lastWarningAt >= RATE_LIMIT_WARNING_INTERVAL_MS) {
+				budget.lastWarningAt = now;
+				Logger.warn(`Ignoring rate-limited socket message from ${socketId}.`);
+			}
+			return false;
+		}
+		budget.tokens -= cost;
+		this._messageBudgets.set(userId, budget);
+		return true;
+	}
+
+	private _messageCost(type: string): number {
+		if (type === 'GetGameDataMessage' || type === 'CreateGameMessage') {
+			return FULL_STATE_MESSAGE_COST;
+		}
+		if (
+			[
+				'WatchGameMessage',
+				'AddPlayerMessage',
+				'RemovePlayerMessage',
+				'ChangeGameSettingsMessage',
+				'SendChatMessage',
+				'StartGameMessage',
+				'ResetGameMessage',
+				'PlayTileMessage',
+				'DiscardTileMessage',
+				'GiveClueMessage',
+				'MoveTilesMessage',
+			].includes(type)
+		) {
+			return 10;
+		}
+		return 1;
+	}
+
+	private _handleSocketManagerMessage(socketId: string, message: SocketMessageBase) {
 		switch (message.type) {
 			case 'AuthenticateSocketMessage':
 				this._handleAuthenticateMessage(socketId, message as AuthenticateSocketMessage);
@@ -169,11 +257,17 @@ export default class ServerSocketManager<MessageType extends SocketMessageBase> 
 		}
 	}
 
-	private _send(socketId: string, message: MessageTypeWithAuth<MessageType>) {
+	private _send<OutboundMessage extends SocketMessageBase>(
+		socketId: string,
+		message: OutboundMessage,
+	) {
 		this._server.to(socketId).emit('message', message);
 	}
 
-	public send(userIdOrIds: string | readonly string[], message: MessageType): void {
+	public send<OutboundMessage extends SocketMessageBase>(
+		userIdOrIds: string | readonly string[],
+		message: OutboundMessage,
+	): void {
 		const userIds = typeof userIdOrIds === 'string' ? [userIdOrIds] : userIdOrIds;
 
 		for (const userId of userIds) {
@@ -189,17 +283,41 @@ export default class ServerSocketManager<MessageType extends SocketMessageBase> 
 		}
 	}
 
-	public addScopedMessageHandler(
-		handler: (data: { userId: string; message: MessageType }) => void,
+	public sendToSocket<OutboundMessage extends SocketMessageBase>(
+		socketId: string,
+		message: OutboundMessage,
+	): void {
+		if (this._authenticatedUsers[socketId]) {
+			this._send(socketId, message);
+		}
+	}
+
+	public addScopedMessageHandler<ScopedMessage extends SocketMessageBase>(
+		handler: (data: {
+			abuseKey: string;
+			socketId: string;
+			userId: string;
+			message: ScopedMessage;
+		}) => void,
 		scope: string,
 	): number {
 		return this.onMessage.subscribe(
-			(d: { userId: string | undefined; message: MessageTypeWithAuth<MessageType> }) => {
-				if (d.message.scope !== scope) {
+			(d: {
+				abuseKey: string;
+				socketId: string;
+				userId: string | undefined;
+				message: SocketMessageBase;
+			}) => {
+				if (d.message.scope !== scope || !d.userId) {
 					return;
 				}
 
-				handler(d as { userId: string; message: MessageType });
+				handler({
+					abuseKey: d.abuseKey,
+					socketId: d.socketId,
+					userId: d.userId,
+					message: d.message as ScopedMessage,
+				});
 			},
 		);
 	}
@@ -213,7 +331,11 @@ export default class ServerSocketManager<MessageType extends SocketMessageBase> 
 			const userId = authToken.userId;
 			this._deleteToken(token);
 			this._failedAuthAttempts.delete(socketId);
+			if (this._authenticatedUsers[socketId] !== userId) {
+				this._removeSocketAuthentication(socketId);
+			}
 			this._authenticatedUsers[socketId] = userId;
+			this._authenticatedAbuseKeys[socketId] = authToken.abuseKey;
 
 			if (!this._authenticatedSockets[userId]) {
 				this._authenticatedSockets[userId] = [];
@@ -229,7 +351,7 @@ export default class ServerSocketManager<MessageType extends SocketMessageBase> 
 				scope: SOCKET_MANAGER_SCOPE,
 				type: 'AuthenticateSocketResponseMessage',
 				data: { userId },
-			} as MessageTypeWithAuth<MessageType>);
+			});
 		} else {
 			const failedAttempts = (this._failedAuthAttempts.get(socketId) ?? 0) + 1;
 			this._failedAuthAttempts.set(socketId, failedAttempts);
@@ -239,7 +361,7 @@ export default class ServerSocketManager<MessageType extends SocketMessageBase> 
 				data: {
 					error: 'Invalid auth token',
 				},
-			} as MessageTypeWithAuth<MessageType>);
+			});
 			if (failedAttempts >= MAX_FAILED_AUTH_ATTEMPTS_PER_SOCKET) {
 				this._server.sockets.sockets.get(socketId)?.disconnect(true);
 			}
@@ -263,6 +385,11 @@ export default class ServerSocketManager<MessageType extends SocketMessageBase> 
 			if (authToken.created < oldestTime) {
 				this._deleteToken(token);
 				Logger.debug(`Purged token "${token}" from ServerSocketManager.`);
+			}
+		}
+		for (const [userId, budget] of this._messageBudgets) {
+			if (budget.expiresAt && budget.expiresAt <= Date.now()) {
+				this._messageBudgets.delete(userId);
 			}
 		}
 	}

@@ -1,4 +1,6 @@
-import useAsyncEffect from '~/utils/client/useAsyncEffect';
+import { loadGameUntilSuccessful } from './loadGameUntilSuccessful';
+import { GameWatchRejectedError } from './GameManager';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 interface Props {
@@ -18,21 +20,31 @@ export default function EnsureGameLoaded({
 }: Props): JSX.Element | null {
 	const navigate = useNavigate();
 
-	useAsyncEffect(async () => {
-		// No need to load if we already have a game.
-		if (gameLoaded) {
-			return;
-		}
-
-		// Is the user authenticated? If so, we can attempt to load the game.
-		// Otherwise, forward the user away.
-		try {
-			await loadGameHandler();
-		} catch (_error) {
-			void Promise.resolve(navigate(redirectUrl, { replace: true })).catch((error: unknown) => {
-				console.error('Could not redirect after loading the game failed:', error);
+	useEffect(() => {
+		let active = true;
+		if (!gameLoaded) {
+			void (async () => {
+				// Keep the game URL intact while connection/authentication recovers.
+				try {
+					await loadGameUntilSuccessful(
+						loadGameHandler,
+						() => active,
+						undefined,
+						(error) => !(error instanceof GameWatchRejectedError),
+					);
+				} catch (error) {
+					if (error instanceof GameWatchRejectedError && active) {
+						await navigate(redirectUrl, { replace: true });
+					}
+				}
+			})().catch((error: unknown) => {
+				console.error('Could not finish loading the game:', error);
 			});
 		}
+
+		return () => {
+			active = false;
+		};
 	}, [redirectUrl, gameLoaded, navigate, loadGameHandler]);
 
 	if (!gameLoaded) {

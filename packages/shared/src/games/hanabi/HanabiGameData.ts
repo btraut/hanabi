@@ -7,6 +7,8 @@ export const HANABI_MAX_PLAYERS = 5;
 
 export const HANABI_MAX_CLUES = 8;
 export const HANABI_MAX_LIVES = 3;
+export const HANABI_MAX_CHAT_LENGTH = 500;
+export const HANABI_MAX_ACTIONS = 1000;
 
 export interface Size {
 	width: number;
@@ -82,6 +84,9 @@ export interface HanabiTile {
 	id: string;
 	color: HanabiTileColor;
 	number: HanabiTileNumber;
+	// Recipient-specific snapshots use a constant dummy value for concealed
+	// tiles. Consumers must not treat color/number as meaningful when set.
+	concealed?: true;
 }
 
 export const tileColorClasses = {

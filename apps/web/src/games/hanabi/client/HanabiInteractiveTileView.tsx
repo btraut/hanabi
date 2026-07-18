@@ -60,6 +60,12 @@ export default function HanabiInteractiveTileView({
 	const cursor = draggable ? 'cursor-move' : onClick ? 'cursor-pointer' : 'cursor-default';
 
 	const { isDragging, dragRef } = useTileDrag(tile.id, highlight, notesIndicator, draggable);
+	const connectDragSource = useCallback(
+		(element: HTMLElement | null) => {
+			dragRef(element);
+		},
+		[dragRef],
+	);
 
 	const handleClick = useCallback(
 		(event: React.MouseEvent<HTMLElement>) => {
@@ -99,8 +105,7 @@ export default function HanabiInteractiveTileView({
 
 	return (
 		<Comp
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			ref={dragRef as any}
+			ref={connectDragSource}
 			style={size === TileViewSize.Regular ? HANABI_TILE_SIZE : HANABI_TILE_SIZE_SMALL}
 			className={classNames([
 				'rounded-lg focus:outline-none',

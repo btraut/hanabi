@@ -11,7 +11,9 @@ interface SocketContext<MessageType extends SocketMessageBase> {
 	userId: string | null;
 }
 
-const context = createContext<SocketContext<any> | null>(null);
+// React contexts cannot preserve a type parameter at runtime. Store an erased
+// value and restore the caller's message type at this single boundary.
+const context = createContext<unknown>(null);
 
 export function useSocket<MessageType extends SocketMessageBase>(
 	requireUserId = false,
@@ -21,12 +23,13 @@ export function useSocket<MessageType extends SocketMessageBase>(
 	if (contextValue === null) {
 		throw new Error('useSocket must be used within a SocketContextProvider');
 	}
+	const typedContext = contextValue as SocketContext<MessageType>;
 
-	if (requireUserId && !contextValue.userId) {
+	if (requireUserId && !typedContext.userId) {
 		throw new Error('No userId specified on socket.');
 	}
 
-	return contextValue;
+	return typedContext;
 }
 
 export function useUserId(): string {

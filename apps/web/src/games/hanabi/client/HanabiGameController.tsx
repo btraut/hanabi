@@ -7,6 +7,7 @@ import {
 import HanabiGameMessenger from '~/games/hanabi/client/HanabiGameMessenger';
 import { HANABI_GAME_TITLE, HanabiGameData } from '@hanabi/shared';
 import { HanabiMessage } from '@hanabi/shared';
+import { initializeGameMessenger } from './initializeGameMessenger';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 interface Props {
@@ -38,6 +39,8 @@ export default function HanabiGameController({ children }: Props): JSX.Element {
 	// Make a callback for creating a game. This will create the game on the
 	// server, set the game as the current one here in the controller.
 	const create = useCallback(async () => {
+		await socketManager.connect();
+		await authSocketManager.authenticate();
 		const { id: gameId, code: newCode } = await gameManager.create(HANABI_GAME_TITLE);
 		const newGameMessenger = new HanabiGameMessenger(
 			gameId,
@@ -45,7 +48,7 @@ export default function HanabiGameController({ children }: Props): JSX.Element {
 			authSocketManager,
 			setGameData,
 		);
-		await newGameMessenger.refreshGameData();
+		await initializeGameMessenger(newGameMessenger);
 		setCode(newCode);
 
 		setGameMessenger(newGameMessenger);
@@ -64,7 +67,7 @@ export default function HanabiGameController({ children }: Props): JSX.Element {
 				authSocketManager,
 				setGameData,
 			);
-			await newGameMessenger.refreshGameData();
+			await initializeGameMessenger(newGameMessenger);
 			setCode(newCode);
 
 			setGameMessenger(newGameMessenger);

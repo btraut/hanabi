@@ -1,16 +1,18 @@
 import SocketManager from '../../utils/SocketManager.js';
 
+type ConnectionEventSource = Pick<SocketManager, 'onAuthenticate' | 'onDisconnect'>;
+
 export enum UserConnectionChange {
 	Authenticated,
 	Disconnected,
 }
 
 export default class UserConnectionListener {
-	private _socketManager: SocketManager<any>;
+	private _socketManager: ConnectionEventSource;
 	private _socketManagerOnAuthenticateSubscriptionId: number | null = null;
 	private _socketManagerOnDisconnectSubscriptionId: number | null = null;
 
-	constructor(socketManager: SocketManager<any>) {
+	constructor(socketManager: ConnectionEventSource) {
 		this._socketManager = socketManager;
 	}
 

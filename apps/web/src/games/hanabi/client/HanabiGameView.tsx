@@ -6,6 +6,7 @@ import HanabiHighlightTileController from '~/games/hanabi/client/HanabiHighlight
 import HanabiLobby from '~/games/hanabi/client/HanabiLobby';
 import useTileDrop from '~/games/hanabi/client/useTileDrop';
 import { HanabiStage } from '@hanabi/shared';
+import { useCallback } from 'react';
 
 export default function HanabiGameView(): JSX.Element | null {
 	const gameData = useGameData();
@@ -14,6 +15,12 @@ export default function HanabiGameView(): JSX.Element | null {
 	// limitation of react-dnd where the "return animation" is played when
 	// dropping things outside drop targets.
 	const dropRef = useTileDrop();
+	const connectDropTarget = useCallback(
+		(element: HTMLDivElement | null) => {
+			dropRef(element);
+		},
+		[dropRef],
+	);
 
 	return (
 		<>
@@ -23,8 +30,7 @@ export default function HanabiGameView(): JSX.Element | null {
 					<BreakpointController>
 						<div
 							className="w-screen min-h-screen grid grid-flow-row gap-6 content-start"
-							// eslint-disable-next-line @typescript-eslint/no-explicit-any
-							ref={dropRef as any}
+							ref={connectDropTarget}
 						>
 							<HanabiHeader />
 							<div className="justify-self-center">
