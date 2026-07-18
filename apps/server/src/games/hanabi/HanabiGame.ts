@@ -1,9 +1,14 @@
 import {
 	getNewPositionsForTiles,
 	addToTileNotes,
+	getHanabiCompletionTileCount,
+	getHanabiFireworkSequence,
 	generateHanabiGameData,
 	generatePlayer,
 	generateRandomDeck,
+	isHanabiFireworkCompletion,
+	isHanabiRainbowRuleSet,
+	isHanabiRuleSet,
 	HANABI_BOARD_SIZE,
 	HANABI_DEFAULT_TILE_POSITIONS,
 	HANABI_GAME_TITLE,
@@ -16,6 +21,7 @@ import {
 	HANABI_TILES_IN_HAND,
 	HanabiFinishedReason,
 	HanabiGameAction,
+	HanabiClueColor,
 	HanabiGameActionType,
 	HanabiGameData,
 	HanabiStage,
@@ -136,8 +142,7 @@ export default class HanabiGame extends Game {
 					Object.keys(data).every((key) =>
 						['ruleSet', 'allowDragging', 'showNotes', 'criticalGameOver'].includes(key),
 					) &&
-					(data.ruleSet === undefined ||
-						['5-color', '6-color', 'rainbow'].includes(data.ruleSet as string)) &&
+					(data.ruleSet === undefined || isHanabiRuleSet(data.ruleSet)) &&
 					(data.allowDragging === undefined || typeof data.allowDragging === 'boolean') &&
 					(data.showNotes === undefined || typeof data.showNotes === 'boolean') &&
 					(data.criticalGameOver === undefined || typeof data.criticalGameOver === 'boolean')
@@ -440,7 +445,7 @@ export default class HanabiGame extends Game {
 
 		// Settings specific validation:
 		if (message.data.ruleSet) {
-			if (!['5-color', '6-color', 'rainbow'].includes(message.data.ruleSet)) {
+			if (!isHanabiRuleSet(message.data.ruleSet)) {
 				this._messenger.send(userId, {
 					type: 'ChangeGameSettingsResponseMessage',
 					data: {
@@ -778,10 +783,14 @@ export default class HanabiGame extends Game {
 		const duplicate = !!this._gameData.playedTiles.find(
 			(tid: string) => tiles[tid].color === tile.color && tiles[tid].number === tile.number,
 		);
+		const fireworkSequence = getHanabiFireworkSequence(tile.color);
+		const tileSequenceIndex = fireworkSequence.indexOf(tile.number);
+		const previousNumberInSequence = fireworkSequence[tileSequenceIndex - 1];
 		const prevNumberInSequenceExists = !!(
-			tile.number === 1 ||
+			tileSequenceIndex === 0 ||
 			this._gameData.playedTiles.find(
-				(tid: string) => tiles[tid].color === tile.color && tiles[tid].number === tile.number - 1,
+				(tid: string) =>
+					tiles[tid].color === tile.color && tiles[tid].number === previousNumberInSequence,
 			)
 		);
 
@@ -790,7 +799,7 @@ export default class HanabiGame extends Game {
 		if (tileIsValid) {
 			this._gameData.playedTiles = [...this._gameData.playedTiles, tile.id];
 
-			if (tile.number === 5 && this._gameData.clues !== HANABI_MAX_CLUES) {
+			if (isHanabiFireworkCompletion(tile) && this._gameData.clues !== HANABI_MAX_CLUES) {
 				this._gameData.clues += 1;
 			}
 		} else {
@@ -825,7 +834,7 @@ export default class HanabiGame extends Game {
 			remainingLives: this._gameData.lives,
 		});
 
-		const maxPlayedTiles = this._gameData.ruleSet === '5-color' ? 25 : 30;
+		const maxPlayedTiles = getHanabiCompletionTileCount(this._gameData.ruleSet);
 		this._completeTurn(userId, {
 			startShotClockIfDeckEmpty: true,
 			gameWon: this._gameData.playedTiles.length === maxPlayedTiles,
@@ -949,12 +958,12 @@ export default class HanabiGame extends Game {
 			});
 			return;
 		}
-		const validClueColors = ['red', 'yellow', 'green', 'blue', 'white'];
+		const validColorClues: HanabiClueColor[] = ['red', 'yellow', 'green', 'blue', 'white'];
 		if (this._gameData.ruleSet === '6-color') {
-			validClueColors.push('purple');
+			validColorClues.push('purple');
 		}
 		if (
-			(message.data.color !== undefined && !validClueColors.includes(message.data.color)) ||
+			(message.data.color !== undefined && !validColorClues.includes(message.data.color)) ||
 			(message.data.number !== undefined && ![1, 2, 3, 4, 5].includes(message.data.number))
 		) {
 			this._messenger.send(userId, {
@@ -977,7 +986,7 @@ export default class HanabiGame extends Game {
 			.map((tid: string) => this._gameData.tiles[tid])
 			.filter((t: HanabiTile) => {
 				if (message.data.color) {
-					if (this._gameData.ruleSet === 'rainbow') {
+					if (isHanabiRainbowRuleSet(this._gameData.ruleSet)) {
 						return t.color === message.data.color || t.color === 'rainbow';
 					} else {
 						return t.color === message.data.color;

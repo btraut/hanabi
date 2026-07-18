@@ -74,11 +74,34 @@ export enum HanabiFinishedReason {
 	OutOfLives = 'OutOfLives',
 }
 
-export type HanabiRuleSet = '5-color' | '6-color' | 'rainbow';
+export const HANABI_RULE_SETS = [
+	'5-color',
+	'6-color',
+	'rainbow',
+	'black-powder',
+	'rainbow-black-powder',
+] as const;
+export type HanabiRuleSet = (typeof HANABI_RULE_SETS)[number];
 
-export type HanabiTileColor = 'red' | 'blue' | 'green' | 'yellow' | 'white' | 'purple' | 'rainbow';
+export const HANABI_TILE_COLORS = [
+	'red',
+	'blue',
+	'green',
+	'yellow',
+	'white',
+	'purple',
+	'rainbow',
+	'black',
+] as const;
+export type HanabiTileColor = (typeof HANABI_TILE_COLORS)[number];
+
+export const HANABI_CLUE_COLORS = ['red', 'blue', 'green', 'yellow', 'white', 'purple'] as const;
+export type HanabiClueColor = (typeof HANABI_CLUE_COLORS)[number];
 
 export type HanabiTileNumber = 1 | 2 | 3 | 4 | 5;
+
+const STANDARD_FIREWORK_SEQUENCE: readonly HanabiTileNumber[] = [1, 2, 3, 4, 5];
+const BLACK_FIREWORK_SEQUENCE: readonly HanabiTileNumber[] = [5, 4, 3, 2, 1];
 
 export interface HanabiTile {
 	id: string;
@@ -97,6 +120,7 @@ export const tileColorClasses = {
 	white: 'text-white',
 	purple: 'text-purple-500',
 	rainbow: 'text-rainbow',
+	black: 'text-black-powder',
 };
 
 export const tileBackgroundClasses = {
@@ -107,7 +131,70 @@ export const tileBackgroundClasses = {
 	white: 'bg-white',
 	purple: 'bg-purple-500',
 	rainbow: 'bg-rainbow',
+	black: 'bg-black-powder',
 };
+
+const STANDARD_COLORS = ['red', 'blue', 'green', 'yellow', 'white'] as const;
+
+const RULE_SET_COLORS: Record<HanabiRuleSet, readonly HanabiTileColor[]> = {
+	'5-color': STANDARD_COLORS,
+	'6-color': [...STANDARD_COLORS, 'purple'],
+	rainbow: [...STANDARD_COLORS, 'rainbow'],
+	'black-powder': [...STANDARD_COLORS, 'black'],
+	'rainbow-black-powder': [...STANDARD_COLORS, 'rainbow', 'black'],
+};
+
+export function getHanabiRuleSetColors(ruleSet: HanabiRuleSet): readonly HanabiTileColor[] {
+	return RULE_SET_COLORS[ruleSet];
+}
+
+export function getHanabiFireworkSequence(color: HanabiTileColor): readonly HanabiTileNumber[] {
+	return color === 'black' ? BLACK_FIREWORK_SEQUENCE : STANDARD_FIREWORK_SEQUENCE;
+}
+
+export function isHanabiRuleSet(value: unknown): value is HanabiRuleSet {
+	return (HANABI_RULE_SETS as readonly unknown[]).includes(value);
+}
+
+export function isHanabiBlackPowderRuleSet(ruleSet: HanabiRuleSet): boolean {
+	return ruleSet === 'black-powder' || ruleSet === 'rainbow-black-powder';
+}
+
+export function isHanabiRainbowRuleSet(ruleSet: HanabiRuleSet): boolean {
+	return ruleSet === 'rainbow' || ruleSet === 'rainbow-black-powder';
+}
+
+export function isHanabiClueColor(color: HanabiTileColor): color is HanabiClueColor {
+	return (HANABI_CLUE_COLORS as readonly HanabiTileColor[]).includes(color);
+}
+
+export function getHanabiCompletionTileCount(ruleSet: HanabiRuleSet): number {
+	return getHanabiRuleSetColors(ruleSet).length * 5;
+}
+
+export function getHanabiMaxScore(ruleSet: HanabiRuleSet): number {
+	return getHanabiCompletionTileCount(ruleSet) - (isHanabiBlackPowderRuleSet(ruleSet) ? 5 : 0);
+}
+
+export function getHanabiScore(
+	gameData: Pick<HanabiGameData, 'ruleSet' | 'playedTiles' | 'tiles'>,
+): number {
+	if (!isHanabiBlackPowderRuleSet(gameData.ruleSet)) {
+		return gameData.playedTiles.length;
+	}
+
+	const blackTilesPlayed = gameData.playedTiles.filter(
+		(tileId) => gameData.tiles[tileId].color === 'black',
+	).length;
+	const coloredTilesPlayed = gameData.playedTiles.length - blackTilesPlayed;
+
+	return coloredTilesPlayed - (5 - blackTilesPlayed);
+}
+
+export function isHanabiFireworkCompletion(tile: HanabiTile): boolean {
+	const sequence = getHanabiFireworkSequence(tile.color);
+	return tile.number === sequence[sequence.length - 1];
+}
 
 export interface HanabiPlayer {
 	id: string;
@@ -150,7 +237,7 @@ export interface HanabiGameActionGiveClue extends HanabiGameActionBase<
 	playerId: string;
 	recipientId: string;
 	tiles: HanabiTile[];
-	color?: HanabiTileColor;
+	color?: HanabiClueColor;
 	number?: HanabiTileNumber;
 }
 
@@ -190,7 +277,7 @@ export type HanabiGameAction =
 export type ActionsFilterOption = 'all' | 'to-me' | 'from-me' | 'chat' | 'clues';
 
 export type HanabiTileNotes = {
-	colors: readonly HanabiTileColor[];
+	colors: readonly HanabiClueColor[];
 	numbers: readonly HanabiTileNumber[];
 };
 
@@ -280,16 +367,12 @@ export function generateRandomDeck(
 	const tiles: { [tileId: string]: HanabiTile } = {};
 	const tileIds: string[] = [];
 
-	const colors: HanabiTileColor[] = ['red', 'blue', 'green', 'yellow', 'white'];
-	if (ruleSet === 'rainbow') {
-		colors.push('rainbow');
-	} else if (ruleSet === '6-color') {
-		colors.push('purple');
-	}
-
-	const numbers: HanabiTileNumber[] = [1, 1, 1, 2, 2, 3, 3, 4, 4, 5];
+	const colors = getHanabiRuleSetColors(ruleSet);
+	const standardNumbers: HanabiTileNumber[] = [1, 1, 1, 2, 2, 3, 3, 4, 4, 5];
+	const blackPowderNumbers: HanabiTileNumber[] = [5, 5, 5, 4, 4, 3, 3, 2, 2, 1];
 
 	for (const color of colors) {
+		const numbers = color === 'black' ? blackPowderNumbers : standardNumbers;
 		for (const number of numbers) {
 			const id = crypto.randomUUID();
 			tiles[id] = { id, color, number };
@@ -302,7 +385,7 @@ export function generateRandomDeck(
 
 export function addToTileNotes(
 	tileNotes: HanabiTileNotes | undefined,
-	newColor: HanabiTileColor | undefined,
+	newColor: HanabiClueColor | undefined,
 	newNumber: HanabiTileNumber | undefined,
 ): HanabiTileNotes {
 	const newNotes = {

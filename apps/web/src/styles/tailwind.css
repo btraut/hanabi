@@ -57,3 +57,47 @@
 	background-clip: text;
 	-webkit-text-fill-color: transparent;
 }
+
+/* Black Powder tiles use a light ash face so visible tiles never read as hidden. */
+.bg-black-powder {
+	background: linear-gradient(145deg, #f8fafc 0%, #cbd5e1 56%, #94a3b8 100%);
+}
+
+.text-black-powder {
+	color: #020617;
+}
+
+.hanabi-tile-black {
+	background: linear-gradient(145deg, #f8fafc 0%, #cbd5e1 56%, #94a3b8 100%);
+	box-shadow:
+		inset 0 0 0 1px rgb(2 6 23 / 75%),
+		inset 0 0 8px rgb(15 23 42 / 20%);
+}
+
+.hanabi-tile-black::before {
+	content: '';
+	position: absolute;
+	inset: 3px;
+	border: 1px solid rgb(2 6 23 / 25%);
+	border-radius: 0.35rem;
+}
+
+.hanabi-tile-black-number {
+	color: #020617;
+	text-shadow: 0 1px 0 rgb(255 255 255 / 70%);
+}
+
+/* Empty firework positions dim the tile face without erasing the sequence. */
+.hanabi-firework-placeholder {
+	background: #1f2937;
+	box-shadow: inset 0 0 0 1px #64748b;
+}
+
+.hanabi-firework-placeholder .hanabi-tile-number {
+	opacity: 1;
+}
+
+.hanabi-firework-placeholder.hanabi-tile-black {
+	background: linear-gradient(145deg, #e2e8f0 0%, #94a3b8 100%);
+	box-shadow: inset 0 0 0 1px rgb(2 6 23 / 75%);
+}

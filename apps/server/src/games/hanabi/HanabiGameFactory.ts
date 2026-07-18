@@ -1,4 +1,5 @@
 import {
+	HANABI_CLUE_COLORS,
 	HANABI_GAME_TITLE,
 	HANABI_MAX_ACTIONS,
 	HANABI_MAX_CHAT_LENGTH,
@@ -6,17 +7,18 @@ import {
 	HANABI_MAX_LIVES,
 	HANABI_MAX_PLAYERS,
 	HANABI_MIN_PLAYERS,
+	HANABI_RULE_SETS,
+	HANABI_TILE_COLORS,
 	HanabiFinishedReason,
 	HanabiGameActionType,
 	HanabiStage,
+	getHanabiRuleSetColors,
 } from '@hanabi/shared';
 import HanabiGame, { HanabiGameSerialized } from './HanabiGame.js';
 import GameFactory from '../server/GameFactory.js';
 import { SaveGameDelegate } from '../server/GameStore.js';
 import ServerSocketManager from '../../utils/SocketManager.js';
 
-const RULE_SETS = ['5-color', '6-color', 'rainbow'] as const;
-const TILE_COLORS = ['red', 'blue', 'green', 'yellow', 'white', 'purple', 'rainbow'] as const;
 const TILE_NUMBERS = [1, 2, 3, 4, 5] as const;
 const STAGES = Object.values(HanabiStage);
 const FINISHED_REASONS = Object.values(HanabiFinishedReason);
@@ -90,7 +92,7 @@ function validateStringArray(value: unknown, path: string): string[] {
 function validateTile(value: unknown, path: string): void {
 	const tile = requireRecord(value, path);
 	requireString(tile.id, `${path}.id`);
-	requireOneOf(tile.color, TILE_COLORS, `${path}.color`);
+	requireOneOf(tile.color, HANABI_TILE_COLORS, `${path}.color`);
 	requireOneOf(tile.number, TILE_NUMBERS, `${path}.number`);
 }
 
@@ -116,7 +118,7 @@ function validateAction(value: unknown, path: string): void {
 			requireArray(action.tiles, `${path}.tiles`).forEach((tile, index) =>
 				validateTile(tile, `${path}.tiles[${index}]`),
 			);
-			requireOneOf(action.color, TILE_COLORS, `${path}.color`);
+			requireOneOf(action.color, HANABI_CLUE_COLORS, `${path}.color`);
 			break;
 		case HanabiGameActionType.GiveNumberClue:
 			requireString(action.playerId, `${path}.playerId`);
@@ -153,7 +155,7 @@ function validateAction(value: unknown, path: string): void {
 function validateGameData(value: unknown): void {
 	const data = requireRecord(value, 'data');
 	requireString(data.seed, 'data.seed');
-	const ruleSet = requireOneOf(data.ruleSet, RULE_SETS, 'data.ruleSet');
+	const ruleSet = requireOneOf(data.ruleSet, HANABI_RULE_SETS, 'data.ruleSet');
 	requireBoolean(data.allowDragging, 'data.allowDragging');
 	requireBoolean(data.showNotes, 'data.showNotes');
 	requireBoolean(data.criticalGameOver, 'data.criticalGameOver');
@@ -224,13 +226,11 @@ function validateGameData(value: unknown): void {
 
 	const tiles = requireRecord(data.tiles, 'data.tiles');
 	const tileIds = new Set(Object.keys(tiles));
-	if (tileIds.size > 60) hydrationError('data.tiles must contain at most 60 tiles.');
-	const allowedColors =
-		ruleSet === '5-color'
-			? TILE_COLORS.slice(0, 5)
-			: ruleSet === '6-color'
-				? TILE_COLORS.slice(0, 6)
-				: [...TILE_COLORS.slice(0, 5), 'rainbow' as const];
+	const allowedColors = getHanabiRuleSetColors(ruleSet);
+	const maximumTiles = allowedColors.length * 10;
+	if (tileIds.size > maximumTiles) {
+		hydrationError(`data.tiles must contain at most ${maximumTiles} tiles.`);
+	}
 	for (const [id, tile] of Object.entries(tiles)) {
 		validateTile(tile, `data.tiles.${id}`);
 		const tileRecord = tile as Record<string, unknown>;
@@ -280,7 +280,7 @@ function validateGameData(value: unknown): void {
 		if (!tileIds.has(id)) hydrationError(`data.tileNotes.${id} references an unknown tile.`);
 		const notes = requireRecord(value, `data.tileNotes.${id}`);
 		requireArray(notes.colors, `data.tileNotes.${id}.colors`).forEach((color, index) =>
-			requireOneOf(color, TILE_COLORS, `data.tileNotes.${id}.colors[${index}]`),
+			requireOneOf(color, HANABI_CLUE_COLORS, `data.tileNotes.${id}.colors[${index}]`),
 		);
 		requireArray(notes.numbers, `data.tileNotes.${id}.numbers`).forEach((number, index) =>
 			requireOneOf(number, TILE_NUMBERS, `data.tileNotes.${id}.numbers[${index}]`),

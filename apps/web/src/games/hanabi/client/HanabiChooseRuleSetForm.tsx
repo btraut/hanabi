@@ -11,6 +11,8 @@ const OPTIONS: { [label: string]: HanabiRuleSet } = {
 	'Basic 5-Color': '5-color',
 	'Basic 6-Color': '6-color',
 	'Decoy Rainbow': 'rainbow',
+	'Black Powder': 'black-powder',
+	'Decoy Rainbow + Black Powder': 'rainbow-black-powder',
 };
 
 export default function HanabiChooseRuleSetForm({ ruleSet }: Props): JSX.Element {

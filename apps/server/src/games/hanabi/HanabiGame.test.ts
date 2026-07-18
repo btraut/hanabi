@@ -8,7 +8,10 @@ import {
 	HanabiMessage,
 	HanabiRuleSet,
 	HanabiStage,
+	HanabiTile,
 	PubSub,
+	generateHanabiGameData,
+	generatePlayer,
 	getScope,
 } from '@hanabi/shared';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -54,6 +57,22 @@ function hydrateForTest(serialized: HanabiGameSerialized, sockets: FakeSocketMan
 	});
 }
 
+function playingData(data: Partial<HanabiGameData> = {}): HanabiGameData {
+	return generateHanabiGameData({
+		ruleSet: 'black-powder',
+		stage: HanabiStage.Playing,
+		players: {
+			alice: generatePlayer({ id: 'alice', name: 'Alice' }),
+			bob: generatePlayer({ id: 'bob', name: 'Bob' }),
+		},
+		currentPlayerId: 'alice',
+		turnOrder: ['alice', 'bob'],
+		playerTiles: { alice: [], bob: [] },
+		criticalGameOver: false,
+		...data,
+	});
+}
+
 describe('HanabiGame characterization', () => {
 	let sockets: FakeSocketManager;
 	let game: HanabiGame;
@@ -65,6 +84,19 @@ describe('HanabiGame characterization', () => {
 			deleteGame: vi.fn().mockResolvedValue(undefined),
 		});
 	});
+
+	function replaceGameData(data: HanabiGameData): void {
+		const serialized = JSON.parse(game.serialize()!) as HanabiGameSerialized;
+		game.cleanUp();
+		game = new HanabiGame(
+			{ ...serialized, data: structuredClone(data) },
+			sockets as unknown as ServerSocketManager,
+			{
+				saveGame: vi.fn().mockResolvedValue(undefined),
+				deleteGame: vi.fn().mockResolvedValue(undefined),
+			},
+		);
+	}
 
 	it('adds players and starts a two-player game through the public message boundary', () => {
 		const scope = getScope(game.title, game.id);
@@ -86,6 +118,236 @@ describe('HanabiGame characterization', () => {
 		expect(sockets.sent.some(({ message }) => message.type === 'StartGameResponseMessage')).toBe(
 			true,
 		);
+	});
+
+	it('starts Black Powder with the official 60-tile deck', () => {
+		const scope = getScope(game.title, game.id);
+
+		sockets.emit('alice', { scope, type: 'AddPlayerMessage', data: { name: 'Alice' } });
+		sockets.emit('bob', { scope, type: 'AddPlayerMessage', data: { name: 'Bob' } });
+		sockets.emit('alice', {
+			scope,
+			type: 'ChangeGameSettingsMessage',
+			data: { ruleSet: 'black-powder' },
+		});
+		sockets.emit('alice', { scope, type: 'StartGameMessage', data: undefined });
+
+		const data = serializedData(game);
+		expect(data.ruleSet).toBe('black-powder');
+		expect(Object.values(data.tiles).filter((tile) => tile.color === 'black')).toHaveLength(10);
+		expect(data.remainingTiles).toHaveLength(50);
+	});
+
+	it('starts combined Decoy Rainbow and Black Powder with all seven suits', () => {
+		const scope = getScope(game.title, game.id);
+
+		sockets.emit('alice', { scope, type: 'AddPlayerMessage', data: { name: 'Alice' } });
+		sockets.emit('bob', { scope, type: 'AddPlayerMessage', data: { name: 'Bob' } });
+		sockets.emit('alice', {
+			scope,
+			type: 'ChangeGameSettingsMessage',
+			data: { ruleSet: 'rainbow-black-powder' },
+		});
+		sockets.emit('alice', { scope, type: 'StartGameMessage', data: undefined });
+
+		const data = serializedData(game);
+		expect(data.ruleSet).toBe('rainbow-black-powder');
+		expect(Object.values(data.tiles).filter((tile) => tile.color === 'rainbow')).toHaveLength(10);
+		expect(Object.values(data.tiles).filter((tile) => tile.color === 'black')).toHaveLength(10);
+		expect(data.remainingTiles).toHaveLength(60);
+	});
+
+	it('plays the black firework downward and rejects an out-of-order black tile', () => {
+		const scope = getScope(game.title, game.id);
+		const black5: HanabiTile = { id: 'black-5', color: 'black', number: 5 };
+		const black4: HanabiTile = { id: 'black-4', color: 'black', number: 4 };
+		replaceGameData(
+			playingData({
+				tiles: { [black5.id]: black5, [black4.id]: black4 },
+				playerTiles: { alice: [black5.id], bob: [black4.id] },
+			}),
+		);
+
+		sockets.emit('alice', { scope, type: 'PlayTileMessage', data: { id: black5.id } });
+		sockets.emit('bob', { scope, type: 'PlayTileMessage', data: { id: black4.id } });
+
+		expect(serializedData(game).playedTiles).toEqual([black5.id, black4.id]);
+		expect(serializedData(game).lives).toBe(3);
+
+		replaceGameData(
+			playingData({
+				tiles: { [black4.id]: black4 },
+				playerTiles: { alice: [black4.id], bob: [] },
+			}),
+		);
+
+		sockets.emit('alice', { scope, type: 'PlayTileMessage', data: { id: black4.id } });
+
+		expect(serializedData(game).playedTiles).toEqual([]);
+		expect(serializedData(game).discardedTiles).toEqual([black4.id]);
+		expect(serializedData(game).lives).toBe(2);
+	});
+
+	it('restores a clue when black 1 completes the reversed firework', () => {
+		const scope = getScope(game.title, game.id);
+		const blackTiles = Object.fromEntries(
+			[5, 4, 3, 2, 1].map((number) => [
+				`black-${number}`,
+				{
+					id: `black-${number}`,
+					color: 'black' as const,
+					number: number as 1 | 2 | 3 | 4 | 5,
+				},
+			]),
+		);
+		replaceGameData(
+			playingData({
+				clues: 7,
+				tiles: blackTiles,
+				playedTiles: ['black-5', 'black-4', 'black-3', 'black-2'],
+				playerTiles: { alice: ['black-1'], bob: [] },
+			}),
+		);
+
+		sockets.emit('alice', { scope, type: 'PlayTileMessage', data: { id: 'black-1' } });
+
+		const data = serializedData(game);
+		expect(data.playedTiles).toEqual(['black-5', 'black-4', 'black-3', 'black-2', 'black-1']);
+		expect(data.clues).toBe(8);
+	});
+
+	it('wins only after all five colored fireworks and the black firework are complete', () => {
+		const scope = getScope(game.title, game.id);
+		const tiles: Record<string, HanabiTile> = {};
+		const playedTiles: string[] = [];
+
+		for (const color of ['red', 'blue', 'green', 'yellow', 'white'] as const) {
+			for (const number of [1, 2, 3, 4, 5] as const) {
+				const id = `${color}-${number}`;
+				tiles[id] = { id, color, number };
+				playedTiles.push(id);
+			}
+		}
+		for (const number of [5, 4, 3, 2, 1] as const) {
+			const id = `black-${number}`;
+			tiles[id] = { id, color: 'black', number };
+			if (number !== 1) {
+				playedTiles.push(id);
+			}
+		}
+
+		replaceGameData(
+			playingData({
+				tiles,
+				playedTiles,
+				playerTiles: { alice: ['black-1'], bob: [] },
+			}),
+		);
+
+		sockets.emit('alice', { scope, type: 'PlayTileMessage', data: { id: 'black-1' } });
+
+		const data = serializedData(game);
+		expect(data.playedTiles).toHaveLength(30);
+		expect(data.stage).toBe(HanabiStage.Finished);
+		expect(data.finishedReason).toBe('Won');
+	});
+
+	it('includes black tiles in rank clues but excludes them from color clues', () => {
+		const scope = getScope(game.title, game.id);
+		const tiles: Record<string, HanabiTile> = {
+			'red-3': { id: 'red-3', color: 'red', number: 3 },
+			'black-3': { id: 'black-3', color: 'black', number: 3 },
+			'blue-2': { id: 'blue-2', color: 'blue', number: 2 },
+		};
+		const data = playingData({
+			tiles,
+			playerTiles: { alice: [], bob: ['red-3', 'black-3', 'blue-2'] },
+		});
+		replaceGameData(data);
+
+		sockets.emit('alice', {
+			scope,
+			type: 'GiveClueMessage',
+			data: { to: 'bob', number: 3 },
+		});
+
+		expect(serializedData(game).actions.at(-1)).toMatchObject({
+			type: 'GiveNumberClue',
+			tiles: [tiles['red-3'], tiles['black-3']],
+		});
+
+		replaceGameData(data);
+		sockets.emit('alice', {
+			scope,
+			type: 'GiveClueMessage',
+			data: { to: 'bob', color: 'red' },
+		});
+		expect(serializedData(game).actions.at(-1)).toMatchObject({
+			type: 'GiveColorClue',
+			tiles: [tiles['red-3']],
+		});
+
+		replaceGameData(data);
+		sockets.emit('alice', {
+			scope,
+			type: 'GiveClueMessage',
+			data: { to: 'bob', color: 'black' },
+		} as unknown as HanabiMessage);
+		expect(sockets.sent.at(-1)?.message).toMatchObject({
+			type: 'GiveClueResponseMessage',
+			data: { error: 'Invalid clue.' },
+		});
+	});
+
+	it('applies rainbow color decoys without making black tiles clueable in the combined mode', () => {
+		const scope = getScope(game.title, game.id);
+		const tiles: Record<string, HanabiTile> = {
+			'red-3': { id: 'red-3', color: 'red', number: 3 },
+			'rainbow-2': { id: 'rainbow-2', color: 'rainbow', number: 2 },
+			'black-3': { id: 'black-3', color: 'black', number: 3 },
+		};
+		replaceGameData(
+			playingData({
+				ruleSet: 'rainbow-black-powder',
+				tiles,
+				playerTiles: { alice: [], bob: ['red-3', 'rainbow-2', 'black-3'] },
+			}),
+		);
+
+		sockets.emit('alice', {
+			scope,
+			type: 'GiveClueMessage',
+			data: { to: 'bob', color: 'red' },
+		});
+
+		expect(serializedData(game).actions.at(-1)).toMatchObject({
+			type: 'GiveColorClue',
+			tiles: [tiles['red-3'], tiles['rainbow-2']],
+		});
+	});
+
+	it('accepts purple clues only in the six-color rule set', () => {
+		const scope = getScope(game.title, game.id);
+		const purple: HanabiTile = { id: 'purple-2', color: 'purple', number: 2 };
+		replaceGameData(
+			playingData({
+				ruleSet: '6-color',
+				tiles: { [purple.id]: purple },
+				playerTiles: { alice: [], bob: [purple.id] },
+			}),
+		);
+
+		sockets.emit('alice', {
+			scope,
+			type: 'GiveClueMessage',
+			data: { to: 'bob', color: 'purple' },
+		});
+
+		expect(serializedData(game).actions.at(-1)).toMatchObject({
+			type: 'GiveColorClue',
+			color: 'purple',
+			tiles: [purple],
+		});
 	});
 
 	it('rejects a turn from a user who is not a player without changing game state', () => {
@@ -398,7 +660,7 @@ describe('HanabiGame characterization', () => {
 		sockets.emit(clueGiverId, {
 			scope,
 			type: 'GiveClueMessage',
-			data: { to: clueRecipientId, color: clueTile.color },
+			data: { to: clueRecipientId, number: clueTile.number },
 		});
 		complete = serializedData(game);
 

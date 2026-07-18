@@ -1,7 +1,7 @@
 import {
 	HanabiGameData,
 	HanabiRuleSet,
-	HanabiTileColor,
+	HanabiClueColor,
 	HanabiTileNumber,
 	Position,
 } from './HanabiGameData.js';
@@ -70,7 +70,7 @@ export type DiscardTileResponseMessage = SocketMessage<
 
 export type GiveClueMessage = SocketMessage<
 	'GiveClueMessage',
-	{ to: string; color?: HanabiTileColor; number?: HanabiTileNumber }
+	{ to: string; color?: HanabiClueColor; number?: HanabiTileNumber }
 >;
 export type GiveClueResponseMessage = SocketMessage<'GiveClueResponseMessage', { error?: string }>;
 

@@ -1,7 +1,7 @@
 import { useGameData } from '~/games/hanabi/client/HanabiGameContext';
 import { useHanabiHighlightContext } from '~/games/hanabi/client/HanabiHighlightContext';
 import HanabiTileView, { TileViewSize } from '~/games/hanabi/client/HanabiTileView';
-import { HanabiTileColor } from '@hanabi/shared';
+import { getHanabiRuleSetColors } from '@hanabi/shared';
 import { Fragment } from 'react';
 
 export default function HanabiPlayedTiles(): JSX.Element {
@@ -9,12 +9,7 @@ export default function HanabiPlayedTiles(): JSX.Element {
 
 	const { highlightedTiles } = useHanabiHighlightContext();
 
-	const colors: HanabiTileColor[] = ['red', 'blue', 'green', 'yellow', 'white'];
-	if (gameData.ruleSet === 'rainbow') {
-		colors.push('rainbow');
-	} else if (gameData.ruleSet === '6-color') {
-		colors.push('purple');
-	}
+	const colors = getHanabiRuleSetColors(gameData.ruleSet);
 
 	return (
 		<div className="grid grid-flow-col justify-start gap-1 items-center">

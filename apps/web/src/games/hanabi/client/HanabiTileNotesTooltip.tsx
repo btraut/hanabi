@@ -2,7 +2,7 @@ import Portal from '~/components/Portal';
 import Tooltip from '~/components/Tooltip';
 import { useGameData } from '~/games/hanabi/client/HanabiGameContext';
 import {
-	HanabiTileColor,
+	HanabiClueColor,
 	HanabiTileNotes,
 	HanabiTileNumber,
 	tileBackgroundClasses,
@@ -23,7 +23,7 @@ interface Props {
 export default function HanabiTileNotesTooltip({ notes, coords }: Props): JSX.Element {
 	const gameData = useGameData();
 
-	const allColors: HanabiTileColor[] = ['red', 'blue', 'green', 'yellow', 'white'];
+	const allColors: HanabiClueColor[] = ['red', 'blue', 'green', 'yellow', 'white'];
 	if (gameData.ruleSet === '6-color') {
 		allColors.push('purple');
 	}
