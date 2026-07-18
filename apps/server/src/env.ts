@@ -22,6 +22,7 @@ export interface RuntimeEnv {
 	REDIS_URL: string;
 	REDIRECT_URL_PROTOCOL_AND_SUBDOMAIN: string;
 	DOMAIN_BASE: string;
+	DEBUG_PLAYER_CONTROLS: boolean;
 }
 
 export function parseEnv(source: NodeJS.ProcessEnv): RuntimeEnv {
@@ -65,6 +66,10 @@ export function parseEnv(source: NodeJS.ProcessEnv): RuntimeEnv {
 
 	const sessionCookieSecret = source.SESSION_COOKIE_SECRET || DEVELOPMENT_SESSION_COOKIE_SECRET;
 	assertValidProductionSessionSecret(nodeEnv, sessionCookieSecret);
+	const debugPlayerControlsRequested = source.DEBUG_PLAYER_CONTROLS === 'true';
+	if (nodeEnv === 'production' && debugPlayerControlsRequested) {
+		throw new Error('DEBUG_PLAYER_CONTROLS cannot be enabled in production.');
+	}
 
 	return {
 		NODE_ENV: nodeEnv as RuntimeEnv['NODE_ENV'],
@@ -74,6 +79,7 @@ export function parseEnv(source: NodeJS.ProcessEnv): RuntimeEnv {
 		REDIS_URL: redisUrl,
 		REDIRECT_URL_PROTOCOL_AND_SUBDOMAIN: source.REDIRECT_URL_PROTOCOL_AND_SUBDOMAIN || '',
 		DOMAIN_BASE: source.DOMAIN_BASE || 'http://localhost:3000',
+		DEBUG_PLAYER_CONTROLS: nodeEnv === 'development' && debugPlayerControlsRequested,
 	};
 }
 

@@ -18,6 +18,7 @@ export interface HanabiRuntimeOptions {
 	redirectUrlProtocolAndSubdomain?: string;
 	domainBase?: string;
 	minimumPlayers?: number;
+	debugPlayerControls?: boolean;
 }
 
 export interface HanabiRuntime {
@@ -35,7 +36,12 @@ export function createHanabiRuntime(options: HanabiRuntimeOptions): HanabiRuntim
 	});
 	const { app, socketManager } = appRuntime;
 	const gameManager = new GameManager(socketManager, options.gameStore);
-	gameManager.addGameFactory(new HanabiGameFactory(options.minimumPlayers ?? HANABI_MIN_PLAYERS));
+	gameManager.addGameFactory(
+		new HanabiGameFactory(
+			options.minimumPlayers ?? HANABI_MIN_PLAYERS,
+			options.debugPlayerControls ?? false,
+		),
+	);
 
 	let ready = false;
 	let started = false;

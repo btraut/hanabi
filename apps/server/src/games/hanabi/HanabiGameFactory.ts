@@ -321,7 +321,10 @@ function parsePersistedGame(value: string): HanabiGameSerialized {
 }
 
 export default class HanabiGameFactory extends GameFactory {
-	constructor(private readonly _minimumPlayers = HANABI_MIN_PLAYERS) {
+	constructor(
+		private readonly _minimumPlayers = HANABI_MIN_PLAYERS,
+		private readonly _debugPlayerControls = false,
+	) {
 		super();
 	}
 
@@ -334,7 +337,13 @@ export default class HanabiGameFactory extends GameFactory {
 		socketManager: ServerSocketManager,
 		saveGameDelegate: SaveGameDelegate,
 	): HanabiGame {
-		return new HanabiGame(creatorId, socketManager, saveGameDelegate, this._minimumPlayers);
+		return new HanabiGame(
+			creatorId,
+			socketManager,
+			saveGameDelegate,
+			this._minimumPlayers,
+			this._debugPlayerControls,
+		);
 	}
 
 	public hydrate(
@@ -347,6 +356,7 @@ export default class HanabiGameFactory extends GameFactory {
 			socketManager,
 			saveGameDelegate,
 			this._minimumPlayers,
+			this._debugPlayerControls,
 		);
 	}
 }

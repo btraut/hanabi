@@ -6,6 +6,7 @@ import {
 	generateHanabiGameData,
 	generatePlayer,
 	generateRandomDeck,
+	HANABI_CLUE_COLORS,
 	isHanabiFireworkCompletion,
 	isHanabiRainbowRuleSet,
 	isHanabiRuleSet,
@@ -29,6 +30,9 @@ import {
 	Position,
 	AddPlayerMessage,
 	ChangeGameSettingsMessage,
+	CreateDebugPlayerMessage,
+	DebugPlayerAction,
+	DebugPlayerActionMessage,
 	DiscardTileMessage,
 	getScope,
 	GiveClueMessage,
@@ -54,6 +58,9 @@ export interface HanabiGameSerialized extends GameSerialized {
 
 const INVALID_MESSAGE_PAYLOAD = 'Invalid message payload.';
 const READ_ACTIVITY_SAVE_INTERVAL_MS = 60_000;
+type ActionResponseDelegate = (data: { error?: string }) => void;
+
+const DEBUG_PLAYER_NAME = 'Debug Player';
 
 export default class HanabiGame extends Game {
 	get title(): string {
@@ -65,19 +72,24 @@ export default class HanabiGame extends Game {
 	private _messenger: GameMessenger<HanabiMessage>;
 	private _userConnectionListener: UserConnectionListener;
 	private _lastReadActivitySaveAt = 0;
+	private readonly _debugPlayerControls: boolean;
 
 	constructor(
 		creatorIdOrData: string | HanabiGameSerialized,
 		socketManager: ServerSocketManager,
 		saveGameDelegate: SaveGameDelegate,
 		private readonly _minimumPlayers = HANABI_MIN_PLAYERS,
+		debugPlayerControls = false,
 	) {
 		super(
 			typeof creatorIdOrData === 'string' ? creatorIdOrData : creatorIdOrData.creatorId,
 			saveGameDelegate,
 		);
+		this._debugPlayerControls = debugPlayerControls;
 
-		if (typeof creatorIdOrData !== 'string') {
+		if (typeof creatorIdOrData === 'string') {
+			this._gameData = generateHanabiGameData({ creatorId: creatorIdOrData });
+		} else {
 			this._id = creatorIdOrData.id;
 			this._code = creatorIdOrData.code;
 			this._creatorId = creatorIdOrData.creatorId;
@@ -85,6 +97,7 @@ export default class HanabiGame extends Game {
 			this._updated = new Date(creatorIdOrData.updated);
 			this._gameData = {
 				...creatorIdOrData.data,
+				creatorId: creatorIdOrData.creatorId,
 				players: Object.fromEntries(
 					Object.entries(creatorIdOrData.data.players).map(([id, player]) => [
 						id,
@@ -276,6 +289,12 @@ export default class HanabiGame extends Game {
 			case 'RemovePlayerMessage':
 				this._handleRemovePlayerMessage(message, userId);
 				break;
+			case 'CreateDebugPlayerMessage':
+				this._handleCreateDebugPlayerMessage(message, userId);
+				break;
+			case 'DebugPlayerActionMessage':
+				this._handleDebugPlayerActionMessage(message, userId);
+				break;
 			case 'ChangeGameSettingsMessage':
 				this._handleChangeGameSettingsMessage(message, userId);
 				break;
@@ -363,8 +382,7 @@ export default class HanabiGame extends Game {
 		}
 
 		// Add the player to the player list.
-		const player = generatePlayer({ id: playerId, name: trimmedName });
-		this._gameData.players = { ...this._gameData.players, [playerId]: player };
+		this._addPlayer(playerId, trimmedName);
 
 		// Success! Respond to the creator.
 		this._messenger.send(playerId, {
@@ -377,6 +395,133 @@ export default class HanabiGame extends Game {
 
 		// Touch the games last updated time.
 		this._update();
+	}
+
+	private _addPlayer(playerId: string, name: string): void {
+		const player = generatePlayer({ id: playerId, name });
+		this._gameData.players = { ...this._gameData.players, [playerId]: player };
+	}
+
+	private _debugPlayerId(): string {
+		return `debug:${this.creatorId}`;
+	}
+
+	private _handleCreateDebugPlayerMessage(
+		_message: CreateDebugPlayerMessage,
+		userId: string,
+	): void {
+		const respond = (data: { playerId?: string; error?: string }) => {
+			this._messenger.send(userId, { type: 'CreateDebugPlayerResponseMessage', data });
+		};
+
+		if (!this._debugPlayerControls) {
+			respond({ error: 'Debug player controls are disabled.' });
+			return;
+		}
+		if (userId !== this.creatorId || !this._gameData.players[userId]) {
+			respond({ error: 'Only the joined host can create a debug player.' });
+			return;
+		}
+		if (this._gameData.stage !== HanabiStage.Setup) {
+			respond({ error: 'Cannot add a debug player after the game has started.' });
+			return;
+		}
+
+		const debugPlayerId = this._debugPlayerId();
+		if (!this._gameData.players[debugPlayerId]) {
+			if (Object.keys(this._gameData.players).length >= HANABI_MAX_PLAYERS) {
+				respond({ error: `Hanabi supports at most ${HANABI_MAX_PLAYERS} players.` });
+				return;
+			}
+			this._addPlayer(debugPlayerId, DEBUG_PLAYER_NAME);
+		}
+
+		respond({ playerId: debugPlayerId });
+		this._messenger.send(this._getAllPlayerAndWatcherIds(), {
+			type: 'RefreshGameDataMessage',
+			data: this._gameData,
+		});
+		this._update();
+	}
+
+	private _isDebugPlayerAction(value: unknown): value is DebugPlayerAction {
+		if (!value || typeof value !== 'object') {
+			return false;
+		}
+
+		const action = value as Record<string, unknown>;
+		if (action.type === 'play' || action.type === 'discard') {
+			return typeof action.tileId === 'string';
+		}
+		if (action.type !== 'clue' || typeof action.to !== 'string') {
+			return false;
+		}
+
+		const numbers = [1, 2, 3, 4, 5];
+		const hasColor = action.color !== undefined;
+		const hasNumber = action.number !== undefined;
+		return (
+			hasColor !== hasNumber &&
+			(!hasColor || HANABI_CLUE_COLORS.includes(action.color as HanabiClueColor)) &&
+			(!hasNumber || numbers.includes(action.number as number))
+		);
+	}
+
+	private _handleDebugPlayerActionMessage(message: DebugPlayerActionMessage, userId: string): void {
+		const respond: ActionResponseDelegate = (data) => {
+			this._messenger.send(userId, { type: 'DebugPlayerActionResponseMessage', data });
+		};
+
+		if (!this._debugPlayerControls) {
+			respond({ error: 'Debug player controls are disabled.' });
+			return;
+		}
+		if (userId !== this.creatorId || !this._gameData.players[userId]) {
+			respond({ error: 'Only the joined host can control the debug player.' });
+			return;
+		}
+
+		const debugPlayerId = this._debugPlayerId();
+		if (!this._gameData.players[debugPlayerId]) {
+			respond({ error: 'Debug player has not been created.' });
+			return;
+		}
+
+		const data = message.data as unknown;
+		const action =
+			data && typeof data === 'object' ? (data as { action?: unknown }).action : undefined;
+		if (!this._isDebugPlayerAction(action)) {
+			respond({ error: 'Invalid debug player action.' });
+			return;
+		}
+
+		switch (action.type) {
+			case 'play':
+				this._handlePlayTileMessage(
+					{ ...message, type: 'PlayTileMessage', data: { id: action.tileId } },
+					debugPlayerId,
+					respond,
+				);
+				break;
+			case 'discard':
+				this._handleDiscardTileMessage(
+					{ ...message, type: 'DiscardTileMessage', data: { id: action.tileId } },
+					debugPlayerId,
+					respond,
+				);
+				break;
+			case 'clue':
+				this._handleGiveClueMessage(
+					{
+						...message,
+						type: 'GiveClueMessage',
+						data: { to: action.to, color: action.color, number: action.number },
+					},
+					debugPlayerId,
+					respond,
+				);
+				break;
+		}
 	}
 
 	private _handleRemovePlayerMessage(
@@ -746,25 +891,24 @@ export default class HanabiGame extends Game {
 		}
 	}
 
-	private _handlePlayTileMessage(message: PlayTileMessage, userId: string): void {
+	private _handlePlayTileMessage(
+		message: PlayTileMessage,
+		userId: string,
+		respond: ActionResponseDelegate = (data) =>
+			this._messenger.send(userId, { type: 'PlayTileResponseMessage', data }),
+	): void {
 		const { tiles } = this._gameData;
 
 		const gameActionError = this._validateGameAction(userId);
 		if (gameActionError) {
-			this._messenger.send(userId, {
-				type: 'PlayTileResponseMessage',
-				data: { error: gameActionError },
-			});
+			respond({ error: gameActionError });
 			return;
 		}
 
 		const tile = this._gameData.tiles[message.data.id];
 
 		if (!tile || !this._gameData.playerTiles[userId].includes(tile.id)) {
-			this._messenger.send(userId, {
-				type: 'PlayTileResponseMessage',
-				data: { error: "That tile isn't in your hand!" },
-			});
+			respond({ error: "That tile isn't in your hand!" });
 			return;
 		}
 
@@ -841,10 +985,7 @@ export default class HanabiGame extends Game {
 		});
 
 		// Send success message.
-		this._messenger.send(userId, {
-			type: 'PlayTileResponseMessage',
-			data: {},
-		});
+		respond({});
 
 		// Send the updated state to all players/watchers.
 		this._broadcastGameData();
@@ -853,23 +994,22 @@ export default class HanabiGame extends Game {
 		this._update();
 	}
 
-	private _handleDiscardTileMessage(message: DiscardTileMessage, userId: string): void {
+	private _handleDiscardTileMessage(
+		message: DiscardTileMessage,
+		userId: string,
+		respond: ActionResponseDelegate = (data) =>
+			this._messenger.send(userId, { type: 'DiscardTileResponseMessage', data }),
+	): void {
 		const gameActionError = this._validateGameAction(userId);
 		if (gameActionError) {
-			this._messenger.send(userId, {
-				type: 'DiscardTileResponseMessage',
-				data: { error: gameActionError },
-			});
+			respond({ error: gameActionError });
 			return;
 		}
 
 		const tile = this._gameData.tiles[message.data.id];
 
 		if (!tile || !this._gameData.playerTiles[userId].includes(tile.id)) {
-			this._messenger.send(userId, {
-				type: 'DiscardTileResponseMessage',
-				data: { error: "That tile isn't in your hand!" },
-			});
+			respond({ error: "That tile isn't in your hand!" });
 			return;
 		}
 
@@ -914,10 +1054,7 @@ export default class HanabiGame extends Game {
 		this._completeTurn(userId, { startShotClockIfDeckEmpty: true });
 
 		// Send success message.
-		this._messenger.send(userId, {
-			type: 'DiscardTileResponseMessage',
-			data: {},
-		});
+		respond({});
 
 		// Send the updated state to all players/watchers.
 		this._broadcastGameData();
@@ -926,36 +1063,29 @@ export default class HanabiGame extends Game {
 		this._update();
 	}
 
-	private _handleGiveClueMessage(message: GiveClueMessage, userId: string): void {
+	private _handleGiveClueMessage(
+		message: GiveClueMessage,
+		userId: string,
+		respond: ActionResponseDelegate = (data) =>
+			this._messenger.send(userId, { type: 'GiveClueResponseMessage', data }),
+	): void {
 		const gameActionError = this._validateGameAction(userId);
 		if (gameActionError) {
-			this._messenger.send(userId, {
-				type: 'GiveClueResponseMessage',
-				data: { error: gameActionError },
-			});
+			respond({ error: gameActionError });
 			return;
 		}
 
 		// Make sure the clue is for a single number or color.
 		if (message.data.color !== undefined && message.data.number !== undefined) {
-			this._messenger.send(userId, {
-				type: 'GiveClueResponseMessage',
-				data: { error: 'Can only give a clue for a single number or color at a time.' },
-			});
+			respond({ error: 'Can only give a clue for a single number or color at a time.' });
 			return;
 		}
 		if (message.data.color === undefined && message.data.number === undefined) {
-			this._messenger.send(userId, {
-				type: 'GiveClueResponseMessage',
-				data: { error: 'Clues must contain a number or color.' },
-			});
+			respond({ error: 'Clues must contain a number or color.' });
 			return;
 		}
 		if (message.data.to === userId) {
-			this._messenger.send(userId, {
-				type: 'GiveClueResponseMessage',
-				data: { error: 'You cannot give yourself a clue.' },
-			});
+			respond({ error: 'You cannot give yourself a clue.' });
 			return;
 		}
 		const validColorClues: HanabiClueColor[] = ['red', 'yellow', 'green', 'blue', 'white'];
@@ -966,19 +1096,15 @@ export default class HanabiGame extends Game {
 			(message.data.color !== undefined && !validColorClues.includes(message.data.color)) ||
 			(message.data.number !== undefined && ![1, 2, 3, 4, 5].includes(message.data.number))
 		) {
-			this._messenger.send(userId, {
-				type: 'GiveClueResponseMessage',
-				data: { error: 'Invalid clue.' },
-			});
+			respond({ error: 'Invalid clue.' });
 			return;
 		}
 
-		const recipientTiles = this._gameData.playerTiles[message.data.to];
-		if (!recipientTiles) {
-			this._messenger.send(userId, {
-				type: 'GiveClueResponseMessage',
-				data: { error: 'Invalid player!' },
-			});
+		const recipientTiles = Object.hasOwn(this._gameData.playerTiles, message.data.to)
+			? this._gameData.playerTiles[message.data.to]
+			: undefined;
+		if (!Array.isArray(recipientTiles)) {
+			respond({ error: 'Invalid player!' });
 			return;
 		}
 
@@ -997,10 +1123,7 @@ export default class HanabiGame extends Game {
 			});
 
 		if (selectedTiles.length === 0) {
-			this._messenger.send(userId, {
-				type: 'GiveClueResponseMessage',
-				data: { error: 'Clues must select at least 1 tile.' },
-			});
+			respond({ error: 'Clues must select at least 1 tile.' });
 			return;
 		}
 
@@ -1011,10 +1134,7 @@ export default class HanabiGame extends Game {
 
 		// Make sure there's a clue to spare.
 		if (this._gameData.clues === 0) {
-			this._messenger.send(userId, {
-				type: 'GiveClueResponseMessage',
-				data: { error: 'No clues remaining.' },
-			});
+			respond({ error: 'No clues remaining.' });
 			return;
 		}
 
@@ -1049,10 +1169,7 @@ export default class HanabiGame extends Game {
 		this._completeTurn(userId);
 
 		// Send success message.
-		this._messenger.send(userId, {
-			type: 'GiveClueResponseMessage',
-			data: {},
-		});
+		respond({});
 
 		// Send the updated state to all players/watchers.
 		this._broadcastGameData();
@@ -1161,6 +1278,7 @@ export default class HanabiGame extends Game {
 
 		// Generate a new game.
 		this._gameData = generateHanabiGameData({
+			creatorId: this.creatorId,
 			players: this._gameData.players,
 			ruleSet: this._gameData.ruleSet,
 		});

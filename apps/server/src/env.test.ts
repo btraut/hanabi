@@ -66,4 +66,22 @@ describe('parseEnv', () => {
 		).toThrow('documented placeholder');
 		expect(() => parseEnv({ GAME_STORE: 'memory' })).toThrow('GAME_STORE');
 	});
+
+	it('only enables debug player controls in development', () => {
+		expect(parseEnv({ NODE_ENV: 'development', DEBUG_PLAYER_CONTROLS: 'true' })).toMatchObject({
+			DEBUG_PLAYER_CONTROLS: true,
+		});
+		expect(parseEnv({ NODE_ENV: 'test', DEBUG_PLAYER_CONTROLS: 'true' })).toMatchObject({
+			DEBUG_PLAYER_CONTROLS: false,
+		});
+		expect(() =>
+			parseEnv({
+				NODE_ENV: 'production',
+				GAME_STORE: 'redis',
+				REDIS_URL: 'redis://localhost',
+				SESSION_COOKIE_SECRET: 'a'.repeat(32),
+				DEBUG_PLAYER_CONTROLS: 'true',
+			}),
+		).toThrow('DEBUG_PLAYER_CONTROLS cannot be enabled in production.');
+	});
 });

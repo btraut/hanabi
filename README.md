@@ -55,6 +55,14 @@ and writes the authoritative URLs to `.context/dev/current.json`. Different work
 same time without fighting over ports. Use `pnpm dev:status` to print the current URLs and
 `pnpm dev:down` to stop the launcher.
 
+#### Single-browser debug player
+
+Press **Option-D** anywhere on the page to toggle the development-only **Debug Player Controls**
+panel. `?debug=1` remains available for opening it directly. After joining as the host, use the panel
+to add a second player. During that player's turns, the panel can play or discard any card and give
+valid color or number clues, so the full turn loop works in one browser. The development launcher
+enables the matching server controls; production rejects them.
+
 ### Available Commands
 
 | Command             | Description                           |

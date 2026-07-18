@@ -282,6 +282,8 @@ export type HanabiTileNotes = {
 };
 
 export interface HanabiGameData {
+	creatorId: string;
+
 	// What seed was used for the random number generator? This seed should
 	// dictate all the same tile types/order at the beginning of the game.
 	seed: string;
@@ -326,6 +328,7 @@ export interface HanabiGameData {
 
 export function generateHanabiGameData(data: Partial<HanabiGameData> = {}): HanabiGameData {
 	return {
+		creatorId: '',
 		seed: crypto.randomUUID(),
 		ruleSet: '5-color',
 		allowDragging: true,

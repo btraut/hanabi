@@ -4,7 +4,7 @@ import HanabiTileView from '~/games/hanabi/client/HanabiTileView';
 import { HanabiTileColor, HanabiTileNumber } from '@hanabi/shared';
 import useForceRefresh from '~/utils/client/useForceRefresh';
 import { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const randomColorChoices: HanabiTileColor[] = ['red', 'blue', 'green', 'yellow', 'white'];
 
@@ -18,6 +18,7 @@ function generateRandomTile() {
 export default function HanabiMainMenu(): JSX.Element {
 	const hanabiGameContext = useHanabiGameContext();
 	const navigate = useNavigate();
+	const { search } = useLocation();
 
 	const loadingRef = useRef(false);
 
@@ -31,7 +32,7 @@ export default function HanabiMainMenu(): JSX.Element {
 		loadingRef.current = true;
 		void hanabiGameContext
 			.create()
-			.then((code) => navigate(`/${code}`))
+			.then((code) => navigate({ pathname: `/${code}`, search }))
 			.catch((error: unknown) => {
 				console.error('Could not create a game:', error);
 			})
@@ -41,7 +42,7 @@ export default function HanabiMainMenu(): JSX.Element {
 	};
 
 	const watchButtonHandler = () => {
-		void Promise.resolve(navigate('/join')).catch((error: unknown) => {
+		void Promise.resolve(navigate({ pathname: '/join', search })).catch((error: unknown) => {
 			console.error('Could not open the join page:', error);
 		});
 	};
