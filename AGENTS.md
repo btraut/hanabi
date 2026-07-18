@@ -10,7 +10,7 @@
 ## Tooling expectations
 
 - Use mise with `.tool-versions`; load via direnv when present (`mise install`, then `direnv allow`).
-- Run commands from repo root `/Users/btraut/Development/hanabi`.
+- Run commands from the active checkout root (`git rev-parse --show-toplevel`), including worktrees.
 - Use `pnpm` for all package operations.
 - Use `pnpm dev` to run both web and server in development mode.
 - Use `pnpm typecheck` and `pnpm lint` to verify code quality.

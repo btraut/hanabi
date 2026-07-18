@@ -1,1 +1,4 @@
 .build/*
+.nx/
+dist/
+artifacts/browser-proof/

@@ -6,11 +6,9 @@ import { useEffect, useRef } from 'react';
 const PLAY_SOUNDS_FOR_ACTING_USER = true;
 
 function playAudio(ele: HTMLAudioElement) {
-	try {
-		ele.play();
-	} catch (error) {
-		console.log('Cannot play audio clip: ', error);
-	}
+	void ele.play().catch(() => {
+		// Browsers can block autoplay until the page receives a direct interaction.
+	});
 }
 
 export default function useActionSounds(enabled = true): void {

@@ -21,7 +21,7 @@ export default class GameMessenger<MessageType extends SocketMessage<string, unk
 				if (data.userId) {
 					handler({ userId: data.userId, message: data.message as MessageType });
 				}
-			}
+			},
 		);
 	}
 

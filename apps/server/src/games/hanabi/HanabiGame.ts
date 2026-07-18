@@ -8,6 +8,7 @@ import {
 	HANABI_DEFAULT_TILE_POSITIONS,
 	HANABI_GAME_TITLE,
 	HANABI_MAX_CLUES,
+	HANABI_MAX_PLAYERS,
 	HANABI_MIN_PLAYERS,
 	HANABI_TILE_SIZE,
 	HANABI_TILES_IN_HAND,
@@ -37,7 +38,7 @@ import GameMessenger from '../server/GameMessenger.js';
 import { SaveGameDelegate } from '../server/GameStore.js';
 import UserConnectionListener, { UserConnectionChange } from '../server/UserConnectionListener.js';
 import ServerSocketManager from '../../utils/SocketManager.js';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'node:crypto';
 import { env } from '../../env.js';
 
 export interface HanabiGameSerialized extends GameSerialized {
@@ -179,9 +180,27 @@ export default class HanabiGame extends Game {
 			});
 			return;
 		}
+		const trimmedName = typeof name === 'string' ? name.trim() : '';
+		if (!trimmedName || trimmedName.length > 40) {
+			this._messenger.send(playerId, {
+				type: 'AddPlayerResponseMessage',
+				data: { error: 'Names must be between 1 and 40 characters.' },
+			});
+			return;
+		}
+		if (
+			!this._gameData.players[playerId] &&
+			Object.keys(this._gameData.players).length >= HANABI_MAX_PLAYERS
+		) {
+			this._messenger.send(playerId, {
+				type: 'AddPlayerResponseMessage',
+				data: { error: `Hanabi supports at most ${HANABI_MAX_PLAYERS} players.` },
+			});
+			return;
+		}
 
 		// Add the player to the player list.
-		const player = generatePlayer({ id: playerId, name });
+		const player = generatePlayer({ id: playerId, name: trimmedName });
 		this._gameData.players = { ...this._gameData.players, [playerId]: player };
 
 		// Success! Respond to the creator.
@@ -213,6 +232,13 @@ export default class HanabiGame extends Game {
 				data: {
 					error: 'Cannot remove user from game because it has already started.',
 				},
+			});
+			return;
+		}
+		if (removeUserId !== userId && this.creatorId !== userId) {
+			this._messenger.send(userId, {
+				type: 'RemovePlayerResponseMessage',
+				data: { error: 'Only the host can remove another player.' },
 			});
 			return;
 		}
@@ -304,14 +330,23 @@ export default class HanabiGame extends Game {
 	}
 
 	private _handleSendChatMessage(message: SendChatMessage, userId: string): void {
+		const chat = typeof message.data === 'string' ? message.data.trim() : '';
+		if (!this._gameData.players[userId] || !chat || chat.length > 500) {
+			this._messenger.send(userId, {
+				type: 'SendChatResponseMessage',
+				data: { error: 'Chat messages must be between 1 and 500 characters.' },
+			});
+			return;
+		}
+
 		// Add the chat action.
 		this._gameData.actions = [
 			...this._gameData.actions,
 			{
-				id: uuidv4(),
+				id: randomUUID(),
 				type: HanabiGameActionType.Chat,
 				playerId: userId,
-				message: message.data,
+				message: chat,
 			},
 		];
 
@@ -343,15 +378,20 @@ export default class HanabiGame extends Game {
 			return;
 		}
 
-		if (
-			Object.keys(this._gameData.players).length <
-			(env.NODE_ENV === 'development' ? 1 : HANABI_MIN_PLAYERS)
-		) {
+		const playerCount = Object.keys(this._gameData.players).length;
+		if (playerCount < (env.NODE_ENV === 'development' ? 1 : HANABI_MIN_PLAYERS)) {
 			this._messenger.send(userId, {
 				type: 'StartGameResponseMessage',
 				data: {
 					error: 'Not enough players to play.',
 				},
+			});
+			return;
+		}
+		if (playerCount > HANABI_MAX_PLAYERS) {
+			this._messenger.send(userId, {
+				type: 'StartGameResponseMessage',
+				data: { error: `Hanabi supports at most ${HANABI_MAX_PLAYERS} players.` },
 			});
 			return;
 		}
@@ -401,7 +441,7 @@ export default class HanabiGame extends Game {
 		this._gameData.actions = [
 			...this._gameData.actions,
 			{
-				id: uuidv4(),
+				id: randomUUID(),
 				type: HanabiGameActionType.GameStarted,
 				startingPlayerId: this._gameData.currentPlayerId,
 			},
@@ -527,7 +567,7 @@ export default class HanabiGame extends Game {
 
 		const tile = this._gameData.tiles[message.data.id];
 
-		if (!tile) {
+		if (!tile || !this._gameData.playerTiles[userId].includes(tile.id)) {
 			this._messenger.send(userId, {
 				type: 'PlayTileResponseMessage',
 				data: { error: "That tile isn't in your hand!" },
@@ -536,7 +576,9 @@ export default class HanabiGame extends Game {
 		}
 
 		// Remove the tile from the player.
-		const newPlayerTiles = this._gameData.playerTiles[userId].filter((tid: string) => tid !== tile.id);
+		const newPlayerTiles = this._gameData.playerTiles[userId].filter(
+			(tid: string) => tid !== tile.id,
+		);
 		this._gameData.playerTiles = { ...this._gameData.playerTiles, [userId]: newPlayerTiles };
 
 		// Pick up another tile if available.
@@ -589,7 +631,7 @@ export default class HanabiGame extends Game {
 		this._gameData.actions = [
 			...this._gameData.actions,
 			{
-				id: uuidv4(),
+				id: randomUUID(),
 				playerId: userId,
 				type: HanabiGameActionType.Play,
 				tile,
@@ -609,7 +651,7 @@ export default class HanabiGame extends Game {
 				this._gameData.actions = [
 					...this._gameData.actions,
 					{
-						id: uuidv4(),
+						id: randomUUID(),
 						playerId: userId,
 						type: HanabiGameActionType.ShotClockStarted,
 						remainingTurns: this._gameData.remainingTurns,
@@ -630,7 +672,7 @@ export default class HanabiGame extends Game {
 				this._gameData.actions = [
 					...this._gameData.actions,
 					{
-						id: uuidv4(),
+						id: randomUUID(),
 						playerId: userId,
 						type: HanabiGameActionType.ShotClockTickedDown,
 						remainingTurns: this._gameData.remainingTurns,
@@ -651,7 +693,7 @@ export default class HanabiGame extends Game {
 			this._gameData.actions = [
 				...this._gameData.actions,
 				{
-					id: uuidv4(),
+					id: randomUUID(),
 					type: HanabiGameActionType.GameFinished,
 					finishedReason: this._gameData.finishedReason,
 				},
@@ -692,7 +734,7 @@ export default class HanabiGame extends Game {
 
 		const tile = this._gameData.tiles[message.data.id];
 
-		if (!tile) {
+		if (!tile || !this._gameData.playerTiles[userId].includes(tile.id)) {
 			this._messenger.send(userId, {
 				type: 'DiscardTileResponseMessage',
 				data: { error: "That tile isn't in your hand!" },
@@ -701,7 +743,9 @@ export default class HanabiGame extends Game {
 		}
 
 		// Remove the tile from the player.
-		const newPlayerTiles = this._gameData.playerTiles[userId].filter((tid: string) => tid !== tile.id);
+		const newPlayerTiles = this._gameData.playerTiles[userId].filter(
+			(tid: string) => tid !== tile.id,
+		);
 		this._gameData.playerTiles = { ...this._gameData.playerTiles, [userId]: newPlayerTiles };
 
 		// Add the tile to discarded tiles.
@@ -721,7 +765,7 @@ export default class HanabiGame extends Game {
 		this._gameData.actions = [
 			...this._gameData.actions,
 			{
-				id: uuidv4(),
+				id: randomUUID(),
 				playerId: userId,
 				type: HanabiGameActionType.Discard,
 				tile,
@@ -745,7 +789,7 @@ export default class HanabiGame extends Game {
 				this._gameData.actions = [
 					...this._gameData.actions,
 					{
-						id: uuidv4(),
+						id: randomUUID(),
 						playerId: userId,
 						type: HanabiGameActionType.ShotClockStarted,
 						remainingTurns: this._gameData.remainingTurns,
@@ -765,7 +809,7 @@ export default class HanabiGame extends Game {
 				this._gameData.actions = [
 					...this._gameData.actions,
 					{
-						id: uuidv4(),
+						id: randomUUID(),
 						playerId: userId,
 						type: HanabiGameActionType.ShotClockTickedDown,
 						remainingTurns: this._gameData.remainingTurns,
@@ -790,7 +834,7 @@ export default class HanabiGame extends Game {
 			this._gameData.actions = [
 				...this._gameData.actions,
 				{
-					id: uuidv4(),
+					id: randomUUID(),
 					type: HanabiGameActionType.GameFinished,
 					finishedReason: this._gameData.finishedReason,
 				},
@@ -838,6 +882,24 @@ export default class HanabiGame extends Game {
 			});
 			return;
 		}
+		if (message.data.to === userId) {
+			this._messenger.send(userId, {
+				type: 'GiveClueResponseMessage',
+				data: { error: 'You cannot give yourself a clue.' },
+			});
+			return;
+		}
+		if (
+			(message.data.color !== undefined &&
+				!['red', 'yellow', 'green', 'blue', 'white'].includes(message.data.color)) ||
+			(message.data.number !== undefined && ![1, 2, 3, 4, 5].includes(message.data.number))
+		) {
+			this._messenger.send(userId, {
+				type: 'GiveClueResponseMessage',
+				data: { error: 'Invalid clue.' },
+			});
+			return;
+		}
 
 		const recipientTiles = this._gameData.playerTiles[message.data.to];
 		if (!recipientTiles) {
@@ -881,6 +943,7 @@ export default class HanabiGame extends Game {
 				type: 'GiveClueResponseMessage',
 				data: { error: 'No clues remaining.' },
 			});
+			return;
 		}
 
 		// Decrement clue count.
@@ -890,7 +953,7 @@ export default class HanabiGame extends Game {
 		this._gameData.actions = [
 			...this._gameData.actions,
 			{
-				id: uuidv4(),
+				id: randomUUID(),
 				playerId: userId,
 				type: actionType,
 				recipientId: message.data.to,
@@ -913,7 +976,7 @@ export default class HanabiGame extends Game {
 				this._gameData.actions = [
 					...this._gameData.actions,
 					{
-						id: uuidv4(),
+						id: randomUUID(),
 						playerId: userId,
 						type: HanabiGameActionType.ShotClockTickedDown,
 						remainingTurns: this._gameData.remainingTurns,
@@ -947,7 +1010,7 @@ export default class HanabiGame extends Game {
 			this._gameData.actions = [
 				...this._gameData.actions,
 				{
-					id: uuidv4(),
+					id: randomUUID(),
 					type: HanabiGameActionType.GameFinished,
 					finishedReason: this._gameData.finishedReason,
 				},
@@ -976,6 +1039,7 @@ export default class HanabiGame extends Game {
 				type: 'MoveTilesResponseMessage',
 				data: { error: 'Invalid player!' },
 			});
+			return;
 		}
 
 		if (this._gameData.stage !== HanabiStage.Playing) {
@@ -983,10 +1047,21 @@ export default class HanabiGame extends Game {
 				type: 'MoveTilesResponseMessage',
 				data: { error: "The game isn't being played right now.!" },
 			});
+			return;
 		}
 
+		const positions: unknown = message.data;
+		if (typeof positions !== 'object' || positions === null || Array.isArray(positions)) {
+			this._messenger.send(userId, {
+				type: 'MoveTilesResponseMessage',
+				data: { error: 'Invalid position.' },
+			});
+			return;
+		}
+		const requestedPositions = positions as Record<string, unknown>;
+
 		// Validate that the user owns all these tiles.
-		for (const tileId of Object.keys(message.data)) {
+		for (const tileId of Object.keys(requestedPositions)) {
 			if (!this._gameData.tilePositions[tileId]) {
 				this._messenger.send(userId, {
 					type: 'MoveTilesResponseMessage',
@@ -1003,23 +1078,36 @@ export default class HanabiGame extends Game {
 				return;
 			}
 
-			const position = this._gameData.tilePositions[tileId];
+			const position = requestedPositions[tileId];
+			const candidate = position as Partial<Position> | null;
 
 			if (
-				position.x > HANABI_BOARD_SIZE.width - HANABI_TILE_SIZE.width ||
-				position.y > HANABI_BOARD_SIZE.height - HANABI_TILE_SIZE.height ||
-				position.x < 0 ||
-				position.y < 0
+				typeof candidate !== 'object' ||
+				candidate === null ||
+				typeof candidate.x !== 'number' ||
+				typeof candidate.y !== 'number' ||
+				typeof candidate.z !== 'number' ||
+				!Number.isFinite(candidate.x) ||
+				!Number.isFinite(candidate.y) ||
+				!Number.isFinite(candidate.z) ||
+				candidate.x > HANABI_BOARD_SIZE.width - HANABI_TILE_SIZE.width ||
+				candidate.y > HANABI_BOARD_SIZE.height - HANABI_TILE_SIZE.height ||
+				candidate.x < 0 ||
+				candidate.y < 0
 			) {
 				this._messenger.send(userId, {
 					type: 'MoveTilesResponseMessage',
 					data: { error: 'Invalid position.' },
 				});
+				return;
 			}
 		}
 
 		// All tiles are validated. We can update positions now.
-		this._gameData.tilePositions = { ...this._gameData.tilePositions, ...message.data };
+		this._gameData.tilePositions = {
+			...this._gameData.tilePositions,
+			...(requestedPositions as Record<string, Position>),
+		};
 
 		// Send success message.
 		this._messenger.send(userId, {
@@ -1043,6 +1131,7 @@ export default class HanabiGame extends Game {
 				type: 'ResetGameResponseMessage',
 				data: { error: 'Only players can reset the game.' },
 			});
+			return;
 		}
 
 		// Generate a new game.

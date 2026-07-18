@@ -3,6 +3,7 @@ import Game from './Game.js';
 import GameFactory from './GameFactory.js';
 import { GameStore } from './GameStore.js';
 import SocketManager from '../../utils/SocketManager.js';
+import Logger from '../../utils/Logger.js';
 
 export default class GameManager {
 	private _gameFactories: { [title: string]: GameFactory } = {};
@@ -12,6 +13,8 @@ export default class GameManager {
 	private _socketManagerOnMessageSubscriptionId: number | null = null;
 
 	private _gameStore: GameStore;
+	private _pendingRemovals = new Set<Promise<void>>();
+	private _removalErrors: unknown[] = [];
 
 	constructor(socketManager: SocketManager<GameManagerMessage>, gameStore: GameStore) {
 		this._socketManager = socketManager;
@@ -25,6 +28,45 @@ export default class GameManager {
 	public cleanUp(): void {
 		if (this._socketManagerOnMessageSubscriptionId !== null) {
 			this._socketManager.onMessage.unsubscribe(this._socketManagerOnMessageSubscriptionId);
+		}
+	}
+
+	public async close(): Promise<void> {
+		this.cleanUp();
+		const games = Object.values(this._games);
+		games.forEach((game) => game.stopSaving());
+
+		const errors: unknown[] = [];
+		await Promise.all(
+			games.map(async (game) => {
+				try {
+					await game.flushSaves();
+				} catch (error) {
+					errors.push(error);
+				}
+
+				try {
+					game.cleanUp();
+				} catch (error) {
+					errors.push(error);
+				}
+			}),
+		);
+
+		while (this._pendingRemovals.size > 0) {
+			await Promise.all(this._pendingRemovals);
+		}
+		errors.push(...this._removalErrors);
+		this._removalErrors = [];
+
+		try {
+			await this._gameStore.close();
+		} catch (error) {
+			errors.push(error);
+		}
+
+		if (errors.length > 0) {
+			throw new AggregateError(errors, 'Failed to close the game manager cleanly.');
 		}
 	}
 
@@ -112,9 +154,49 @@ export default class GameManager {
 	}
 
 	public _removeGame(id: string): void {
-		this._games[id].cleanUp();
-		this._gameStore.deleteGame(this._games[id]);
+		const game = this._games[id];
+		if (!game) {
+			return;
+		}
+
 		delete this._games[id];
+		game.stopSaving();
+
+		const removal = this._flushAndDeleteGame(game)
+			.catch((error) => {
+				this._removalErrors.push(error);
+				Logger.error(`Failed to remove ${game.title} game ${game.id}.`, error);
+			})
+			.finally(() => {
+				this._pendingRemovals.delete(removal);
+			});
+		this._pendingRemovals.add(removal);
+	}
+
+	private async _flushAndDeleteGame(game: Game): Promise<void> {
+		const errors: unknown[] = [];
+
+		try {
+			await game.flushSaves();
+		} catch (error) {
+			errors.push(error);
+		}
+
+		try {
+			game.cleanUp();
+		} catch (error) {
+			errors.push(error);
+		}
+
+		try {
+			await this._gameStore.deleteGame(game);
+		} catch (error) {
+			errors.push(error);
+		}
+
+		if (errors.length > 0) {
+			throw new AggregateError(errors, `Failed to remove ${game.title} game ${game.id}.`);
+		}
 	}
 
 	public prune(olderThan = 24 * 60 * 60 * 1000): Game[] {

@@ -7,4 +7,5 @@ export interface SaveGameDelegate {
 
 export interface GameStore extends SaveGameDelegate {
 	loadGameData: () => Promise<{ [title: string]: string[] }>;
+	close: () => Promise<void>;
 }

@@ -4,11 +4,7 @@ import { useGameData } from '~/games/hanabi/client/HanabiGameContext';
 import { useHanabiOptionsContext } from '~/games/hanabi/client/HanabiOptionsContext';
 import useActionHighlighter from '~/games/hanabi/client/useActionHighlighter';
 import useActionSounds from '~/games/hanabi/client/useActionSounds';
-import {
-	ActionsFilterOption,
-	HanabiGameAction,
-	HanabiGameActionType,
-} from '@hanabi/shared';
+import { ActionsFilterOption, HanabiGameAction, HanabiGameActionType } from '@hanabi/shared';
 import classNames from 'classnames';
 
 type Props = {

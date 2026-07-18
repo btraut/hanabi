@@ -1,7 +1,6 @@
 import useFocusVisible from '~/utils/client/useFocusVisible';
 import classNames from 'classnames';
 import { ChangeEventHandler, forwardRef, useState } from 'react';
-import { v4 as uuidv4 } from 'uuid';
 
 interface Props {
 	id?: string;
@@ -13,7 +12,7 @@ interface Props {
 function HanabiDropdown({ id, onChange, options, value }: Props, ref: any): JSX.Element {
 	const isFocusVisible = useFocusVisible();
 
-	const [finalId] = useState(id ?? `dropdown-${uuidv4()}`);
+	const [finalId] = useState(() => id ?? `dropdown-${crypto.randomUUID()}`);
 
 	return (
 		<div className="grid justify-start">

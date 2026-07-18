@@ -1,31 +1,24 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import store from 'store';
+import { useCallback, useState } from 'react';
 
-export function useLocalStorage<T = any>(key: string, defaultValue: T): [T, (newVal: T) => void] {
-	const fetchedFromStorageRef = useRef(false);
-
-	let initialStorageVal: T | null = null;
-	if (!fetchedFromStorageRef.current) {
-		initialStorageVal = store.get(key);
-		fetchedFromStorageRef.current = true;
-	}
-
-	useEffect(() => {
-		if (initialStorageVal === null && defaultValue !== null) {
-			store.set(key, defaultValue);
+export function useLocalStorage<T>(key: string, defaultValue: T): [T, (newVal: T) => void] {
+	const [localVal, setLocalVal] = useState<T>(() => {
+		try {
+			const storedValue = localStorage.getItem(key);
+			if (storedValue !== null) return JSON.parse(storedValue) as T;
+			localStorage.setItem(key, JSON.stringify(defaultValue));
+		} catch {
+			// Storage may be unavailable or contain an obsolete value. Use the default.
 		}
-
-		// defaultValue is intended to be unmanaged, so we're only going to run
-		// this on mount.
-		//
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
-
-	const [localVal, setLocalVal] = useState(initialStorageVal ?? defaultValue);
+		return defaultValue;
+	});
 
 	const storeValue = useCallback(
 		(newVal: T) => {
-			store.set(key, newVal);
+			try {
+				localStorage.setItem(key, JSON.stringify(newVal));
+			} catch {
+				// Keep the in-memory preference usable if storage is unavailable.
+			}
 			setLocalVal(newVal);
 		},
 		[key],

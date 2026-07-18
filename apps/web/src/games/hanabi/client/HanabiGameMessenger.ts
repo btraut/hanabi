@@ -85,19 +85,25 @@ export default class HanabiGameMessenger {
 			this._authSocketManager.authenticationState === AuthenticationState.Authenticated;
 
 		if (this._connected) {
-			this.refreshGameData();
+			void this.refreshGameData().catch((error: unknown) => {
+				console.error('Could not refresh the game after reconnecting:', error);
+			});
 		}
 	};
 
 	private _sendMessage(message: DistributiveOmit<HanabiMessage, 'scope'>) {
 		this._socketManager.send({
 			...message,
-			scope: getScope(HANABI_GAME_TITLE, this._id),
+			scope: this._scope,
 		});
 	}
 
+	private get _scope(): string {
+		return getScope(HANABI_GAME_TITLE, this._id);
+	}
+
 	private _handleMessage = (message: HanabiMessage) => {
-		if (message.scope !== getScope(HANABI_GAME_TITLE, this._id)) {
+		if (message.scope !== this._scope) {
 			return;
 		}
 
@@ -112,7 +118,10 @@ export default class HanabiGameMessenger {
 			data: undefined,
 		});
 
-		await this._socketManager.expectMessageOfType<RefreshGameDataMessage>('RefreshGameDataMessage');
+		await this._socketManager.expectMessageOfType<RefreshGameDataMessage>(
+			'RefreshGameDataMessage',
+			this._scope,
+		);
 
 		// After responding to our initial message, the server will also send a
 		// RefreshGameData message. We'll handle that in a separate handler.
@@ -124,9 +133,11 @@ export default class HanabiGameMessenger {
 			data: { name },
 		});
 
-		const addPlayerResponseMessage = await this._socketManager.expectMessageOfType<AddPlayerResponseMessage>(
-			'AddPlayerResponseMessage',
-		);
+		const addPlayerResponseMessage =
+			await this._socketManager.expectMessageOfType<AddPlayerResponseMessage>(
+				'AddPlayerResponseMessage',
+				this._scope,
+			);
 
 		if (addPlayerResponseMessage.data.error) {
 			throw new Error(addPlayerResponseMessage.data.error);
@@ -142,9 +153,11 @@ export default class HanabiGameMessenger {
 			data: {},
 		});
 
-		const removePlayerResponseMessage = await this._socketManager.expectMessageOfType<RemovePlayerResponseMessage>(
-			'RemovePlayerResponseMessage',
-		);
+		const removePlayerResponseMessage =
+			await this._socketManager.expectMessageOfType<RemovePlayerResponseMessage>(
+				'RemovePlayerResponseMessage',
+				this._scope,
+			);
 
 		if (removePlayerResponseMessage.data.error) {
 			throw new Error(removePlayerResponseMessage.data.error);
@@ -160,9 +173,11 @@ export default class HanabiGameMessenger {
 			data: undefined,
 		});
 
-		const startGameResponseMessage = await this._socketManager.expectMessageOfType<StartGameResponseMessage>(
-			'StartGameResponseMessage',
-		);
+		const startGameResponseMessage =
+			await this._socketManager.expectMessageOfType<StartGameResponseMessage>(
+				'StartGameResponseMessage',
+				this._scope,
+			);
 
 		if (startGameResponseMessage.data.error) {
 			throw new Error(startGameResponseMessage.data.error);
@@ -178,9 +193,11 @@ export default class HanabiGameMessenger {
 			data: undefined,
 		});
 
-		const resetGameResponseMessage = await this._socketManager.expectMessageOfType<ResetGameResponseMessage>(
-			'ResetGameResponseMessage',
-		);
+		const resetGameResponseMessage =
+			await this._socketManager.expectMessageOfType<ResetGameResponseMessage>(
+				'ResetGameResponseMessage',
+				this._scope,
+			);
 
 		if (resetGameResponseMessage.data.error) {
 			throw new Error(resetGameResponseMessage.data.error);
@@ -200,9 +217,11 @@ export default class HanabiGameMessenger {
 			data: settings,
 		});
 
-		const changeGameSettingsResponseMessage = await this._socketManager.expectMessageOfType<ChangeGameSettingsResponseMessage>(
-			'ChangeGameSettingsResponseMessage',
-		);
+		const changeGameSettingsResponseMessage =
+			await this._socketManager.expectMessageOfType<ChangeGameSettingsResponseMessage>(
+				'ChangeGameSettingsResponseMessage',
+				this._scope,
+			);
 
 		if (changeGameSettingsResponseMessage.data.error) {
 			throw new Error(changeGameSettingsResponseMessage.data.error);
@@ -218,9 +237,11 @@ export default class HanabiGameMessenger {
 			data: message,
 		});
 
-		const sendChatResponseMessage = await this._socketManager.expectMessageOfType<SendChatResponseMessage>(
-			'SendChatResponseMessage',
-		);
+		const sendChatResponseMessage =
+			await this._socketManager.expectMessageOfType<SendChatResponseMessage>(
+				'SendChatResponseMessage',
+				this._scope,
+			);
 
 		if (sendChatResponseMessage.data.error) {
 			throw new Error(sendChatResponseMessage.data.error);
@@ -236,9 +257,11 @@ export default class HanabiGameMessenger {
 			data: positions,
 		});
 
-		const moveTilesResponseMessage = await this._socketManager.expectMessageOfType<MoveTilesResponseMessage>(
-			'MoveTilesResponseMessage',
-		);
+		const moveTilesResponseMessage =
+			await this._socketManager.expectMessageOfType<MoveTilesResponseMessage>(
+				'MoveTilesResponseMessage',
+				this._scope,
+			);
 
 		if (moveTilesResponseMessage.data.error) {
 			throw new Error(moveTilesResponseMessage.data.error);
@@ -254,9 +277,11 @@ export default class HanabiGameMessenger {
 			data: { id: tile.id },
 		});
 
-		const discardTileResponseMessage = await this._socketManager.expectMessageOfType<DiscardTileResponseMessage>(
-			'DiscardTileResponseMessage',
-		);
+		const discardTileResponseMessage =
+			await this._socketManager.expectMessageOfType<DiscardTileResponseMessage>(
+				'DiscardTileResponseMessage',
+				this._scope,
+			);
 
 		if (discardTileResponseMessage.data.error) {
 			throw new Error(discardTileResponseMessage.data.error);
@@ -272,9 +297,11 @@ export default class HanabiGameMessenger {
 			data: { id: tile.id },
 		});
 
-		const playTileResponseMessage = await this._socketManager.expectMessageOfType<PlayTileResponseMessage>(
-			'PlayTileResponseMessage',
-		);
+		const playTileResponseMessage =
+			await this._socketManager.expectMessageOfType<PlayTileResponseMessage>(
+				'PlayTileResponseMessage',
+				this._scope,
+			);
 
 		if (playTileResponseMessage.data.error) {
 			throw new Error(playTileResponseMessage.data.error);
@@ -290,9 +317,11 @@ export default class HanabiGameMessenger {
 			data: { to, color },
 		});
 
-		const giveClueResponseMessage = await this._socketManager.expectMessageOfType<GiveClueResponseMessage>(
-			'GiveClueResponseMessage',
-		);
+		const giveClueResponseMessage =
+			await this._socketManager.expectMessageOfType<GiveClueResponseMessage>(
+				'GiveClueResponseMessage',
+				this._scope,
+			);
 
 		if (giveClueResponseMessage.data.error) {
 			throw new Error(giveClueResponseMessage.data.error);
@@ -308,9 +337,11 @@ export default class HanabiGameMessenger {
 			data: { to, number },
 		});
 
-		const giveClueResponseMessage = await this._socketManager.expectMessageOfType<GiveClueResponseMessage>(
-			'GiveClueResponseMessage',
-		);
+		const giveClueResponseMessage =
+			await this._socketManager.expectMessageOfType<GiveClueResponseMessage>(
+				'GiveClueResponseMessage',
+				this._scope,
+			);
 
 		if (giveClueResponseMessage.data.error) {
 			throw new Error(giveClueResponseMessage.data.error);

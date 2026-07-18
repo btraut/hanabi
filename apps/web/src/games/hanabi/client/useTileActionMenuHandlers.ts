@@ -80,16 +80,26 @@ export default function useTileActionMenuHandlers(): {
 
 			switch (action) {
 				case 'discard':
-					gameMessenger.discardTile(tile);
+					void gameMessenger.discardTile(tile).catch((error: unknown) => {
+						console.error('Could not discard the tile:', error);
+					});
 					break;
 				case 'play':
-					gameMessenger.playTile(tile);
+					void gameMessenger.playTile(tile).catch((error: unknown) => {
+						console.error('Could not play the tile:', error);
+					});
 					break;
 				case 'color':
-					gameMessenger.giveColorClue(tileOwner, details?.color ?? tile.color);
+					void gameMessenger
+						.giveColorClue(tileOwner, details?.color ?? tile.color)
+						.catch((error: unknown) => {
+							console.error('Could not give the color clue:', error);
+						});
 					break;
 				case 'number':
-					gameMessenger.giveNumberClue(tileOwner, tile.number);
+					void gameMessenger.giveNumberClue(tileOwner, tile.number).catch((error: unknown) => {
+						console.error('Could not give the number clue:', error);
+					});
 					break;
 			}
 

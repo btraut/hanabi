@@ -1,48 +1,37 @@
 import { BreakpointContextProvider } from '~/components/BreakpointContext';
-import { useEffect, useRef, useState } from 'react';
-import Tailbreak from 'tailbreak';
+import { useEffect, useState } from 'react';
 
 interface Props {
 	readonly children: JSX.Element | JSX.Element[] | null;
 }
 
-export default function BreakpointController({ children }: Props): JSX.Element {
-	const tailbreakRef = useRef(Tailbreak());
+const queries = {
+	sm: '(min-width: 640px)',
+	md: '(min-width: 768px)',
+	lg: '(min-width: 1024px)',
+	xl: '(min-width: 1280px)',
+	'2xl': '(min-width: 1536px)',
+} as const;
 
-	const [breakpoints, setBreakpoints] = useState({
-		sm: tailbreakRef.current.sm,
-		md: tailbreakRef.current.md,
-		lg: tailbreakRef.current.lg,
-		xl: tailbreakRef.current.xl,
-		'2xl': tailbreakRef.current['2xl'],
-	});
+const readBreakpoints = () => ({
+	sm: window.matchMedia(queries.sm).matches,
+	md: window.matchMedia(queries.md).matches,
+	lg: window.matchMedia(queries.lg).matches,
+	xl: window.matchMedia(queries.xl).matches,
+	'2xl': window.matchMedia(queries['2xl']).matches,
+});
+
+export default function BreakpointController({ children }: Props): JSX.Element {
+	const [breakpoints, setBreakpoints] = useState(readBreakpoints);
 
 	useEffect(() => {
-		const handleResize = () => {
-			if (
-				breakpoints.sm === tailbreakRef.current.sm &&
-				breakpoints.md === tailbreakRef.current.md &&
-				breakpoints.lg === tailbreakRef.current.lg &&
-				breakpoints.xl === tailbreakRef.current.xl &&
-				breakpoints['2xl'] === tailbreakRef.current['2xl']
-			) {
-				return;
-			}
-
-			setBreakpoints({
-				sm: tailbreakRef.current.sm,
-				md: tailbreakRef.current.md,
-				lg: tailbreakRef.current.lg,
-				xl: tailbreakRef.current.xl,
-				'2xl': tailbreakRef.current['2xl'],
-			});
-		};
-
-		window.addEventListener('resize', handleResize);
+		const mediaQueries = Object.values(queries).map((query) => window.matchMedia(query));
+		const handleChange = () => setBreakpoints(readBreakpoints());
+		mediaQueries.forEach((query) => query.addEventListener('change', handleChange));
 		return () => {
-			window.removeEventListener('resize', handleResize);
+			mediaQueries.forEach((query) => query.removeEventListener('change', handleChange));
 		};
-	}, [breakpoints]);
+	}, []);
 
 	return <BreakpointContextProvider value={breakpoints}>{children}</BreakpointContextProvider>;
 }

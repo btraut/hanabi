@@ -48,7 +48,7 @@ export default function HanabiPlayerTiles({
 				<div className="absolute bottom-0 left-0 right-0 h-1/2 bg-black opacity-5" />
 			)}
 			<div style={HANABI_BOARD_SIZE} className="relative z-0">
-				{gameData.playerTiles[id].map((tileId) => (
+				{gameData.playerTiles[id].map((tileId, index) => (
 					<div
 						key={`TileContainer-${tileId}`}
 						className={classNames('absolute top-0 left-0', {
@@ -61,6 +61,11 @@ export default function HanabiPlayerTiles({
 					>
 						<HanabiInteractiveTileView
 							tile={gameData.tiles[tileId]}
+							ariaLabel={
+								ownTiles
+									? `Your tile ${index + 1}`
+									: `${gameData.players[id].name}'s tile ${index + 1}`
+							}
 							hidden={gameStillPlaying && ownTiles}
 							onClick={enableOnClick ? onTileClick : undefined}
 							onMouseOver={onTileMouseOver}

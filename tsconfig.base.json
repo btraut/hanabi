@@ -1,24 +1,24 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
-  "compilerOptions": {
-    "target": "ES2022",
-    "module": "Node16",
-    "moduleResolution": "node16",
-    "lib": ["ES2022", "DOM"],
-    "types": ["node"],
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "rootDir": ".",
-    "baseUrl": ".",
-    "paths": {
-      "@hanabi/shared": ["packages/shared/src/index.ts"],
-      "@hanabi/shared/*": ["packages/shared/src/*"],
-      "~/*": ["apps/web/src/*"]
-    }
-  },
-  "include": ["apps/**/*", "packages/**/*", "scripts/**/*", "eslint.config.mjs"],
-  "exclude": ["node_modules", "dist", ".build"]
+	"$schema": "https://json.schemastore.org/tsconfig",
+	"compilerOptions": {
+		"target": "ES2022",
+		"module": "Node16",
+		"moduleResolution": "node16",
+		"lib": ["ES2022", "DOM"],
+		"types": ["node"],
+		"strict": true,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"forceConsistentCasingInFileNames": true,
+		"resolveJsonModule": true,
+		"rootDir": ".",
+		"baseUrl": ".",
+		"paths": {
+			"@hanabi/shared": ["packages/shared/src/index.ts"],
+			"@hanabi/shared/*": ["packages/shared/src/*"],
+			"~/*": ["apps/web/src/*"]
+		}
+	},
+	"include": ["apps/**/*", "packages/**/*", "scripts/**/*", "eslint.config.mjs"],
+	"exclude": ["node_modules", "dist", ".build"]
 }

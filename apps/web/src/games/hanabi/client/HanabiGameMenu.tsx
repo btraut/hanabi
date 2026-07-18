@@ -24,7 +24,9 @@ export default function HanabiGameMenu({ onClose, onOptions }: Props): JSX.Eleme
 							label="New Game"
 							onClick={() => {
 								onClose();
-								gameMessenger.reset();
+								void gameMessenger.reset().catch((error: unknown) => {
+									console.error('Could not reset the game:', error);
+								});
 							}}
 						/>
 					) : (

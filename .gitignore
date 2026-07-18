@@ -3,6 +3,11 @@
 
 ### App ###
 .build/*
+.context/
+.nx/
+dist/
+.saved-games/
+artifacts/browser-proof/
 
 ### Node ###
 # Logs

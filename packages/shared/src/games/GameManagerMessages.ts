@@ -18,7 +18,4 @@ export type WatchGameResponseMessage = SocketMessage<
 >;
 
 export type GameManagerMessage =
-	| CreateGameMessage
-	| CreateGameResponseMessage
-	| WatchGameMessage
-	| WatchGameResponseMessage;
+	CreateGameMessage | CreateGameResponseMessage | WatchGameMessage | WatchGameResponseMessage;

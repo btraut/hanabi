@@ -1,20 +1,24 @@
 # Hanabi Modernization Spec
 
 ## Context
+
 The current project uses a single-package layout with Webpack 5 for client + server builds, React 17, and legacy tooling (Tailwind v2, React Router v5, Socket.IO v3). The goal is a full modernization that preserves runtime behavior while upgrading tooling, dependency versions, and repository structure. The migration is a direct cutover; legacy build configs can be removed during the process.
 
 ## Goals
+
 - Preserve application behavior (UI, routing, websocket interactions, server responses).
 - Modernize build tooling (Vite, Nx, pnpm), upgrade dependencies (React 19, Tailwind v4, React Router v7), and standardize on Node v24.11.1.
 - Establish a simple monorepo with two apps: `apps/web` and `apps/server`.
 - Improve developer experience: fast HMR, consistent lint/typecheck, clear scripts.
 
 ## Non-Goals
+
 - Introducing SSR or altering rendering strategy (keep SPA behavior).
 - Creating separate UI/design system packages.
 - Re-architecting websocket usage (keep long-lived Node websocket server).
 
 ## Current State (Pre-Migration)
+
 - **Build**: Webpack 5 with ts-loader, Babel 7
 - **React**: 17.0.1
 - **Router**: React Router v5.2.0
@@ -27,6 +31,7 @@ The current project uses a single-package layout with Webpack 5 for client + ser
 ## Target Architecture
 
 ### Repo Layout
+
 ```
 apps/
   web/          # Vite + React 19 SPA
@@ -36,40 +41,46 @@ packages/
 ```
 
 ### Apps
+
 - `apps/web`: Vite + React 19 SPA. No SSR.
 - `apps/server`: Node 24.11.1 + Express + Socket.IO v4. Long-lived websocket server remains in Node process.
 
 ### Tooling
+
 - **Package manager**: pnpm workspaces
 - **Monorepo**: Nx with `nx:run-commands` executor pattern (following decklist)
 - **Build**:
   - Web: Vite with `vite-tsconfig-paths`
-  - Server: `tsx` for dev (watch mode), `tsc` for production builds
+- Server: `tsx` for dev (watch mode), esbuild for a self-contained production entrypoint
 - **Lint/format**: ESLint 9 flat config (`eslint.config.mjs`) + Prettier 3
 - **TypeScript**: 5.7+ with root `tsconfig.base.json` and per-app configs (build, typecheck variants)
 - **Runtime**: Node v24.11.1 enforced via `.tool-versions` + `.envrc` (mise/direnv)
 - **Styling**: Tailwind CSS v4 (CSS-first config)
 
 ### Key Dependencies (Target Versions)
-| Package | Current | Target |
-|---------|---------|--------|
-| React | 17.0.1 | 19.x |
-| React Router | 5.2.0 | 7.x |
-| Tailwind CSS | 2.0.2 | 4.x |
-| Socket.IO | 3.0.4 | 4.x |
-| TypeScript | 5.4.3 | 5.7+ |
-| ESLint | 8.46.0 | 9.x |
+
+| Package      | Current | Target |
+| ------------ | ------- | ------ |
+| React        | 17.0.1  | 19.x   |
+| React Router | 5.2.0   | 7.x    |
+| Tailwind CSS | 2.0.2   | 4.x    |
+| Socket.IO    | 3.0.4   | 4.x    |
+| TypeScript   | 5.4.3   | 5.7+   |
+| ESLint       | 8.46.0  | 9.x    |
 
 ## Environment & Config
+
 - Per-app `.env` and `.env.example` files
 - Explicitly separate server-only envs from client-exposed envs (use `VITE_` prefix for client)
 - Centralize environment access in `env.ts` modules for server and client
 
 ## Build Outputs
+
 - Web build artifacts in `dist/apps/web`
 - Server build artifacts in `dist/apps/server`
 
 ## Development Workflow
+
 - `pnpm dev` → `nx run-many -t dev --projects web,server`
 - Explicit ports and HMR config for websocket stability
 - Helper script `scripts/run-pnpm.sh` for Nx executor commands
@@ -79,6 +90,7 @@ packages/
 ## Migration Phases
 
 ### Phase 1: Monorepo Scaffolding ✅
+
 Set up the monorepo structure without moving code yet.
 
 - [x] Install pnpm globally, remove yarn.lock
@@ -93,6 +105,7 @@ Set up the monorepo structure without moving code yet.
 - [x] Scaffold empty `apps/web/` and `apps/server/` directories with `package.json` and `project.json`
 
 ### Phase 2: Server App Migration ✅
+
 Move and modernize the server code.
 
 - [x] Move server source files from `app/src/` to `apps/server/src/`
@@ -108,12 +121,14 @@ Move and modernize the server code.
 - [x] Verify server starts and accepts websocket connections
 
 **Implementation Notes:**
+
 - Created `packages/shared/` for shared types/utilities (HanabiGameData, SocketMessage, PubSub, etc.)
 - Using `express.json()` instead of body-parser (built into express 4.16+)
 - Redis client upgraded to v4 API (async connect)
 - TypeScript project references for cross-package imports
 
 ### Phase 3: Web App Migration ✅
+
 Move and modernize the client code.
 
 - [x] Create `apps/web/vite.config.ts` with React plugin, tsconfig-paths, Tailwind v4
@@ -129,13 +144,15 @@ Move and modernize the client code.
 - [ ] Create `apps/web/src/env.ts` for client env access (deferred - no client env vars needed yet)
 
 **Implementation Notes:**
+
 - Updated imports to use `~/` path alias for local imports and `@hanabi/shared` for shared types
 - Fixed react-dnd v14 API changes (useDrag now takes a factory function)
 - Tailwind v4 uses CSS-first config via `@import "tailwindcss"` and `@theme`
 - Removed duplicate types/utilities that now live in @hanabi/shared
-- Added missing dependencies: classnames, boring-avatars, react-focus-lock, tailbreak, store
+- Added current dependencies for the retained UI; obsolete `tailbreak`, `store`, and UUID wrappers were replaced with browser platform APIs.
 
 ### Phase 4: Dependency Upgrades ✅
+
 Upgrade major dependencies with necessary code migrations.
 
 - [x] Upgrade React 17 → 19
@@ -158,11 +175,13 @@ Upgrade major dependencies with necessary code migrations.
 - [x] Remove webpack and related loaders
 
 **Implementation Notes:**
+
 - React 19's stricter types required updating event handler types from `HTMLDivElement` to `HTMLElement` for components that can render as either button or div
 - react-dnd's ref types don't fully match React 19's ref types - used `as any` casts where needed
 - `useRef()` now requires an initial value (null) in React 19 types
 
 ### Phase 5: Cleanup & Verification ✅
+
 Remove legacy config and verify parity.
 
 - [x] Delete legacy files:
@@ -177,19 +196,20 @@ Remove legacy config and verify parity.
 - [x] Run full lint, typecheck, format from root
   - Typecheck passes on all projects
   - Lint has pre-existing issues (not introduced by migration)
-- [ ] Manual verification of parity checklist (to be done by user):
-  - [ ] Login/auth flows work
-  - [ ] Game creation/joining works
-  - [ ] Websocket connection is stable (long-lived)
-  - [ ] Real-time game updates work
-  - [ ] UI renders correctly with all styles
-  - [ ] Assets (images, sounds) load correctly
+- [x] Browser verification of the multiplayer parity checklist ✅
+  - [x] Signed session and socket authentication work ✅
+  - [x] Game creation and joining work in isolated browsers ✅
+  - [x] Websocket connections survive reload and reauthenticate ✅
+  - [x] Turns and chat update both players in real time ✅
+  - [x] React 19, avatars, Tailwind, and responsive game layouts render correctly ✅
+  - [x] Production SPA and deep routes serve from the generated artifact ✅
 - [x] Update README with new dev workflow
 - [x] AGENTS.md already up to date
 
 ---
 
 ## Acceptance Criteria
+
 - `pnpm install` works from repo root
 - `pnpm dev` launches both web and server with working websockets
 - `pnpm build` produces `dist/apps/web` and `dist/apps/server`
@@ -198,7 +218,8 @@ Remove legacy config and verify parity.
 - Legacy webpack configs and scripts are removed
 
 ## Decisions Made
-- **Server build**: `tsx` for dev (fast watch), `tsc` for production (following decklist pattern)
+
+- **Server build**: `tsx` for dev and esbuild for a predictable self-contained production artifact
 - **WebSocket library**: Keep Socket.IO, upgrade to v4 (stable, well-supported, minimal migration)
 - **Tailwind version**: v4 (CSS-first config, latest features)
 - **React Router**: Aggressive upgrade to v7 (latest, better patterns)

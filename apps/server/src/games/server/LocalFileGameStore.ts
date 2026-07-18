@@ -1,6 +1,7 @@
 import Game from './Game.js';
 import { GameStore } from './GameStore.js';
-import { existsSync, promises } from 'fs';
+import { randomUUID } from 'node:crypto';
+import { existsSync, promises } from 'node:fs';
 
 export default class LocalFileGameStore implements GameStore {
 	private _savedGamesPath: string;
@@ -9,22 +10,26 @@ export default class LocalFileGameStore implements GameStore {
 		this._savedGamesPath = savedGamesPath;
 	}
 
+	public async close(): Promise<void> {}
+
 	public async saveGame(game: Game): Promise<void> {
-		const { writeFile, mkdir } = promises;
+		const { writeFile, mkdir, rename, rm } = promises;
 
 		const serialized = game.serialize();
-		const path = `${this._savedGamesPath}/${game.title}/${game.id}`;
-
-		if (!existsSync(this._savedGamesPath)) {
-			await mkdir(this._savedGamesPath);
+		if (serialized === null) {
+			return;
 		}
 
-		if (!existsSync(`${this._savedGamesPath}/${game.title}`)) {
-			await mkdir(`${this._savedGamesPath}/${game.title}`);
-		}
+		const gameDirectory = `${this._savedGamesPath}/${game.title}`;
+		const path = `${gameDirectory}/${game.id}`;
+		const temporaryPath = `${path}.${process.pid}.${randomUUID()}.tmp`;
 
-		if (serialized !== null) {
-			await writeFile(path, serialized);
+		await mkdir(gameDirectory, { recursive: true });
+		try {
+			await writeFile(temporaryPath, serialized);
+			await rename(temporaryPath, path);
+		} finally {
+			await rm(temporaryPath, { force: true });
 		}
 	}
 
@@ -61,6 +66,9 @@ export default class LocalFileGameStore implements GameStore {
 			const gameFiles = await readdir(`${this._savedGamesPath}/${title}`);
 
 			for (const gameFile of gameFiles) {
+				if (gameFile.endsWith('.tmp')) {
+					continue;
+				}
 				const gameFileData = await readFile(`${this._savedGamesPath}/${title}/${gameFile}`, 'utf8');
 				gameData[title].push(gameFileData);
 			}

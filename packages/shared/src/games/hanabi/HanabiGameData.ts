@@ -1,5 +1,4 @@
 import { shuffle } from '../../utils/shuffle.js';
-import { v4 as uuidv4 } from 'uuid';
 
 export const HANABI_GAME_TITLE = 'hanabi';
 
@@ -135,16 +134,14 @@ export interface HanabiGameActionPlay extends HanabiGameActionBase<HanabiGameAct
 	valid: boolean;
 }
 
-export interface HanabiGameActionDiscard
-	extends HanabiGameActionBase<HanabiGameActionType.Discard> {
+export interface HanabiGameActionDiscard extends HanabiGameActionBase<HanabiGameActionType.Discard> {
 	playerId: string;
 	tile: HanabiTile;
 }
 
-export interface HanabiGameActionGiveClue
-	extends HanabiGameActionBase<
-		HanabiGameActionType.GiveNumberClue | HanabiGameActionType.GiveColorClue
-	> {
+export interface HanabiGameActionGiveClue extends HanabiGameActionBase<
+	HanabiGameActionType.GiveNumberClue | HanabiGameActionType.GiveColorClue
+> {
 	playerId: string;
 	recipientId: string;
 	tiles: HanabiTile[];
@@ -152,24 +149,20 @@ export interface HanabiGameActionGiveClue
 	number?: HanabiTileNumber;
 }
 
-export interface HanabiGameActionGameStarted
-	extends HanabiGameActionBase<HanabiGameActionType.GameStarted> {
+export interface HanabiGameActionGameStarted extends HanabiGameActionBase<HanabiGameActionType.GameStarted> {
 	startingPlayerId: string;
 }
 
-export interface HanabiGameActionGameFinished
-	extends HanabiGameActionBase<HanabiGameActionType.GameFinished> {
+export interface HanabiGameActionGameFinished extends HanabiGameActionBase<HanabiGameActionType.GameFinished> {
 	finishedReason: HanabiFinishedReason;
 }
 
-export interface HanabiGameActionShotClockStarted
-	extends HanabiGameActionBase<HanabiGameActionType.ShotClockStarted> {
+export interface HanabiGameActionShotClockStarted extends HanabiGameActionBase<HanabiGameActionType.ShotClockStarted> {
 	playerId: string;
 	remainingTurns: number;
 }
 
-export interface HanabiGameActionShotClockTickedDown
-	extends HanabiGameActionBase<HanabiGameActionType.ShotClockTickedDown> {
+export interface HanabiGameActionShotClockTickedDown extends HanabiGameActionBase<HanabiGameActionType.ShotClockTickedDown> {
 	playerId: string;
 	remainingTurns: number;
 }
@@ -241,7 +234,7 @@ export interface HanabiGameData {
 
 export function generateHanabiGameData(data: Partial<HanabiGameData> = {}): HanabiGameData {
 	return {
-		seed: uuidv4(),
+		seed: crypto.randomUUID(),
 		ruleSet: '5-color',
 		allowDragging: true,
 		showNotes: true,
@@ -269,7 +262,7 @@ export function generateHanabiGameData(data: Partial<HanabiGameData> = {}): Hana
 export function generatePlayer(data: Partial<HanabiPlayer> = {}): HanabiPlayer {
 	return {
 		connected: true,
-		id: uuidv4(),
+		id: crypto.randomUUID(),
 		name: '',
 		...data,
 	};
@@ -293,7 +286,7 @@ export function generateRandomDeck(
 
 	for (const color of colors) {
 		for (const number of numbers) {
-			const id = uuidv4();
+			const id = crypto.randomUUID();
 			tiles[id] = { id, color, number };
 			tileIds.push(id);
 		}

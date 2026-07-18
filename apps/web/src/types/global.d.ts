@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+
 import type { JSX as ReactJSX } from 'react';
 
 declare global {

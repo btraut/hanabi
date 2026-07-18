@@ -1,22 +1,9 @@
 {
-	"compilerOptions": {
-		"declaration": false,
-		"noResolve": false,
-		"noImplicitAny": true,
-		"module": "commonjs",
-		"target": "es6",
-		"lib": ["es6", "dom", "es2017"],
-		"jsx": "react-jsx",
-		"sourceMap": true,
-		"experimentalDecorators": true,
-		"esModuleInterop": true,
-		"strictNullChecks": true,
-		"skipLibCheck": true,
-		"noUnusedParameters": true,
-		"noUnusedLocals": true,
-		"baseUrl": ".",
-		"paths": {
-			"*": ["node_modules/*", "node_modules/@types/*", "*"]
-		}
-	}
+	"$schema": "https://json.schemastore.org/tsconfig",
+	"files": [],
+	"references": [
+		{ "path": "./packages/shared" },
+		{ "path": "./apps/server" },
+		{ "path": "./apps/web" }
+	]
 }
