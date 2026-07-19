@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Hanabi authored asset review</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 32px; background: #030914; color: #f6f2e8; font: 14px/1.4 system-ui, sans-serif; }
+    h1 { margin: 0 0 4px; font-size: 22px; }
+    p { margin: 0 0 24px; color: #93a4bc; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .surface { min-height: 270px; padding: 24px; border: 1px solid #233854; border-radius: 16px; }
+    .navy { background: #0b1728; }
+    .ivory { background: #f4eedf; color: #132035; }
+    h2 { margin: 0 0 18px; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; opacity: .7; }
+    .row { display: flex; align-items: center; gap: 16px; margin-bottom: 22px; }
+    .brand { width: 32px; height: 32px; }
+    .tile { position: relative; width: 40px; height: 48px; border-radius: 8px; background: #05070a; box-shadow: 0 0 0 1px rgba(255,255,255,.65); }
+    .tile::after { content: ''; position: absolute; inset: 2px; background: #ef665f; opacity: .32; mask: var(--asset) center/contain no-repeat; -webkit-mask: var(--asset) center/contain no-repeat; }
+    .tile.back::after { background: #385273; opacity: .5; }
+    .emblems { display: flex; flex-wrap: wrap; gap: 14px; }
+    .emblem { width: 24px; height: 24px; background: currentColor; mask: var(--asset) center/contain no-repeat; -webkit-mask: var(--asset) center/contain no-repeat; }
+    .red { color:#ef665f }.blue { color:#5f9de8 }.green { color:#59b987 }.yellow { color:#e8bd5f }
+    .white { color:#eee9df }.ivory .white { color:#738096 }.purple { color:#a78be5 }.black { color:#738096 }
+    .rainbow { background: linear-gradient(135deg,#ef665f,#e8bd5f,#59b987,#5f9de8,#a78be5); }
+    code { font-size: 11px; opacity: .7; }
+  </style>
+</head>
+<body>
+  <h1>Hanabi authored asset review</h1>
+  <p>Actual 32px brand, 40×48px tile motifs, and 24px lane emblems on both production surfaces.</p>
+  <div class="grid" id="surfaces"></div>
+  <script>
+    const root = '../../apps/web/public/images/hanabi/';
+    const colors = ['red','blue','green','yellow','white','purple','rainbow','black'];
+    for (const surface of ['navy','ivory']) {
+      const panel = document.createElement('section');
+      panel.className = `surface ${surface}`;
+      panel.innerHTML = `<h2>${surface} surface</h2><div class="row"><img alt="" class="brand" src="${root}brand-mark.svg"><code>brand-mark.svg</code></div><div class="row"><span class="tile" style="--asset:url(${root}tile-face-burst.svg)"></span><span class="tile back" style="--asset:url(${root}tile-back-emblem.svg)"></span><code>face / concealed</code></div><div class="emblems">${colors.map(color => `<span title="${color}" class="emblem ${color}" style="--asset:url(${root}tableau/${color}.svg)"></span>`).join('')}</div>`;
+      document.querySelector('#surfaces').append(panel);
+    }
+  </script>
+</body>
+</html>

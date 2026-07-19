@@ -1,6 +1,7 @@
 import { useHanabiGameContext } from '~/games/hanabi/client/HanabiGameContext';
 import HanabiHeaderMenuButton from '~/games/hanabi/client/HanabiHeaderMenuButton';
 import HanabiCopyLinkButton from '~/games/hanabi/client/HanabiCopyLinkButton';
+import { HANABI_BRAND_MARK_PATH } from '~/games/hanabi/client/HanabiArtwork';
 import useFocusVisible from '~/utils/client/useFocusVisible';
 import classNames from 'classnames';
 
@@ -17,12 +18,12 @@ export default function HanabiHeader({ variant = 'default' }: Props): JSX.Elemen
 			<header className="border-b border-hanabi-border bg-hanabi-table-deep/90 backdrop-blur">
 				<div className="mx-auto flex min-h-14 max-w-[1240px] items-center justify-between gap-6 px-5">
 					<a className="hanabi-focus-ring group flex items-center gap-3 rounded-md" href="/">
-						<span
+						<img
+							alt=""
 							aria-hidden="true"
-							className="grid size-8 place-items-center rounded-full border border-hanabi-coral/45 bg-hanabi-surface text-lg text-hanabi-coral shadow-[0_0_18px_rgb(255_114_95_/_25%)]"
-						>
-							✦
-						</span>
+							className="size-8 drop-shadow-[0_0_9px_rgb(255_114_95_/_28%)]"
+							src={HANABI_BRAND_MARK_PATH}
+						/>
 						<span className="text-xl font-semibold tracking-tight text-hanabi-text transition-colors group-hover:text-hanabi-coral-soft">
 							Hanabi
 						</span>

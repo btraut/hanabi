@@ -73,6 +73,21 @@
 	box-shadow: var(--hanabi-panel-shadow);
 }
 
+.hanabi-tile-art {
+	position: absolute;
+	inset: 2px;
+	background: currentColor;
+	mask-position: center;
+	mask-repeat: no-repeat;
+	mask-size: contain;
+	opacity: 0.16;
+	pointer-events: none;
+}
+
+.hanabi-tile-art-back {
+	opacity: 0.44;
+}
+
 .hanabi-focus-ring:focus-visible {
 	outline: 2px solid var(--color-hanabi-coral-soft);
 	outline-offset: 3px;

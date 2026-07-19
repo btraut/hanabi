@@ -1,5 +1,9 @@
 import MagnifyingGlass from '~/games/hanabi/client/icons/MagnifyingGlass';
 import {
+	HANABI_TILE_BACK_EMBLEM_PATH,
+	HANABI_TILE_FACE_BURST_PATH,
+} from '~/games/hanabi/client/HanabiArtwork';
+import {
 	HANABI_TILE_SIZE,
 	HANABI_TILE_SIZE_SMALL,
 	HanabiTileColor,
@@ -63,6 +67,26 @@ export default function HanabiTileView({
 				},
 			])}
 		>
+			{!!(color && number) && (
+				<span
+					aria-hidden="true"
+					className={classNames('hanabi-tile-art', tileColorClasses[color])}
+					style={{
+						WebkitMaskImage: `url(${HANABI_TILE_FACE_BURST_PATH})`,
+						maskImage: `url(${HANABI_TILE_FACE_BURST_PATH})`,
+					}}
+				/>
+			)}
+			{!color && !number && !placeholder && (
+				<span
+					aria-hidden="true"
+					className="hanabi-tile-art hanabi-tile-art-back text-hanabi-border-bright"
+					style={{
+						WebkitMaskImage: `url(${HANABI_TILE_BACK_EMBLEM_PATH})`,
+						maskImage: `url(${HANABI_TILE_BACK_EMBLEM_PATH})`,
+					}}
+				/>
+			)}
 			{!!(color && number) && (
 				<div
 					className={classNames(

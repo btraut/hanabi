@@ -1,4 +1,5 @@
 import { getTileViewTransitionName } from '~/games/hanabi/client/HanabiActionTransition';
+import { getHanabiTableauEmblemPath } from '~/games/hanabi/client/HanabiArtwork';
 import HanabiDiscardQueue from '~/games/hanabi/client/HanabiDiscardQueue';
 import HanabiTileView from '~/games/hanabi/client/HanabiTileView';
 import {
@@ -84,11 +85,17 @@ export default function HanabiDesktopTableau({
 						</h2>
 						<span
 							aria-hidden="true"
-							className="grid size-6 place-items-center rounded-full border border-current/35 text-sm"
+							className="size-6 bg-current"
 							data-lane-emblem={color}
-						>
-							✦
-						</span>
+							style={{
+								background:
+									color === 'rainbow'
+										? 'linear-gradient(135deg, #ef665f, #e8bd5f, #59b987, #5f9de8, #a78be5)'
+										: undefined,
+								WebkitMask: `url(${getHanabiTableauEmblemPath(color)}) center / contain no-repeat`,
+								mask: `url(${getHanabiTableauEmblemPath(color)}) center / contain no-repeat`,
+							}}
+						/>
 						<div
 							aria-label={
 								topTile ? `${color} firework at ${topTile.number}` : `${color} firework is empty`
