@@ -1,4 +1,5 @@
 import HanabiDesktopBoard from '~/games/hanabi/client/HanabiDesktopBoard';
+import HanabiActivityRail from '~/games/hanabi/client/HanabiActivityRail';
 import HanabiDesktopTableau from '~/games/hanabi/client/HanabiDesktopTableau';
 import { HanabiDesktopPlayerWorkspaces } from '~/games/hanabi/client/HanabiPlayerWorkspace';
 import HanabiTileView from '~/games/hanabi/client/HanabiTileView';
@@ -40,6 +41,16 @@ export default function HanabiDesktopFixtureView(): JSX.Element {
 				</nav>
 			</header>
 			<HanabiDesktopBoard
+				activity={
+					<HanabiActivityRail
+						composer={<div className="p-3 text-xs text-hanabi-text-muted">Message composer</div>}
+						gameData={fixture.gameData}
+						renderAction={(action) => (
+							<p className="p-3 text-sm text-hanabi-text">{action.type}</p>
+						)}
+						userId={fixture.userId}
+					/>
+				}
 				gameData={fixture.gameData}
 				playerWorkspaces={
 					<HanabiDesktopPlayerWorkspaces

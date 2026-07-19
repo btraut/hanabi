@@ -1,9 +1,14 @@
 import { useGameMessenger } from '~/games/hanabi/client/HanabiGameContext';
 import useFocusVisible from '~/utils/client/useFocusVisible';
+import PaperPlane from '~/games/hanabi/client/icons/PaperPlane';
 import classNames from 'classnames';
 import { KeyboardEvent, useCallback, useRef } from 'react';
 
-export default function HanabiChatInput(): JSX.Element {
+export default function HanabiChatInput({
+	variant = 'legacy',
+}: {
+	variant?: 'desktop' | 'legacy';
+}): JSX.Element {
 	const gameMessenger = useGameMessenger();
 	const isFocusVisible = useFocusVisible();
 
@@ -32,10 +37,16 @@ export default function HanabiChatInput(): JSX.Element {
 	);
 
 	return (
-		<div className="p-2 grid items-stretch" style={{ gridTemplateColumns: '1fr auto' }}>
+		<div className="grid items-stretch p-2" style={{ gridTemplateColumns: '1fr auto' }}>
 			<input
 				aria-label="Chat message"
-				className="p-2 bg-gray-100 border-2 border-gray-800 text-black text-sm focus:outline-none focus:border-red-600 focus:bg-white"
+				className={classNames('p-2 text-sm focus:outline-none', {
+					'border-2 border-gray-800 bg-gray-100 text-black focus:border-red-600 focus:bg-white':
+						variant === 'legacy',
+					'border border-hanabi-border bg-hanabi-table text-hanabi-text placeholder:text-hanabi-text-muted focus:border-hanabi-coral':
+						variant === 'desktop',
+				})}
+				placeholder={variant === 'desktop' ? 'Send a message…' : undefined}
 				style={{
 					borderTopLeftRadius: 4,
 					borderBottomLeftRadius: 4,
@@ -47,11 +58,14 @@ export default function HanabiChatInput(): JSX.Element {
 				ref={inputRef}
 			/>
 			<button
+				aria-label="Send message"
 				className={classNames(
-					'block bg-gray-800 text-center font-bold duration-100 focus:outline-none select-none',
-					'cursor-pointer text-white hover:bg-red-600 active:scale-95',
+					'block cursor-pointer select-none text-center font-bold text-white duration-100 focus:outline-none active:scale-95',
 					{
-						'focus:bg-red-600': isFocusVisible,
+						'bg-gray-800 hover:bg-red-600': variant === 'legacy',
+						'bg-hanabi-coral hover:bg-hanabi-coral-soft': variant === 'desktop',
+						'bg-red-600': isFocusVisible && variant === 'legacy',
+						'ring-2 ring-hanabi-focus ring-inset': isFocusVisible && variant === 'desktop',
 					},
 				)}
 				style={{
@@ -61,7 +75,7 @@ export default function HanabiChatInput(): JSX.Element {
 				}}
 				onClick={sendMessage}
 			>
-				Send
+				{variant === 'desktop' ? <PaperPlane size={18} /> : 'Send'}
 			</button>
 		</div>
 	);
