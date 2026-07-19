@@ -1,9 +1,40 @@
+import { useHanabiGameContext } from '~/games/hanabi/client/HanabiGameContext';
 import HanabiHeaderMenuButton from '~/games/hanabi/client/HanabiHeaderMenuButton';
+import HanabiCopyLinkButton from '~/games/hanabi/client/HanabiCopyLinkButton';
 import useFocusVisible from '~/utils/client/useFocusVisible';
 import classNames from 'classnames';
 
-export default function HanabiHeader(): JSX.Element {
+interface Props {
+	variant?: 'default' | 'game';
+}
+
+export default function HanabiHeader({ variant = 'default' }: Props): JSX.Element {
 	const isFocusVisible = useFocusVisible();
+	const { code } = useHanabiGameContext();
+
+	if (variant === 'game') {
+		return (
+			<header className="border-b border-hanabi-border bg-hanabi-table-deep/90 backdrop-blur">
+				<div className="mx-auto flex min-h-14 max-w-[1240px] items-center justify-between gap-6 px-5">
+					<a className="hanabi-focus-ring group flex items-center gap-3 rounded-md" href="/">
+						<span
+							aria-hidden="true"
+							className="grid size-8 place-items-center rounded-full border border-hanabi-coral/45 bg-hanabi-surface text-lg text-hanabi-coral shadow-[0_0_18px_rgb(255_114_95_/_25%)]"
+						>
+							✦
+						</span>
+						<span className="text-xl font-semibold tracking-tight text-hanabi-text transition-colors group-hover:text-hanabi-coral-soft">
+							Hanabi
+						</span>
+					</a>
+					<div className="flex items-center gap-3">
+						{code && <HanabiCopyLinkButton compact label="Game" link={code} />}
+						<HanabiHeaderMenuButton />
+					</div>
+				</div>
+			</header>
+		);
+	}
 
 	return (
 		<div className="bg-black">

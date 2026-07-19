@@ -1,52 +1,93 @@
 import classNames from 'classnames';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface Props {
 	link: string;
+	compact?: boolean;
+	label?: string;
 }
 
-export default function HanabiCopyLinkButton({ link }: Props): JSX.Element {
+async function copyText(text: string): Promise<void> {
+	if (navigator.clipboard?.writeText) {
+		await navigator.clipboard.writeText(text);
+		return;
+	}
+
+	const textArea = document.createElement('textarea');
+	textArea.style.width = '1px';
+	textArea.style.height = '1px';
+	textArea.style.opacity = '0';
+	textArea.style.position = 'absolute';
+	textArea.value = text;
+	document.body.append(textArea);
+	textArea.select();
+	document.execCommand('copy');
+	document.body.removeChild(textArea);
+}
+
+export default function HanabiCopyLinkButton({ compact = false, label, link }: Props): JSX.Element {
 	const copyButtonRef = useRef<HTMLButtonElement | null>(null);
 	const [showCopiedButton, setShowCopiedButton] = useState(false);
 	const showCopiedButtonTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-	const handleLinkClick = () => {
-		const textArea = document.createElement('textarea');
-		textArea.style.width = '1px';
-		textArea.style.height = '1px';
-		textArea.style.opacity = '0';
-		textArea.style.position = 'absolute';
-		textArea.value = link;
-		document.body.append(textArea);
-		textArea.select();
-		document.execCommand('copy');
-		document.body.removeChild(textArea);
-
+	const handleLinkClick = async () => {
+		try {
+			await copyText(link);
+		} catch (error: unknown) {
+			console.error('Could not copy game link:', error);
+			return;
+		}
 		setShowCopiedButton(true);
 
-		if (!showCopiedButtonTimeoutRef.current) {
-			showCopiedButtonTimeoutRef.current = setTimeout(() => {
-				setShowCopiedButton(false);
-			}, 3000);
+		if (showCopiedButtonTimeoutRef.current) clearTimeout(showCopiedButtonTimeoutRef.current);
+		showCopiedButtonTimeoutRef.current = setTimeout(() => {
+			setShowCopiedButton(false);
 			showCopiedButtonTimeoutRef.current = null;
-		}
+		}, 3000);
 
 		copyButtonRef.current?.focus();
 	};
+
+	useEffect(
+		() => () => {
+			if (showCopiedButtonTimeoutRef.current) clearTimeout(showCopiedButtonTimeoutRef.current);
+		},
+		[],
+	);
 
 	return (
 		<div className="grid justify-center">
 			<button
 				className={classNames(
-					'outline-none grid grid-flow-col items-center max-w-screen-md overflow-hidden rounded-lg font-bold text-lg',
-					'group transition-all focus:outline-none',
+					'group grid grid-flow-col items-center overflow-hidden font-bold transition-all focus:outline-none',
+					{
+						'hanabi-focus-ring rounded-md border border-hanabi-border bg-hanabi-surface text-xs':
+							compact,
+						'max-w-screen-md rounded-lg text-lg': !compact,
+					},
 				)}
-				onClick={handleLinkClick}
+				onClick={() => void handleLinkClick()}
 				ref={copyButtonRef}
+				type="button"
 			>
-				<div className="self-stretch items-center flex px-5 text-center text-red-600 group-hover:text-red-600 transition-all bg-gray-300 group-focus:bg-white">
-					{link}
+				<div
+					className={classNames('flex self-stretch items-center text-center transition-all', {
+						'gap-1.5 px-3 text-hanabi-text-muted group-hover:text-hanabi-text': compact,
+						'bg-gray-300 px-5 text-red-600 group-hover:text-red-600 group-focus:bg-white': !compact,
+					})}
+				>
+					{label && <span className="font-medium text-hanabi-text-muted">{label}</span>}
+					<span className={classNames({ 'font-mono tracking-[0.14em] text-hanabi-text': compact })}>
+						{link}
+					</span>
 				</div>
-				<div className="text-white bg-gray-800 px-5 py-3 w-28 group-hover:bg-red-600 transition-all group-focus:border-red-600">
+				<div
+					className={classNames('text-white transition-all', {
+						'border-l border-hanabi-border px-2.5 py-2 text-[11px] text-hanabi-coral-soft group-hover:bg-hanabi-coral group-hover:text-white':
+							compact,
+						'w-28 bg-gray-800 px-5 py-3 group-hover:bg-red-600 group-focus:border-red-600':
+							!compact,
+					})}
+				>
 					{showCopiedButton ? 'Copied!' : 'Copy'}
 				</div>
 			</button>

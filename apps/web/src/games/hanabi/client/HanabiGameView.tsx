@@ -60,7 +60,7 @@ export default function HanabiGameView(): JSX.Element | null {
 							className="w-screen min-h-screen grid grid-flow-row gap-6 content-start"
 							ref={connectDropTarget}
 						>
-							<HanabiHeader />
+							<HanabiHeader variant="game" />
 							<div className="justify-self-center">
 								<HanabiBoard />
 							</div>
