@@ -1,9 +1,6 @@
 import { useUserId } from '~/components/SocketContext';
 import HanabiAction from '~/games/hanabi/client/HanabiAction';
 import { useGameData } from '~/games/hanabi/client/HanabiGameContext';
-import { useHanabiOptionsContext } from '~/games/hanabi/client/HanabiOptionsContext';
-import useActionHighlighter from '~/games/hanabi/client/useActionHighlighter';
-import useActionSounds from '~/games/hanabi/client/useActionSounds';
 import { ActionsFilterOption, HanabiGameAction, HanabiGameActionType } from '@hanabi/shared';
 import classNames from 'classnames';
 
@@ -56,11 +53,6 @@ export default function HanabiActions({ filter = 'all' }: Props): JSX.Element {
 
 	const actions = gameData.actions.slice().reverse();
 	const actionsFiltered = filterActions(actions, filter, userId);
-
-	const { playSounds } = useHanabiOptionsContext();
-
-	useActionHighlighter();
-	useActionSounds(playSounds);
 
 	return (
 		<div>

@@ -1,5 +1,6 @@
 import { useBreakpointContext } from '~/components/BreakpointContext';
 import { useUserId } from '~/components/SocketContext';
+import HanabiActionEffects from '~/games/hanabi/client/HanabiActionEffects';
 import HanabiActionsPanel from '~/games/hanabi/client/HanabiActionsPanel';
 import HanabiClues from '~/games/hanabi/client/HanabiClues';
 import HanabiDiscardedTilesCollapsed from '~/games/hanabi/client/HanabiDiscardedTilesCollapsed';
@@ -79,7 +80,9 @@ export default function HanabiBoard(): JSX.Element {
 	);
 
 	return (
-		<div className="grid grid-flow-row lg:grid-flow-col gap-6 relative">
+		<>
+			<HanabiActionEffects />
+			<div className="grid grid-flow-row lg:grid-flow-col gap-6 relative">
 			<div>
 				{!breakpoints.lg && (
 					<>
@@ -185,6 +188,7 @@ export default function HanabiBoard(): JSX.Element {
 					}}
 				/>
 			)}
-		</div>
+			</div>
+		</>
 	);
 }
