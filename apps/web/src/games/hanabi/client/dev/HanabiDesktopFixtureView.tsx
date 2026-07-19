@@ -1,10 +1,13 @@
 import HanabiDesktopBoard from '~/games/hanabi/client/HanabiDesktopBoard';
 import HanabiDesktopTableau from '~/games/hanabi/client/HanabiDesktopTableau';
+import { HanabiDesktopPlayerWorkspaces } from '~/games/hanabi/client/HanabiPlayerWorkspace';
+import HanabiTileView from '~/games/hanabi/client/HanabiTileView';
 import {
 	getHanabiDesktopFixtures,
 	HanabiDesktopFixtureName,
 } from '~/games/hanabi/client/dev/HanabiDesktopFixtures';
 import Error404Page from '~/pages/Error404Page';
+import { HANABI_BOARD_SIZE } from '@hanabi/shared';
 import { Link, useParams } from 'react-router-dom';
 
 export default function HanabiDesktopFixtureView(): JSX.Element {
@@ -38,6 +41,39 @@ export default function HanabiDesktopFixtureView(): JSX.Element {
 			</header>
 			<HanabiDesktopBoard
 				gameData={fixture.gameData}
+				playerWorkspaces={
+					<HanabiDesktopPlayerWorkspaces
+						gameData={fixture.gameData}
+						renderTileSurface={(playerId) => (
+							<div className="relative overflow-hidden bg-hanabi-ivory" style={HANABI_BOARD_SIZE}>
+								<div
+									aria-hidden="true"
+									className="absolute inset-x-0 bottom-0 h-1/2 border-t border-hanabi-border/35 bg-hanabi-ink/8"
+								/>
+								{fixture.gameData.playerTiles[playerId].map((tileId) => {
+									const position = fixture.gameData.tilePositions[tileId];
+									const tile = fixture.gameData.tiles[tileId];
+									return (
+										<div
+											className="absolute left-0 top-0"
+											key={tileId}
+											style={{
+												transform: `translate(${position.x}px, ${position.y}px)`,
+												zIndex: position.z,
+											}}
+										>
+											<HanabiTileView
+												color={fixture.userId === playerId ? undefined : tile.color}
+												number={fixture.userId === playerId ? undefined : tile.number}
+											/>
+										</div>
+									);
+								})}
+							</div>
+						)}
+						userId={fixture.userId}
+					/>
+				}
 				tableau={<HanabiDesktopTableau gameData={fixture.gameData} />}
 				userId={fixture.userId}
 			/>

@@ -6,12 +6,14 @@ interface Props {
 	player: HanabiPlayer;
 	size?: 'lg' | 'sm';
 	color?: 'white' | 'yellow';
+	showName?: boolean;
 }
 
 export default function HanabiPlayerAvatar({
 	player,
 	size = 'lg',
 	color = 'white',
+	showName = true,
 }: Props): JSX.Element {
 	return (
 		<div
@@ -31,14 +33,16 @@ export default function HanabiPlayerAvatar({
 					colors={['#f43f5d', '#3b83f6', '#10b981', '#f59f0b', '#8a5cf6']}
 				/>
 			</div>
-			<p
-				className="text-lg font-bold truncate text-center"
-				style={{
-					color,
-				}}
-			>
-				{player.name}
-			</p>
+			{showName && (
+				<p
+					className="text-lg font-bold truncate text-center"
+					style={{
+						color,
+					}}
+				>
+					{player.name}
+				</p>
+			)}
 		</div>
 	);
 }

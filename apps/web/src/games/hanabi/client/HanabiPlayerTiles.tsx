@@ -6,20 +6,43 @@ import { useHanabiMoveTileContext } from '~/games/hanabi/client/HanabiMoveTileCo
 import { getTileViewTransitionName } from '~/games/hanabi/client/HanabiActionTransition';
 import HanabiPlayerTilesDragLayer from '~/games/hanabi/client/HanabiPlayerTilesDragLayer';
 import useJustTookAction from '~/games/hanabi/client/useJustTookAction';
-import { HANABI_BOARD_SIZE } from '@hanabi/shared';
+import { HANABI_BOARD_SIZE, HanabiGameData } from '@hanabi/shared';
 import classNames from 'classnames';
 import { useDragLayer } from 'react-dnd';
 
 interface Props {
 	id: string;
+	variant?: 'desktop' | 'legacy';
 	onTileClick?: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
 	onTileMouseOver?: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
 	onTileMouseOut?: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
 	onTileMouseDown?: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
 }
 
+export function getHanabiPlayerTilePermissions({
+	gameData,
+	isTransitioning,
+	playerId,
+	userId,
+}: {
+	gameData: Pick<HanabiGameData, 'allowDragging' | 'currentPlayerId' | 'finishedReason'>;
+	isTransitioning: boolean;
+	playerId: string;
+	userId: string;
+}): { canAct: boolean; draggable: boolean; hidden: boolean; ownTiles: boolean } {
+	const ownTiles = playerId === userId;
+	const gameStillPlaying = gameData.finishedReason === null;
+	return {
+		canAct: gameStillPlaying && ownTiles && gameData.currentPlayerId === userId,
+		draggable: !isTransitioning && gameData.allowDragging && gameStillPlaying && ownTiles,
+		hidden: gameStillPlaying && ownTiles,
+		ownTiles,
+	};
+}
+
 export default function HanabiPlayerTiles({
 	id,
+	variant = 'legacy',
 	onTileClick,
 	onTileMouseOver,
 	onTileMouseOut,
@@ -32,10 +55,6 @@ export default function HanabiPlayerTiles({
 
 	const { highlightedTiles } = useHanabiHighlightContext();
 
-	const ownTiles = id === userId;
-	const ownTurn = gameData.currentPlayerId === userId;
-
-	const enableOnClick = ownTurn && onTileClick;
 	const gameStillPlaying = gameData.finishedReason === null;
 
 	const { isDragging } = useDragLayer((monitor) => ({
@@ -45,19 +64,36 @@ export default function HanabiPlayerTiles({
 	const justTookAction = useJustTookAction();
 
 	return (
-		<div className="border-4 border-black rounded-xl p-0.5 bg-white relative">
+		<div
+			className={classNames('relative overflow-hidden', {
+				'border-4 border-black rounded-xl p-0.5 bg-white': variant === 'legacy',
+				'bg-hanabi-ivory': variant === 'desktop',
+			})}
+		>
 			{gameData.allowDragging && (
-				<div className="absolute bottom-0 left-0 right-0 h-1/2 bg-black opacity-5" />
+				<div
+					aria-hidden="true"
+					className={classNames('absolute bottom-0 left-0 right-0 h-1/2 border-t', {
+						'border-black/10 bg-black/5': variant === 'legacy',
+						'border-hanabi-border/35 bg-hanabi-ink/8': variant === 'desktop',
+					})}
+				/>
 			)}
 			<div style={HANABI_BOARD_SIZE} className="relative z-0">
 				{gameData.playerTiles[id].map((tileId, index) => {
 					const isTransitioning = transitioningTileId === tileId;
+					const permissions = getHanabiPlayerTilePermissions({
+						gameData,
+						isTransitioning,
+						playerId: id,
+						userId,
+					});
 
 					return (
 						<div
 							key={`TileContainer-${tileId}`}
 							className={classNames('absolute top-0 left-0', {
-								'duration-100': !ownTiles || isDragging || justTookAction,
+								'duration-100': !permissions.ownTiles || isDragging || justTookAction,
 							})}
 							style={{
 								transform: `translate(${tilePositions[tileId].x}px, ${tilePositions[tileId].y}px)`,
@@ -67,22 +103,20 @@ export default function HanabiPlayerTiles({
 							<HanabiInteractiveTileView
 								tile={gameData.tiles[tileId]}
 								ariaLabel={
-									ownTiles
+									permissions.ownTiles
 										? `Your tile ${index + 1}`
 										: `${gameData.players[id].name}'s tile ${index + 1}`
 								}
-								hidden={gameStillPlaying && ownTiles}
-								onClick={enableOnClick ? onTileClick : undefined}
+								hidden={permissions.hidden}
+								onClick={permissions.canAct ? onTileClick : undefined}
 								onMouseOver={isTransitioning ? undefined : onTileMouseOver}
 								onMouseOut={isTransitioning ? undefined : onTileMouseOut}
 								onMouseDown={isTransitioning ? undefined : onTileMouseDown}
-								draggable={
-									!isTransitioning && gameData.allowDragging && gameStillPlaying && ownTiles
-								}
+								draggable={permissions.draggable}
 								notesIndicator={
 									!isTransitioning &&
 									gameStillPlaying &&
-									ownTiles &&
+									permissions.ownTiles &&
 									gameData.showNotes &&
 									!!gameData.tileNotes[tileId]
 								}
@@ -92,7 +126,7 @@ export default function HanabiPlayerTiles({
 						</div>
 					);
 				})}
-				{gameStillPlaying && ownTiles && <HanabiPlayerTilesDragLayer />}
+				{gameStillPlaying && id === userId && <HanabiPlayerTilesDragLayer />}
 			</div>
 		</div>
 	);
