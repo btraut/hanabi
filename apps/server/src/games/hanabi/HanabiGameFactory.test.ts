@@ -82,6 +82,46 @@ describe('HanabiGameFactory', () => {
 		hydrated.cleanUp();
 	});
 
+	it('normalizes legacy freeform tile positions exactly once during hydration', () => {
+		const factory = new HanabiGameFactory(1);
+		const { onMessage, socketManager, store } = dependencies();
+		const game = factory.create('creator', socketManager, store);
+		const scope = getScope(game.title, game.id);
+		onMessage.emit({
+			userId: 'alice',
+			message: { scope, type: 'AddPlayerMessage', data: { name: 'Alice' } },
+		});
+		onMessage.emit({
+			userId: 'alice',
+			message: { scope, type: 'StartGameMessage', data: undefined },
+		});
+
+		const persisted = JSON.parse(game.serialize()!) as {
+			data: {
+				playerTiles: Record<string, string[]>;
+				tilePositions: Record<string, { x: number; y: number; z: number }>;
+			};
+		};
+		const [legacyStartId, legacyEndId, existingFreeformId] = persisted.data.playerTiles.alice;
+		persisted.data.tilePositions[legacyStartId] = { x: 71, y: 58, z: 3 };
+		persisted.data.tilePositions[legacyEndId] = { x: 109, y: 69, z: 8 };
+		persisted.data.tilePositions[existingFreeformId] = { x: 120, y: 70, z: 4 };
+
+		const hydrated = factory.hydrate(JSON.stringify(persisted), socketManager, store);
+		const normalized = JSON.parse(hydrated.serialize()!) as typeof persisted;
+		expect(normalized.data.tilePositions[legacyStartId]).toEqual({ x: 71, y: 70, z: 3 });
+		expect(normalized.data.tilePositions[legacyEndId]).toEqual({ x: 109, y: 70, z: 8 });
+		expect(normalized.data.tilePositions[existingFreeformId]).toEqual({ x: 120, y: 70, z: 4 });
+
+		const hydratedAgain = factory.hydrate(hydrated.serialize()!, socketManager, store);
+		const normalizedAgain = JSON.parse(hydratedAgain.serialize()!) as typeof persisted;
+		expect(normalizedAgain.data.tilePositions).toEqual(normalized.data.tilePositions);
+
+		game.cleanUp();
+		hydrated.cleanUp();
+		hydratedAgain.cleanUp();
+	});
+
 	it('rejects invalid JSON with a useful hydration error', () => {
 		const factory = new HanabiGameFactory();
 		const { socketManager, store } = dependencies();

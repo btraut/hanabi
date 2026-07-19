@@ -33,6 +33,7 @@ export const HANABI_BOARD_SIZE: Size = { width: 400, height: 140 };
 export const HANABI_TILE_SIZE: Size = { width: 40, height: 48 };
 export const HANABI_TILE_SIZE_SMALL: Size = { width: 30, height: 36 };
 export const HANABI_DEFAULT_TILE_PADDING = 10;
+export const HANABI_WORKSPACE_ZONE_BOUNDARY = HANABI_BOARD_SIZE.height / 2;
 export const HANABI_DEFAULT_TILE_POSITIONS: { [tileNumber: number]: Position } = [
 	{
 		x: HANABI_DEFAULT_TILE_PADDING + (HANABI_DEFAULT_TILE_PADDING + HANABI_TILE_SIZE.width) * 0,

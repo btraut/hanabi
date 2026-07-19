@@ -6,7 +6,7 @@ import { useHanabiMoveTileContext } from '~/games/hanabi/client/HanabiMoveTileCo
 import { getTileViewTransitionName } from '~/games/hanabi/client/HanabiActionTransition';
 import HanabiPlayerTilesDragLayer from '~/games/hanabi/client/HanabiPlayerTilesDragLayer';
 import useJustTookAction from '~/games/hanabi/client/useJustTookAction';
-import { HANABI_BOARD_SIZE, HanabiGameData } from '@hanabi/shared';
+import { HANABI_BOARD_SIZE, HANABI_WORKSPACE_ZONE_BOUNDARY, HanabiGameData } from '@hanabi/shared';
 import classNames from 'classnames';
 import { useDragLayer } from 'react-dnd';
 
@@ -73,10 +73,11 @@ export default function HanabiPlayerTiles({
 			{gameData.allowDragging && (
 				<div
 					aria-hidden="true"
-					className={classNames('absolute bottom-0 left-0 right-0 h-1/2 border-t', {
+					className={classNames('absolute bottom-0 left-0 right-0 border-t', {
 						'border-black/10 bg-black/5': variant === 'legacy',
 						'border-hanabi-border/35 bg-hanabi-ink/8': variant === 'desktop',
 					})}
+					style={{ height: HANABI_BOARD_SIZE.height - HANABI_WORKSPACE_ZONE_BOUNDARY }}
 				/>
 			)}
 			<div style={HANABI_BOARD_SIZE} className="relative z-0">

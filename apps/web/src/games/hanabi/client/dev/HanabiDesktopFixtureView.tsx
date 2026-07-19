@@ -7,7 +7,7 @@ import {
 	HanabiDesktopFixtureName,
 } from '~/games/hanabi/client/dev/HanabiDesktopFixtures';
 import Error404Page from '~/pages/Error404Page';
-import { HANABI_BOARD_SIZE } from '@hanabi/shared';
+import { HANABI_BOARD_SIZE, HANABI_WORKSPACE_ZONE_BOUNDARY } from '@hanabi/shared';
 import { Link, useParams } from 'react-router-dom';
 
 export default function HanabiDesktopFixtureView(): JSX.Element {
@@ -48,7 +48,8 @@ export default function HanabiDesktopFixtureView(): JSX.Element {
 							<div className="relative overflow-hidden bg-hanabi-ivory" style={HANABI_BOARD_SIZE}>
 								<div
 									aria-hidden="true"
-									className="absolute inset-x-0 bottom-0 h-1/2 border-t border-hanabi-border/35 bg-hanabi-ink/8"
+									className="absolute inset-x-0 bottom-0 border-t border-hanabi-border/35 bg-hanabi-ink/8"
+									style={{ height: HANABI_BOARD_SIZE.height - HANABI_WORKSPACE_ZONE_BOUNDARY }}
 								/>
 								{fixture.gameData.playerTiles[playerId].map((tileId) => {
 									const position = fixture.gameData.tilePositions[tileId];
