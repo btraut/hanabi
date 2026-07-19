@@ -14,6 +14,70 @@
 	/* Custom border widths */
 	--border-width-3: 3px;
 	--border-width-6: 6px;
+
+	/* Hanabi desktop game-surface palette */
+	--color-hanabi-table: #07111f;
+	--color-hanabi-table-deep: #030914;
+	--color-hanabi-surface: #0b1728;
+	--color-hanabi-surface-raised: #102139;
+	--color-hanabi-border: #233854;
+	--color-hanabi-border-bright: #385273;
+	--color-hanabi-ivory: #f4eedf;
+	--color-hanabi-ivory-muted: #d8d0bd;
+	--color-hanabi-ink: #132035;
+	--color-hanabi-text: #f6f2e8;
+	--color-hanabi-text-muted: #93a4bc;
+	--color-hanabi-coral: #ff725f;
+	--color-hanabi-coral-soft: #ff9a89;
+	--color-hanabi-red: #ef665f;
+	--color-hanabi-blue: #5f9de8;
+	--color-hanabi-green: #59b987;
+	--color-hanabi-yellow: #e8bd5f;
+	--color-hanabi-white: #eee9df;
+	--color-hanabi-purple: #a78be5;
+	--color-hanabi-black: #738096;
+}
+
+:root {
+	--hanabi-table-gradient:
+		radial-gradient(circle at 48% -20%, rgb(35 60 91 / 45%), transparent 46%),
+		linear-gradient(160deg, var(--color-hanabi-table) 0%, var(--color-hanabi-table-deep) 100%);
+	--hanabi-panel-shadow: 0 22px 50px rgb(0 0 0 / 24%), inset 0 1px 0 rgb(255 255 255 / 4%);
+	--hanabi-card-shadow: 0 8px 18px rgb(0 0 0 / 28%), inset 0 1px 0 rgb(255 255 255 / 65%);
+}
+
+.hanabi-game-surface {
+	background: var(--hanabi-table-gradient);
+	color: var(--color-hanabi-text);
+}
+
+.hanabi-panel {
+	background: linear-gradient(
+		145deg,
+		var(--color-hanabi-surface-raised),
+		var(--color-hanabi-surface)
+	);
+	border: 1px solid var(--color-hanabi-border);
+	box-shadow: var(--hanabi-panel-shadow);
+}
+
+.hanabi-focus-ring:focus-visible {
+	outline: 2px solid var(--color-hanabi-coral-soft);
+	outline-offset: 3px;
+}
+
+@keyframes hanabi-unread-pulse {
+	0%,
+	100% {
+		box-shadow: 0 0 0 0 rgb(255 114 95 / 0%);
+	}
+	45% {
+		box-shadow: 0 0 0 5px rgb(255 114 95 / 22%);
+	}
+}
+
+.hanabi-unread-pulse {
+	animation: hanabi-unread-pulse 560ms ease-out 1;
 }
 
 /* Text shadow utility */
@@ -113,6 +177,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+	.hanabi-unread-pulse {
+		animation: none;
+	}
+
 	::view-transition-group(*),
 	::view-transition-old(*),
 	::view-transition-new(*) {

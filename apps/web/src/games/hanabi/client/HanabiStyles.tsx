@@ -1,7 +1,6 @@
 export default function HanabiStyles(): JSX.Element {
 	return (
 		<style>{`
-	
 @keyframes border-dance {
 	0% {
 		background-position: left top, right bottom, left bottom, right top;
@@ -20,15 +19,6 @@ export default function HanabiStyles(): JSX.Element {
 	background-size: 15px 3px, 15px 3px, 3px 15px, 3px 15px;
 	background-position: left top, right bottom, left bottom, right top;
 	animation: border-dance 1s infinite linear;
-}
-	
-@keyframes border-dance {
-	0% {
-		background-position: left top, right bottom, left bottom, right top;
-	}
-	100% {
-		background-position: left 15px top, right 15px bottom, left bottom 15px, right top 15px;
-	}
 }
 
 @keyframes bg-blue-to-red {
@@ -52,6 +42,12 @@ export default function HanabiStyles(): JSX.Element {
   height: 0.5em;
   background-color: white;
   clip-path: polygon(100% 0%, 0 0%, 50% 100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.marquee-highlight {
+		animation: none;
+	}
 }
 
 	`}</style>
