@@ -33,7 +33,7 @@ export function getHanabiPlayerTilePermissions({
 	const ownTiles = playerId === userId;
 	const gameStillPlaying = gameData.finishedReason === null;
 	return {
-		canAct: gameStillPlaying && ownTiles && gameData.currentPlayerId === userId,
+		canAct: gameStillPlaying && gameData.currentPlayerId === userId,
 		draggable: !isTransitioning && gameData.allowDragging && gameStillPlaying && ownTiles,
 		hidden: gameStillPlaying && ownTiles,
 		ownTiles,

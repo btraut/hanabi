@@ -45,9 +45,7 @@ export default function HanabiDesktopFixtureView(): JSX.Element {
 					<HanabiActivityRail
 						composer={<div className="p-3 text-xs text-hanabi-text-muted">Message composer</div>}
 						gameData={fixture.gameData}
-						renderAction={(action) => (
-							<p className="p-3 text-sm text-hanabi-text">{action.type}</p>
-						)}
+						renderAction={(action) => <p className="p-3 text-sm text-hanabi-text">{action.type}</p>}
 						userId={fixture.userId}
 					/>
 				}

@@ -5,11 +5,7 @@ import {
 	selectLatestGameplayAction,
 } from '~/games/hanabi/client/HanabiActionSelectors';
 import HanabiChatInput from '~/games/hanabi/client/HanabiChatInput';
-import {
-	HanabiGameAction,
-	HanabiGameActionType,
-	HanabiGameData,
-} from '@hanabi/shared';
+import { HanabiGameAction, HanabiGameActionType, HanabiGameData } from '@hanabi/shared';
 import classNames from 'classnames';
 import { KeyboardEvent, ReactNode, useEffect, useId, useRef, useState } from 'react';
 
@@ -30,10 +26,10 @@ export function countIncomingUnreadChat(
 ): number {
 	if (chatIsOpen || previousActionCount >= actions.length) return 0;
 
-	return actions.slice(previousActionCount).filter(
-		(action) =>
-			action.type === HanabiGameActionType.Chat && action.playerId !== userId,
-	).length;
+	return actions
+		.slice(previousActionCount)
+		.filter((action) => action.type === HanabiGameActionType.Chat && action.playerId !== userId)
+		.length;
 }
 
 export default function HanabiActivityRail({
@@ -77,8 +73,7 @@ export default function HanabiActivityRail({
 	const handleTabKeyDown = (event: KeyboardEvent<HTMLButtonElement>): void => {
 		if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
 		event.preventDefault();
-		const nextTab =
-			event.key === 'ArrowRight' || event.key === 'End' ? 'chat' : 'history';
+		const nextTab = event.key === 'ArrowRight' || event.key === 'End' ? 'chat' : 'history';
 		activateTab(nextTab);
 		(nextTab === 'chat' ? chatTabRef : historyTabRef).current?.focus();
 	};
@@ -104,7 +99,11 @@ export default function HanabiActivityRail({
 				</div>
 			</section>
 
-			<div aria-label="Activity views" className="grid grid-cols-2 border-b border-hanabi-border" role="tablist">
+			<div
+				aria-label="Activity views"
+				className="grid grid-cols-2 border-b border-hanabi-border"
+				role="tablist"
+			>
 				{(['history', 'chat'] as const).map((tab) => {
 					const selected = activeTab === tab;
 					const unread = tab === 'chat' ? unreadChat : 0;

@@ -1,8 +1,4 @@
-import {
-	HanabiGameAction,
-	HanabiGameActionChat,
-	HanabiGameActionType,
-} from '@hanabi/shared';
+import { HanabiGameAction, HanabiGameActionChat, HanabiGameActionType } from '@hanabi/shared';
 
 export type HanabiGameplayAction = Exclude<HanabiGameAction, HanabiGameActionChat>;
 
@@ -24,7 +20,9 @@ export function selectLatestGameplayAction(
 export function selectGameplayHistory(
 	actions: readonly HanabiGameAction[],
 ): readonly HanabiGameplayAction[] {
-	return actions.filter((action): action is HanabiGameplayAction => !isChatAction(action)).reverse();
+	return actions
+		.filter((action): action is HanabiGameplayAction => !isChatAction(action))
+		.reverse();
 }
 
 export function selectChatTranscript(

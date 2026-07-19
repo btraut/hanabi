@@ -1,5 +1,5 @@
 ---
-title: "feat: Redesign the desktop Hanabi game surface"
+title: 'feat: Redesign the desktop Hanabi game surface'
 type: feat
 status: active
 date: 2026-07-19
@@ -13,11 +13,11 @@ Rebuild the in-game desktop surface around the approved 1586×992 visual directi
 
 The desktop composition begins at a deliberate wide breakpoint where all three columns can fit without crushing the 400×140 logical hand surface. The existing sub-desktop composition remains intact for a separate mobile redesign.
 
-| Mode | Composition | Intentional behavior |
-|---|---|---|
-| Wide desktop | Three-column tableau / hands / activity rail | Full information is simultaneously visible; the page may scroll vertically for maximum player and ruleset states. |
-| Narrow desktop and tablet | Existing responsive board | No half-finished approximation of the new desktop surface; behavior stays usable until the mobile/tablet design is implemented. |
-| Reduced motion | Same desktop composition | View transitions, pulses, and hover lifts become immediate or static without hiding state. |
+| Mode                      | Composition                                  | Intentional behavior                                                                                                            |
+| ------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Wide desktop              | Three-column tableau / hands / activity rail | Full information is simultaneously visible; the page may scroll vertically for maximum player and ruleset states.               |
+| Narrow desktop and tablet | Existing responsive board                    | No half-finished approximation of the new desktop surface; behavior stays usable until the mobile/tablet design is implemented. |
+| Reduced motion            | Same desktop composition                     | View transitions, pulses, and hover lifts become immediate or static without hiding state.                                      |
 
 ---
 
@@ -121,20 +121,20 @@ Typography remains the system sans stack. Weight, size, case, and spacing establ
 
 All source artwork is optimized SVG with transparent backgrounds, no embedded fonts, text, or raster content, and sane square or shared view boxes. Except for the brand mark, assets are monochrome masks/current-color artwork so the application controls color and contrast. Every asset must remain identifiable at its actual 16–64px use sizes.
 
-| Asset | Runtime path | Purpose and acceptance criteria |
-|---|---|---|
-| Brand firework mark | `apps/web/public/images/hanabi/brand-mark.svg` | Fixed multicolor radial firework used beside the live wordmark. Must remain legible at 24–32px and on dark/transparent backgrounds. |
-| Tile face burst | `apps/web/public/images/hanabi/tile-face-burst.svg` | Restrained monochrome line-art firework/festival motif used behind visible tile numerals as a CSS mask. Must not compete with the numeral at small tile size. |
-| Concealed tile emblem | `apps/web/public/images/hanabi/tile-back-emblem.svg` | Denser monochrome radial rosette for navy card backs, identifiable at 30×36 and 40×48. |
-| Red lane emblem | `apps/web/public/images/hanabi/tableau/red.svg` | Monochrome Japanese festival/firework silhouette in the shared optical box. |
-| Blue lane emblem | `apps/web/public/images/hanabi/tableau/blue.svg` | Monochrome torii-inspired silhouette in the shared optical box. |
-| Green lane emblem | `apps/web/public/images/hanabi/tableau/green.svg` | Monochrome bridge/garden-inspired silhouette in the shared optical box. |
-| Yellow lane emblem | `apps/web/public/images/hanabi/tableau/yellow.svg` | Monochrome pagoda-inspired silhouette in the shared optical box. |
-| White lane emblem | `apps/web/public/images/hanabi/tableau/white.svg` | Monochrome castle/lantern-inspired silhouette in the shared optical box. |
-| Purple lane emblem | `apps/web/public/images/hanabi/tableau/purple.svg` | Distinct monochrome lantern/fan silhouette for six-color rulesets. |
-| Rainbow lane emblem | `apps/web/public/images/hanabi/tableau/rainbow.svg` | Distinct monochrome radiating-prism/firework silhouette; CSS supplies multicolor treatment. |
-| Black-powder lane emblem | `apps/web/public/images/hanabi/tableau/black.svg` | Distinct monochrome powder-keg/night-firework silhouette; must read against both navy and ivory treatments. |
-Generate a local review sheet showing the brand mark, both tile motifs, and all eight lane emblems at actual UI sizes on navy and ivory. The review sheet is design evidence, not a runtime dependency. Existing favicon files remain unchanged; application-wide rebranding is outside this in-game redesign.
+| Asset                                                                                                                                                                                                                                                                                                          | Runtime path                                         | Purpose and acceptance criteria                                                                                                                               |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Brand firework mark                                                                                                                                                                                                                                                                                            | `apps/web/public/images/hanabi/brand-mark.svg`       | Fixed multicolor radial firework used beside the live wordmark. Must remain legible at 24–32px and on dark/transparent backgrounds.                           |
+| Tile face burst                                                                                                                                                                                                                                                                                                | `apps/web/public/images/hanabi/tile-face-burst.svg`  | Restrained monochrome line-art firework/festival motif used behind visible tile numerals as a CSS mask. Must not compete with the numeral at small tile size. |
+| Concealed tile emblem                                                                                                                                                                                                                                                                                          | `apps/web/public/images/hanabi/tile-back-emblem.svg` | Denser monochrome radial rosette for navy card backs, identifiable at 30×36 and 40×48.                                                                        |
+| Red lane emblem                                                                                                                                                                                                                                                                                                | `apps/web/public/images/hanabi/tableau/red.svg`      | Monochrome Japanese festival/firework silhouette in the shared optical box.                                                                                   |
+| Blue lane emblem                                                                                                                                                                                                                                                                                               | `apps/web/public/images/hanabi/tableau/blue.svg`     | Monochrome torii-inspired silhouette in the shared optical box.                                                                                               |
+| Green lane emblem                                                                                                                                                                                                                                                                                              | `apps/web/public/images/hanabi/tableau/green.svg`    | Monochrome bridge/garden-inspired silhouette in the shared optical box.                                                                                       |
+| Yellow lane emblem                                                                                                                                                                                                                                                                                             | `apps/web/public/images/hanabi/tableau/yellow.svg`   | Monochrome pagoda-inspired silhouette in the shared optical box.                                                                                              |
+| White lane emblem                                                                                                                                                                                                                                                                                              | `apps/web/public/images/hanabi/tableau/white.svg`    | Monochrome castle/lantern-inspired silhouette in the shared optical box.                                                                                      |
+| Purple lane emblem                                                                                                                                                                                                                                                                                             | `apps/web/public/images/hanabi/tableau/purple.svg`   | Distinct monochrome lantern/fan silhouette for six-color rulesets.                                                                                            |
+| Rainbow lane emblem                                                                                                                                                                                                                                                                                            | `apps/web/public/images/hanabi/tableau/rainbow.svg`  | Distinct monochrome radiating-prism/firework silhouette; CSS supplies multicolor treatment.                                                                   |
+| Black-powder lane emblem                                                                                                                                                                                                                                                                                       | `apps/web/public/images/hanabi/tableau/black.svg`    | Distinct monochrome powder-keg/night-firework silhouette; must read against both navy and ivory treatments.                                                   |
+| Generate a local review sheet showing the brand mark, both tile motifs, and all eight lane emblems at actual UI sizes on navy and ivory. The review sheet is design evidence, not a runtime dependency. Existing favicon files remain unchanged; application-wide rebranding is outside this in-game redesign. |
 
 ### Code-native icons to create or reuse
 
@@ -154,17 +154,17 @@ Generate a local review sheet showing the brand mark, both tile motifs, and all 
 
 ## Key Technical Decisions
 
-| Decision | Rationale |
-|---|---|
-| Gate the new composition at a wide content-based breakpoint, initially 1280px. | The fixed 400px hand surface, tableau, gaps, and usable activity rail do not honestly fit at the existing 1024px desktop threshold. |
-| Keep one board data model and render desktop-specific composition around existing interaction components. | Avoids forking gameplay logic while allowing a clean responsive boundary. |
-| Mount exactly one tile-bearing responsive branch at a time. | Hidden duplicate boards would create duplicate interactive surfaces and duplicate `view-transition-name` targets. |
-| Derive tableau lanes and assets from `getHanabiRuleSetColors`. | Prevents the approved five-color mock from breaking six/seven-color variants. |
-| Preserve discard DOM order and vary only gap/overlap by count. | Chronology is game information; fixed card size preserves numeral legibility and predictable hit targets. |
-| Introduce one exported hand-zone boundary shared by CSS and drag/drop logic. | Eliminates the current 12px mismatch and prevents future visual/semantic drift. |
-| Separate persistent action effects from History/Chat presentation. | Tab switches must not disable sounds or tile highlighting and must not run those hooks twice. |
-| Keep authored art monochrome and tintable wherever possible. | One asset works across rulesets, themes, and density changes without state/size export explosion. |
-| Use real action data but omit invented timestamps. | The current shared action model has no reliable time field; visual fidelity does not justify a protocol migration for decorative metadata. |
+| Decision                                                                                                  | Rationale                                                                                                                                  |
+| --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Gate the new composition at a wide content-based breakpoint, initially 1280px.                            | The fixed 400px hand surface, tableau, gaps, and usable activity rail do not honestly fit at the existing 1024px desktop threshold.        |
+| Keep one board data model and render desktop-specific composition around existing interaction components. | Avoids forking gameplay logic while allowing a clean responsive boundary.                                                                  |
+| Mount exactly one tile-bearing responsive branch at a time.                                               | Hidden duplicate boards would create duplicate interactive surfaces and duplicate `view-transition-name` targets.                          |
+| Derive tableau lanes and assets from `getHanabiRuleSetColors`.                                            | Prevents the approved five-color mock from breaking six/seven-color variants.                                                              |
+| Preserve discard DOM order and vary only gap/overlap by count.                                            | Chronology is game information; fixed card size preserves numeral legibility and predictable hit targets.                                  |
+| Introduce one exported hand-zone boundary shared by CSS and drag/drop logic.                              | Eliminates the current 12px mismatch and prevents future visual/semantic drift.                                                            |
+| Separate persistent action effects from History/Chat presentation.                                        | Tab switches must not disable sounds or tile highlighting and must not run those hooks twice.                                              |
+| Keep authored art monochrome and tintable wherever possible.                                              | One asset works across rulesets, themes, and density changes without state/size export explosion.                                          |
+| Use real action data but omit invented timestamps.                                                        | The current shared action model has no reliable time field; visual fidelity does not justify a protocol migration for decorative metadata. |
 
 ---
 
@@ -191,7 +191,7 @@ Generate a local review sheet showing the brand mark, both tile motifs, and all 
 
 ## High-Level Technical Design
 
-> *This illustrates the intended approach and is directional guidance for review, not implementation specification. The implementing agent should treat it as context, not code to reproduce.*
+> _This illustrates the intended approach and is directional guidance for review, not implementation specification. The implementing agent should treat it as context, not code to reproduce._
 
 ```mermaid
 flowchart TB
@@ -231,7 +231,7 @@ flowchart TB
     U10 --> U9
 ```
 
-- U1. **Build the visual foundation and functional icon set**
+- U1. ✅ **Build the visual foundation and functional icon set**
 
 **Goal:** Establish reusable tokens, surface treatments, and functional inline icons without blocking layout work on decorative artwork.
 
@@ -240,6 +240,7 @@ flowchart TB
 **Dependencies:** None
 
 **Files:**
+
 - Create: `apps/web/src/games/hanabi/client/icons/Star.tsx`
 - Create: `apps/web/src/games/hanabi/client/icons/CardStack.tsx`
 - Create: `apps/web/src/games/hanabi/client/icons/PaperPlane.tsx`
@@ -249,23 +250,27 @@ flowchart TB
 - Test: `apps/web/src/games/hanabi/client/HanabiStyles.test.ts`
 
 **Approach:**
+
 - Define semantic custom properties for table background, panel layers, borders, ivory stock, text levels, coral active state, and supported firework colors.
 - Give all inline icons `currentColor` behavior and consistent accessible sizing.
 - Expose resilient asset hooks and fallback styles, but defer authored motif integration to U10.
 
 **Patterns to follow:**
+
 - Existing icon components under `apps/web/src/games/hanabi/client/icons/`.
 - Existing color mapping in `HanabiStyles.tsx`.
 
 **Test scenarios:**
+
 - Happy path: semantic token classes expose the intended navy, slate, ivory, coral, text, and firework-color values.
 - Happy path: all functional icons inherit `currentColor` and accept consistent size/accessibility props.
 - Accessibility: reduced-motion and focus-visible token styles remain available without relying on animation or color alone.
 
 **Verification:**
+
 - The shell can use the complete visual system before any decorative SVG is available.
 
-- U2. **Create the desktop shell, header, turn banner, and compact status HUD**
+- U2. ✅ **Create the desktop shell, header, turn banner, and compact status HUD**
 
 **Goal:** Establish the desktop page hierarchy and resource presentation without yet integrating the final three feature columns.
 
@@ -274,6 +279,7 @@ flowchart TB
 **Dependencies:** U1
 
 **Files:**
+
 - Create: `apps/web/src/games/hanabi/client/HanabiDesktopStatus.tsx`
 - Create: `apps/web/src/games/hanabi/client/HanabiDesktopBoard.tsx`
 - Create: `apps/web/src/games/hanabi/client/dev/HanabiDesktopFixtures.ts`
@@ -287,6 +293,7 @@ flowchart TB
 - Test: `apps/web/src/games/hanabi/client/HanabiDesktopStatus.test.ts`
 
 **Approach:**
+
 - Add an explicit game-surface variant to the shared header while keeping the default lobby presentation unchanged. Keep the game header slim and make code/copy/menu controls compact, keyboard reachable, and visually subordinate to the game state.
 - Calculate score/max, remaining deck, clues, and lives from existing data helpers and render numeric counters with icons.
 - Render a concise active-turn sentence independent of the player workspace so it never disappears below a long stack.
@@ -294,10 +301,12 @@ flowchart TB
 - Before downstream feature work, use that shell to measure the tableau, 400px workspace plus identity rail, and activity tracks at 1280px and 1586px. Move the gate upward if the content does not fit; do not compress the hand surface.
 
 **Patterns to follow:**
+
 - Existing `HanabiRemainingTiles`, `HanabiClues`, and `HanabiLives` data access.
 - Existing `HanabiCopyLinkButton` clipboard feedback and `HanabiGameMenu` behavior.
 
 **Test scenarios:**
+
 - Happy path: an in-progress game shows score/max, deck, clues, lives, active-player name, and game code.
 - Edge case: local player's turn says “Your turn”; another player's turn names that player; a disconnected active player retains the correct name/state.
 - Edge case: zero deck, zero clues, and zero lives render numeric zero rather than disappearing.
@@ -306,9 +315,10 @@ flowchart TB
 - Geometry: the maximum-state shell proves the chosen gate without page-level horizontal scrolling before U3–U8 fill the tracks.
 
 **Verification:**
+
 - At the desktop gate and above, the header/status band consumes materially less vertical space than the old cards, exposes every core resource at a glance, and the browser-backed shell proves the three load-bearing track widths.
 
-- U3. **Rebuild the tableau as chronological per-color lanes**
+- U3. ✅ **Rebuild the tableau as chronological per-color lanes**
 
 **Goal:** Replace the progress ladder with one current played tile and a complete chronological discard queue for every active color.
 
@@ -317,6 +327,7 @@ flowchart TB
 **Dependencies:** U1, U2
 
 **Files:**
+
 - Create: `apps/web/src/games/hanabi/client/HanabiDesktopTableau.tsx`
 - Create: `apps/web/src/games/hanabi/client/HanabiDiscardQueue.tsx`
 - Create: `apps/web/src/games/hanabi/client/HanabiDiscardQueue.test.ts`
@@ -324,6 +335,7 @@ flowchart TB
 - Modify: `apps/web/src/games/hanabi/client/HanabiActionTransition.test.ts`
 
 **Approach:**
+
 - Derive lanes exclusively from the active ruleset color order.
 - Find the current played tile for each lane from played state, respecting black-powder's descending sequence, and render one tile or empty target.
 - Filter `discardedTiles` by color without sorting; use the filtered array's original order as the DOM and visual order.
@@ -335,10 +347,12 @@ flowchart TB
 **Execution note:** Add characterization coverage for color order, transition targets, and discard chronology before replacing the existing placeholder ladder.
 
 **Patterns to follow:**
+
 - Current color derivation and tile rendering in `HanabiPlayedTiles.tsx`.
 - Transition-name helpers in `HanabiActionTransition.ts`.
 
 **Test scenarios:**
+
 - Happy path: standard rules render five lanes; each lane renders one current played tile and its own discards in global chronological order.
 - Edge case: lanes with zero, one, six, seven, and ten discards render every item; duplicate values remain duplicated.
 - Edge case: ten same-color discards keep fixed card dimensions, remain within the lane, and expose every numeral through shallow overlap.
@@ -349,9 +363,10 @@ flowchart TB
 - Accessibility: an empty lane exposes its color identity and empty current-play/discard state to assistive technology without a visible structural label.
 
 **Verification:**
+
 - No progress dots, progress numerals, or five-card ladders remain, and all 0–10 per-color discards are readable and ordered.
 
-- U4. **Render split player workspaces and active-player treatment**
+- U4. ✅ **Render split player workspaces and active-player treatment**
 
 **Goal:** Turn each hand into the approved identity rail plus horizontally split ordered/freeform workspace while preserving all card semantics.
 
@@ -360,6 +375,7 @@ flowchart TB
 **Dependencies:** U1, U2
 
 **Files:**
+
 - Create: `apps/web/src/games/hanabi/client/HanabiPlayerWorkspace.tsx`
 - Modify: `apps/web/src/games/hanabi/client/HanabiBoard.tsx`
 - Modify: `apps/web/src/games/hanabi/client/HanabiPlayerTiles.tsx`
@@ -367,6 +383,7 @@ flowchart TB
 - Test: `apps/web/src/games/hanabi/client/HanabiPlayerWorkspace.test.ts`
 
 **Approach:**
+
 - Keep the 400×140 logical coordinate surface so stored card positions and server semantics remain compatible.
 - Move player identity into a compact side rail and make the active workspace coral-bordered with a concise “Playing” badge/state.
 - Render one visual divider and a subtle lower-zone tint; omit structural labels.
@@ -374,10 +391,12 @@ flowchart TB
 - Cards remain a single collection positioned into either zone, never duplicated or mirrored.
 
 **Patterns to follow:**
+
 - Existing `rotateArrayToItem` ordering in `HanabiBoard.tsx`.
 - Existing tile rendering, tooltips, DnD hooks, and transition identities in `HanabiPlayerTiles.tsx`.
 
 **Test scenarios:**
+
 - Happy path: two-, four-, and five-player games render one stable workspace per player and only the active workspace gets the coral treatment.
 - Happy path: upper and lower cards render on opposite sides of the divider without “Auto” or “Freeform” text.
 - Edge case: four- and five-card hands fit; overlapping lower cards keep their stored z-order.
@@ -385,9 +404,10 @@ flowchart TB
 - Integration: local cards remain concealed and eligible for drag only when allowed; remote cards remain face-up and read-only; notes and action tooltips still open.
 
 **Verification:**
+
 - The player column matches the approved split-workspace hierarchy with no change to tile identity or permissions.
 
-- U5. **Unify visible and semantic hand-zone boundaries**
+- U5. ✅ **Unify visible and semantic hand-zone boundaries**
 
 **Goal:** Make cross-divider drag behavior exactly match the workspace the player sees.
 
@@ -396,6 +416,7 @@ flowchart TB
 **Dependencies:** U4
 
 **Files:**
+
 - Modify: `packages/shared/src/games/hanabi/HanabiGameData.ts`
 - Modify: `packages/shared/src/games/hanabi/HanabiDragDropUtils.ts`
 - Modify: `packages/shared/src/games/hanabi/HanabiGameData.test.ts`
@@ -407,6 +428,7 @@ flowchart TB
 - Modify: `apps/server/src/games/hanabi/HanabiGameFactory.test.ts`
 
 **Approach:**
+
 - Introduce one exported zone-boundary constant derived from the logical board height and use it for rendering and all new top/freeform decisions.
 - During persisted-game hydration, idempotently shift legacy freeform positions with y values in the old 58–69 mismatch band to the new 70px lower-zone boundary while preserving x/z. Newly created and already-normalized positions remain unchanged.
 - Preserve upper-zone x-order insertion and reflow behavior.
@@ -417,9 +439,11 @@ flowchart TB
 **Execution note:** Implement the shared boundary and cross-zone behavior test-first because this changes persisted gameplay interaction semantics.
 
 **Patterns to follow:**
+
 - Existing pure position helpers in `HanabiDragDropUtils.ts` and client `useTileDrop.ts` delegation.
 
 **Test scenarios:**
+
 - Happy path: dropping just above the boundary snaps/reorders; dropping exactly at or below it preserves freeform placement.
 - Happy path: crossing from top to bottom removes the card from ordered reflow without moving unrelated freeform cards.
 - Happy path: crossing from bottom to top inserts by x position and reflows ordered cards.
@@ -430,9 +454,10 @@ flowchart TB
 - Integration: remote clients render the persisted placement and cannot drag another player's tiles.
 
 **Verification:**
+
 - The divider has no dead band or contradictory behavior, and all shared/client tests agree on the boundary.
 
-- U6. **Separate persistent action effects from feed presentation**
+- U6. ✅ **Separate persistent action effects from feed presentation**
 
 **Goal:** Make sounds, board highlighting, latest-action selection, history, and chat safe to render through independent activity views.
 
@@ -441,6 +466,7 @@ flowchart TB
 **Dependencies:** U1, U2
 
 **Files:**
+
 - Create: `apps/web/src/games/hanabi/client/HanabiActionEffects.tsx`
 - Create: `apps/web/src/games/hanabi/client/HanabiActionSelectors.ts`
 - Create: `apps/web/src/games/hanabi/client/HanabiActionSelectors.test.ts`
@@ -448,22 +474,26 @@ flowchart TB
 - Modify: `apps/web/src/games/hanabi/client/HanabiBoard.tsx`
 
 **Approach:**
+
 - Mount action sound/highlight hooks once at the board/controller level, independent of the selected activity tab.
 - Add pure selectors for latest non-chat gameplay action, full gameplay history, and chat transcript without altering the shared action model.
 - Keep rendering components side-effect free so Latest and History may show related data without duplicate sound/highlight subscriptions.
 
 **Patterns to follow:**
+
 - Current `useActionSounds`, `useActionHighlighter`, and `useLatestActions` behavior.
 
 **Test scenarios:**
+
 - Happy path: mixed action/chat input returns the newest non-chat item, ordered gameplay history, and ordered chat transcript.
 - Edge case: empty history, chat-only history, and game-action-only history produce stable empty/latest results.
 - Integration: switching the future tab content does not remount or duplicate action-effect subscriptions.
 
 **Verification:**
+
 - Existing action sounds and click/hover highlights behave exactly once regardless of which activity content is visible.
 
-- U7. **Build the desktop Latest, History, and Chat activity rail**
+- U7. ✅ **Build the desktop Latest, History, and Chat activity rail**
 
 **Goal:** Match the approved right-rail hierarchy while preserving action comprehension and adding scoped unread chat behavior.
 
@@ -472,6 +502,7 @@ flowchart TB
 **Dependencies:** U6
 
 **Files:**
+
 - Create: `apps/web/src/games/hanabi/client/HanabiActivityRail.tsx`
 - Create: `apps/web/src/games/hanabi/client/HanabiActivityRail.test.ts`
 - Modify: `apps/web/src/games/hanabi/client/HanabiActionsPanel.tsx`
@@ -482,6 +513,7 @@ flowchart TB
 - Modify: `apps/web/src/games/hanabi/client/actions/HanabiTileAction.tsx`
 
 **Approach:**
+
 - Keep Latest visible above the tab body and restrict it to meaningful non-chat gameplay actions.
 - Render History and Chat as two accessible tabs with independent scroll containers; render the composer only in Chat.
 - Initialize unread count to zero at mount. Increment for new messages from other players only while Chat is closed, clear on activation, and never count the local player's own messages.
@@ -491,10 +523,12 @@ flowchart TB
 - Render compact defined empty states: “No moves yet” for Latest, “Moves will appear here” for History, and “No messages yet. Say hello.” for Chat. The Chat composer remains available when the viewer may send messages.
 
 **Patterns to follow:**
+
 - Existing `HanabiActionsFilter` categories, `HanabiAction` dispatch, and `HanabiChatInput` send path.
 - Existing highlight wrappers in tile action components.
 
 **Test scenarios:**
+
 - Happy path: Latest stays visible while History and Chat switch; the composer appears only in Chat and sends through the existing path.
 - Happy path: another player's new message increments unread while History is selected and opening Chat clears it.
 - Edge case: existing chat history at mount, own new messages, and messages received while Chat is open do not increment unread.
@@ -503,9 +537,10 @@ flowchart TB
 - Accessibility: tab roles, selected state, keyboard traversal, focus rings, badge accessible name, and disabled composer state are correct.
 
 **Verification:**
+
 - The rail remains usable through long histories and presents gameplay actions as more important than chat without hiding either.
 
-- U8. **Assemble and responsively gate the three-column desktop board**
+- U8. ✅ **Assemble and responsively gate the three-column desktop board**
 
 **Goal:** Integrate the header/status, tableau, workspaces, and activity rail into the approved wide-desktop composition while preserving the existing narrower board.
 
@@ -514,21 +549,25 @@ flowchart TB
 **Dependencies:** U2, U3, U5, U7
 
 **Files:**
+
 - Modify: `apps/web/src/games/hanabi/client/HanabiDesktopBoard.tsx`
 - Modify: `apps/web/src/games/hanabi/client/HanabiBoard.tsx`
 - Modify: `apps/web/src/games/hanabi/client/HanabiGameView.tsx`
 - Test: `apps/web/src/games/hanabi/client/HanabiBoard.test.ts`
 
 **Approach:**
+
 - Compose a desktop-only grid with a bounded tableau track, a center track that honors the 400px logical hand plus identity rail, and a sticky activity track.
 - Let the page scroll vertically for five-player/seven-lane states; do not clip the board to viewport height.
 - Keep the activity rail sticky only while its scroll behavior remains reachable and keyboard safe.
 - Choose the board branch from the existing breakpoint context and mount exactly one tile-bearing composition and one set of play/discard transition targets at any viewport. Do not render both boards and hide one with CSS. Keep shared controllers and the sole action-effects owner above that exclusive branch.
 
 **Patterns to follow:**
+
 - Existing breakpoint styles in `HanabiBoard.tsx` and page framing in `HanabiGameView.tsx`.
 
 **Test scenarios:**
+
 - Happy path: a four-player standard game renders the full three-column hierarchy at the desktop gate.
 - Edge case: two-player/five-card, five-player/four-card, disconnected, spectator, and finished states render without missing workspaces or controls.
 - Edge case: combined rainbow/black-powder ruleset and ten-card discard lane fit without page-level horizontal scrolling.
@@ -536,9 +575,10 @@ flowchart TB
 - Accessibility: source/focus order follows header, status, tableau, workspaces, activity and does not follow a visually misleading sequence.
 
 **Verification:**
+
 - The approved hierarchy is present at 1280px and wider, and one pixel below the gate cleanly uses the prior composition.
 
-- U10. **Generate and integrate the authored art assets**
+- U10. ✅ **Generate and integrate the authored art assets**
 
 **Goal:** Produce the reusable brand, card, and all-ruleset tableau artwork after the functional desktop surface can already be rendered and evaluated.
 
@@ -547,6 +587,7 @@ flowchart TB
 **Dependencies:** U1
 
 **Files:**
+
 - Create: `apps/web/public/images/hanabi/brand-mark.svg`
 - Create: `apps/web/public/images/hanabi/tile-face-burst.svg`
 - Create: `apps/web/public/images/hanabi/tile-back-emblem.svg`
@@ -564,22 +605,26 @@ flowchart TB
 - Test: `apps/web/src/games/hanabi/client/HanabiTileView.test.ts`
 
 **Approach:**
+
 - Generate/author assets to the manifest contract, review them at actual UI size, and optimize final SVG paths before source control.
 - Integrate artwork as decorative masks/backgrounds while preserving live numerals, accessible names, and image-disabled fallback.
 - Use the brand mark only on the game-surface header variant; do not alter application favicons or lobby branding in this epic.
 
 **Patterns to follow:**
+
 - Optional decorative layers in `HanabiTileView.tsx` and the semantic color mapping established by U1.
 
 **Test scenarios:**
+
 - Happy path: face-up, concealed, and placeholder tiles retain their live state and show the correct optional motif.
 - Edge case: red, blue, green, yellow, white, purple, rainbow, and black-powder lanes select distinct art with readable color/numeral treatment.
 - Accessibility: decorative art is hidden from the accessibility tree and missing/disabled images do not remove game information.
 
 **Verification:**
+
 - The review sheet proves every asset on navy and ivory at actual size, and the functional layout remains complete without the artwork.
 
-- U9. **Prove the redesign in real browsers and perform one visual refinement pass**
+- U9. ✅ **Prove the redesign in real browsers and perform one visual refinement pass**
 
 **Goal:** Validate behavior and appearance across realistic and maximum game states, then correct the highest-impact visual discrepancies.
 
@@ -588,6 +633,7 @@ flowchart TB
 **Dependencies:** U8, U10
 
 **Files:**
+
 - Modify as findings require: files owned by U1–U8 and U10 only
 - Create: `docs/proof/hanabi-desktop-redesign/README.md`
 - Create: `docs/proof/hanabi-desktop-redesign/desktop-standard.png`
@@ -595,12 +641,14 @@ flowchart TB
 - Create: `docs/proof/hanabi-desktop-redesign/desktop-chat.png`
 
 **Approach:**
+
 - Use the deterministic development fixture route for repeatable visual states and real games for multiplayer behavior; do not add fake data branches to production gameplay components.
 - Compare the first 1586×992 capture to the approved visual thesis, identify the single highest-impact mismatch, and make at least one focused refinement pass.
 - Exercise real multiplayer behavior with isolated browser identities for drag persistence, chat unread/send, action sounds/highlights, and play/discard transitions.
 - Record viewport, fixture/game state, and observed result beside final screenshots.
 
 **Test scenarios:**
+
 - Visual: capture 1280×800, 1366×768, 1440×900, 1586×992, and 1920×1080; no page-level horizontal scroll, clipped rail, or hidden header/status.
 - Visual: at 200% zoom, the layout remains navigable and focus indicators remain visible.
 - State: verify 2/4/5 players; 4/5-card hands; current user/other/disconnected turns; spectator; finished game.
@@ -612,6 +660,7 @@ flowchart TB
 - Cross-browser: smoke Chrome, Firefox, and Safari for DnD, sticky layout, CSS masks, and view transitions/fallbacks.
 
 **Verification:**
+
 - Focused tests plus full test, typecheck, lint, and production build pass.
 - Final screenshots and a concise state matrix are committed under `docs/proof/hanabi-desktop-redesign/`.
 
@@ -643,17 +692,17 @@ flowchart TB
 
 ## Risks & Dependencies
 
-| Risk | Likelihood | Impact | Mitigation |
-|---|---:|---:|---|
-| The approved composition is too wide at 1280px. | Medium | High | Treat the gate as content-based; tune tracks at real widths and move the gate upward rather than compressing cards below legibility. |
-| Long discard queues obscure numerals. | Medium | High | Fixed-size mini cards, count-derived overlap, numeral exposure tests, and 10-card visual fixtures. |
-| DOM restructuring breaks action transitions. | Medium | High | Preserve target naming, extend transition tests, and exercise successful/failed play from two clients. |
-| Tab rendering disables or duplicates sounds/highlights. | Medium | High | Extract one persistent effects owner before building tabs and test subscription stability. |
-| Changing the zone boundary surprises saved layouts. | Low | Medium | Normalize the legacy 58–69 freeform band to y=70 idempotently during hydration, then use one shared midpoint constant everywhere. |
-| Variant rulesets look unfinished. | Medium | Medium | Generate and test all eight possible color identities, not only the five shown in the mock. |
-| Decorative SVGs reduce numeral contrast. | Medium | Medium | Use monochrome masks, actual-size review sheet, contrast checks, and readable no-image fallback. |
-| Five players create excessive vertical height. | High | Low | Allow intentional document scroll, keep status/rail sticky where safe, and do not compress the logical hand height. |
-| Existing narrow layout regresses from shared styles. | Medium | High | Scope tokens/components carefully and verify one pixel below the desktop gate after every integration unit. |
+| Risk                                                    | Likelihood | Impact | Mitigation                                                                                                                           |
+| ------------------------------------------------------- | ---------: | -----: | ------------------------------------------------------------------------------------------------------------------------------------ |
+| The approved composition is too wide at 1280px.         |     Medium |   High | Treat the gate as content-based; tune tracks at real widths and move the gate upward rather than compressing cards below legibility. |
+| Long discard queues obscure numerals.                   |     Medium |   High | Fixed-size mini cards, count-derived overlap, numeral exposure tests, and 10-card visual fixtures.                                   |
+| DOM restructuring breaks action transitions.            |     Medium |   High | Preserve target naming, extend transition tests, and exercise successful/failed play from two clients.                               |
+| Tab rendering disables or duplicates sounds/highlights. |     Medium |   High | Extract one persistent effects owner before building tabs and test subscription stability.                                           |
+| Changing the zone boundary surprises saved layouts.     |        Low | Medium | Normalize the legacy 58–69 freeform band to y=70 idempotently during hydration, then use one shared midpoint constant everywhere.    |
+| Variant rulesets look unfinished.                       |     Medium | Medium | Generate and test all eight possible color identities, not only the five shown in the mock.                                          |
+| Decorative SVGs reduce numeral contrast.                |     Medium | Medium | Use monochrome masks, actual-size review sheet, contrast checks, and readable no-image fallback.                                     |
+| Five players create excessive vertical height.          |       High |    Low | Allow intentional document scroll, keep status/rail sticky where safe, and do not compress the logical hand height.                  |
+| Existing narrow layout regresses from shared styles.    |     Medium |   High | Scope tokens/components carefully and verify one pixel below the desktop gate after every integration unit.                          |
 
 ---
 

@@ -18,6 +18,7 @@ describe('Hanabi desktop fixtures', () => {
 
 		for (const fixture of Object.values(fixtures)) {
 			const data = fixture.gameData;
+			expect(new Set(data.actions.map((action) => action.id)).size).toBe(data.actions.length);
 			const referencedTileIds = [
 				...data.remainingTiles,
 				...data.playedTiles,

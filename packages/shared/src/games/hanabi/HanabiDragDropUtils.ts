@@ -6,8 +6,7 @@ import {
 	Position,
 } from './HanabiGameData.js';
 
-const HANABI_LEGACY_WORKSPACE_ZONE_BOUNDARY =
-	HANABI_TILE_SIZE.height + HANABI_DEFAULT_TILE_PADDING;
+const HANABI_LEGACY_WORKSPACE_ZONE_BOUNDARY = HANABI_TILE_SIZE.height + HANABI_DEFAULT_TILE_PADDING;
 
 export function getSlotXForDraggingTile(x: number, max: number = Number.MAX_SAFE_INTEGER): number {
 	const slot = Math.floor(

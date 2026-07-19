@@ -108,7 +108,7 @@ describe('HanabiPlayerWorkspace', () => {
 				playerId: 'ben',
 				userId: 'alice',
 			}),
-		).toEqual({ canAct: false, draggable: false, hidden: false, ownTiles: false });
+		).toEqual({ canAct: true, draggable: false, hidden: false, ownTiles: false });
 		expect(
 			getHanabiPlayerTilePermissions({
 				gameData: { ...playing, finishedReason: HanabiFinishedReason.OutOfTurns },

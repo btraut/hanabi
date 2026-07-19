@@ -189,7 +189,16 @@ export function getHanabiDesktopFixtures(): Record<HanabiDesktopFixtureName, Han
 		activity: {
 			code: 'CHAT22',
 			description: 'Gameplay and chat actions ready for the desktop activity rail.',
-			gameData: { ...standard, actions: [...standard.actions, ...standard.actions] },
+			gameData: {
+				...standard,
+				actions: [
+					...standard.actions,
+					...standard.actions.map((action): HanabiGameAction => ({
+						...action,
+						id: `${action.id}-repeat`,
+					})),
+				],
+			},
 			name: 'activity',
 			userId: 'player-1',
 		},
