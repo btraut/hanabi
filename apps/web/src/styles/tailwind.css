@@ -51,6 +51,18 @@
 	color: var(--color-hanabi-text);
 }
 
+.hanabi-responsive-game-surface {
+	background: white;
+	color: #111827;
+}
+
+@media (min-width: 1280px) {
+	.hanabi-responsive-game-surface {
+		background: var(--hanabi-table-gradient);
+		color: var(--color-hanabi-text);
+	}
+}
+
 .hanabi-panel {
 	background: linear-gradient(
 		145deg,

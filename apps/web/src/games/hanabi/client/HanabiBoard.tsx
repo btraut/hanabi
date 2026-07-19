@@ -1,15 +1,22 @@
 import { useBreakpointContext } from '~/components/BreakpointContext';
 import { useUserId } from '~/components/SocketContext';
 import HanabiActionEffects from '~/games/hanabi/client/HanabiActionEffects';
+import HanabiActivityRail from '~/games/hanabi/client/HanabiActivityRail';
 import HanabiActionsPanel from '~/games/hanabi/client/HanabiActionsPanel';
+import { getHanabiBoardLayout } from '~/games/hanabi/client/HanabiBoardLayout';
 import HanabiClues from '~/games/hanabi/client/HanabiClues';
 import HanabiDiscardedTilesCollapsed from '~/games/hanabi/client/HanabiDiscardedTilesCollapsed';
+import HanabiDesktopBoard from '~/games/hanabi/client/HanabiDesktopBoard';
+import HanabiDesktopTableau from '~/games/hanabi/client/HanabiDesktopTableau';
 import { useGameData } from '~/games/hanabi/client/HanabiGameContext';
+import { useTransitioningTileId } from '~/games/hanabi/client/HanabiGameContext';
 import HanabiGameOverPopup from '~/games/hanabi/client/HanabiGameOverPopup';
+import { useHanabiHighlightContext } from '~/games/hanabi/client/HanabiHighlightContext';
 import HanabiLives from '~/games/hanabi/client/HanabiLives';
 import HanabiPlayedTiles from '~/games/hanabi/client/HanabiPlayedTiles';
 import HanabiPlayedTilesCollapsed from '~/games/hanabi/client/HanabiPlayedTilesCollapsed';
 import HanabiPlayerAvatar from '~/games/hanabi/client/HanabiPlayerAvatar';
+import { HanabiDesktopPlayerWorkspaces } from '~/games/hanabi/client/HanabiPlayerWorkspace';
 import HanabiPlayerTiles from '~/games/hanabi/client/HanabiPlayerTiles';
 import HanabiRemainingTiles from '~/games/hanabi/client/HanabiRemainingTiles';
 import HanabiTileActionsTooltip from '~/games/hanabi/client/HanabiTileActionsTooltip';
@@ -35,11 +42,14 @@ function rotateArrayToItem<T>(arr: readonly T[], item: T): readonly T[] {
 
 export default function HanabiBoard(): JSX.Element {
 	const gameData = useGameData();
+	const transitioningTileId = useTransitioningTileId();
 	const userId = useUserId();
+	const { highlightedTiles } = useHanabiHighlightContext();
 
 	const playerDisplayOrder = rotateArrayToItem(gameData.turnOrder, userId);
 
 	const breakpoints = useBreakpointContext();
+	const layout = getHanabiBoardLayout(breakpoints);
 
 	// Build handlers and data pertaining to the action menu (clicks for tiles).
 	const {
@@ -82,93 +92,135 @@ export default function HanabiBoard(): JSX.Element {
 	return (
 		<>
 			<HanabiActionEffects />
-			<div className="grid grid-flow-row lg:grid-flow-col gap-6 relative">
-			<div>
-				{!breakpoints.lg && (
-					<>
-						<HanabiActionsPanel />
-						<div className="grid grid-flow-row border-4 border-black bg-white rounded-xl p-4 gap-3 mb-6">
-							<div className="grid grid-flow-col gap-2 justify-start">
+			{layout === 'desktop' ? (
+				<HanabiDesktopBoard
+					activity={<HanabiActivityRail gameData={gameData} userId={userId} />}
+					gameData={gameData}
+					playerWorkspaces={
+						<HanabiDesktopPlayerWorkspaces
+							gameData={gameData}
+							renderTileSurface={(playerId) => (
+								<HanabiPlayerTiles
+									id={playerId}
+									onTileClick={gameData.finishedReason === null ? handleTileClick : undefined}
+									onTileMouseDown={
+										gameData.showNotes && !showMenuForTile ? handleTileMouseDown : undefined
+									}
+									onTileMouseOut={
+										gameData.showNotes && !showMenuForTile ? handleTileMouseOut : undefined
+									}
+									onTileMouseOver={
+										gameData.showNotes && !showMenuForTile ? handleTileMouseOver : undefined
+									}
+									variant="desktop"
+								/>
+							)}
+							userId={userId}
+						/>
+					}
+					tableau={
+						<HanabiDesktopTableau
+							gameData={gameData}
+							highlightedTiles={highlightedTiles}
+							onTileMouseOut={
+								gameData.showNotes && !showMenuForTile ? handleTileMouseOut : undefined
+							}
+							onTileMouseOver={
+								gameData.showNotes && !showMenuForTile ? handleTileMouseOver : undefined
+							}
+							transitioningTileId={transitioningTileId}
+						/>
+					}
+					userId={userId}
+				/>
+			) : (
+				<div className="grid grid-flow-row lg:grid-flow-col gap-6 relative">
+					<div>
+						{!breakpoints.lg && (
+							<>
+								<HanabiActionsPanel />
+								<div className="grid grid-flow-row border-4 border-black bg-white rounded-xl p-4 gap-3 mb-6">
+									<div className="grid grid-flow-col gap-2 justify-start">
+										<HanabiRemainingTiles />
+										<HanabiClues />
+										<HanabiLives />
+									</div>
+									<HanabiPlayedTilesCollapsed />
+									{gameData.discardedTiles.length > 0 && <HanabiDiscardedTilesCollapsed />}
+								</div>
+							</>
+						)}
+
+						<div
+							className="pb-10 grid gap-y-6 content-start items-start"
+							style={{ gridTemplateColumns: 'auto auto' }}
+						>
+							{playerDisplayOrder.map((playerId) => {
+								const thisPlayersTurn =
+									gameData.finishedReason === null && gameData.currentPlayerId === playerId;
+
+								return (
+									<Fragment key={`player-${playerId}`}>
+										<div
+											className={classNames('my-2 p-3 border-black border-4', {
+												'bg-gray-800': !thisPlayersTurn,
+												'bg-red-800': thisPlayersTurn,
+											})}
+											style={{
+												borderTopLeftRadius: '0.75rem',
+												borderBottomLeftRadius: '0.75rem',
+												borderRightWidth: 0,
+											}}
+										>
+											<HanabiPlayerAvatar player={gameData.players[playerId]} size="sm" />
+											{thisPlayersTurn && userId === playerId && (
+												<p className="text-white italic whitespace-nowrap">Your turn!</p>
+											)}
+											{thisPlayersTurn && userId !== playerId && (
+												<p className="text-white italic whitespace-nowrap">Waiting…</p>
+											)}
+										</div>
+										<HanabiPlayerTiles
+											id={playerId}
+											onTileClick={gameData.finishedReason === null ? handleTileClick : undefined}
+											onTileMouseOver={
+												gameData.showNotes && !showMenuForTile ? handleTileMouseOver : undefined
+											}
+											onTileMouseOut={
+												gameData.showNotes && !showMenuForTile ? handleTileMouseOut : undefined
+											}
+											onTileMouseDown={
+												gameData.showNotes && !showMenuForTile ? handleTileMouseDown : undefined
+											}
+										/>
+									</Fragment>
+								);
+							})}
+						</div>
+					</div>
+					{breakpoints.lg && (
+						<div className="grid grid-flow-row gap-y-6 content-start" style={{ width: 488 }}>
+							<div className="border-4 border-black bg-white rounded-xl p-4 grid grid-flow-row xl:grid-flow-col gap-2 xl:gap-4 justify-start items-center">
 								<HanabiRemainingTiles />
 								<HanabiClues />
 								<HanabiLives />
 							</div>
-							<HanabiPlayedTilesCollapsed />
-							{gameData.discardedTiles.length > 0 && <HanabiDiscardedTilesCollapsed />}
-						</div>
-					</>
-				)}
-
-				<div
-					className="pb-10 grid gap-y-6 content-start items-start"
-					style={{ gridTemplateColumns: 'auto auto' }}
-				>
-					{playerDisplayOrder.map((playerId) => {
-						const thisPlayersTurn =
-							gameData.finishedReason === null && gameData.currentPlayerId === playerId;
-
-						return (
-							<Fragment key={`player-${playerId}`}>
-								<div
-									className={classNames('my-2 p-3 border-black border-4', {
-										'bg-gray-800': !thisPlayersTurn,
-										'bg-red-800': thisPlayersTurn,
-									})}
-									style={{
-										borderTopLeftRadius: '0.75rem',
-										borderBottomLeftRadius: '0.75rem',
-										borderRightWidth: 0,
-									}}
-								>
-									<HanabiPlayerAvatar player={gameData.players[playerId]} size="sm" />
-									{thisPlayersTurn && userId === playerId && (
-										<p className="text-white italic whitespace-nowrap">Your turn!</p>
-									)}
-									{thisPlayersTurn && userId !== playerId && (
-										<p className="text-white italic whitespace-nowrap">Waiting…</p>
-									)}
-								</div>
-								<HanabiPlayerTiles
-									id={playerId}
-									onTileClick={gameData.finishedReason === null ? handleTileClick : undefined}
+							<div className="border-4 border-black bg-white rounded-xl p-4 grid grid-flow-row gap-y-6">
+								<HanabiPlayedTiles
+									tileSize={breakpoints.xl ? TileViewSize.Regular : TileViewSize.Small}
 									onTileMouseOver={
 										gameData.showNotes && !showMenuForTile ? handleTileMouseOver : undefined
 									}
 									onTileMouseOut={
 										gameData.showNotes && !showMenuForTile ? handleTileMouseOut : undefined
 									}
-									onTileMouseDown={
-										gameData.showNotes && !showMenuForTile ? handleTileMouseDown : undefined
-									}
 								/>
-							</Fragment>
-						);
-					})}
-				</div>
-			</div>
-			{breakpoints.lg && (
-				<div className="grid grid-flow-row gap-y-6 content-start" style={{ width: 488 }}>
-					<div className="border-4 border-black bg-white rounded-xl p-4 grid grid-flow-row xl:grid-flow-col gap-2 xl:gap-4 justify-start items-center">
-						<HanabiRemainingTiles />
-						<HanabiClues />
-						<HanabiLives />
-					</div>
-					<div className="border-4 border-black bg-white rounded-xl p-4 grid grid-flow-row gap-y-6">
-						<HanabiPlayedTiles
-							tileSize={breakpoints.xl ? TileViewSize.Regular : TileViewSize.Small}
-							onTileMouseOver={
-								gameData.showNotes && !showMenuForTile ? handleTileMouseOver : undefined
-							}
-							onTileMouseOut={
-								gameData.showNotes && !showMenuForTile ? handleTileMouseOut : undefined
-							}
-						/>
-					</div>
-					<HanabiActionsPanel />
+							</div>
+							<HanabiActionsPanel />
+						</div>
+					)}
 				</div>
 			)}
-
-			{/* Popups */}
 			{showMenuForTile && (
 				<HanabiTileActionsTooltip
 					coords={showMenuForTile.coords}
@@ -188,7 +240,6 @@ export default function HanabiBoard(): JSX.Element {
 					}}
 				/>
 			)}
-			</div>
 		</>
 	);
 }
