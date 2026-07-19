@@ -1,4 +1,5 @@
 import HanabiDesktopBoard from '~/games/hanabi/client/HanabiDesktopBoard';
+import HanabiDesktopTableau from '~/games/hanabi/client/HanabiDesktopTableau';
 import {
 	getHanabiDesktopFixtures,
 	HanabiDesktopFixtureName,
@@ -35,7 +36,11 @@ export default function HanabiDesktopFixtureView(): JSX.Element {
 					))}
 				</nav>
 			</header>
-			<HanabiDesktopBoard gameData={fixture.gameData} userId={fixture.userId} />
+			<HanabiDesktopBoard
+				gameData={fixture.gameData}
+				tableau={<HanabiDesktopTableau gameData={fixture.gameData} />}
+				userId={fixture.userId}
+			/>
 		</div>
 	);
 }
