@@ -1,0 +1,14 @@
+[build]
+builder = "RAILPACK"
+buildCommand = "pnpm build"
+
+[deploy]
+startCommand = "node dist/apps/server/main.js"
+healthcheckPath = "/api/readyz"
+healthcheckTimeout = 300
+numReplicas = 1
+sleepApplication = true
+overlapSeconds = 0
+drainingSeconds = 15
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
