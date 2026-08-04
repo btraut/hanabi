@@ -155,6 +155,11 @@ describe('Hanabi game data', () => {
 		expect(getHanabiScore({ ruleSet: 'rainbow-black-powder', tiles, playedTiles })).toBe(16);
 	});
 
+	it('never reports a negative Black Powder score', () => {
+		expect(getHanabiScore({ ruleSet: 'black-powder', tiles: {}, playedTiles: [] })).toBe(0);
+		expect(getHanabiScore({ ruleSet: 'rainbow-black-powder', tiles: {}, playedTiles: [] })).toBe(0);
+	});
+
 	it('recognizes the tile that completes each firework direction', () => {
 		expect(getHanabiFireworkSequence('red')).toEqual([1, 2, 3, 4, 5]);
 		expect(getHanabiFireworkSequence('black')).toEqual([5, 4, 3, 2, 1]);
