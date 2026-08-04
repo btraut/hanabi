@@ -188,7 +188,7 @@ export function getHanabiScore(
 	).length;
 	const coloredTilesPlayed = gameData.playedTiles.length - blackTilesPlayed;
 
-	return coloredTilesPlayed - (5 - blackTilesPlayed);
+	return Math.max(0, coloredTilesPlayed - (5 - blackTilesPlayed));
 }
 
 export function isHanabiFireworkCompletion(tile: HanabiTile): boolean {
