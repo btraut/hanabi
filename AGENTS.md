@@ -25,7 +25,7 @@
 ## Committing
 
 - If asked to commit and push, use the current branch and push to origin.
-- If asked to "ship it", it means: commit on the current branch, rebase that branch onto the local `production` branch, then fast-forward `production` to the current branch so production includes the new commits, and push BOTH branches to origin.
+- If asked to "ship it", commit and push the current branch, then merge it to `main`; Railway deploys `main` automatically.
 
 ## Work checkpoints (run after a logical chunk)
 
