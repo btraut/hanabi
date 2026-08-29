@@ -6,7 +6,12 @@
 import { useUserId } from '~/components/SocketContext';
 import { useGameData, useGameMessenger } from '~/games/hanabi/client/HanabiGameContext';
 import { HanabiTileActionsTooltipType } from '~/games/hanabi/client/HanabiTileActionsTooltip';
-import { HanabiClueColor, HanabiTile, isHanabiClueColor } from '@hanabi/shared';
+import {
+	HanabiClueColor,
+	HanabiTile,
+	canHanabiPlayerDiscard,
+	isHanabiClueColor,
+} from '@hanabi/shared';
 import { useCallback, useState } from 'react';
 
 type ActionMenuDetails = {
@@ -80,6 +85,10 @@ export default function useTileActionMenuHandlers(): {
 
 			switch (action) {
 				case 'discard':
+					if (!canHanabiPlayerDiscard(gameData.clues)) {
+						console.error('Cannot discard when all clues are available.');
+						break;
+					}
 					void gameMessenger.discardTile(tile).catch((error: unknown) => {
 						console.error('Could not discard the tile:', error);
 					});

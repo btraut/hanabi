@@ -12,6 +12,7 @@ import {
 	preferredPort,
 	releaseLock,
 	reportRuntimeFailure,
+	startServicesSequentially,
 	terminateChildren,
 	waitForUrl,
 	writeManifest,
@@ -86,6 +87,34 @@ describe('development runtime ports', () => {
 });
 
 describe('development runtime lifecycle', () => {
+	it('waits for the server to become ready before starting the web app', async () => {
+		const events: string[] = [];
+		let markServerReady: (() => void) | undefined;
+		const serverReady = new Promise<void>((resolve) => {
+			markServerReady = resolve;
+		});
+
+		const servicesStarted = startServicesSequentially(
+			async () => {
+				events.push('server started');
+				await serverReady;
+				events.push('server ready');
+				return 'server';
+			},
+			async () => {
+				events.push('web started');
+				return 'web';
+			},
+		);
+
+		await Promise.resolve();
+		expect(events).toEqual(['server started']);
+
+		markServerReady?.();
+		await expect(servicesStarted).resolves.toEqual({ server: 'server', web: 'web' });
+		expect(events).toEqual(['server started', 'server ready', 'web started']);
+	});
+
 	it('never removes a lock owned by another launcher', async () => {
 		const directory = await mkdtemp(join(tmpdir(), 'hanabi-runtime-lock-'));
 		const target = join(directory, 'lock.json');

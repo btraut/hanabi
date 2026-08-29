@@ -4,8 +4,8 @@
 /* Custom theme extensions */
 @theme {
 	--font-sans:
-		ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-		'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+		'Barlow Condensed', 'Arial Narrow', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+		'Segoe UI', sans-serif;
 
 	/* Custom shadows */
 	--shadow-dark: 0 0 50px -20px black;
@@ -25,25 +25,406 @@
 	--color-hanabi-ivory: #f4eedf;
 	--color-hanabi-ivory-muted: #d8d0bd;
 	--color-hanabi-ink: #132035;
-	--color-hanabi-text: #f6f2e8;
-	--color-hanabi-text-muted: #93a4bc;
-	--color-hanabi-coral: #ff725f;
-	--color-hanabi-coral-soft: #ff9a89;
-	--color-hanabi-red: #ef665f;
-	--color-hanabi-blue: #5f9de8;
-	--color-hanabi-green: #59b987;
-	--color-hanabi-yellow: #e8bd5f;
+	--color-hanabi-text: #eeeae2;
+	--color-hanabi-text-muted: #8d9ab0;
+	--color-hanabi-coral: #da7163;
+	--color-hanabi-coral-soft: #e58f83;
+	--color-hanabi-red: #d36b65;
+	--color-hanabi-blue: #638fd1;
+	--color-hanabi-green: #6cab7f;
+	--color-hanabi-yellow: #d5ad61;
 	--color-hanabi-white: #eee9df;
-	--color-hanabi-purple: #a78be5;
+	--color-hanabi-purple: #9278c4;
 	--color-hanabi-black: #738096;
 }
 
+body {
+	min-height: 100vh;
+	background: var(--hanabi-table-gradient);
+	color: var(--color-hanabi-text);
+	font-family: var(--font-sans);
+	font-weight: 500;
+}
+
 :root {
+	--hanabi-player-tile-width: 50px;
+	--hanabi-player-tile-height: 64px;
+	--hanabi-player-tile-inset: 8px;
+	--hanabi-player-tile-slot-0: 8px;
+	--hanabi-player-tile-slot-1: 64px;
+	--hanabi-player-tile-slot-2: 120px;
+	--hanabi-player-tile-slot-3: 176px;
+	--hanabi-player-tile-slot-4: 232px;
+	--hanabi-tile-ink-red: #a94442;
+	--hanabi-tile-ink-blue: #386aa4;
+	--hanabi-tile-ink-green: #36784e;
+	--hanabi-tile-ink-yellow: #8b5f0e;
+	--hanabi-tile-ink-purple: #6c4d9b;
+	--hanabi-tile-ink-white: #74452f;
+	--hanabi-tile-ink-rainbow: linear-gradient(
+		to right,
+		#b72d3f 0%,
+		#a76200 24%,
+		#267a48 44%,
+		#2468ad 64%,
+		#7042a0 84%,
+		#9a3f78 100%
+	);
 	--hanabi-table-gradient:
-		radial-gradient(circle at 48% -20%, rgb(35 60 91 / 45%), transparent 46%),
-		linear-gradient(160deg, var(--color-hanabi-table) 0%, var(--color-hanabi-table-deep) 100%);
+		radial-gradient(ellipse at 52% 28%, rgb(24 80 125 / 50%), transparent 64%),
+		radial-gradient(circle at 48% 105%, rgb(8 51 89 / 55%), transparent 58%),
+		linear-gradient(160deg, #061b31 0%, #031226 100%);
 	--hanabi-panel-shadow: 0 22px 50px rgb(0 0 0 / 24%), inset 0 1px 0 rgb(255 255 255 / 4%);
 	--hanabi-card-shadow: 0 8px 18px rgb(0 0 0 / 28%), inset 0 1px 0 rgb(255 255 255 / 65%);
+	--hanabi-control-height: 42px;
+	--hanabi-control-radius: 8px;
+	--hanabi-control-border: rgb(56 82 115 / 86%);
+	--hanabi-control-border-hover: rgb(229 143 131 / 72%);
+	--hanabi-control-bg: rgb(16 33 57 / 92%);
+	--hanabi-control-bg-hover: rgb(22 45 75 / 96%);
+}
+
+.hanabi-button {
+	display: inline-flex;
+	min-height: var(--hanabi-control-height);
+	align-items: center;
+	justify-content: center;
+	padding: 9px 18px;
+	border: 1px solid var(--hanabi-control-border);
+	border-radius: var(--hanabi-control-radius);
+	background: var(--hanabi-control-bg);
+	box-shadow: inset 0 1px rgb(255 255 255 / 5%);
+	color: var(--color-hanabi-text);
+	font-size: 17px;
+	font-weight: 600;
+	letter-spacing: 0.01em;
+	line-height: 1;
+	text-align: center;
+	transition:
+		background-color 140ms ease,
+		border-color 140ms ease,
+		box-shadow 140ms ease,
+		color 140ms ease,
+		transform 140ms ease;
+	user-select: none;
+}
+
+.hanabi-button:not(:disabled):hover {
+	border-color: var(--hanabi-control-border-hover);
+	background: var(--hanabi-control-bg-hover);
+	transform: translateY(-1px);
+}
+
+.hanabi-button:not(:disabled):active {
+	transform: translateY(0);
+}
+
+.hanabi-button:focus-visible,
+.hanabi-field:focus-visible,
+.hanabi-checkbox:focus-visible,
+.hanabi-icon-button:focus-visible {
+	outline: 2px solid var(--color-hanabi-coral-soft);
+	outline-offset: 3px;
+}
+
+.hanabi-button:disabled {
+	cursor: not-allowed;
+	opacity: 0.42;
+}
+
+.hanabi-button-primary {
+	border-color: rgb(229 143 131 / 90%);
+	background: var(--color-hanabi-coral);
+	box-shadow:
+		inset 0 1px rgb(255 255 255 / 18%),
+		0 7px 18px rgb(103 30 26 / 22%);
+	color: #fffaf3;
+}
+
+.hanabi-button-primary:not(:disabled):hover {
+	border-color: #f1b0a7;
+	background: var(--color-hanabi-coral-soft);
+}
+
+.hanabi-button-danger {
+	border-color: rgb(229 143 131 / 68%);
+	background: rgb(211 107 101 / 18%);
+	color: #f3bbb4;
+}
+
+.hanabi-button-danger:not(:disabled):hover {
+	border-color: rgb(241 176 167 / 88%);
+	background: rgb(211 107 101 / 26%);
+}
+
+.hanabi-button-wide {
+	width: 100%;
+}
+
+.hanabi-field {
+	min-height: var(--hanabi-control-height);
+	width: 100%;
+	border: 1px solid var(--hanabi-control-border);
+	border-radius: var(--hanabi-control-radius);
+	background: rgb(3 14 27 / 72%);
+	box-shadow: inset 0 1px 5px rgb(0 0 0 / 22%);
+	color: var(--color-hanabi-text);
+	font-size: 18px;
+	font-weight: 500;
+	line-height: 1.2;
+	transition:
+		background-color 140ms ease,
+		border-color 140ms ease,
+		box-shadow 140ms ease;
+}
+
+.hanabi-field:hover {
+	border-color: var(--color-hanabi-border-bright);
+}
+
+.hanabi-field:focus {
+	border-color: var(--color-hanabi-coral-soft);
+	background: rgb(5 19 36 / 94%);
+	outline: none;
+}
+
+.hanabi-copy-control {
+	display: grid;
+	max-width: min(100%, 760px);
+	min-height: var(--hanabi-control-height);
+	grid-auto-flow: column;
+	grid-template-columns: minmax(0, 1fr) auto;
+	overflow: hidden;
+	border: 1px solid var(--hanabi-control-border);
+	border-radius: var(--hanabi-control-radius);
+	background: var(--hanabi-control-bg);
+	color: var(--color-hanabi-text);
+	font-size: 16px;
+	font-weight: 600;
+	transition:
+		background-color 140ms ease,
+		border-color 140ms ease,
+		transform 140ms ease;
+}
+
+.hanabi-copy-control:hover {
+	border-color: var(--hanabi-control-border-hover);
+	background: var(--hanabi-control-bg-hover);
+	transform: translateY(-1px);
+}
+
+.hanabi-copy-control-value,
+.hanabi-copy-control-action {
+	display: flex;
+	align-items: center;
+	padding: 9px 14px;
+}
+
+.hanabi-copy-control-value {
+	min-width: 0;
+}
+
+.hanabi-copy-control-action {
+	min-width: 72px;
+	justify-content: center;
+	border-left: 1px solid var(--hanabi-control-border);
+	color: var(--color-hanabi-coral-soft);
+}
+
+.hanabi-select-wrap {
+	position: relative;
+	display: inline-grid;
+}
+
+.hanabi-select {
+	appearance: none;
+	padding: 9px 38px 9px 14px;
+	cursor: pointer;
+}
+
+.hanabi-select-chevron {
+	position: absolute;
+	top: 50%;
+	right: 15px;
+	width: 8px;
+	height: 8px;
+	border-right: 1.5px solid var(--color-hanabi-text-muted);
+	border-bottom: 1.5px solid var(--color-hanabi-text-muted);
+	pointer-events: none;
+	transform: translateY(-66%) rotate(45deg);
+}
+
+.hanabi-checkbox-wrap {
+	position: relative;
+	display: inline-grid;
+	width: 22px;
+	height: 22px;
+	flex: none;
+	place-items: center;
+}
+
+.hanabi-checkbox {
+	width: 22px;
+	height: 22px;
+	appearance: none;
+	border: 1px solid var(--hanabi-control-border);
+	border-radius: 6px;
+	background: rgb(3 14 27 / 72%);
+	cursor: pointer;
+	transition:
+		background-color 140ms ease,
+		border-color 140ms ease,
+		box-shadow 140ms ease;
+}
+
+.hanabi-checkbox:hover {
+	border-color: var(--hanabi-control-border-hover);
+}
+
+.hanabi-checkbox:checked {
+	border-color: var(--color-hanabi-coral-soft);
+	background: var(--color-hanabi-coral);
+	box-shadow: inset 0 1px rgb(255 255 255 / 18%);
+}
+
+.hanabi-checkbox-check {
+	position: absolute;
+	width: 10px;
+	height: 6px;
+	border-bottom: 2px solid #fffaf3;
+	border-left: 2px solid #fffaf3;
+	pointer-events: none;
+	transform: translateY(-1px) rotate(-45deg);
+}
+
+@keyframes hanabi-dialog-backdrop-in {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+@keyframes hanabi-dialog-in {
+	from {
+		opacity: 0;
+		transform: translateY(10px) scale(0.985);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+.hanabi-dialog-backdrop {
+	position: fixed;
+	z-index: 100;
+	inset: 0;
+	display: grid;
+	padding: 18px;
+	background: rgb(1 7 16 / 76%);
+	backdrop-filter: blur(5px);
+	place-items: center;
+	animation: hanabi-dialog-backdrop-in 150ms ease-out both;
+}
+
+.hanabi-dialog {
+	position: relative;
+	width: min(420px, 100%);
+	max-height: calc(100dvh - 36px);
+	overflow: auto;
+	border: 1px solid var(--color-hanabi-border-bright);
+	border-radius: 12px;
+	background: linear-gradient(150deg, rgb(17 38 64 / 98%), rgb(8 23 42 / 98%));
+	box-shadow:
+		0 28px 80px rgb(0 0 0 / 56%),
+		inset 0 1px rgb(255 255 255 / 6%);
+	animation: hanabi-dialog-in 170ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.hanabi-dialog[data-tone='danger'] {
+	border-color: rgb(211 107 101 / 58%);
+	box-shadow:
+		0 28px 80px rgb(0 0 0 / 56%),
+		inset 3px 0 rgb(211 107 101 / 82%),
+		inset 0 1px rgb(255 255 255 / 6%);
+}
+
+.hanabi-dialog[data-tone='success'] {
+	border-color: rgb(108 171 127 / 58%);
+	box-shadow:
+		0 28px 80px rgb(0 0 0 / 56%),
+		inset 3px 0 rgb(108 171 127 / 82%),
+		inset 0 1px rgb(255 255 255 / 6%);
+}
+
+.hanabi-dialog-header {
+	display: flex;
+	min-height: 70px;
+	align-items: center;
+	justify-content: space-between;
+	gap: 20px;
+	padding: 18px 18px 14px 24px;
+	border-bottom: 1px solid var(--color-hanabi-border);
+}
+
+.hanabi-dialog-title {
+	color: var(--color-hanabi-text);
+	font-size: 29px;
+	font-weight: 600;
+	letter-spacing: -0.015em;
+	line-height: 1.05;
+}
+
+.hanabi-dialog-body {
+	padding: 24px;
+}
+
+.hanabi-dialog-section + .hanabi-dialog-section {
+	margin-top: 22px;
+	padding-top: 20px;
+	border-top: 1px solid var(--color-hanabi-border);
+}
+
+.hanabi-dialog-section-title {
+	margin-bottom: 10px;
+	color: var(--color-hanabi-text-muted);
+	font-size: 15px;
+	font-weight: 600;
+	letter-spacing: 0.01em;
+}
+
+.hanabi-icon-button {
+	display: inline-grid;
+	width: 38px;
+	height: 38px;
+	flex: none;
+	border: 1px solid rgb(82 108 141 / 90%);
+	border-radius: 999px;
+	background: rgb(3 14 27 / 48%);
+	color: var(--color-hanabi-text);
+	cursor: pointer;
+	place-items: center;
+	transition:
+		background-color 140ms ease,
+		border-color 140ms ease,
+		color 140ms ease;
+}
+
+.hanabi-icon-button:hover {
+	border-color: var(--hanabi-control-border-hover);
+	background: rgb(218 113 99 / 10%);
+	color: var(--color-hanabi-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.hanabi-button,
+	.hanabi-dialog,
+	.hanabi-dialog-backdrop {
+		animation: none;
+		transition: none;
+	}
 }
 
 .hanabi-game-surface {
@@ -52,15 +433,9 @@
 }
 
 .hanabi-responsive-game-surface {
-	background: white;
-	color: #111827;
-}
-
-@media (min-width: 1280px) {
-	.hanabi-responsive-game-surface {
-		background: var(--hanabi-table-gradient);
-		color: var(--color-hanabi-text);
-	}
+	background: var(--hanabi-table-gradient);
+	color: var(--color-hanabi-text);
+	overflow-x: clip;
 }
 
 .hanabi-panel {
@@ -73,19 +448,1281 @@
 	box-shadow: var(--hanabi-panel-shadow);
 }
 
-.hanabi-tile-art {
+.hanabi-tableau-lane {
+	--hanabi-tableau-accent: 115 128 150;
+	--hanabi-tableau-fill: var(--hanabi-tableau-accent);
+	position: relative;
+	background: rgb(6 25 44 / 86%);
+	border-color: rgb(var(--hanabi-tableau-accent) / 18%);
+	box-shadow:
+		inset 0 1px rgb(255 255 255 / 3%),
+		inset 0 -1px rgb(0 0 0 / 18%);
+}
+
+.hanabi-tableau-lane::before {
 	position: absolute;
-	inset: 2px;
-	background: currentColor;
-	mask-position: center;
-	mask-repeat: no-repeat;
-	mask-size: contain;
-	opacity: 0.16;
+	z-index: 1;
+	inset: -1px auto -1px -1px;
+	width: 6px;
+	border: 1px solid rgb(var(--hanabi-tableau-accent) / 74%);
+	border-right: 0;
+	border-radius: 8px 0 0 8px;
+	background: linear-gradient(
+		90deg,
+		rgb(var(--hanabi-tableau-accent) / 100%),
+		rgb(var(--hanabi-tableau-accent) / 76%) 56%,
+		rgb(var(--hanabi-tableau-accent) / 46%)
+	);
+	box-shadow:
+		inset 1px 0 rgb(255 255 255 / 24%),
+		inset -1px 0 rgb(0 0 0 / 28%);
+	content: '';
 	pointer-events: none;
 }
 
-.hanabi-tile-art-back {
-	opacity: 0.44;
+.hanabi-tableau-lane[data-tableau-color='red'] {
+	--hanabi-tableau-accent: 239 72 55;
+	--hanabi-tableau-fill: 222 72 34;
+}
+
+.hanabi-tableau-lane[data-tableau-color='blue'] {
+	--hanabi-tableau-accent: 50 126 220;
+}
+
+.hanabi-tableau-lane[data-tableau-color='green'] {
+	--hanabi-tableau-accent: 80 156 89;
+	--hanabi-tableau-fill: 89 132 57;
+}
+
+.hanabi-tableau-lane[data-tableau-color='yellow'] {
+	--hanabi-tableau-accent: 224 157 30;
+	--hanabi-tableau-fill: 238 167 36;
+}
+
+.hanabi-tableau-lane[data-tableau-color='white'] {
+	--hanabi-tableau-accent: 196 193 184;
+	--hanabi-tableau-fill: 91 108 126;
+}
+
+.hanabi-tableau-lane[data-tableau-color='purple'] {
+	--hanabi-tableau-accent: 146 120 196;
+}
+
+.hanabi-tableau-lane[data-tableau-color='rainbow'] {
+	--hanabi-tableau-accent: 218 113 99;
+}
+
+.hanabi-tableau-lane[data-tableau-color='black'] {
+	--hanabi-tableau-accent: 88 101 122;
+}
+
+.hanabi-tableau-play-stack {
+	--hanabi-played-tile-overlap: -29.5px;
+	height: 64px;
+	min-width: 0;
+}
+
+.hanabi-tableau-played-tile {
+	position: relative;
+	flex: 0 0 auto;
+}
+
+.hanabi-tableau-played-tile + .hanabi-tableau-played-tile {
+	margin-left: var(--hanabi-played-tile-overlap);
+}
+
+.hanabi-tableau-emblem {
+	background:
+		repeating-linear-gradient(
+			45deg,
+			transparent 0,
+			transparent 13px,
+			rgb(255 255 255 / 0.35%) 14px,
+			rgb(255 255 255 / 0.12%) 15px,
+			transparent 16px,
+			transparent 28px
+		),
+		repeating-linear-gradient(
+			-45deg,
+			transparent 0,
+			transparent 14px,
+			rgb(0 0 0 / 0.24%) 15px,
+			rgb(0 0 0 / 0.08%) 16px,
+			transparent 17px,
+			transparent 30px
+		),
+		radial-gradient(circle at 46% 44%, rgb(var(--hanabi-tableau-fill) / 14%), transparent 72%),
+		linear-gradient(
+			145deg,
+			rgb(var(--hanabi-tableau-fill) / 28%),
+			rgb(var(--hanabi-tableau-fill) / 23%)
+		),
+		#09192b;
+	filter: none;
+	opacity: 0.86;
+}
+
+.hanabi-status-deck-icon {
+	position: relative;
+	display: block;
+	width: 43px;
+	height: 54px;
+	filter: drop-shadow(0 5px 5px rgb(0 0 0 / 36%));
+}
+
+.hanabi-status-deck-icon::before,
+.hanabi-status-deck-icon::after,
+.hanabi-status-deck-face {
+	position: absolute;
+	width: 35px;
+	height: 46px;
+	border: 2px solid rgb(235 226 208 / 82%);
+	border-radius: 5px;
+	background: linear-gradient(145deg, #15344e, #071a2d);
+	box-shadow: inset 0 0 0 1px rgb(4 13 24 / 80%);
+}
+
+.hanabi-status-deck-icon::before,
+.hanabi-status-deck-icon::after {
+	content: '';
+}
+
+.hanabi-status-deck-icon::before {
+	top: 8px;
+	left: 8px;
+	opacity: 0.64;
+}
+
+.hanabi-status-deck-icon::after {
+	top: 4px;
+	left: 4px;
+	opacity: 0.86;
+}
+
+.hanabi-status-deck-face {
+	top: 0;
+	left: 0;
+	z-index: 1;
+	border-color: #e7dfce;
+	box-shadow:
+		inset 0 0 0 1px rgb(3 12 22 / 88%),
+		inset 0 0 0 3px rgb(130 155 176 / 26%);
+}
+
+.hanabi-status-deck-face::after {
+	position: absolute;
+	inset: 6px 4px 7px;
+	background: #718da1;
+	content: '';
+	mask: var(--hanabi-status-deck-art) center / contain no-repeat;
+	opacity: 0.62;
+}
+
+.hanabi-status-clue-icon {
+	position: relative;
+	display: block;
+	width: 35px;
+	height: 35px;
+	border: 2px solid #5d8fdf;
+	border-radius: 50%;
+	background: radial-gradient(circle at 38% 32%, #4b8be2 0 18%, #2765bd 45%, #103d7f 100%);
+	box-shadow:
+		inset 0 2px 3px rgb(255 255 255 / 20%),
+		inset 0 -3px 5px rgb(3 20 53 / 48%),
+		0 0 0 3px rgb(3 16 39 / 78%),
+		0 3px 8px rgb(23 79 159 / 36%);
+}
+
+.hanabi-status-clue-icon::after {
+	position: absolute;
+	inset: 4px;
+	border: 1px solid rgb(144 188 255 / 28%);
+	border-radius: inherit;
+	content: '';
+}
+
+.hanabi-status-life-icon {
+	display: block;
+	width: 36px;
+	height: 35px;
+	filter: drop-shadow(0 2px 0 rgb(86 22 28 / 82%)) drop-shadow(0 5px 6px rgb(0 0 0 / 38%));
+}
+
+.hanabi-activity-panel {
+	display: flex;
+	min-height: 0;
+	flex: 1;
+	flex-direction: column;
+	overflow: hidden;
+	border-radius: 8px;
+}
+
+.hanabi-activity-tabs {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	flex: none;
+	padding-inline: 26px;
+}
+
+.hanabi-activity-tab {
+	height: 69px;
+	font-size: 21px;
+}
+
+.hanabi-activity-tab-indicator {
+	position: absolute;
+	right: 12px;
+	bottom: 0;
+	left: 12px;
+	height: 3px;
+	border-radius: 999px 999px 0 0;
+	background: var(--color-hanabi-coral);
+}
+
+.hanabi-activity-transcript,
+.hanabi-chat-transcript {
+	min-height: 0;
+	flex: 1;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	scrollbar-color: rgb(80 105 139 / 58%) transparent;
+}
+
+.hanabi-history-action {
+	display: block;
+	width: 100%;
+	text-align: left;
+	transition:
+		background 150ms ease,
+		box-shadow 150ms ease;
+}
+
+.hanabi-history-action:hover {
+	background: rgb(255 255 255 / 3%);
+}
+
+.hanabi-history-action.is-selected {
+	background: linear-gradient(
+		90deg,
+		rgb(var(--hanabi-emphasis-rgb) / 16%),
+		rgb(var(--hanabi-emphasis-rgb) / 4%) 68%,
+		transparent
+	);
+	box-shadow: inset 3px 0 0 rgb(var(--hanabi-emphasis-rgb));
+}
+
+.hanabi-chat-tab-panel {
+	display: flex;
+	min-height: 0;
+	flex: 1;
+	flex-direction: column;
+}
+
+.hanabi-activity-panel [hidden] {
+	display: none;
+}
+
+.hanabi-chat-transcript {
+	position: relative;
+	padding: 20px 18px 24px;
+}
+
+.hanabi-chat-message-wrap + .hanabi-chat-message-wrap {
+	margin-top: 20px;
+}
+
+.hanabi-chat-message {
+	display: grid;
+	grid-template-columns: 42px minmax(0, 1fr) auto;
+	align-items: start;
+	gap: 4px 12px;
+}
+
+.hanabi-chat-avatar {
+	display: grid;
+	width: 42px;
+	height: 42px;
+	grid-row: 1 / span 2;
+	place-items: center;
+	border: 1px solid rgb(255 255 255 / 24%);
+	border-radius: 999px;
+	box-shadow:
+		inset 0 1px 0 rgb(255 255 255 / 20%),
+		0 6px 16px rgb(0 0 0 / 24%);
+	color: var(--color-hanabi-text);
+	font-size: 17px;
+	font-weight: 600;
+}
+
+.hanabi-chat-author {
+	margin-bottom: 5px;
+	font-size: 17px;
+	font-weight: 650;
+	line-height: 1.15;
+}
+
+.hanabi-chat-bubble {
+	width: fit-content;
+	max-width: 100%;
+	padding: 10px 13px;
+	border: 1px solid rgb(70 94 126 / 68%);
+	border-radius: 7px 14px 14px 14px;
+	background: linear-gradient(145deg, rgb(30 49 75 / 94%), rgb(20 36 59 / 94%));
+	box-shadow:
+		inset 0 1px 0 rgb(255 255 255 / 5%),
+		0 5px 14px rgb(0 0 0 / 16%);
+	color: var(--color-hanabi-text);
+	font-size: 17px;
+	line-height: 1.35;
+	overflow-wrap: anywhere;
+	white-space: pre-wrap;
+}
+
+.hanabi-chat-time {
+	grid-column: 3;
+	grid-row: 1 / span 2;
+	padding-top: 1px;
+	color: var(--color-hanabi-text-muted);
+	font-size: 12px;
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+.hanabi-chat-empty {
+	display: grid;
+	height: 100%;
+	min-height: 190px;
+	place-content: center;
+	justify-items: center;
+	color: var(--color-hanabi-text-muted);
+	text-align: center;
+}
+
+.hanabi-chat-empty svg {
+	margin-bottom: 10px;
+	color: var(--color-hanabi-border-bright);
+}
+
+.hanabi-chat-empty p {
+	color: var(--color-hanabi-text);
+	font-size: 16px;
+	font-weight: 600;
+}
+
+.hanabi-chat-empty span {
+	margin-top: 3px;
+	font-size: 13px;
+}
+
+.hanabi-new-message-button {
+	position: sticky;
+	bottom: 4px;
+	display: block;
+	margin: 16px auto 0;
+	padding: 7px 12px;
+	border: 1px solid rgb(108 152 221 / 60%);
+	border-radius: 999px;
+	background: #173d78;
+	box-shadow: 0 6px 18px rgb(0 0 0 / 36%);
+	color: var(--color-hanabi-text);
+	font-size: 12px;
+	font-weight: 650;
+}
+
+.hanabi-chat-composer {
+	flex: none;
+	padding: 12px;
+	border-top: 1px solid var(--color-hanabi-border);
+	background: rgb(4 14 27 / 58%);
+}
+
+.hanabi-chat-input {
+	position: relative;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 52px;
+	align-items: end;
+	gap: 10px;
+}
+
+.hanabi-chat-field {
+	display: flex;
+	min-height: 52px;
+	align-items: center;
+	border: 1px solid var(--color-hanabi-border-bright);
+	border-radius: 12px;
+	background: rgb(2 12 25 / 82%);
+	box-shadow: inset 0 1px 4px rgb(0 0 0 / 28%);
+	transition:
+		border-color 140ms ease,
+		box-shadow 140ms ease;
+}
+
+.hanabi-chat-field:focus-within {
+	border-color: #5e9dec;
+	box-shadow:
+		inset 0 1px 4px rgb(0 0 0 / 28%),
+		0 0 0 3px rgb(59 130 246 / 18%);
+}
+
+.hanabi-chat-field.has-error {
+	border-color: var(--color-hanabi-coral);
+}
+
+.hanabi-chat-textarea {
+	width: 100%;
+	max-height: 112px;
+	resize: none;
+	border: 0;
+	background: transparent;
+	padding: 13px 15px;
+	color: var(--color-hanabi-text);
+	font: inherit;
+	font-size: 16px;
+	line-height: 22px;
+	outline: none;
+}
+
+.hanabi-chat-textarea::placeholder {
+	color: var(--color-hanabi-text-muted);
+}
+
+.hanabi-chat-send {
+	display: grid;
+	width: 52px;
+	height: 52px;
+	place-items: center;
+	border: 1px solid #6da1ec;
+	border-radius: 12px;
+	background: linear-gradient(145deg, #2b67ca, #1d4da8);
+	box-shadow:
+		inset 0 1px 0 rgb(255 255 255 / 22%),
+		0 7px 18px rgb(2 28 75 / 34%);
+	color: var(--color-hanabi-ivory);
+	transition:
+		transform 100ms ease,
+		filter 120ms ease,
+		opacity 120ms ease;
+}
+
+.hanabi-chat-send:not(:disabled):hover {
+	filter: brightness(1.12);
+}
+
+.hanabi-chat-send:not(:disabled):active {
+	transform: translateY(1px) scale(0.97);
+}
+
+.hanabi-chat-send:disabled {
+	cursor: not-allowed;
+	filter: saturate(0.35);
+	opacity: 0.38;
+}
+
+.hanabi-chat-error {
+	grid-column: 1 / -1;
+	margin: -2px 2px 0;
+	color: var(--color-hanabi-coral-soft);
+	font-size: 12px;
+}
+
+.hanabi-mobile-activity,
+.hanabi-mobile-chat-trigger,
+.hanabi-mobile-sheet,
+.hanabi-mobile-sheet-backdrop {
+	display: none;
+}
+
+.hanabi-desktop-board {
+	grid-template-columns: minmax(460px, 1.12fr) minmax(410px, 0.915fr) minmax(420px, 1fr);
+	grid-template-rows: 86px auto;
+	column-gap: 20px;
+	row-gap: 20px;
+}
+
+.hanabi-status-regions {
+	display: grid;
+	grid-column: 1 / span 2;
+	grid-row: 1;
+	grid-template-columns: minmax(270px, 1fr) 650px;
+	gap: 20px;
+	height: 86px;
+}
+
+.hanabi-turn-banner,
+.hanabi-desktop-status {
+	width: 100%;
+	height: 100%;
+	grid-column: auto;
+	grid-row: auto;
+	justify-self: stretch;
+	margin-left: 0;
+}
+
+@media (width < 1500px) {
+	.hanabi-desktop-board {
+		grid-template-columns: minmax(450px, 1.12fr) minmax(390px, 0.915fr) minmax(400px, 1fr);
+		column-gap: 18px;
+	}
+
+	.hanabi-status-regions {
+		grid-template-columns: minmax(240px, 1fr) minmax(0, 650px);
+		gap: 18px;
+	}
+
+	.hanabi-turn-banner {
+		gap: 12px;
+		padding-inline: 16px;
+	}
+
+	.hanabi-turn-banner > span {
+		width: 30px;
+		height: 30px;
+	}
+
+	.hanabi-turn-label {
+		font-size: 27px;
+	}
+
+	.hanabi-status-item {
+		gap: 5px;
+		padding-inline: 5px;
+	}
+
+	.hanabi-status-item > span {
+		display: flex;
+		transform: scale(0.9);
+	}
+
+	.hanabi-status-label {
+		font-size: 14px;
+	}
+
+	.hanabi-status-value {
+		font-size: 24px;
+	}
+
+	.hanabi-tableau-lane {
+		grid-template-columns: 90px 120px minmax(0, 1fr);
+		gap: 12px;
+		padding-right: 8px;
+	}
+
+	.hanabi-tableau-play-stack {
+		--hanabi-played-tile-overlap: -32.5px;
+	}
+
+	.hanabi-tableau-emblem {
+		width: 90px;
+		padding: 12px;
+	}
+
+	.hanabi-player-workspace {
+		grid-template-columns: 80px minmax(0, 1fr);
+	}
+
+	[data-discard-count='6'] > [role='listitem'] + [role='listitem'] {
+		margin-left: -3px !important;
+	}
+
+	[data-discard-count='7'] > [role='listitem'] + [role='listitem'] {
+		margin-left: -11px !important;
+	}
+
+	[data-discard-count='8'] > [role='listitem'] + [role='listitem'] {
+		margin-left: -17px !important;
+	}
+
+	[data-discard-count='9'] > [role='listitem'] + [role='listitem'] {
+		margin-left: -22px !important;
+	}
+
+	[data-discard-count='10'] > [role='listitem'] + [role='listitem'] {
+		margin-left: -26px !important;
+	}
+
+	.hanabi-activity-tabs {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		padding-inline: 18px;
+	}
+
+	.hanabi-activity-tab {
+		width: auto !important;
+		margin-left: 0 !important;
+		justify-content: center;
+		padding-left: 0 !important;
+	}
+
+	.hanabi-activity-tab-indicator {
+		width: auto;
+	}
+}
+
+@media (width < 1360px) {
+	.hanabi-desktop-board {
+		width: calc(100vw - 28px);
+		grid-template-columns: minmax(415px, 1.12fr) minmax(380px, 0.915fr) minmax(360px, 1fr);
+		column-gap: 16px;
+	}
+
+	.hanabi-status-regions {
+		grid-template-columns: minmax(232px, 1fr) minmax(0, 650px);
+		gap: 16px;
+	}
+
+	.hanabi-turn-label {
+		font-size: 26px;
+	}
+
+	[data-discard-count='6'] > [role='listitem'] + [role='listitem'] {
+		margin-left: -12px !important;
+	}
+
+	[data-discard-count='7'] > [role='listitem'] + [role='listitem'] {
+		margin-left: -19px !important;
+	}
+
+	[data-discard-count='8'] > [role='listitem'] + [role='listitem'] {
+		margin-left: -24px !important;
+	}
+
+	[data-discard-count='9'] > [role='listitem'] + [role='listitem'] {
+		margin-left: -29px !important;
+	}
+
+	[data-discard-count='10'] > [role='listitem'] + [role='listitem'] {
+		margin-left: -33px !important;
+	}
+}
+
+/* One game surface, three deliberate compositions. The modern tree remains mounted
+   across every breakpoint so drag, activity, unread, and tooltip state survive resize. */
+@media (width < 1280px) {
+	.hanabi-game-board-shell {
+		padding-top: 16px;
+	}
+
+	.hanabi-desktop-board {
+		width: calc(100vw - 32px);
+		grid-template-columns: minmax(370px, 0.82fr) minmax(430px, 1.18fr);
+		grid-template-rows: auto auto auto;
+		column-gap: 16px;
+		row-gap: 16px;
+	}
+
+	.hanabi-status-regions {
+		grid-column: 1 / -1;
+		grid-row: 1;
+		grid-template-columns: 240px minmax(0, 1fr);
+		gap: 16px;
+		height: 78px;
+	}
+
+	.hanabi-turn-banner,
+	.hanabi-desktop-status {
+		height: 100%;
+	}
+
+	.hanabi-turn-banner {
+		gap: 13px;
+		padding-inline: 18px;
+	}
+
+	.hanabi-turn-label {
+		font-size: 27px;
+	}
+
+	.hanabi-status-item {
+		gap: 6px;
+		padding-inline: 7px;
+	}
+
+	.hanabi-status-item > span {
+		display: flex;
+		transform: scale(0.84);
+	}
+
+	.hanabi-status-label {
+		font-size: 13px;
+	}
+
+	.hanabi-status-value {
+		font-size: 23px;
+	}
+
+	[data-desktop-region='tableau'] {
+		grid-column: 1;
+		grid-row: 2;
+		margin-top: 0;
+	}
+
+	[data-desktop-region='workspaces'] {
+		grid-column: 2;
+		grid-row: 2;
+	}
+
+	[data-desktop-region='activity'] {
+		grid-column: 1 / -1;
+		grid-row: 3;
+	}
+
+	.hanabi-activity-rail {
+		position: static;
+		height: clamp(520px, calc(100dvh - 96px), 700px);
+		min-height: 0;
+	}
+
+	.hanabi-tableau-lane {
+		grid-template-columns: 90px 112px minmax(0, 1fr);
+		gap: 9px;
+		padding-right: 8px;
+	}
+
+	.hanabi-tableau-play-stack {
+		--hanabi-played-tile-overlap: -34.5px;
+	}
+
+	.hanabi-tableau-emblem {
+		width: 90px;
+		padding: 11px;
+	}
+}
+
+@media (width < 960px) {
+	.hanabi-desktop-board {
+		width: calc(100vw - 28px);
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-rows: auto auto auto auto;
+		row-gap: 14px;
+	}
+
+	.hanabi-status-regions {
+		grid-column: 1;
+		grid-row: 1;
+	}
+
+	[data-desktop-region='tableau'] {
+		grid-column: 1;
+		grid-row: 2;
+	}
+
+	[data-desktop-region='workspaces'] {
+		grid-column: 1;
+		grid-row: 3;
+	}
+
+	[data-desktop-region='activity'] {
+		grid-column: 1;
+		grid-row: 4;
+	}
+
+	.hanabi-tableau-lane {
+		grid-template-columns: 90px 102px minmax(0, 1fr);
+		gap: 12px;
+	}
+
+	.hanabi-tableau-play-stack {
+		--hanabi-played-tile-overlap: -37px;
+	}
+
+	.hanabi-tableau-emblem {
+		width: 90px;
+	}
+}
+
+@media (width < 640px) {
+	.hanabi-game-header-inner {
+		height: 62px;
+		gap: 10px;
+		padding-inline: 10px;
+	}
+
+	.hanabi-game-brand {
+		gap: 5px;
+		min-width: 0;
+	}
+
+	.hanabi-game-brand-mark {
+		width: 36px;
+		height: 36px;
+	}
+
+	.hanabi-game-brand-name {
+		font-size: 24px;
+	}
+
+	.hanabi-game-header-actions {
+		gap: 8px;
+	}
+
+	.hanabi-game-code-label {
+		display: none;
+	}
+
+	.hanabi-game-board-shell {
+		padding-top: 10px;
+	}
+
+	.hanabi-desktop-board {
+		width: calc(100vw - 20px);
+		row-gap: 10px;
+		padding-bottom: 90px;
+	}
+
+	.hanabi-status-regions {
+		grid-template-columns: minmax(0, 1fr);
+		gap: 10px;
+		height: auto;
+	}
+
+	.hanabi-turn-banner {
+		height: 64px;
+		gap: 12px;
+		padding-inline: 16px;
+	}
+
+	.hanabi-turn-banner > span {
+		width: 30px;
+		height: 30px;
+	}
+
+	.hanabi-turn-label {
+		font-size: 25px;
+	}
+
+	.hanabi-desktop-status {
+		height: 112px;
+	}
+
+	.hanabi-desktop-status > dl {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		grid-template-rows: repeat(2, minmax(0, 1fr));
+	}
+
+	.hanabi-status-item {
+		justify-content: flex-start;
+		gap: 6px;
+		padding: 5px 12px;
+	}
+
+	.hanabi-status-item:nth-child(n + 3) {
+		border-top: 1px solid var(--color-hanabi-border);
+	}
+
+	.hanabi-status-item:nth-child(3)::before {
+		display: none;
+	}
+
+	.hanabi-status-item > span {
+		width: 28px;
+		justify-content: center;
+		transform: scale(0.68);
+	}
+
+	.hanabi-status-label {
+		font-size: 11px;
+	}
+
+	.hanabi-status-value {
+		font-size: 20px;
+	}
+
+	.hanabi-desktop-tableau {
+		gap: 7px;
+	}
+
+	.hanabi-tableau-lane {
+		height: 70px;
+		grid-template-columns: 70px 122px minmax(0, 1fr);
+		gap: 6px;
+		padding-right: 6px;
+	}
+
+	.hanabi-tableau-play-stack {
+		--hanabi-played-tile-overlap: -32px;
+	}
+
+	.hanabi-tableau-emblem {
+		width: 70px;
+		padding: 7px;
+	}
+
+	.hanabi-player-workspace {
+		height: 230px !important;
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-rows: 44px minmax(0, 1fr);
+	}
+
+	.hanabi-player-workspace > div:first-child {
+		flex-direction: row;
+		justify-content: flex-start;
+		gap: 8px;
+		border-right: 0;
+		border-bottom: 1px solid var(--color-hanabi-border);
+		padding: 4px 10px;
+		text-align: left;
+	}
+
+	.hanabi-player-workspace > div:first-child > div:first-child {
+		width: 32px;
+		height: 32px;
+		font-size: 14px;
+	}
+
+	.hanabi-player-workspace > div:first-child > p {
+		width: auto;
+		max-width: 45%;
+		font-size: 15px;
+	}
+
+	[data-desktop-region='activity'] {
+		display: none;
+	}
+
+	.hanabi-mobile-activity {
+		display: contents;
+	}
+
+	.hanabi-mobile-chat-trigger {
+		position: fixed;
+		z-index: 50;
+		right: 16px;
+		bottom: calc(16px + env(safe-area-inset-bottom));
+		display: flex;
+		height: 52px;
+		align-items: center;
+		gap: 9px;
+		padding: 0 18px;
+		border: 1px solid #6096e7;
+		border-radius: 999px;
+		background: linear-gradient(145deg, #285eb7, #173f8b);
+		box-shadow:
+			inset 0 1px 0 rgb(255 255 255 / 18%),
+			0 12px 28px rgb(0 0 0 / 42%);
+		color: var(--color-hanabi-text);
+		font-size: 16px;
+		font-weight: 650;
+	}
+
+	@media (width < 420px) {
+		.hanabi-mobile-chat-trigger {
+			right: 12px;
+			width: 52px;
+			justify-content: center;
+			padding: 0;
+		}
+
+		.hanabi-mobile-chat-trigger-label {
+			display: none;
+		}
+
+		.hanabi-mobile-chat-badge {
+			position: absolute;
+			top: -5px;
+			right: -5px;
+		}
+	}
+
+	.hanabi-mobile-chat-badge {
+		display: grid;
+		min-width: 21px;
+		height: 21px;
+		place-items: center;
+		border-radius: 999px;
+		background: var(--color-hanabi-coral);
+		color: #fff;
+		font-size: 11px;
+	}
+
+	.hanabi-mobile-sheet-backdrop {
+		position: fixed;
+		z-index: 70;
+		inset: 0;
+		display: block;
+		border: 0;
+		background: rgb(0 5 14 / 72%);
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 220ms ease;
+	}
+
+	.hanabi-mobile-sheet-backdrop.is-open {
+		opacity: 1;
+		pointer-events: auto;
+	}
+
+	.hanabi-mobile-sheet {
+		position: fixed;
+		z-index: 80;
+		right: 8px;
+		bottom: 0;
+		left: 8px;
+		display: block;
+		height: min(90dvh, 820px);
+		max-height: calc(100dvh - 10px);
+		transform: translateY(calc(100% + 16px));
+		visibility: hidden;
+		transition:
+			transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+			visibility 0s linear 260ms;
+	}
+
+	.hanabi-mobile-sheet.is-open {
+		transform: translateY(0);
+		visibility: visible;
+		transition-delay: 0s;
+	}
+
+	.hanabi-mobile-sheet-panel {
+		height: 100%;
+		border-color: rgb(91 116 150 / 78%);
+		border-bottom: 0;
+		border-radius: 28px 28px 0 0;
+		background:
+			radial-gradient(circle at 82% 18%, rgb(29 67 111 / 28%), transparent 36%),
+			linear-gradient(145deg, #10243e, #08172a 62%);
+		box-shadow:
+			0 -14px 42px rgb(0 0 0 / 46%),
+			inset 0 1px 0 rgb(255 255 255 / 8%);
+	}
+
+	.hanabi-mobile-sheet-close {
+		position: absolute;
+		z-index: 4;
+		top: 26px;
+		right: 18px;
+		display: grid;
+		width: 44px;
+		height: 44px;
+		place-items: center;
+		border: 1px solid rgb(126 145 174 / 72%);
+		border-radius: 999px;
+		background: rgb(8 22 40 / 62%);
+		color: var(--color-hanabi-text);
+	}
+
+	.hanabi-mobile-activity-tabs {
+		height: 88px;
+		grid-template-columns: repeat(2, max-content);
+		justify-content: start;
+		gap: 30px;
+		padding: 18px 78px 0 24px;
+	}
+
+	.hanabi-mobile-activity-tabs .hanabi-activity-tab {
+		height: 69px;
+		justify-content: flex-start;
+		font-size: 22px;
+	}
+
+	.hanabi-mobile-activity-tabs .hanabi-activity-tab-indicator {
+		right: 0;
+		left: 0;
+		width: auto;
+	}
+
+	.hanabi-mobile-sheet .hanabi-chat-transcript {
+		padding: 20px 16px 26px;
+	}
+
+	.hanabi-mobile-sheet .hanabi-chat-message {
+		grid-template-columns: 46px minmax(0, 1fr) auto;
+		gap: 4px 11px;
+	}
+
+	.hanabi-mobile-sheet .hanabi-chat-avatar {
+		width: 46px;
+		height: 46px;
+	}
+
+	.hanabi-mobile-sheet .hanabi-chat-bubble {
+		padding: 11px 14px;
+		font-size: 17px;
+	}
+
+	.hanabi-mobile-sheet .hanabi-chat-composer {
+		padding: 12px 14px calc(12px + env(safe-area-inset-bottom));
+		background: rgb(5 16 31 / 94%);
+		box-shadow: 0 -10px 26px rgb(0 0 0 / 14%);
+	}
+
+	.hanabi-mobile-sheet .hanabi-chat-field,
+	.hanabi-mobile-sheet .hanabi-chat-send {
+		min-height: 52px;
+		height: 52px;
+	}
+
+	.hanabi-mobile-sheet .hanabi-chat-send {
+		border-radius: 999px;
+		background: radial-gradient(circle at 35% 28%, #477fdf, #2055b7 62%, #143b86);
+		box-shadow:
+			inset 0 1px 0 rgb(255 255 255 / 28%),
+			0 7px 20px rgb(1 25 72 / 46%);
+	}
+}
+
+@media (width < 640px) and (prefers-reduced-motion: reduce) {
+	.hanabi-mobile-sheet,
+	.hanabi-mobile-sheet-backdrop {
+		transition-duration: 0.01ms;
+	}
+}
+
+@media (width < 400px) {
+	.hanabi-game-brand-name {
+		font-size: 22px;
+	}
+
+	.hanabi-game-header-actions button:first-child {
+		gap: 7px;
+	}
+
+	.hanabi-game-header-actions button:first-child > span:nth-child(2) {
+		font-size: 15px;
+	}
+}
+
+.hanabi-tile-face {
+	--hanabi-card-frame: #e8dcc2;
+	--hanabi-card-hairline: rgb(39 34 27 / 34%);
+
+	isolation: isolate;
+	overflow: hidden;
+	background-color: #f0eadf;
+	background-image: var(--hanabi-tile-face-art);
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: 100% 100%;
+	border: 1px solid var(--hanabi-card-frame);
+	box-shadow:
+		0 3px 8px rgb(0 0 0 / 24%),
+		inset 0 0 0 1px var(--hanabi-card-hairline),
+		inset 0 1px 0 rgb(255 255 255 / 18%);
+}
+
+.hanabi-tile-back {
+	background-color: #09243e;
+	background-image:
+		radial-gradient(circle at 42% 32%, rgb(63 91 110 / 20%), transparent 62%),
+		linear-gradient(145deg, #102f49 0%, #092238 58%, #061625 100%);
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size:
+		100% 100%,
+		100% 100%;
+	border: 1px solid #d9cfba;
+	box-shadow:
+		0 2px 5px rgb(0 0 0 / 20%),
+		inset 0 0 0 1px rgb(2 11 22 / 86%),
+		inset 0 0 0 2px rgb(151 169 182 / 28%),
+		inset 0 1px 0 rgb(255 255 255 / 18%);
+}
+
+.hanabi-tile-back::before {
+	position: absolute;
+	inset: 4px 3px;
+	border: 1px solid rgb(124 148 166 / 34%);
+	border-radius: 4px;
+	background:
+		radial-gradient(
+				circle at left top,
+				transparent 0 2px,
+				rgb(176 191 201 / 34%) 2.2px 2.8px,
+				transparent 3px 4px,
+				rgb(176 191 201 / 28%) 4.2px 4.8px,
+				transparent 5px
+			)
+			left 1px top 1px / 7px 7px no-repeat,
+		radial-gradient(
+				circle at right top,
+				transparent 0 2px,
+				rgb(176 191 201 / 34%) 2.2px 2.8px,
+				transparent 3px 4px,
+				rgb(176 191 201 / 28%) 4.2px 4.8px,
+				transparent 5px
+			)
+			right 1px top 1px / 7px 7px no-repeat,
+		radial-gradient(
+				circle at left bottom,
+				transparent 0 2px,
+				rgb(176 191 201 / 34%) 2.2px 2.8px,
+				transparent 3px 4px,
+				rgb(176 191 201 / 28%) 4.2px 4.8px,
+				transparent 5px
+			)
+			left 1px bottom 1px / 7px 7px no-repeat,
+		radial-gradient(
+				circle at right bottom,
+				transparent 0 2px,
+				rgb(176 191 201 / 34%) 2.2px 2.8px,
+				transparent 3px 4px,
+				rgb(176 191 201 / 28%) 4.2px 4.8px,
+				transparent 5px
+			)
+			right 1px bottom 1px / 7px 7px no-repeat;
+	content: '';
+	pointer-events: none;
+}
+
+.hanabi-tile-back::after {
+	position: absolute;
+	inset: 0;
+	background: #7c8995;
+	content: '';
+	mask-image: var(--hanabi-tile-back-art);
+	mask-position: center;
+	mask-repeat: no-repeat;
+	mask-size: 62% auto;
+	opacity: 0.88;
+	pointer-events: none;
+	-webkit-mask-image: var(--hanabi-tile-back-art);
+	-webkit-mask-position: center;
+	-webkit-mask-repeat: no-repeat;
+	-webkit-mask-size: 62% auto;
+}
+
+.hanabi-tile-number {
+	position: absolute;
+	top: 4%;
+	left: 50%;
+	font-family: Georgia, 'Times New Roman', serif;
+	font-size: var(--hanabi-tile-number-size);
+	font-weight: 700;
+	line-height: 1;
+	color: var(--hanabi-tile-number-color, #fff9eb) !important;
+	text-shadow: 0 1px 1px rgb(1 9 19 / 34%);
+	transform: translateX(-50%);
+}
+
+.hanabi-player-tile .hanabi-tile-back,
+.hanabi-player-tile .hanabi-tile-face {
+	height: var(--hanabi-player-tile-height) !important;
+	width: var(--hanabi-player-tile-width) !important;
+	border-radius: 8px;
+	box-shadow:
+		0 2px 5px rgb(0 0 0 / 20%),
+		inset 0 0 0 1px var(--hanabi-card-hairline, rgb(2 11 22 / 86%)),
+		inset 0 1px 0 rgb(255 255 255 / 18%);
+}
+
+.hanabi-player-tile > * {
+	height: var(--hanabi-player-tile-height) !important;
+	width: var(--hanabi-player-tile-width) !important;
+}
+
+.hanabi-player-tile-emphasis {
+	height: var(--hanabi-player-tile-height) !important;
+	width: var(--hanabi-player-tile-width) !important;
+}
+
+[data-hanabi-tile-color='white'] {
+	--hanabi-tile-number-color: #2d3440;
+}
+
+[data-hanabi-tile-color='rainbow'] .hanabi-tile-number {
+	background: none;
+	color: #fffaf0 !important;
+	-webkit-text-fill-color: #fffaf0;
 }
 
 .hanabi-focus-ring:focus-visible {
@@ -123,59 +1760,31 @@
 
 /* Rainbow gradient for hanabi tiles */
 .bg-rainbow {
-	background: linear-gradient(
-		135deg,
-		#f87171 0%,
-		#fbbf24 20%,
-		#34d399 40%,
-		#60a5fa 60%,
-		#a78bfa 80%,
-		#f87171 100%
-	);
+	background: var(--hanabi-tile-ink-rainbow);
 }
 
 .text-rainbow {
-	background: linear-gradient(
-		135deg,
-		#f87171 0%,
-		#fbbf24 20%,
-		#34d399 40%,
-		#60a5fa 60%,
-		#a78bfa 80%,
-		#f87171 100%
-	);
+	background: var(--hanabi-tile-ink-rainbow);
 	-webkit-background-clip: text;
 	background-clip: text;
 	-webkit-text-fill-color: transparent;
 }
 
-/* Black Powder tiles use a light ash face so visible tiles never read as hidden. */
+/* Black Powder keeps a metallic charcoal face, distinct from the navy concealed back. */
 .bg-black-powder {
-	background: linear-gradient(145deg, #f8fafc 0%, #cbd5e1 56%, #94a3b8 100%);
+	background: #171a21;
 }
 
 .text-black-powder {
-	color: #020617;
+	color: #fff9eb;
 }
 
 .hanabi-tile-black {
-	background: linear-gradient(145deg, #f8fafc 0%, #cbd5e1 56%, #94a3b8 100%);
-	box-shadow:
-		inset 0 0 0 1px rgb(2 6 23 / 75%),
-		inset 0 0 8px rgb(15 23 42 / 20%);
-}
-
-.hanabi-tile-black::before {
-	content: '';
-	position: absolute;
-	inset: 3px;
-	border: 1px solid rgb(2 6 23 / 25%);
-	border-radius: 0.35rem;
+	background-color: #171a21;
 }
 
 .hanabi-tile-black-number {
-	color: #020617;
-	text-shadow: 0 1px 0 rgb(255 255 255 / 70%);
+	color: #fff9eb !important;
 }
 
 /* Empty firework positions are regular tiles shown as faint guides. */

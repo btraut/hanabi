@@ -2,6 +2,7 @@ import {
 	getNewPositionsForTiles,
 	addToTileNotes,
 	getHanabiCompletionTileCount,
+	canHanabiPlayerDiscard,
 	getHanabiFireworkSequence,
 	generateHanabiGameData,
 	generatePlayer,
@@ -264,7 +265,13 @@ export default class HanabiGame extends Game {
 	}
 
 	private _appendActions(...actions: HanabiGameAction[]): void {
-		this._gameData.actions = [...this._gameData.actions, ...actions].slice(-HANABI_MAX_ACTIONS);
+		const timestampedActions = actions.map((action) => ({
+			...action,
+			createdAt: action.createdAt ?? new Date().toISOString(),
+		}));
+		this._gameData.actions = [...this._gameData.actions, ...timestampedActions].slice(
+			-HANABI_MAX_ACTIONS,
+		);
 	}
 
 	private _handleMessage = ({
@@ -904,7 +911,6 @@ export default class HanabiGame extends Game {
 			respond({ error: gameActionError });
 			return;
 		}
-
 		const tile = this._gameData.tiles[message.data.id];
 
 		if (!tile || !this._gameData.playerTiles[userId].includes(tile.id)) {
@@ -1003,6 +1009,10 @@ export default class HanabiGame extends Game {
 		const gameActionError = this._validateGameAction(userId);
 		if (gameActionError) {
 			respond({ error: gameActionError });
+			return;
+		}
+		if (!canHanabiPlayerDiscard(this._gameData.clues)) {
+			respond({ error: 'Cannot discard when all clues are available.' });
 			return;
 		}
 

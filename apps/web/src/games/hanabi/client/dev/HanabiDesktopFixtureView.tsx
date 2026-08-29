@@ -1,92 +1,149 @@
 import HanabiDesktopBoard from '~/games/hanabi/client/HanabiDesktopBoard';
 import HanabiActivityRail from '~/games/hanabi/client/HanabiActivityRail';
+import { HANABI_BRAND_MARK_PATH } from '~/games/hanabi/client/HanabiArtwork';
+import PaperPlane from '~/games/hanabi/client/icons/PaperPlane';
 import HanabiDesktopTableau from '~/games/hanabi/client/HanabiDesktopTableau';
+import { HanabiHighlightContextProvider } from '~/games/hanabi/client/HanabiHighlightContext';
 import { HanabiDesktopPlayerWorkspaces } from '~/games/hanabi/client/HanabiPlayerWorkspace';
 import HanabiTileView from '~/games/hanabi/client/HanabiTileView';
+import {
+	HANABI_DESKTOP_SURFACE_HEIGHT,
+	HANABI_DESKTOP_TILE_SIZE,
+	HANABI_DESKTOP_ZONE_HEIGHT,
+	getHanabiDesktopTileStyle,
+} from '~/games/hanabi/client/HanabiDesktopTileGeometry';
 import {
 	getHanabiDesktopFixtures,
 	HanabiDesktopFixtureName,
 } from '~/games/hanabi/client/dev/HanabiDesktopFixtures';
 import Error404Page from '~/pages/Error404Page';
-import { HANABI_BOARD_SIZE, HANABI_WORKSPACE_ZONE_BOUNDARY } from '@hanabi/shared';
-import { Link, useParams } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { useParams } from 'react-router-dom';
 
 export default function HanabiDesktopFixtureView(): JSX.Element {
 	const { fixture: fixtureName } = useParams();
 	const fixtures = getHanabiDesktopFixtures();
 	const fixture = fixtures[fixtureName as HanabiDesktopFixtureName];
+	const [highlightedAction, highlightAction] = useState<string | null>(null);
+	const highlightContext = useMemo(
+		() => ({
+			highlightAction,
+			highlightedAction,
+			highlightedLabel: null,
+			highlightedRecipientId: null,
+			highlightedTiles: new Set<string>(),
+			highlightedTone: null,
+		}),
+		[highlightedAction],
+	);
 
 	if (!fixture) return <Error404Page />;
 
 	return (
-		<div className="hanabi-game-surface min-h-screen py-5">
-			<header className="mx-auto mb-4 flex w-[calc(100vw-32px)] max-w-[1240px] items-start justify-between gap-4">
-				<div>
-					<p className="text-xs font-semibold uppercase tracking-[0.18em] text-hanabi-coral-soft">
-						Development fixture
-					</p>
-					<h1 className="text-lg font-semibold text-hanabi-text">{fixture.name}</h1>
-					<p className="text-sm text-hanabi-text-muted">{fixture.description}</p>
-				</div>
-				<nav aria-label="Desktop fixtures" className="flex max-w-xl flex-wrap justify-end gap-1.5">
-					{Object.values(fixtures).map((item) => (
-						<Link
-							className="hanabi-focus-ring rounded-md border border-hanabi-border px-2 py-1 text-xs text-hanabi-text-muted hover:border-hanabi-border-bright hover:text-hanabi-text"
-							key={item.name}
-							to={`/dev/desktop/${item.name}`}
-						>
-							{item.name}
-						</Link>
-					))}
-				</nav>
-			</header>
-			<HanabiDesktopBoard
-				activity={
-					<HanabiActivityRail
-						composer={<div className="p-3 text-xs text-hanabi-text-muted">Message composer</div>}
-						gameData={fixture.gameData}
-						renderAction={(action) => <p className="p-3 text-sm text-hanabi-text">{action.type}</p>}
-						userId={fixture.userId}
-					/>
-				}
-				gameData={fixture.gameData}
-				playerWorkspaces={
-					<HanabiDesktopPlayerWorkspaces
-						gameData={fixture.gameData}
-						renderTileSurface={(playerId) => (
-							<div className="relative overflow-hidden bg-hanabi-ivory" style={HANABI_BOARD_SIZE}>
-								<div
-									aria-hidden="true"
-									className="absolute inset-x-0 bottom-0 border-t border-hanabi-border/35 bg-hanabi-ink/8"
-									style={{ height: HANABI_BOARD_SIZE.height - HANABI_WORKSPACE_ZONE_BOUNDARY }}
-								/>
-								{fixture.gameData.playerTiles[playerId].map((tileId) => {
-									const position = fixture.gameData.tilePositions[tileId];
-									const tile = fixture.gameData.tiles[tileId];
-									return (
-										<div
-											className="absolute left-0 top-0"
-											key={tileId}
-											style={{
-												transform: `translate(${position.x}px, ${position.y}px)`,
-												zIndex: position.z,
-											}}
-										>
-											<HanabiTileView
-												color={fixture.userId === playerId ? undefined : tile.color}
-												number={fixture.userId === playerId ? undefined : tile.number}
-											/>
-										</div>
-									);
-								})}
+		<HanabiHighlightContextProvider value={highlightContext}>
+			<div className="hanabi-game-surface min-h-screen">
+				<header className="h-[70px] border-b border-hanabi-border bg-hanabi-table-deep/70">
+					<div className="mx-auto flex h-full max-w-[1660px] items-center justify-between px-5">
+						<div className="flex items-center gap-2.5">
+							<img alt="" className="size-12" src={HANABI_BRAND_MARK_PATH} />
+							<span className="text-[32px] font-medium tracking-[-0.025em] text-hanabi-text">
+								Hanabi
+							</span>
+						</div>
+						<div className="flex items-center gap-5">
+							<div className="flex items-center gap-3 text-sm">
+								<span className="text-hanabi-coral-soft">Game code</span>
+								<span className="font-mono text-lg tracking-[0.08em] text-hanabi-text">
+									{fixture.code}
+								</span>
+								<span aria-hidden="true" className="relative block h-6 w-5">
+									<span className="absolute left-0 top-0 size-4 rounded-sm border border-hanabi-text" />
+									<span className="absolute bottom-0 right-0 size-4 rounded-sm border border-hanabi-text bg-hanabi-table-deep" />
+								</span>
 							</div>
-						)}
+							<div
+								aria-hidden="true"
+								className="grid h-12 w-14 content-center justify-center gap-1.5 rounded-lg border border-hanabi-border"
+							>
+								<span className="block h-px w-5 bg-hanabi-text" />
+								<span className="block h-px w-5 bg-hanabi-text" />
+								<span className="block h-px w-5 bg-hanabi-text" />
+							</div>
+						</div>
+					</div>
+				</header>
+				<div className="pt-5">
+					<HanabiDesktopBoard
+						activity={
+							<HanabiActivityRail
+								composer={
+									<div className="hanabi-chat-input">
+										<div className="hanabi-chat-field">
+											<div className="hanabi-chat-textarea text-hanabi-text-muted">
+												Message the table…
+											</div>
+										</div>
+										<div className="hanabi-chat-send opacity-40">
+											<PaperPlane size={23} />
+										</div>
+									</div>
+								}
+								gameData={fixture.gameData}
+								historyIncludesLatest={fixture.name === 'standard'}
+								latestActionId={fixture.name === 'standard' ? 'action-clue-blue' : undefined}
+								userId={fixture.userId}
+							/>
+						}
+						gameData={fixture.gameData}
+						playerWorkspaces={
+							<HanabiDesktopPlayerWorkspaces
+								gameData={fixture.gameData}
+								renderTileSurface={(playerId) => (
+									<div
+										className="relative overflow-visible bg-hanabi-table/25"
+										style={{ height: HANABI_DESKTOP_SURFACE_HEIGHT, width: '100%' }}
+									>
+										<div
+											aria-hidden="true"
+											className="absolute inset-x-0 bottom-0 border-t border-hanabi-border bg-hanabi-table-deep/18"
+											style={{ bottom: 0, top: HANABI_DESKTOP_ZONE_HEIGHT }}
+										/>
+										{fixture.gameData.playerTiles[playerId].map((tileId) => {
+											const position = fixture.gameData.tilePositions[tileId];
+											const tile = fixture.gameData.tiles[tileId];
+											return (
+												<div
+													className="absolute left-0 top-0"
+													key={tileId}
+													style={{
+														...getHanabiDesktopTileStyle({
+															hidden: fixture.userId === playerId,
+															position,
+															tileCount: fixture.gameData.playerTiles[playerId].length,
+														}),
+														zIndex: position.z,
+													}}
+												>
+													<div className="hanabi-player-tile">
+														<HanabiTileView
+															color={fixture.userId === playerId ? undefined : tile.color}
+															dimensions={HANABI_DESKTOP_TILE_SIZE}
+															number={fixture.userId === playerId ? undefined : tile.number}
+														/>
+													</div>
+												</div>
+											);
+										})}
+									</div>
+								)}
+								userId={fixture.userId}
+							/>
+						}
+						tableau={<HanabiDesktopTableau gameData={fixture.gameData} />}
 						userId={fixture.userId}
 					/>
-				}
-				tableau={<HanabiDesktopTableau gameData={fixture.gameData} />}
-				userId={fixture.userId}
-			/>
-		</div>
+				</div>
+			</div>
+		</HanabiHighlightContextProvider>
 	);
 }

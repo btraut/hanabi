@@ -6,7 +6,6 @@ import {
 	HanabiGameActionDiscard,
 	HanabiGameActionGiveClue,
 	HanabiGameActionPlay,
-	HanabiGameActionType,
 } from '@hanabi/shared';
 import useFocusVisible from '~/utils/client/useFocusVisible';
 import classNames from 'classnames';
@@ -29,21 +28,8 @@ export default function HanabiTileAction({ action }: Props): JSX.Element {
 	const handleClick = () => {
 		if (thisActionHighlighted) {
 			highlightContext.highlightAction(null);
-			highlightContext.highlightTiles(new Set());
 		} else {
 			highlightContext.highlightAction(action.id);
-
-			if (
-				action.type === HanabiGameActionType.Play ||
-				action.type === HanabiGameActionType.Discard
-			) {
-				highlightContext.highlightTiles(new Set([action.tile.id]));
-			} else if (
-				action.type === HanabiGameActionType.GiveColorClue ||
-				action.type === HanabiGameActionType.GiveNumberClue
-			) {
-				highlightContext.highlightTiles(new Set(action.tiles.map((a) => a.id)));
-			}
 		}
 	};
 

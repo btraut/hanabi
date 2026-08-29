@@ -1,5 +1,10 @@
-export type HanabiBoardLayout = 'desktop' | 'legacy';
+export type HanabiBoardLayout = 'desktop' | 'mobile' | 'tablet';
 
-export function getHanabiBoardLayout(breakpoints: { xl: boolean }): HanabiBoardLayout {
-	return breakpoints.xl ? 'desktop' : 'legacy';
+export function getHanabiBoardLayout(breakpoints: {
+	md: boolean;
+	xl: boolean;
+}): HanabiBoardLayout {
+	if (breakpoints.xl) return 'desktop';
+	if (breakpoints.md) return 'tablet';
+	return 'mobile';
 }

@@ -10,6 +10,7 @@
 		"lint": "eslint \"src/**/*.{ts,tsx}\""
 	},
 	"dependencies": {
+		"@fontsource/barlow-condensed": "^5.3.0",
 		"@hanabi/shared": "workspace:*",
 		"boring-avatars": "^2.0.4",
 		"classnames": "^2.5.1",
@@ -27,6 +28,7 @@
 		"@types/react": "^19.2.17",
 		"@types/react-dom": "^19.2.3",
 		"@vitejs/plugin-react": "^6.0.3",
+		"happy-dom": "^20.11.6",
 		"tailwindcss": "^4.3.3",
 		"vite": "^8.1.5"
 	}

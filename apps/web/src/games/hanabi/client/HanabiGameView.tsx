@@ -61,7 +61,7 @@ export default function HanabiGameView(): JSX.Element | null {
 							ref={connectDropTarget}
 						>
 							<HanabiHeader variant="game" />
-							<div className="pt-4">
+							<div className="hanabi-game-board-shell pt-5">
 								<HanabiBoard />
 							</div>
 							<div id="portal" />

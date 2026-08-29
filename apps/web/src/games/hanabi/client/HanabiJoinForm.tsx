@@ -68,7 +68,7 @@ export default function HanabiJoinForm(): JSX.Element {
 					/>
 				</div>
 				<div className="flex justify-center">
-					<HanabiMenuButton label="Join" ref={joinButtonRef} />
+					<HanabiMenuButton label="Join" ref={joinButtonRef} type="submit" variant="primary" />
 				</div>
 			</form>
 		</>

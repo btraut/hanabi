@@ -15,22 +15,25 @@ export default function HanabiHeader({ variant = 'default' }: Props): JSX.Elemen
 
 	if (variant === 'game') {
 		return (
-			<header className="border-b border-hanabi-border bg-hanabi-table-deep/90 backdrop-blur">
-				<div className="mx-auto flex min-h-14 max-w-[1240px] items-center justify-between gap-6 px-5">
-					<a className="hanabi-focus-ring group flex items-center gap-3 rounded-md" href="/">
+			<header className="hanabi-game-header border-b border-hanabi-border bg-hanabi-table-deep/90 backdrop-blur">
+				<div className="hanabi-game-header-inner mx-auto flex h-[70px] max-w-[1660px] items-center justify-between gap-6 px-5">
+					<a
+						className="hanabi-game-brand hanabi-focus-ring group flex items-center gap-2 rounded-md"
+						href="/"
+					>
 						<img
 							alt=""
 							aria-hidden="true"
-							className="size-8 drop-shadow-[0_0_9px_rgb(255_114_95_/_28%)]"
+							className="hanabi-game-brand-mark size-12 drop-shadow-[0_0_9px_rgb(255_114_95_/_28%)]"
 							src={HANABI_BRAND_MARK_PATH}
 						/>
-						<span className="text-xl font-semibold tracking-tight text-hanabi-text transition-colors group-hover:text-hanabi-coral-soft">
+						<span className="hanabi-game-brand-name text-[32px] font-medium tracking-[-0.025em] text-hanabi-text transition-colors group-hover:text-hanabi-coral-soft">
 							Hanabi
 						</span>
 					</a>
-					<div className="flex items-center gap-3">
-						{code && <HanabiCopyLinkButton compact label="Game" link={code} />}
-						<HanabiHeaderMenuButton />
+					<div className="hanabi-game-header-actions flex min-w-0 items-center gap-3">
+						{code && <HanabiCopyLinkButton compact label="Game code" link={code} />}
+						<HanabiHeaderMenuButton variant="game" />
 					</div>
 				</div>
 			</header>

@@ -84,9 +84,10 @@ export default function HanabiLobby(): JSX.Element {
 						<div className="grid grid-flow-col gap-x-4 justify-center">
 							<HanabiMenuButton label="Leave" onClick={handleLeaveClick} />
 							<HanabiMenuButton
-								label="Start Game"
+								label="Start game"
 								onClick={handleStartClick}
 								disabled={!enoughPlayers}
+								variant="primary"
 							/>
 						</div>
 					</>

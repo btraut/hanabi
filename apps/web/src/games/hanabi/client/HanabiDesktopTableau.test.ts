@@ -13,20 +13,39 @@ function tile(id: string, color: HanabiTileColor, number: 1 | 2 | 3 | 4 | 5): Ha
 }
 
 describe('HanabiDesktopTableau', () => {
-	it('renders one current tile per lane without a progress ladder', () => {
+	it('renders every played tile as an ordered, persistent firework stack', () => {
 		const tiles = {
 			r1: tile('r1', 'red', 1),
 			r2: tile('r2', 'red', 2),
 			r3: tile('r3', 'red', 3),
 		};
 		const gameData = generateHanabiGameData({ playedTiles: ['r3', 'r1', 'r2'], tiles });
-		const markup = renderToStaticMarkup(createElement(HanabiDesktopTableau, { gameData }));
+		const markup = renderToStaticMarkup(
+			createElement(HanabiDesktopTableau, { gameData, transitioningTileId: 'r3' }),
+		);
 
 		expect(getHanabiPlayedTopTile(gameData, 'red')).toEqual(tiles.r3);
 		expect(markup.match(/data-tableau-color=/g)).toHaveLength(5);
 		expect(markup).toContain('red firework at 3');
-		expect(markup).not.toContain('red firework at 1');
-		expect(markup.match(/hanabi-firework-placeholder/g)).toHaveLength(4);
+		expect(markup).toContain('data-played-count="3"');
+		expect(markup).toContain('data-played-number="1"');
+		expect(markup).toContain('data-played-number="2"');
+		expect(markup).toContain('data-played-number="3"');
+		expect(markup.indexOf('data-played-number="1"')).toBeLessThan(
+			markup.indexOf('data-played-number="2"'),
+		);
+		expect(markup.indexOf('data-played-number="2"')).toBeLessThan(
+			markup.indexOf('data-played-number="3"'),
+		);
+		expect(markup).toContain('view-transition-name:hanabi-tile-r3');
+		expect(markup).not.toContain('hanabi-firework-placeholder');
+		expect(markup).not.toContain('ring-1 ring-current/25');
+		expect(markup).not.toContain('border-r border-current/15');
+		expect(markup).not.toContain('border-l-[3px]');
+		expect(markup).not.toContain('shadow-light');
+		expect(markup).toContain('height:64px;width:50px');
+		expect(markup).toContain('grid-cols-[90px_132px_minmax(0,1fr)]');
+		expect(markup).toContain('hanabi-tableau-emblem h-full w-[90px] object-contain');
 	});
 
 	it('uses firework sequence order for black-powder top tiles', () => {
@@ -40,8 +59,16 @@ describe('HanabiDesktopTableau', () => {
 			ruleSet: 'black-powder',
 			tiles,
 		});
+		const markup = renderToStaticMarkup(createElement(HanabiDesktopTableau, { gameData }));
 
 		expect(getHanabiPlayedTopTile(gameData, 'black')).toEqual(tiles.b3);
+		expect(markup).toContain('data-played-count="3"');
+		expect(markup.indexOf('data-played-number="5"')).toBeLessThan(
+			markup.indexOf('data-played-number="4"'),
+		);
+		expect(markup.indexOf('data-played-number="4"')).toBeLessThan(
+			markup.indexOf('data-played-number="3"'),
+		);
 	});
 
 	it('preserves every same-color discard in global chronology, including duplicates', () => {
@@ -78,7 +105,7 @@ describe('HanabiDesktopTableau', () => {
 		);
 
 		expect(markup).toContain('data-discard-count="10"');
-		expect(markup).toContain('data-discard-gap="-8"');
+		expect(markup).toContain('data-discard-gap="-17"');
 		expect(markup).toContain('view-transition-name:hanabi-tile-red-9');
 		expect(markup.match(/role="listitem"/g)).toHaveLength(10);
 	});

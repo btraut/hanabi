@@ -202,6 +202,12 @@ export async function reportRuntimeFailure(manifest, message, shutdown, write = 
 	}
 }
 
+export async function startServicesSequentially(startServer, startWeb) {
+	const server = await startServer();
+	const web = await startWeb();
+	return { server, web };
+}
+
 export async function start() {
 	const worktreeRoot = await realpath(repoRoot);
 	const runId = randomUUID();
@@ -277,21 +283,24 @@ export async function start() {
 			);
 		};
 
-		server = spawn('pnpm', ['--dir', 'apps/server', 'dev'], spawnOptions);
-		monitorChild(server, 'server', reportChildFailure);
-		web = spawn('pnpm', ['--dir', 'apps/web', 'dev'], spawnOptions);
-		monitorChild(web, 'web', reportChildFailure);
-		manifest.services.server.pid = server.pid ?? null;
-		manifest.services.web.pid = web.pid ?? null;
-		await writeManifest(manifest);
+		const startService = async (name, directory, readinessUrl) => {
+			const child = spawn('pnpm', ['--dir', directory, 'dev'], spawnOptions);
+			if (name === 'server') server = child;
+			else web = child;
+			monitorChild(child, name, reportChildFailure);
+			manifest.services[name].pid = child.pid ?? null;
+			await writeManifest(manifest);
+			await waitForUrl(readinessUrl, 60_000, readinessAbortController.signal);
+			manifest.services[name].ready = true;
+			await writeManifest(manifest);
+			return child;
+		};
 
-		await Promise.all([
-			waitForUrl(`${urls.server}/api/readyz`, 60_000, readinessAbortController.signal),
-			waitForUrl(urls.web, 60_000, readinessAbortController.signal),
-		]);
+		await startServicesSequentially(
+			() => startService('server', 'apps/server', `${urls.server}/api/readyz`),
+			() => startService('web', 'apps/web', urls.web),
+		);
 		manifest.status = 'ready';
-		manifest.services.server.ready = true;
-		manifest.services.web.ready = true;
 		await writeManifest(manifest);
 		console.log(`Hanabi web: ${urls.web}`);
 		console.log(`Hanabi server: ${urls.server}`);

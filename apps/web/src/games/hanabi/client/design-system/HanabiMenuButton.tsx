@@ -1,33 +1,27 @@
-import useFocusVisible from '~/utils/client/useFocusVisible';
 import classNames from 'classnames';
-import { ForwardedRef, forwardRef, SyntheticEvent } from 'react';
+import { ButtonHTMLAttributes, ForwardedRef, forwardRef } from 'react';
 
-interface Props {
-	onClick?: (event: SyntheticEvent) => void;
+interface Props extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'> {
 	label: string;
-	disabled?: boolean;
+	variant?: 'danger' | 'primary' | 'secondary';
+	wide?: boolean;
 }
 
 function HanabiMenuButton(
-	{ onClick, label, disabled = false }: Props,
+	{ className, label, type = 'button', variant = 'secondary', wide = false, ...buttonProps }: Props,
 	ref: ForwardedRef<HTMLButtonElement>,
 ): JSX.Element {
-	const isFocusVisible = useFocusVisible();
-
 	return (
 		<button
 			className={classNames(
-				'block px-5 py-3 bg-gray-800 text-center uppercase font-bold rounded-xl border-4 duration-100 focus:outline-none select-none',
-				disabled
-					? 'border-gray-500 cursor-default text-gray-500'
-					: 'border-white cursor-pointer text-white hover:bg-red-600 active:scale-95',
-				{
-					'focus:border-red-600': isFocusVisible,
-				},
+				'hanabi-button',
+				`hanabi-button-${variant}`,
+				{ 'hanabi-button-wide': wide },
+				className,
 			)}
-			onClick={onClick}
-			disabled={disabled}
 			ref={ref}
+			type={type}
+			{...buttonProps}
 		>
 			{label}
 		</button>

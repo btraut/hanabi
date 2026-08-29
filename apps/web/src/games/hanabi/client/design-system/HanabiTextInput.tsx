@@ -1,25 +1,20 @@
-import { ChangeEventHandler, ForwardedRef, forwardRef } from 'react';
+import classNames from 'classnames';
+import { ForwardedRef, forwardRef, InputHTMLAttributes } from 'react';
 
-interface Props {
-	id?: string;
-	value?: string;
-	onChange?: ChangeEventHandler<HTMLInputElement>;
-}
+type Props = Omit<InputHTMLAttributes<HTMLInputElement>, 'type'>;
 
 function HanabiTextInput(
-	{ onChange, value, id }: Props,
+	{ className, ...inputProps }: Props,
 	ref: ForwardedRef<HTMLInputElement>,
 ): JSX.Element {
 	return (
 		<input
-			className="block px-3 py-2 bg-gray-900 border-4 border-white text-white w-full font-bold text-2xl focus:outline-none focus:border-red-600"
-			id={id}
-			type="text"
-			autoCorrect="off"
 			autoCapitalize="none"
-			onChange={onChange}
-			value={value}
+			autoCorrect="off"
+			className={classNames('hanabi-field px-3.5 py-2', className)}
 			ref={ref}
+			type="text"
+			{...inputProps}
 		/>
 	);
 }

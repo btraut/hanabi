@@ -70,7 +70,7 @@ describe('Hanabi workspace drag and drop', () => {
 		});
 		expect(getPositionInContainer({ x: 10, y: 10, z: 4 }, { x: 1000, y: 1000 })).toEqual({
 			x: 360,
-			y: 92,
+			y: 88.8,
 			z: 4,
 		});
 	});

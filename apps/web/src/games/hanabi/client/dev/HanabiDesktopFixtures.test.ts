@@ -9,6 +9,7 @@ describe('Hanabi desktop fixtures', () => {
 		expect(Object.keys(fixtures)).toEqual([
 			'standard',
 			'maximum',
+			'six-color',
 			'workspace',
 			'activity',
 			'spectator',
@@ -27,6 +28,16 @@ describe('Hanabi desktop fixtures', () => {
 			];
 			for (const tileId of referencedTileIds) expect(data.tiles[tileId]).toBeDefined();
 		}
+	});
+
+	it('renders purple cards in the six-color fixture', () => {
+		const sixColor = getHanabiDesktopFixtures()['six-color'].gameData;
+		const renderedTileIds = [
+			...sixColor.playedTiles,
+			...Object.values(sixColor.playerTiles).flat(),
+		];
+
+		expect(renderedTileIds.some((tileId) => sixColor.tiles[tileId].color === 'purple')).toBe(true);
 	});
 
 	it('models the maximum width and height constraints', () => {

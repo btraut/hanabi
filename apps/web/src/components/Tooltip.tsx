@@ -19,6 +19,8 @@ export default function Tooltip({
 	fadeIn = false,
 }: Props): JSX.Element {
 	const tooltipRef = useRef<HTMLDivElement | null>(null);
+	const viewportWidth = typeof window === 'undefined' ? Number.POSITIVE_INFINITY : window.innerWidth;
+	const constrainedLeft = Math.min(Math.max(left, 130), Math.max(130, viewportWidth - 130));
 
 	const handleBodyClick = useCallback(
 		(event: MouseEvent) => {
@@ -54,14 +56,17 @@ export default function Tooltip({
 			ref={tooltipRef}
 			style={{
 				top,
-				left,
+				left: constrainedLeft,
 			}}
-			className={classNames('absolute transform transition-all', {
+			className={classNames(
+				'absolute z-[100] max-w-[calc(100vw-24px)] transform transition-all',
+				{
 				'-translate-y-full -translate-x-1/2': position === 'above',
 				'-translate-x-1/2': position === 'below',
 				'opacity-0': !visible,
 				'opacity-100': visible,
-			})}
+				},
+			)}
 		>
 			{children}
 		</div>

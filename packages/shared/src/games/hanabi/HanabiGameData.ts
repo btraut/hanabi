@@ -10,6 +10,10 @@ export const HANABI_MAX_LIVES = 3;
 export const HANABI_MAX_CHAT_LENGTH = 500;
 export const HANABI_MAX_ACTIONS = 1000;
 
+export function canHanabiPlayerDiscard(clues: number): boolean {
+	return clues < HANABI_MAX_CLUES;
+}
+
 export interface Size {
 	width: number;
 	height: number;
@@ -30,8 +34,8 @@ export const HANABI_TILES_IN_HAND: { [numPlayers: number]: number } = {
 };
 
 export const HANABI_BOARD_SIZE: Size = { width: 400, height: 140 };
-export const HANABI_TILE_SIZE: Size = { width: 40, height: 48 };
-export const HANABI_TILE_SIZE_SMALL: Size = { width: 30, height: 36 };
+export const HANABI_TILE_SIZE: Size = { width: 40, height: 51.2 };
+export const HANABI_TILE_SIZE_SMALL: Size = { width: 30, height: 38.4 };
 export const HANABI_DEFAULT_TILE_PADDING = 10;
 export const HANABI_WORKSPACE_ZONE_BOUNDARY = HANABI_BOARD_SIZE.height / 2;
 export const HANABI_DEFAULT_TILE_POSITIONS: { [tileNumber: number]: Position } = [
@@ -216,6 +220,7 @@ export enum HanabiGameActionType {
 }
 
 export interface HanabiGameActionBase<Type> {
+	createdAt?: string;
 	id: string;
 	type: Type;
 }

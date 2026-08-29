@@ -3,6 +3,7 @@ import useTileDrag from '~/games/hanabi/client/useTileDrag';
 import { HANABI_TILE_SIZE, HANABI_TILE_SIZE_SMALL, HanabiTile } from '@hanabi/shared';
 import useFocusVisible from '~/utils/client/useFocusVisible';
 import classNames from 'classnames';
+import { HanabiTileHighlightTone } from '~/games/hanabi/client/HanabiHighlightContext';
 import { useCallback } from 'react';
 
 export enum TileViewSize {
@@ -20,12 +21,16 @@ interface Props {
 
 	// Control tile size including overall size and font size.
 	size?: TileViewSize;
+	dimensions?: { height: number; width: number };
 
 	// Can the user drag this tile?
 	draggable?: boolean;
+	dragHighlight?: boolean;
+	responsiveDragSurface?: boolean;
 
 	// Optionally show dashed highlight lines around the edges.
 	highlight?: boolean;
+	highlightTone?: HanabiTileHighlightTone;
 
 	// Optionally show a little tick mark meaning there has been a clue given
 	// for this tile. This only shows for hidden tiles.
@@ -37,15 +42,13 @@ interface Props {
 	onMouseOut?: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
 	onMouseDown?: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
 
-	// Optionally show a 1px border on this tile.
-	border?: boolean;
-
 	// Give this rendered tile a stable identity across an action state update.
 	viewTransitionName?: string;
 }
 
 export default function HanabiInteractiveTileView({
 	tile,
+	dimensions,
 	hidden = false,
 	ariaLabel,
 	size = TileViewSize.Regular,
@@ -54,16 +57,25 @@ export default function HanabiInteractiveTileView({
 	onMouseOut,
 	onMouseDown,
 	draggable = false,
+	dragHighlight,
+	responsiveDragSurface = false,
 	highlight = false,
+	highlightTone = 'action',
 	notesIndicator = false,
-	border = true,
 	viewTransitionName,
 }: Props): JSX.Element | null {
 	const isFocusVisible = useFocusVisible();
 
 	const cursor = draggable ? 'cursor-move' : onClick ? 'cursor-pointer' : 'cursor-default';
 
-	const { isDragging, dragRef } = useTileDrag(tile.id, highlight, notesIndicator, draggable);
+	const { isDragging, dragRef } = useTileDrag(
+		tile.id,
+		dragHighlight ?? highlight,
+		highlightTone,
+		notesIndicator,
+		draggable,
+		responsiveDragSurface,
+	);
 	const connectDragSource = useCallback(
 		(element: HTMLElement | null) => {
 			dragRef(element);
@@ -110,7 +122,9 @@ export default function HanabiInteractiveTileView({
 	return (
 		<Comp
 			ref={connectDragSource}
-			style={size === TileViewSize.Regular ? HANABI_TILE_SIZE : HANABI_TILE_SIZE_SMALL}
+			style={
+				dimensions ?? (size === TileViewSize.Regular ? HANABI_TILE_SIZE : HANABI_TILE_SIZE_SMALL)
+			}
 			className={classNames([
 				'rounded-lg focus:outline-none',
 				cursor,
@@ -124,13 +138,14 @@ export default function HanabiInteractiveTileView({
 			onMouseOver={onMouseOver ? handleMouseOver : undefined}
 			onMouseOut={onMouseOut ? handleMouseOut : undefined}
 			onMouseDown={onMouseDown ? handleMouseDown : undefined}
-			aria-label={onClick ? ariaLabel : undefined}
+			aria-label={ariaLabel ? `${ariaLabel}${notesIndicator ? ', has notes' : ''}` : undefined}
 		>
 			<HanabiTileView
 				color={hidden ? undefined : tile.color}
+				dimensions={dimensions}
 				number={hidden ? undefined : tile.number}
-				border={border}
 				highlight={highlight}
+				highlightTone={highlightTone}
 				notesIndicator={hidden && notesIndicator}
 				size={size}
 				viewTransitionName={viewTransitionName}

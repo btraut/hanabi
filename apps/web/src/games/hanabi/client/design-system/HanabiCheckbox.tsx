@@ -1,6 +1,4 @@
-import useFocusVisible from '~/utils/client/useFocusVisible';
-import classNames from 'classnames';
-import { ChangeEventHandler, ForwardedRef, forwardRef, useState } from 'react';
+import { ChangeEventHandler, ForwardedRef, forwardRef, useId } from 'react';
 
 interface Props {
 	id?: string;
@@ -12,32 +10,21 @@ function HanabiCheckbox(
 	{ id, onChange, checked }: Props,
 	ref: ForwardedRef<HTMLInputElement>,
 ): JSX.Element {
-	const isFocusVisible = useFocusVisible();
-
-	const [finalId] = useState(() => id ?? `checkbox-${crypto.randomUUID()}`);
+	const generatedId = useId();
+	const finalId = id ?? `checkbox-${generatedId}`;
 
 	return (
-		<div className="relative h-8">
-			{checked && (
-				<div className="absolute inset-0 grid justify-center items-center text-white pointer-events-none text-xl font-bold h-8">
-					✓
-				</div>
-			)}
+		<span className="hanabi-checkbox-wrap">
 			<input
-				id={finalId}
-				type="checkbox"
 				checked={checked}
+				className="hanabi-checkbox"
+				id={finalId}
 				onChange={onChange}
 				ref={ref}
-				className={classNames(
-					'appearance-none bg-gray-800 border-4 duration-100 w-8 h-8',
-					'border-white hover:bg-red-600 active:scale-95 rounded-md cursor-pointer',
-					{
-						'focus:border-red-600': isFocusVisible,
-					},
-				)}
+				type="checkbox"
 			/>
-		</div>
+			{checked && <span aria-hidden="true" className="hanabi-checkbox-check" />}
+		</span>
 	);
 }
 

@@ -1,15 +1,22 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { getHanabiTileDragPreview } from './HanabiPlayerTilesDragLayer';
+import { getHanabiTileDragPreviewStyle } from './HanabiPlayerTilesDragLayer';
 
 describe('HanabiPlayerTilesDragLayer', () => {
-	it('snaps the ordered preview while leaving the freeform ghost clamped in place', () => {
-		expect(getHanabiTileDragPreview({ x: 42, y: 69, z: 3 })).toEqual({
-			position: { x: 60, y: 10, z: 3 },
-			zone: 'ordered',
+	it('uses the source client offset without board clamping', () => {
+		expect(getHanabiTileDragPreviewStyle({ x: 512, y: 714 })).toMatchObject({
+			position: 'fixed',
+			transform: 'translate3d(512px, 714px, 0)',
 		});
-		expect(getHanabiTileDragPreview({ x: 42, y: 70, z: 3 })).toEqual({
-			position: { x: 42, y: 70, z: 3 },
-			zone: 'freeform',
-		});
+	});
+
+	it('does not paint drop-zone outlines while dragging', () => {
+		const source = readFileSync(
+			new URL('./HanabiPlayerTilesDragLayer.tsx', import.meta.url),
+			'utf8',
+		);
+
+		expect(source).not.toContain('border-hanabi-coral');
+		expect(source).not.toContain('bg-hanabi-coral/10');
 	});
 });

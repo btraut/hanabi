@@ -1,10 +1,12 @@
 import HanabiDesktopStatus from '~/games/hanabi/client/HanabiDesktopStatus';
+import { HanabiBoardLayout } from '~/games/hanabi/client/HanabiBoardLayout';
 import { getHanabiRuleSetColors, HanabiGameData } from '@hanabi/shared';
 import { ReactNode } from 'react';
 
 interface Props {
 	activity?: ReactNode;
 	gameData: HanabiGameData;
+	layout?: HanabiBoardLayout;
 	playerWorkspaces?: ReactNode;
 	tableau?: ReactNode;
 	userId: string;
@@ -13,30 +15,27 @@ interface Props {
 export default function HanabiDesktopBoard({
 	activity,
 	gameData,
+	layout = 'desktop',
 	playerWorkspaces,
 	tableau,
 	userId,
 }: Props): JSX.Element {
 	return (
-		<main className="mx-auto grid w-[calc(100vw-32px)] max-w-[1240px] gap-4 pb-10">
+		<main
+			className="hanabi-desktop-board mx-auto grid w-[calc(100vw-42px)] max-w-[1660px] items-start pb-5"
+			data-hanabi-layout={layout}
+		>
 			<HanabiDesktopStatus gameData={gameData} userId={userId} />
-			<div
-				className="grid min-w-0 items-start gap-4"
-				style={{
-					gridTemplateColumns: 'minmax(268px, 0.92fr) minmax(500px, 1.45fr) minmax(270px, 0.95fr)',
-				}}
-			>
-				<div className="min-w-0" data-desktop-region="tableau">
-					{tableau ?? (
-						<TableauGeometryProbe lanes={getHanabiRuleSetColors(gameData.ruleSet).length} />
-					)}
-				</div>
-				<div className="min-w-0" data-desktop-region="workspaces">
-					{playerWorkspaces ?? <WorkspaceGeometryProbe players={gameData.turnOrder.length} />}
-				</div>
-				<div className="min-w-0" data-desktop-region="activity">
-					{activity ?? <ActivityGeometryProbe actions={gameData.actions.length} />}
-				</div>
+			<div className="col-start-1 row-start-2 min-w-0" data-desktop-region="tableau">
+				{tableau ?? (
+					<TableauGeometryProbe lanes={getHanabiRuleSetColors(gameData.ruleSet).length} />
+				)}
+			</div>
+			<div className="col-start-2 row-start-2 min-w-0" data-desktop-region="workspaces">
+				{playerWorkspaces ?? <WorkspaceGeometryProbe players={gameData.turnOrder.length} />}
+			</div>
+			<div className="col-start-3 row-span-2 row-start-1 min-w-0" data-desktop-region="activity">
+				{activity ?? <ActivityGeometryProbe actions={gameData.actions.length} />}
 			</div>
 		</main>
 	);

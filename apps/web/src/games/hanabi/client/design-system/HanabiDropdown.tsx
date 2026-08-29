@@ -1,6 +1,4 @@
-import useFocusVisible from '~/utils/client/useFocusVisible';
-import classNames from 'classnames';
-import { ChangeEventHandler, ForwardedRef, forwardRef, useState } from 'react';
+import { ChangeEventHandler, ForwardedRef, forwardRef, useId } from 'react';
 
 interface Props {
 	id?: string;
@@ -13,26 +11,18 @@ function HanabiDropdown(
 	{ id, onChange, options, value }: Props,
 	ref: ForwardedRef<HTMLSelectElement>,
 ): JSX.Element {
-	const isFocusVisible = useFocusVisible();
-
-	const [finalId] = useState(() => id ?? `dropdown-${crypto.randomUUID()}`);
+	const generatedId = useId();
+	const finalId = id ?? `dropdown-${generatedId}`;
 
 	return (
 		<div className="grid justify-start">
-			<div className="inline-block relative">
+			<div className="hanabi-select-wrap">
 				<select
+					className="hanabi-field hanabi-select"
 					id={finalId}
 					onChange={onChange}
 					ref={ref}
 					value={value}
-					className={classNames(
-						'appearance-none focus:outline-none bg-transparent text-white text-center font-bold cursor-pointer',
-						'py-2 pl-3 pr-10 bg-gray-800 border-4 duration-100',
-						'border-white hover:bg-red-600 active:scale-95 rounded-xl cursor-pointer',
-						{
-							'focus:border-red-600': isFocusVisible,
-						},
-					)}
 				>
 					{Object.keys(options).map((label) => (
 						<option key={options[label]} value={options[label]}>
@@ -40,18 +30,7 @@ function HanabiDropdown(
 						</option>
 					))}
 				</select>
-				<div className="absolute right-4 top-0 bottom-0 pointer-events-none flex items-center">
-					<div
-						style={{
-							borderLeftColor: 'transparent',
-							borderRightColor: 'transparent',
-							borderTopWidth: 6,
-							borderLeftWidth: 6,
-							borderRightWidth: 6,
-						}}
-						className="white"
-					/>
-				</div>
+				<span aria-hidden="true" className="hanabi-select-chevron" />
 			</div>
 		</div>
 	);

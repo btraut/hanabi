@@ -1,5 +1,7 @@
 import {
+	getHanabiPlayerAccent,
 	getHanabiPlayerDisplayOrder,
+	HANABI_PLAYER_ACCENTS,
 	HanabiDesktopPlayerWorkspaces,
 } from '~/games/hanabi/client/HanabiPlayerWorkspace';
 import { getHanabiPlayerTilePermissions } from '~/games/hanabi/client/HanabiPlayerTiles';
@@ -24,6 +26,14 @@ describe('HanabiPlayerWorkspace', () => {
 		expect(getHanabiPlayerDisplayOrder(['alice', 'ben'], 'spectator')).toEqual(['alice', 'ben']);
 	});
 
+	it('uses the same local-first identity colors everywhere', () => {
+		const turnOrder = ['alice', 'ben', 'chika'];
+
+		expect(getHanabiPlayerAccent(turnOrder, 'ben', 'ben')).toBe(HANABI_PLAYER_ACCENTS[0]);
+		expect(getHanabiPlayerAccent(turnOrder, 'ben', 'chika')).toBe(HANABI_PLAYER_ACCENTS[1]);
+		expect(getHanabiPlayerAccent(turnOrder, 'ben', 'alice')).toBe(HANABI_PLAYER_ACCENTS[2]);
+	});
+
 	it('marks only the active in-progress player and preserves offline/local identity', () => {
 		const gameData = generateHanabiGameData({
 			currentPlayerId: 'chika',
@@ -43,6 +53,9 @@ describe('HanabiPlayerWorkspace', () => {
 		expect(markup).toContain('aria-label="Chika, playing"');
 		expect(markup).toContain('aria-label="Ben, you"');
 		expect(markup).toContain('Offline');
+		expect(markup).toContain('grid-cols-[80px_minmax(0,1fr)]');
+		expect(markup).not.toContain('uppercase');
+		expect(markup).not.toContain('tracking-[0.12em]');
 		expect(markup.indexOf('data-surface="ben"')).toBeLessThan(
 			markup.indexOf('data-surface="chika"'),
 		);
@@ -84,6 +97,25 @@ describe('HanabiPlayerWorkspace', () => {
 
 		expect(markup).not.toContain('Auto');
 		expect(markup).not.toContain('Freeform');
+	});
+
+	it('uses one workspace height for every player', () => {
+		const gameData = generateHanabiGameData({
+			players,
+			stage: HanabiStage.Playing,
+			turnOrder: ['alice', 'ben', 'chika'],
+		});
+		const markup = renderToStaticMarkup(
+			createElement(HanabiDesktopPlayerWorkspaces, {
+				gameData,
+				renderTileSurface: () => createElement('div'),
+				userId: 'alice',
+			}),
+		);
+
+		expect(markup.match(/h-\[186px\]/g)).toHaveLength(3);
+		expect(markup).not.toContain('h-[154px]');
+		expect(markup).not.toContain('h-[174px]');
 	});
 
 	it('preserves concealment, action, and drag permissions', () => {

@@ -29,10 +29,12 @@ describe('HanabiPlayedTiles', () => {
 			code: 'test',
 		};
 		const highlightContext: HanabiHighlightContext = {
-			highlightTiles: vi.fn(),
 			highlightedTiles: new Set([playedTile.id]),
 			highlightAction: vi.fn(),
 			highlightedAction: null,
+			highlightedLabel: null,
+			highlightedRecipientId: null,
+			highlightedTone: 'action',
 		};
 
 		const markup = renderToStaticMarkup(
@@ -49,7 +51,7 @@ describe('HanabiPlayedTiles', () => {
 
 		expect(markup.match(/hanabi-firework-placeholder/g)).toHaveLength(25);
 		expect(markup).toContain('view-transition-name:hanabi-tile-played-1');
-		expect(markup).not.toContain('marquee-highlight');
+		expect(markup).not.toContain('hanabi-tile-emphasis');
 		expect(markup).not.toContain('cursor-');
 	});
 });

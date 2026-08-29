@@ -1,5 +1,6 @@
 import {
 	generateHanabiGameData,
+	getHanabiRuleSetColors,
 	HanabiFinishedReason,
 	HanabiGameAction,
 	HanabiGameActionType,
@@ -14,7 +15,14 @@ import {
 } from '@hanabi/shared';
 
 export type HanabiDesktopFixtureName =
-	'standard' | 'maximum' | 'workspace' | 'activity' | 'spectator' | 'disconnected' | 'finished';
+	| 'standard'
+	| 'maximum'
+	| 'six-color'
+	| 'workspace'
+	| 'activity'
+	| 'spectator'
+	| 'disconnected'
+	| 'finished';
 
 export interface HanabiDesktopFixture {
 	code: string;
@@ -24,7 +32,51 @@ export interface HanabiDesktopFixture {
 	userId: string;
 }
 
-const PLAYER_NAMES = ['Alice', 'Ben', 'Chika', 'Diego', 'Emi'];
+const PLAYER_NAMES = ['You', 'Alice', 'Miguel', 'Priya', 'Emi'];
+type TargetHandTile = readonly [HanabiTileColor, HanabiTileNumber, Position];
+
+const TARGET_HANDS: readonly (readonly TargetHandTile[])[] = [
+	[
+		['blue', 1, { x: 72, y: 10, z: 0 }],
+		['green', 2, { x: 142, y: 10, z: 0 }],
+		['yellow', 3, { x: 212, y: 10, z: 0 }],
+		['white', 4, { x: 282, y: 10, z: 0 }],
+		['red', 5, { x: 122, y: 79, z: 1 }],
+		['blue', 2, { x: 202, y: 79, z: 2 }],
+	],
+	[
+		['red', 2, { x: 68, y: 10, z: 0 }],
+		['blue', 4, { x: 142, y: 10, z: 0 }],
+		['green', 1, { x: 212, y: 10, z: 0 }],
+		['yellow', 5, { x: 282, y: 10, z: 0 }],
+		['white', 3, { x: 161, y: 94, z: 1 }],
+	],
+	[
+		['yellow', 1, { x: 74, y: 10, z: 0 }],
+		['white', 1, { x: 154, y: 10, z: 0 }],
+		['blue', 3, { x: 89, y: 97, z: 1 }],
+		['green', 2, { x: 180, y: 97, z: 2 }],
+		['red', 5, { x: 267, y: 97, z: 3 }],
+	],
+	[
+		['green', 5, { x: 65, y: 10, z: 0 }],
+		['red', 1, { x: 142, y: 10, z: 0 }],
+		['yellow', 2, { x: 217, y: 10, z: 0 }],
+		['white', 4, { x: 121, y: 97, z: 1 }],
+		['blue', 1, { x: 235, y: 97, z: 2 }],
+	],
+];
+
+const TARGET_DISCARDS: Readonly<Record<HanabiTileColor, readonly HanabiTileNumber[]>> = {
+	red: [1, 4, 2, 1, 3, 4],
+	blue: [1, 3, 1, 4, 2, 5, 3],
+	green: [1, 3, 2, 5, 1],
+	yellow: [4, 1, 2, 4, 3, 5],
+	white: [1, 3, 1, 4, 2],
+	purple: [],
+	rainbow: [],
+	black: [],
+};
 
 function makePlayers(count: number): {
 	players: Record<string, HanabiPlayer>;
@@ -60,6 +112,7 @@ function makeFixtureData({
 	ruleSet: HanabiRuleSet;
 	withMaximumDiscards?: boolean;
 }): HanabiGameData {
+	const targetFixture = !withMaximumDiscards && playerCount === 4 && ruleSet === '5-color';
 	const { players, turnOrder } = makePlayers(playerCount);
 	const tiles: Record<string, HanabiTile> = {};
 	const tilePositions: Record<string, Position> = {};
@@ -68,21 +121,31 @@ function makeFixtureData({
 
 	turnOrder.forEach((playerId, playerIndex) => {
 		playerTiles[playerId] = [];
-		for (let tileIndex = 0; tileIndex < (playerCount < 4 ? 5 : 4); tileIndex += 1) {
-			const colors: HanabiTileColor[] = ['red', 'blue', 'green', 'yellow', 'white'];
+		const targetHand = targetFixture ? TARGET_HANDS[playerIndex] : undefined;
+		const handSize = targetHand?.length ?? (playerCount < 4 ? 5 : 4);
+		for (let tileIndex = 0; tileIndex < handSize; tileIndex += 1) {
+			const colors = getHanabiRuleSetColors(ruleSet);
+			const targetTile = targetHand?.[tileIndex];
 			const tileId = makeTile(
 				tiles,
-				colors[(playerIndex + tileIndex) % colors.length],
-				(((tileIndex + playerIndex) % 5) + 1) as HanabiTileNumber,
+				targetTile?.[0] ?? colors[(playerIndex + tileIndex) % colors.length],
+				targetTile?.[1] ?? ((((tileIndex + playerIndex) % 5) + 1) as HanabiTileNumber),
 				`hand-${playerIndex}-${tileIndex}`,
 			);
 			playerTiles[playerId].push(tileId);
-			const freeform = tileIndex >= 2 && playerIndex % 2 === 0;
-			tilePositions[tileId] = {
-				x: 10 + tileIndex * 50 + (freeform ? playerIndex * 4 : 0),
-				y: freeform ? 78 + (tileIndex % 2) * 10 : 10,
-				z: freeform ? tileIndex : 0,
-			};
+			if (targetTile) {
+				tilePositions[tileId] = targetTile[2];
+			} else {
+				const freeformStart = playerIndex % 2 === 0 ? 2 : 3;
+				const freeform = tileIndex >= freeformStart;
+				tilePositions[tileId] = {
+					x: freeform
+						? 50 + (tileIndex - freeformStart) * 86 + playerIndex * 5
+						: 55 + tileIndex * 76,
+					y: freeform ? 82 + ((tileIndex + playerIndex) % 2) * 6 : 10,
+					z: freeform ? tileIndex : 0,
+				};
+			}
 			(tileNotes as Record<string, { colors: []; numbers: [] }>)[tileId] = {
 				colors: [],
 				numbers: [],
@@ -91,47 +154,127 @@ function makeFixtureData({
 	});
 
 	const playedTiles: string[] = [];
-	const playedColors: HanabiTileColor[] =
-		ruleSet === 'rainbow-black-powder'
-			? ['blue', 'green', 'yellow', 'white', 'rainbow', 'black']
-			: ['red', 'blue', 'green', 'yellow', 'white'];
+	const playedColors = getHanabiRuleSetColors(ruleSet);
+	const playedNumbers: HanabiTileNumber[] = [3, 2, 4, 3, 2, 1, 5];
 	playedColors.forEach((color, index) => {
-		playedTiles.push(
-			makeTile(
-				tiles,
-				color,
-				color === 'black' ? 5 : (((index % 3) + 1) as HanabiTileNumber),
-				`played-${index}`,
-			),
-		);
+		const topNumber = color === 'black' ? 5 : playedNumbers[index];
+		const sequence: HanabiTileNumber[] =
+			color === 'black'
+				? [5]
+				: Array.from(
+						{ length: topNumber },
+						(_, numberIndex) => (numberIndex + 1) as HanabiTileNumber,
+					);
+		for (const number of sequence) {
+			playedTiles.push(makeTile(tiles, color, number, `played-${index}-${number}`));
+		}
 	});
 
 	const discardedTiles: string[] = [];
-	const discardCount = withMaximumDiscards ? 10 : 6;
-	for (let index = 0; index < discardCount; index += 1) {
-		discardedTiles.push(
-			makeTile(tiles, 'red', (((index + 2) % 5) + 1) as HanabiTileNumber, `discard-${index}`),
-		);
+	if (withMaximumDiscards) {
+		for (let index = 0; index < 10; index += 1) {
+			discardedTiles.push(
+				makeTile(tiles, 'red', (((index + 2) % 5) + 1) as HanabiTileNumber, `discard-${index}`),
+			);
+		}
+	} else {
+		for (const [color, numbers] of Object.entries(TARGET_DISCARDS) as [
+			HanabiTileColor,
+			readonly HanabiTileNumber[],
+		][]) {
+			for (let index = 0; index < numbers.length; index += 1) {
+				discardedTiles.push(makeTile(tiles, color, numbers[index], `discard-${color}-${index}`));
+			}
+		}
 	}
 
-	const remainingTiles = Array.from({ length: withMaximumDiscards ? 3 : 21 }, (_, index) =>
+	const remainingTiles = Array.from({ length: withMaximumDiscards ? 3 : 23 }, (_, index) =>
 		makeTile(tiles, 'blue', ((index % 5) + 1) as HanabiTileNumber, `deck-${index}`),
 	);
-	const actions: HanabiGameAction[] = [
-		{ id: 'action-start', startingPlayerId: turnOrder[0], type: HanabiGameActionType.GameStarted },
-		{
-			id: 'action-chat-1',
-			message: 'Watch the yellow twos.',
-			playerId: turnOrder[1],
-			type: HanabiGameActionType.Chat,
-		},
-		{
-			id: 'action-discard-1',
-			playerId: turnOrder[0],
-			tile: tiles[discardedTiles[0]],
-			type: HanabiGameActionType.Discard,
-		},
-	];
+	const secondHand = playerTiles[turnOrder[1]];
+	const thirdHand = playerTiles[turnOrder[2]];
+	const fourthHand = playerTiles[turnOrder[3]];
+	const playedActionId =
+		playedTiles.find((tileId) => tiles[tileId].color === 'red' && tiles[tileId].number === 3) ??
+		playedTiles[0];
+	const actions: HanabiGameAction[] = targetFixture
+		? [
+				{
+					id: 'action-chat-1',
+					message: 'Watch the yellow twos.',
+					playerId: turnOrder[2],
+					type: HanabiGameActionType.Chat,
+				},
+				{
+					id: 'action-chat-2',
+					message: 'The blue clue is safe.',
+					playerId: turnOrder[3],
+					type: HanabiGameActionType.Chat,
+				},
+				{
+					id: 'action-discard-blue',
+					playerId: turnOrder[2],
+					tile: { color: 'blue', id: 'history-blue-5', number: 5 },
+					type: HanabiGameActionType.Discard,
+				},
+				{
+					id: 'action-clue-white',
+					playerId: turnOrder[1],
+					recipientId: turnOrder[3],
+					tiles: [tiles[fourthHand[3]]],
+					color: 'white',
+					type: HanabiGameActionType.GiveColorClue,
+				},
+				{
+					id: 'action-discard-yellow',
+					playerId: turnOrder[0],
+					tile: { color: 'yellow', id: 'history-yellow-2', number: 2 },
+					type: HanabiGameActionType.Discard,
+				},
+				{
+					id: 'action-clue-green',
+					playerId: turnOrder[3],
+					recipientId: turnOrder[2],
+					tiles: [tiles[thirdHand[3]], tiles[thirdHand[4]]],
+					color: 'green',
+					type: HanabiGameActionType.GiveColorClue,
+				},
+				{
+					id: 'action-clue-blue',
+					playerId: turnOrder[2],
+					recipientId: turnOrder[1],
+					tiles: secondHand.slice(0, 4).map((tileId) => tiles[tileId]),
+					color: 'blue',
+					type: HanabiGameActionType.GiveColorClue,
+				},
+				{
+					id: 'action-play-red',
+					playerId: turnOrder[1],
+					remainingLives: 2,
+					tile: tiles[playedActionId],
+					type: HanabiGameActionType.Play,
+					valid: true,
+				},
+			]
+		: [
+				{
+					id: 'action-start',
+					startingPlayerId: turnOrder[0],
+					type: HanabiGameActionType.GameStarted,
+				},
+				{
+					id: 'action-clue-latest',
+					playerId: turnOrder[2],
+					recipientId: turnOrder[1],
+					tiles: secondHand.map((tileId) => tiles[tileId]),
+					color: 'blue',
+					type: HanabiGameActionType.GiveColorClue,
+				},
+			];
+	const actionMinutesAgo = targetFixture ? [12, 11, 10, 8, 6, 4, 2, 1] : [12, 1];
+	actions.forEach((action, index) => {
+		action.createdAt = new Date(Date.now() - actionMinutesAgo[index] * 60_000).toISOString();
+	});
 
 	return generateHanabiGameData({
 		actions,
@@ -139,7 +282,7 @@ function makeFixtureData({
 		creatorId: turnOrder[0],
 		currentPlayerId: turnOrder[1],
 		discardedTiles,
-		lives: withMaximumDiscards ? 1 : 3,
+		lives: withMaximumDiscards ? 1 : 2,
 		playedTiles,
 		playerTiles,
 		players,
@@ -156,6 +299,7 @@ function makeFixtureData({
 
 export function getHanabiDesktopFixtures(): Record<HanabiDesktopFixtureName, HanabiDesktopFixture> {
 	const standard = makeFixtureData({ playerCount: 4, ruleSet: '5-color' });
+	const sixColor = makeFixtureData({ playerCount: 4, ruleSet: '6-color' });
 	const maximum = makeFixtureData({
 		playerCount: 5,
 		ruleSet: 'rainbow-black-powder',
@@ -166,7 +310,7 @@ export function getHanabiDesktopFixtures(): Record<HanabiDesktopFixtureName, Han
 
 	return {
 		standard: {
-			code: 'NIGHT5',
+			code: 'X7K2',
 			description: 'Four players, standard rules, representative live game.',
 			gameData: standard,
 			name: 'standard',
@@ -177,6 +321,13 @@ export function getHanabiDesktopFixtures(): Record<HanabiDesktopFixtureName, Han
 			description: 'Five players, seven colors, ten same-color discards, and a short deck.',
 			gameData: maximum,
 			name: 'maximum',
+			userId: 'player-1',
+		},
+		'six-color': {
+			code: 'VIOLET',
+			description: 'Six-color game proving purple cards and tableau treatment at production scale.',
+			gameData: sixColor,
+			name: 'six-color',
 			userId: 'player-1',
 		},
 		workspace: {

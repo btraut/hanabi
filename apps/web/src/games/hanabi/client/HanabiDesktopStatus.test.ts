@@ -31,6 +31,13 @@ describe('HanabiDesktopStatus', () => {
 		expect(markup).toContain('Score');
 		expect(markup).toContain('0/25');
 		expect(markup).toContain('Deck');
+		expect(markup).toContain('data-status-icon="deck"');
+		expect(markup).toContain('data-status-icon="clues"');
+		expect(markup).toContain('data-status-icon="lives"');
+		expect(markup).toContain('tile-back-firework-v5.png');
+		expect(markup).toContain('class="hanabi-status-regions"');
+		expect(markup).not.toContain('h-[78px] w-[270px]');
+		expect(markup).not.toContain('h-[86px] w-[650px]');
 		expect(markup.match(/>0</g)?.length).toBeGreaterThanOrEqual(3);
 	});
 
@@ -44,7 +51,7 @@ describe('HanabiDesktopStatus', () => {
 		});
 
 		expect(getHanabiDesktopStatusData(gameData, 'alice').turnLabel).toBe(
-			'Ben’s turn · disconnected · 1 turn left',
+			"Ben's turn · disconnected · 1 turn left",
 		);
 	});
 

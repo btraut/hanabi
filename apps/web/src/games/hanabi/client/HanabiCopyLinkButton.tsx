@@ -1,4 +1,3 @@
-import classNames from 'classnames';
 import { useEffect, useRef, useState } from 'react';
 
 interface Props {
@@ -54,42 +53,46 @@ export default function HanabiCopyLinkButton({ compact = false, label, link }: P
 		[],
 	);
 
-	return (
-		<div className="grid justify-center">
+	if (compact) {
+		return (
 			<button
-				className={classNames(
-					'group grid grid-flow-col items-center overflow-hidden font-bold transition-all focus:outline-none',
-					{
-						'hanabi-focus-ring rounded-md border border-hanabi-border bg-hanabi-surface text-xs':
-							compact,
-						'max-w-screen-md rounded-lg text-lg': !compact,
-					},
-				)}
+				aria-label={`Copy game code ${link}`}
+				className="hanabi-focus-ring group flex items-center gap-3 rounded-md text-sm focus:outline-none"
 				onClick={() => void handleLinkClick()}
 				ref={copyButtonRef}
 				type="button"
 			>
-				<div
-					className={classNames('flex self-stretch items-center text-center transition-all', {
-						'gap-1.5 px-3 text-hanabi-text-muted group-hover:text-hanabi-text': compact,
-						'bg-gray-300 px-5 text-red-600 group-hover:text-red-600 group-focus:bg-white': !compact,
-					})}
-				>
+				{label && <span className="hanabi-game-code-label text-hanabi-coral-soft">{label}</span>}
+				<span className="font-mono text-lg font-medium tracking-[0.08em] text-hanabi-text">
+					{link}
+				</span>
+				<span aria-hidden="true" className="relative block h-6 w-5 text-hanabi-text">
+					<span className="absolute left-0 top-0 size-4 rounded-sm border border-current" />
+					<span className="absolute bottom-0 right-0 size-4 rounded-sm border border-current bg-hanabi-table-deep" />
+				</span>
+				<span aria-live="polite" className="sr-only">
+					{showCopiedButton ? 'Copied!' : ''}
+				</span>
+			</button>
+		);
+	}
+
+	return (
+		<div className="grid justify-center">
+			<button
+				aria-label={`Copy game link ${link}`}
+				className="hanabi-copy-control hanabi-focus-ring group"
+				onClick={() => void handleLinkClick()}
+				ref={copyButtonRef}
+				type="button"
+			>
+				<span className="hanabi-copy-control-value">
 					{label && <span className="font-medium text-hanabi-text-muted">{label}</span>}
-					<span className={classNames({ 'font-mono tracking-[0.14em] text-hanabi-text': compact })}>
-						{link}
-					</span>
-				</div>
-				<div
-					className={classNames('text-white transition-all', {
-						'border-l border-hanabi-border px-2.5 py-2 text-[11px] text-hanabi-coral-soft group-hover:bg-hanabi-coral group-hover:text-white':
-							compact,
-						'w-28 bg-gray-800 px-5 py-3 group-hover:bg-red-600 group-focus:border-red-600':
-							!compact,
-					})}
-				>
+					<span className="font-mono tracking-[0.08em] text-hanabi-text">{link}</span>
+				</span>
+				<span className="hanabi-copy-control-action" aria-live="polite">
 					{showCopiedButton ? 'Copied!' : 'Copy'}
-				</div>
+				</span>
 			</button>
 		</div>
 	);
