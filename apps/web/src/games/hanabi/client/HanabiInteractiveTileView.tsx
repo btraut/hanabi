@@ -32,7 +32,7 @@ interface Props {
 	highlight?: boolean;
 	highlightTone?: HanabiTileHighlightTone;
 
-	// Optionally show a little tick mark meaning there has been a clue given
+	// Optionally show a clue seal meaning there has been a clue given
 	// for this tile. This only shows for hidden tiles.
 	notesIndicator?: boolean;
 
@@ -138,7 +138,9 @@ export default function HanabiInteractiveTileView({
 			onMouseOver={onMouseOver ? handleMouseOver : undefined}
 			onMouseOut={onMouseOut ? handleMouseOut : undefined}
 			onMouseDown={onMouseDown ? handleMouseDown : undefined}
-			aria-label={ariaLabel ? `${ariaLabel}${notesIndicator ? ', has notes' : ''}` : undefined}
+			aria-label={
+				ariaLabel ? `${ariaLabel}${notesIndicator ? ', has clue information' : ''}` : undefined
+			}
 		>
 			<HanabiTileView
 				color={hidden ? undefined : tile.color}

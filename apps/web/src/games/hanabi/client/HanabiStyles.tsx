@@ -24,6 +24,23 @@ export default function HanabiStyles(): JSX.Element {
 	}
 }
 
+.hanabi-tile-note-marker {
+	--hanabi-clue-token-inset: 2px;
+
+	position: absolute;
+	right: 3px;
+	bottom: 3px;
+	z-index: 24;
+	width: 14px;
+	height: 14px;
+	border-width: 1px;
+	box-shadow:
+		inset 0 1px 1px rgb(255 255 255 / 28%),
+		inset 0 -1px 2px rgb(3 20 53 / 52%),
+		0 0 0 2px rgb(3 16 39 / 82%),
+		0 0 9px 3px rgb(73 141 242 / 72%);
+}
+
 .hanabi-tile-emphasis,
 .hanabi-player-tile-emphasis {
 	--hanabi-emphasis-rgb: 218 113 99;

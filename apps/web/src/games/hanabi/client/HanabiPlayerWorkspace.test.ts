@@ -52,6 +52,8 @@ describe('HanabiPlayerWorkspace', () => {
 		expect(markup.match(/Playing/g)).toHaveLength(1);
 		expect(markup).toContain('aria-label="Chika, playing"');
 		expect(markup).toContain('aria-label="Ben, you"');
+		expect(markup.match(/data-hanabi-player-avatar=/g)).toHaveLength(3);
+		expect(markup).toContain('data-hanabi-player-avatar="ben"');
 		expect(markup).toContain('Offline');
 		expect(markup).toContain('grid-cols-[80px_minmax(0,1fr)]');
 		expect(markup).not.toContain('uppercase');

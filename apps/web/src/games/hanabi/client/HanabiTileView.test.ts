@@ -47,6 +47,7 @@ describe('HanabiTileView artwork', () => {
 		expect(markup).toContain('tile-back-firework-v5.png');
 		expect(markup).toContain('hanabi-tile-emphasis');
 		expect(markup).toContain('hanabi-tile-emphasis-action');
+		expect(markup).toContain('hanabi-clue-token');
 		expect(markup).toContain('hanabi-tile-note-marker');
 		expect(markup).not.toContain('MagnifyingGlass');
 	});

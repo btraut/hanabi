@@ -161,6 +161,27 @@ body {
 	width: 100%;
 }
 
+.hanabi-copy-button {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
+	column-gap: 12px;
+}
+
+.hanabi-copy-button-label {
+	justify-self: end;
+}
+
+.hanabi-copy-button-separator {
+	width: 1px;
+	height: 18px;
+	align-self: center;
+	background: var(--color-hanabi-border-bright);
+}
+
+.hanabi-copy-button-code {
+	justify-self: start;
+}
+
 .hanabi-field {
 	min-height: var(--hanabi-control-height);
 	width: 100%;
@@ -221,6 +242,7 @@ body {
 }
 
 .hanabi-copy-control-value {
+	gap: 8px;
 	min-width: 0;
 }
 
@@ -452,6 +474,8 @@ body {
 	--hanabi-tableau-accent: 115 128 150;
 	--hanabi-tableau-fill: var(--hanabi-tableau-accent);
 	position: relative;
+	height: var(--hanabi-tableau-row-height, 80px);
+	grid-template-columns: var(--hanabi-tableau-row-height, 80px) 132px 1px minmax(0, 1fr);
 	background: rgb(6 25 44 / 86%);
 	border-color: rgb(var(--hanabi-tableau-accent) / 18%);
 	box-shadow:
@@ -509,7 +533,21 @@ body {
 }
 
 .hanabi-tableau-lane[data-tableau-color='rainbow'] {
-	--hanabi-tableau-accent: 218 113 99;
+	--hanabi-tableau-accent: 128 139 188;
+	border-color: rgb(118 143 185 / 34%);
+}
+
+.hanabi-tableau-lane[data-tableau-color='rainbow']::before {
+	border-color: rgb(228 222 202 / 52%);
+	background: linear-gradient(
+		180deg,
+		#df5148 0%,
+		#e59a31 20%,
+		#d7bd3f 38%,
+		#5eaa65 56%,
+		#478ecb 76%,
+		#8d67bd 100%
+	);
 }
 
 .hanabi-tableau-lane[data-tableau-color='black'] {
@@ -531,7 +569,24 @@ body {
 	margin-left: var(--hanabi-played-tile-overlap);
 }
 
+.hanabi-tableau-discards {
+	display: flex;
+	min-height: 64px;
+	align-items: center;
+}
+
+.hanabi-tableau-divider {
+	width: 1px;
+	height: 100%;
+	align-self: stretch;
+	background: rgb(var(--hanabi-tableau-accent) / 28%);
+	box-shadow: 1px 0 rgb(255 255 255 / 3%);
+	pointer-events: none;
+}
+
 .hanabi-tableau-emblem {
+	width: var(--hanabi-tableau-row-height, 80px);
+	padding: 8px;
 	background:
 		repeating-linear-gradient(
 			45deg,
@@ -560,6 +615,21 @@ body {
 		#09192b;
 	filter: none;
 	opacity: 0.86;
+}
+
+.hanabi-tableau-lane[data-tableau-color='rainbow'] .hanabi-tableau-emblem {
+	background:
+		radial-gradient(circle at 50% 46%, rgb(255 255 255 / 10%), transparent 62%),
+		linear-gradient(
+			135deg,
+			rgb(213 64 59 / 30%) 0%,
+			rgb(224 151 47 / 27%) 22%,
+			rgb(92 161 91 / 25%) 48%,
+			rgb(58 129 189 / 28%) 72%,
+			rgb(128 87 178 / 32%) 100%
+		),
+		#09192b;
+	opacity: 0.94;
 }
 
 .hanabi-status-deck-icon {
@@ -618,27 +688,34 @@ body {
 	opacity: 0.62;
 }
 
-.hanabi-status-clue-icon {
+.hanabi-clue-token {
 	position: relative;
 	display: block;
-	width: 35px;
-	height: 35px;
-	border: 2px solid #5d8fdf;
+	border-color: #5d8fdf;
+	border-style: solid;
 	border-radius: 50%;
 	background: radial-gradient(circle at 38% 32%, #4b8be2 0 18%, #2765bd 45%, #103d7f 100%);
+}
+
+.hanabi-clue-token::after {
+	position: absolute;
+	inset: var(--hanabi-clue-token-inset, 4px);
+	border: 1px solid rgb(144 188 255 / 28%);
+	border-radius: inherit;
+	content: '';
+}
+
+.hanabi-status-clue-icon {
+	--hanabi-clue-token-inset: 4px;
+
+	width: 35px;
+	height: 35px;
+	border-width: 2px;
 	box-shadow:
 		inset 0 2px 3px rgb(255 255 255 / 20%),
 		inset 0 -3px 5px rgb(3 20 53 / 48%),
 		0 0 0 3px rgb(3 16 39 / 78%),
 		0 3px 8px rgb(23 79 159 / 36%);
-}
-
-.hanabi-status-clue-icon::after {
-	position: absolute;
-	inset: 4px;
-	border: 1px solid rgb(144 188 255 / 28%);
-	border-radius: inherit;
-	content: '';
 }
 
 .hanabi-status-life-icon {
@@ -933,7 +1010,7 @@ body {
 }
 
 .hanabi-desktop-board {
-	grid-template-columns: minmax(460px, 1.12fr) minmax(410px, 0.915fr) minmax(420px, 1fr);
+	grid-template-columns: repeat(3, minmax(0, 1fr));
 	grid-template-rows: 86px auto;
 	column-gap: 20px;
 	row-gap: 20px;
@@ -941,170 +1018,40 @@ body {
 
 .hanabi-status-regions {
 	display: grid;
-	grid-column: 1 / span 2;
+	grid-column: 1 / -1;
 	grid-row: 1;
-	grid-template-columns: minmax(270px, 1fr) 650px;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+	align-items: stretch;
 	gap: 20px;
 	height: 86px;
+}
+
+.hanabi-mobile-game-menu {
+	display: none;
 }
 
 .hanabi-turn-banner,
 .hanabi-desktop-status {
 	width: 100%;
-	height: 100%;
+	height: 86px;
 	grid-column: auto;
 	grid-row: auto;
+	align-self: stretch;
+	box-sizing: border-box;
 	justify-self: stretch;
 	margin-left: 0;
 }
 
-@media (width < 1500px) {
-	.hanabi-desktop-board {
-		grid-template-columns: minmax(450px, 1.12fr) minmax(390px, 0.915fr) minmax(400px, 1fr);
-		column-gap: 18px;
-	}
-
-	.hanabi-status-regions {
-		grid-template-columns: minmax(240px, 1fr) minmax(0, 650px);
-		gap: 18px;
-	}
-
-	.hanabi-turn-banner {
-		gap: 12px;
-		padding-inline: 16px;
-	}
-
-	.hanabi-turn-banner > span {
-		width: 30px;
-		height: 30px;
-	}
-
-	.hanabi-turn-label {
-		font-size: 27px;
-	}
-
-	.hanabi-status-item {
-		gap: 5px;
-		padding-inline: 5px;
-	}
-
-	.hanabi-status-item > span {
-		display: flex;
-		transform: scale(0.9);
-	}
-
-	.hanabi-status-label {
-		font-size: 14px;
-	}
-
-	.hanabi-status-value {
-		font-size: 24px;
-	}
-
-	.hanabi-tableau-lane {
-		grid-template-columns: 90px 120px minmax(0, 1fr);
-		gap: 12px;
-		padding-right: 8px;
-	}
-
-	.hanabi-tableau-play-stack {
-		--hanabi-played-tile-overlap: -32.5px;
-	}
-
-	.hanabi-tableau-emblem {
-		width: 90px;
-		padding: 12px;
-	}
-
-	.hanabi-player-workspace {
-		grid-template-columns: 80px minmax(0, 1fr);
-	}
-
-	[data-discard-count='6'] > [role='listitem'] + [role='listitem'] {
-		margin-left: -3px !important;
-	}
-
-	[data-discard-count='7'] > [role='listitem'] + [role='listitem'] {
-		margin-left: -11px !important;
-	}
-
-	[data-discard-count='8'] > [role='listitem'] + [role='listitem'] {
-		margin-left: -17px !important;
-	}
-
-	[data-discard-count='9'] > [role='listitem'] + [role='listitem'] {
-		margin-left: -22px !important;
-	}
-
-	[data-discard-count='10'] > [role='listitem'] + [role='listitem'] {
-		margin-left: -26px !important;
-	}
-
-	.hanabi-activity-tabs {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		padding-inline: 18px;
-	}
-
-	.hanabi-activity-tab {
-		width: auto !important;
-		margin-left: 0 !important;
-		justify-content: center;
-		padding-left: 0 !important;
-	}
-
-	.hanabi-activity-tab-indicator {
-		width: auto;
-	}
-}
-
-@media (width < 1360px) {
-	.hanabi-desktop-board {
-		width: calc(100vw - 28px);
-		grid-template-columns: minmax(415px, 1.12fr) minmax(380px, 0.915fr) minmax(360px, 1fr);
-		column-gap: 16px;
-	}
-
-	.hanabi-status-regions {
-		grid-template-columns: minmax(232px, 1fr) minmax(0, 650px);
-		gap: 16px;
-	}
-
-	.hanabi-turn-label {
-		font-size: 26px;
-	}
-
-	[data-discard-count='6'] > [role='listitem'] + [role='listitem'] {
-		margin-left: -12px !important;
-	}
-
-	[data-discard-count='7'] > [role='listitem'] + [role='listitem'] {
-		margin-left: -19px !important;
-	}
-
-	[data-discard-count='8'] > [role='listitem'] + [role='listitem'] {
-		margin-left: -24px !important;
-	}
-
-	[data-discard-count='9'] > [role='listitem'] + [role='listitem'] {
-		margin-left: -29px !important;
-	}
-
-	[data-discard-count='10'] > [role='listitem'] + [role='listitem'] {
-		margin-left: -33px !important;
-	}
-}
-
 /* One game surface, three deliberate compositions. The modern tree remains mounted
    across every breakpoint so drag, activity, unread, and tooltip state survive resize. */
-@media (width < 1280px) {
+@media (width < 1440px) {
 	.hanabi-game-board-shell {
 		padding-top: 16px;
 	}
 
 	.hanabi-desktop-board {
 		width: calc(100vw - 32px);
-		grid-template-columns: minmax(370px, 0.82fr) minmax(430px, 1.18fr);
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 		grid-template-rows: auto auto auto;
 		column-gap: 16px;
 		row-gap: 16px;
@@ -1113,41 +1060,8 @@ body {
 	.hanabi-status-regions {
 		grid-column: 1 / -1;
 		grid-row: 1;
-		grid-template-columns: 240px minmax(0, 1fr);
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 		gap: 16px;
-		height: 78px;
-	}
-
-	.hanabi-turn-banner,
-	.hanabi-desktop-status {
-		height: 100%;
-	}
-
-	.hanabi-turn-banner {
-		gap: 13px;
-		padding-inline: 18px;
-	}
-
-	.hanabi-turn-label {
-		font-size: 27px;
-	}
-
-	.hanabi-status-item {
-		gap: 6px;
-		padding-inline: 7px;
-	}
-
-	.hanabi-status-item > span {
-		display: flex;
-		transform: scale(0.84);
-	}
-
-	.hanabi-status-label {
-		font-size: 13px;
-	}
-
-	.hanabi-status-value {
-		font-size: 23px;
 	}
 
 	[data-desktop-region='tableau'] {
@@ -1162,8 +1076,10 @@ body {
 	}
 
 	[data-desktop-region='activity'] {
+		width: 100%;
 		grid-column: 1 / -1;
 		grid-row: 3;
+		justify-self: stretch;
 	}
 
 	.hanabi-activity-rail {
@@ -1171,34 +1087,33 @@ body {
 		height: clamp(520px, calc(100dvh - 96px), 700px);
 		min-height: 0;
 	}
-
-	.hanabi-tableau-lane {
-		grid-template-columns: 90px 112px minmax(0, 1fr);
-		gap: 9px;
-		padding-right: 8px;
-	}
-
-	.hanabi-tableau-play-stack {
-		--hanabi-played-tile-overlap: -34.5px;
-	}
-
-	.hanabi-tableau-emblem {
-		width: 90px;
-		padding: 11px;
-	}
 }
 
 @media (width < 960px) {
 	.hanabi-desktop-board {
 		width: calc(100vw - 28px);
 		grid-template-columns: minmax(0, 1fr);
-		grid-template-rows: auto auto auto auto;
+		grid-template-rows: auto auto auto;
 		row-gap: 14px;
 	}
 
 	.hanabi-status-regions {
 		grid-column: 1;
 		grid-row: 1;
+		grid-template-columns: minmax(0, 1fr);
+		gap: 14px;
+		height: auto;
+	}
+
+	.hanabi-turn-banner,
+	.hanabi-desktop-status {
+		height: 86px;
+	}
+
+	[data-desktop-region='tableau'],
+	[data-desktop-region='workspaces'] {
+		width: 100%;
+		justify-self: start;
 	}
 
 	[data-desktop-region='tableau'] {
@@ -1210,52 +1125,10 @@ body {
 		grid-column: 1;
 		grid-row: 3;
 	}
-
-	[data-desktop-region='activity'] {
-		grid-column: 1;
-		grid-row: 4;
-	}
-
-	.hanabi-tableau-lane {
-		grid-template-columns: 90px 102px minmax(0, 1fr);
-		gap: 12px;
-	}
-
-	.hanabi-tableau-play-stack {
-		--hanabi-played-tile-overlap: -37px;
-	}
-
-	.hanabi-tableau-emblem {
-		width: 90px;
-	}
 }
 
 @media (width < 640px) {
-	.hanabi-game-header-inner {
-		height: 62px;
-		gap: 10px;
-		padding-inline: 10px;
-	}
-
-	.hanabi-game-brand {
-		gap: 5px;
-		min-width: 0;
-	}
-
-	.hanabi-game-brand-mark {
-		width: 36px;
-		height: 36px;
-	}
-
-	.hanabi-game-brand-name {
-		font-size: 24px;
-	}
-
-	.hanabi-game-header-actions {
-		gap: 8px;
-	}
-
-	.hanabi-game-code-label {
+	.hanabi-game-header {
 		display: none;
 	}
 
@@ -1270,111 +1143,165 @@ body {
 	}
 
 	.hanabi-status-regions {
-		grid-template-columns: minmax(0, 1fr);
-		gap: 10px;
-		height: auto;
+		grid-template-columns: minmax(0, 1fr) 56px;
+		grid-template-rows: 56px 52px;
+		gap: 8px;
+		height: 116px;
 	}
 
 	.hanabi-turn-banner {
-		height: 64px;
-		gap: 12px;
-		padding-inline: 16px;
+		height: 56px;
+		gap: 10px;
+		padding-inline: 14px;
 	}
 
 	.hanabi-turn-banner > span {
-		width: 30px;
-		height: 30px;
+		width: 27px;
+		height: 27px;
+		border-width: 2px;
 	}
 
 	.hanabi-turn-label {
-		font-size: 25px;
+		font-size: 27px;
+	}
+
+	.hanabi-mobile-game-menu {
+		display: block;
+		grid-column: 2;
+		grid-row: 1;
+	}
+
+	.hanabi-mobile-game-menu > button {
+		width: 56px;
+		height: 56px;
+		background: linear-gradient(145deg, rgb(16 37 64 / 96%), rgb(7 22 40 / 96%));
+		box-shadow:
+			inset 0 1px rgb(255 255 255 / 5%),
+			0 8px 20px rgb(0 0 0 / 18%);
 	}
 
 	.hanabi-desktop-status {
-		height: 112px;
-	}
-
-	.hanabi-desktop-status > dl {
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		grid-template-rows: repeat(2, minmax(0, 1fr));
+		grid-column: 1 / -1;
+		grid-row: 2;
+		height: 52px;
 	}
 
 	.hanabi-status-item {
-		justify-content: flex-start;
-		gap: 6px;
-		padding: 5px 12px;
+		gap: 3px;
+		padding: 4px 3px;
 	}
 
-	.hanabi-status-item:nth-child(n + 3) {
-		border-top: 1px solid var(--color-hanabi-border);
-	}
-
-	.hanabi-status-item:nth-child(3)::before {
-		display: none;
+	.hanabi-status-item::before {
+		top: 8px;
+		bottom: 8px;
 	}
 
 	.hanabi-status-item > span {
+		display: flex;
 		width: 28px;
+		flex: 0 0 28px;
 		justify-content: center;
-		transform: scale(0.68);
+	}
+
+	.hanabi-status-item > span > svg {
+		width: 28px;
+		height: 28px;
 	}
 
 	.hanabi-status-label {
-		font-size: 11px;
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		clip-path: inset(50%);
+		white-space: nowrap;
 	}
 
 	.hanabi-status-value {
-		font-size: 20px;
+		font-size: 23px;
 	}
 
-	.hanabi-desktop-tableau {
-		gap: 7px;
+	.hanabi-status-deck-icon {
+		width: 28px;
+		height: 35px;
+		filter: drop-shadow(0 3px 3px rgb(0 0 0 / 36%));
+	}
+
+	.hanabi-status-deck-icon::before,
+	.hanabi-status-deck-icon::after,
+	.hanabi-status-deck-face {
+		width: 23px;
+		height: 30px;
+		border-width: 1px;
+		border-radius: 4px;
+	}
+
+	.hanabi-status-deck-icon::before {
+		top: 5px;
+		left: 5px;
+	}
+
+	.hanabi-status-deck-icon::after {
+		top: 3px;
+		left: 3px;
+	}
+
+	.hanabi-status-deck-face::after {
+		inset: 4px 3px 5px;
+	}
+
+	.hanabi-status-clue-icon {
+		width: 27px;
+		height: 27px;
+		border-width: 2px;
+		box-shadow:
+			inset 0 2px 3px rgb(255 255 255 / 20%),
+			inset 0 -3px 5px rgb(3 20 53 / 48%),
+			0 0 0 2px rgb(3 16 39 / 78%),
+			0 3px 8px rgb(23 79 159 / 36%);
+	}
+
+	.hanabi-status-life-icon {
+		width: 28px !important;
+		height: 27px !important;
 	}
 
 	.hanabi-tableau-lane {
-		height: 70px;
-		grid-template-columns: 70px 122px minmax(0, 1fr);
-		gap: 6px;
-		padding-right: 6px;
-	}
-
-	.hanabi-tableau-play-stack {
-		--hanabi-played-tile-overlap: -32px;
+		height: 68px;
+		grid-template-columns: 68px 1px minmax(0, 1fr);
+		gap: 8px;
+		padding: 2px 8px 2px 12px;
 	}
 
 	.hanabi-tableau-emblem {
-		width: 70px;
-		padding: 7px;
+		display: none;
 	}
 
-	.hanabi-player-workspace {
-		height: 230px !important;
-		grid-template-columns: minmax(0, 1fr);
-		grid-template-rows: 44px minmax(0, 1fr);
-	}
-
-	.hanabi-player-workspace > div:first-child {
-		flex-direction: row;
+	.hanabi-tableau-play-stack {
+		--hanabi-played-tile-overlap: -48px;
+		grid-column: 1;
 		justify-content: flex-start;
-		gap: 8px;
-		border-right: 0;
-		border-bottom: 1px solid var(--color-hanabi-border);
-		padding: 4px 10px;
-		text-align: left;
 	}
 
-	.hanabi-player-workspace > div:first-child > div:first-child {
-		width: 32px;
-		height: 32px;
-		font-size: 14px;
+	.hanabi-tableau-divider {
+		grid-column: 2;
 	}
 
-	.hanabi-player-workspace > div:first-child > p {
-		width: auto;
-		max-width: 45%;
-		font-size: 15px;
+	.hanabi-tableau-discards {
+		grid-column: 3;
 	}
 
+	.hanabi-tableau-discards
+		[data-discard-overlap='true']
+		[role='listitem']:not(:last-child)
+		.hanabi-tile-number {
+		left: 10px;
+		font-size: 20px;
+	}
+}
+
+@media (width < 960px) {
 	[data-desktop-region='activity'] {
 		display: none;
 	}
@@ -1386,13 +1313,14 @@ body {
 	.hanabi-mobile-chat-trigger {
 		position: fixed;
 		z-index: 50;
-		right: 16px;
+		right: 12px;
 		bottom: calc(16px + env(safe-area-inset-bottom));
 		display: flex;
+		width: 52px;
 		height: 52px;
 		align-items: center;
-		gap: 9px;
-		padding: 0 18px;
+		justify-content: center;
+		padding: 0;
 		border: 1px solid #6096e7;
 		border-radius: 999px;
 		background: linear-gradient(145deg, #285eb7, #173f8b);
@@ -1404,23 +1332,14 @@ body {
 		font-weight: 650;
 	}
 
-	@media (width < 420px) {
-		.hanabi-mobile-chat-trigger {
-			right: 12px;
-			width: 52px;
-			justify-content: center;
-			padding: 0;
-		}
+	.hanabi-mobile-chat-trigger-label {
+		display: none;
+	}
 
-		.hanabi-mobile-chat-trigger-label {
-			display: none;
-		}
-
-		.hanabi-mobile-chat-badge {
-			position: absolute;
-			top: -5px;
-			right: -5px;
-		}
+	.hanabi-mobile-chat-badge {
+		position: absolute;
+		top: -5px;
+		right: -5px;
 	}
 
 	.hanabi-mobile-chat-badge {
@@ -1512,7 +1431,6 @@ body {
 	.hanabi-mobile-activity-tabs .hanabi-activity-tab {
 		height: 69px;
 		justify-content: flex-start;
-		font-size: 22px;
 	}
 
 	.hanabi-mobile-activity-tabs .hanabi-activity-tab-indicator {
@@ -1526,30 +1444,23 @@ body {
 	}
 
 	.hanabi-mobile-sheet .hanabi-chat-message {
-		grid-template-columns: 46px minmax(0, 1fr) auto;
+		grid-template-columns: 42px minmax(0, 1fr) auto;
 		gap: 4px 11px;
 	}
 
 	.hanabi-mobile-sheet .hanabi-chat-avatar {
-		width: 46px;
-		height: 46px;
+		width: 42px;
+		height: 42px;
 	}
 
 	.hanabi-mobile-sheet .hanabi-chat-bubble {
-		padding: 11px 14px;
-		font-size: 17px;
+		padding: 10px 13px;
 	}
 
 	.hanabi-mobile-sheet .hanabi-chat-composer {
 		padding: 12px 14px calc(12px + env(safe-area-inset-bottom));
 		background: rgb(5 16 31 / 94%);
 		box-shadow: 0 -10px 26px rgb(0 0 0 / 14%);
-	}
-
-	.hanabi-mobile-sheet .hanabi-chat-field,
-	.hanabi-mobile-sheet .hanabi-chat-send {
-		min-height: 52px;
-		height: 52px;
 	}
 
 	.hanabi-mobile-sheet .hanabi-chat-send {
@@ -1561,24 +1472,34 @@ body {
 	}
 }
 
-@media (width < 640px) and (prefers-reduced-motion: reduce) {
-	.hanabi-mobile-sheet,
-	.hanabi-mobile-sheet-backdrop {
-		transition-duration: 0.01ms;
+/* The vertical identity rail stays intact until it would squeeze a five-card hand. */
+@media (width < 390px) {
+	.hanabi-player-workspace {
+		height: 230px !important;
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-rows: 44px minmax(0, 1fr);
+	}
+
+	.hanabi-player-workspace > div:first-child {
+		flex-direction: row;
+		justify-content: flex-start;
+		gap: 8px;
+		border-right: 0;
+		border-bottom: 1px solid var(--color-hanabi-border);
+		padding: 4px 10px;
+		text-align: left;
+	}
+
+	.hanabi-player-workspace > div:first-child > p {
+		width: auto;
+		max-width: 45%;
 	}
 }
 
-@media (width < 400px) {
-	.hanabi-game-brand-name {
-		font-size: 22px;
-	}
-
-	.hanabi-game-header-actions button:first-child {
-		gap: 7px;
-	}
-
-	.hanabi-game-header-actions button:first-child > span:nth-child(2) {
-		font-size: 15px;
+@media (width < 960px) and (prefers-reduced-motion: reduce) {
+	.hanabi-mobile-sheet,
+	.hanabi-mobile-sheet-backdrop {
+		transition-duration: 0.01ms;
 	}
 }
 
@@ -1690,7 +1611,7 @@ body {
 	font-weight: 700;
 	line-height: 1;
 	color: var(--hanabi-tile-number-color, #fff9eb) !important;
-	text-shadow: 0 1px 1px rgb(1 9 19 / 34%);
+	text-shadow: 0 1px 1px rgb(1 9 19 / 48%);
 	transform: translateX(-50%);
 }
 

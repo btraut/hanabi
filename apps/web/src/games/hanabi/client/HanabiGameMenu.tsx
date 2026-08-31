@@ -1,9 +1,14 @@
-import { useUserId } from '~/components/SocketContext';
+import { useSocket } from '~/components/SocketContext';
 import HanabiCheckbox from '~/games/hanabi/client/design-system/HanabiCheckbox';
 import HanabiDialog from '~/games/hanabi/client/design-system/HanabiDialog';
 import HanabiLinkButton from '~/games/hanabi/client/design-system/HanabiLinkButton';
 import HanabiMenuButton from '~/games/hanabi/client/design-system/HanabiMenuButton';
-import { useGameData, useGameMessenger } from '~/games/hanabi/client/HanabiGameContext';
+import HanabiCopyLinkButton from '~/games/hanabi/client/HanabiCopyLinkButton';
+import {
+	useGameData,
+	useGameMessenger,
+	useHanabiGameContext,
+} from '~/games/hanabi/client/HanabiGameContext';
 import { useHanabiOptionsContext } from '~/games/hanabi/client/HanabiOptionsContext';
 
 interface Props {
@@ -13,14 +18,16 @@ interface Props {
 export default function HanabiGameMenu({ onClose }: Props): JSX.Element | null {
 	const gameMessenger = useGameMessenger();
 	const gameData = useGameData();
-	const userId = useUserId();
+	const { code } = useHanabiGameContext();
+	const { userId } = useSocket();
 	const { playSounds, setPlaySounds } = useHanabiOptionsContext();
 
 	return (
 		<HanabiDialog onClose={onClose} title="Game menu">
 			<section className="hanabi-dialog-section">
 				<div className="grid gap-3">
-					{gameData.players[userId] ? (
+					{code && <HanabiCopyLinkButton link={code} variant="button" />}
+					{userId && gameData.players[userId] ? (
 						<HanabiMenuButton
 							label="Restart game"
 							onClick={() => {

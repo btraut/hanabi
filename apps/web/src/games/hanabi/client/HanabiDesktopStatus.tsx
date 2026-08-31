@@ -1,5 +1,6 @@
 import Star from '~/games/hanabi/client/icons/Star';
 import { HANABI_TILE_BACK_PATH } from '~/games/hanabi/client/HanabiArtwork';
+import HanabiHeaderMenuButton from '~/games/hanabi/client/HanabiHeaderMenuButton';
 import { getHanabiMaxScore, getHanabiScore, HanabiGameData, HanabiStage } from '@hanabi/shared';
 import { CSSProperties } from 'react';
 
@@ -63,6 +64,9 @@ export default function HanabiDesktopStatus({ gameData, userId }: Props): JSX.El
 					{status.turnLabel}
 				</p>
 			</section>
+			<div className="hanabi-mobile-game-menu">
+				<HanabiHeaderMenuButton variant="game" />
+			</div>
 			<section
 				aria-label="Game status"
 				className="hanabi-panel hanabi-desktop-status min-w-0 overflow-hidden rounded-lg"
@@ -116,7 +120,13 @@ function DeckStatusIcon(): JSX.Element {
 }
 
 function ClueStatusIcon(): JSX.Element {
-	return <span aria-hidden="true" className="hanabi-status-clue-icon" data-status-icon="clues" />;
+	return (
+		<span
+			aria-hidden="true"
+			className="hanabi-clue-token hanabi-status-clue-icon"
+			data-status-icon="clues"
+		/>
+	);
 }
 
 function LifeStatusIcon(): JSX.Element {

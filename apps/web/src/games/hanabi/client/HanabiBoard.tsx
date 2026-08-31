@@ -1,8 +1,6 @@
-import { useBreakpointContext } from '~/components/BreakpointContext';
 import { useUserId } from '~/components/SocketContext';
 import HanabiActionEffects from '~/games/hanabi/client/HanabiActionEffects';
 import HanabiActivityRail from '~/games/hanabi/client/HanabiActivityRail';
-import { getHanabiBoardLayout } from '~/games/hanabi/client/HanabiBoardLayout';
 import HanabiDesktopBoard from '~/games/hanabi/client/HanabiDesktopBoard';
 import HanabiDesktopTableau from '~/games/hanabi/client/HanabiDesktopTableau';
 import { useGameData } from '~/games/hanabi/client/HanabiGameContext';
@@ -30,15 +28,9 @@ export default function HanabiBoard(): JSX.Element {
 	const gameData = useGameData();
 	const transitioningTileId = useTransitioningTileId();
 	const userId = useUserId();
-	const {
-		highlightedLabel,
-		highlightedRecipientId,
-		highlightedTiles,
-		highlightedTone,
-	} = useHanabiHighlightContext();
+	const { highlightedLabel, highlightedRecipientId, highlightedTiles, highlightedTone } =
+		useHanabiHighlightContext();
 
-	const breakpoints = useBreakpointContext();
-	const layout = getHanabiBoardLayout(breakpoints);
 	const isDraggingTile = useDragLayer(
 		(monitor) => monitor.isDragging() && monitor.getItemType() === HANABI_DRAG_TYPES.TILE,
 	);
@@ -102,7 +94,6 @@ export default function HanabiBoard(): JSX.Element {
 			<HanabiDesktopBoard
 				activity={<HanabiActivityRail gameData={gameData} userId={userId} />}
 				gameData={gameData}
-				layout={layout}
 				playerWorkspaces={
 					<HanabiDesktopPlayerWorkspaces
 						clueHighlight={
@@ -118,9 +109,7 @@ export default function HanabiBoard(): JSX.Element {
 						renderTileSurface={(playerId) => (
 							<HanabiPlayerTiles
 								id={playerId}
-								onTileClick={
-									gameData.finishedReason === null && !isDraggingTile ? handleTileClick : undefined
-								}
+								onTileClick={gameData.finishedReason === null ? handleTileClick : undefined}
 								onTileMouseDown={
 									gameData.showNotes && !showMenuForTile && !isDraggingTile
 										? handleTileMouseDown
@@ -147,16 +136,6 @@ export default function HanabiBoard(): JSX.Element {
 						gameData={gameData}
 						highlightedTiles={highlightedTiles}
 						highlightedTone={highlightedTone ?? undefined}
-						onTileMouseOut={
-							gameData.showNotes && !showMenuForTile && !isDraggingTile
-								? handleTileMouseOut
-								: undefined
-						}
-						onTileMouseOver={
-							gameData.showNotes && !showMenuForTile && !isDraggingTile
-								? handleTileMouseOver
-								: undefined
-						}
 						transitioningTileId={transitioningTileId}
 					/>
 				}

@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 
 interface Props {
 	link: string;
-	compact?: boolean;
 	label?: string;
+	variant?: 'button' | 'compact' | 'default';
 }
 
 async function copyText(text: string): Promise<void> {
@@ -24,7 +24,11 @@ async function copyText(text: string): Promise<void> {
 	document.body.removeChild(textArea);
 }
 
-export default function HanabiCopyLinkButton({ compact = false, label, link }: Props): JSX.Element {
+export default function HanabiCopyLinkButton({
+	label,
+	link,
+	variant = 'default',
+}: Props): JSX.Element {
 	const copyButtonRef = useRef<HTMLButtonElement | null>(null);
 	const [showCopiedButton, setShowCopiedButton] = useState(false);
 	const showCopiedButtonTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -53,7 +57,7 @@ export default function HanabiCopyLinkButton({ compact = false, label, link }: P
 		[],
 	);
 
-	if (compact) {
+	if (variant === 'compact') {
 		return (
 			<button
 				aria-label={`Copy game code ${link}`}
@@ -72,6 +76,26 @@ export default function HanabiCopyLinkButton({ compact = false, label, link }: P
 				</span>
 				<span aria-live="polite" className="sr-only">
 					{showCopiedButton ? 'Copied!' : ''}
+				</span>
+			</button>
+		);
+	}
+
+	if (variant === 'button') {
+		return (
+			<button
+				aria-label={`Copy game code ${link}`}
+				className="hanabi-button hanabi-button-wide hanabi-copy-button"
+				onClick={() => void handleLinkClick()}
+				ref={copyButtonRef}
+				type="button"
+			>
+				<span aria-live="polite" className="hanabi-copy-button-label">
+					{showCopiedButton ? 'Copied!' : 'Copy game code'}
+				</span>
+				<span aria-hidden="true" className="hanabi-copy-button-separator" />
+				<span className="hanabi-copy-button-code font-mono tracking-[0.08em] text-hanabi-text">
+					{link}
 				</span>
 			</button>
 		);

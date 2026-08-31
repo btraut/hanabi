@@ -1,10 +1,10 @@
 import { HanabiGameData, HanabiPlayer } from '@hanabi/shared';
 import { HanabiTileHighlightTone } from '~/games/hanabi/client/HanabiHighlightContext';
+import HanabiPlayerAvatar from '~/games/hanabi/client/HanabiPlayerAvatar';
 import classNames from 'classnames';
 import { ReactNode } from 'react';
 
 interface WorkspaceProps {
-	accent: string;
 	active: boolean;
 	children: ReactNode;
 	clueLabel?: string;
@@ -57,9 +57,8 @@ export function HanabiDesktopPlayerWorkspaces({
 
 	return (
 		<div aria-label="Player workspaces" className="hanabi-player-workspaces grid gap-1.5">
-			{displayOrder.map((playerId, index) => (
+			{displayOrder.map((playerId) => (
 				<HanabiPlayerWorkspace
-					accent={HANABI_PLAYER_ACCENTS[index % HANABI_PLAYER_ACCENTS.length]}
 					active={!finished && gameData.currentPlayerId === playerId}
 					clueLabel={clueHighlight?.recipientId === playerId ? clueHighlight.label : undefined}
 					clueTone={clueHighlight?.recipientId === playerId ? clueHighlight.tone : undefined}
@@ -76,7 +75,6 @@ export function HanabiDesktopPlayerWorkspaces({
 }
 
 export default function HanabiPlayerWorkspace({
-	accent,
 	active,
 	children,
 	clueLabel,
@@ -106,15 +104,7 @@ export default function HanabiPlayerWorkspace({
 						: 'border-hanabi-border bg-hanabi-table/35',
 				)}
 			>
-				<div
-					aria-hidden="true"
-					className="flex size-10 items-center justify-center rounded-full border border-white/25 text-[18px] font-medium text-white shadow-[inset_0_1px_8px_rgb(255_255_255_/_14%),0_2px_10px_rgb(0_0_0_/_35%)]"
-					style={{
-						background: `linear-gradient(145deg, ${accent}, color-mix(in srgb, ${accent} 72%, #071426))`,
-					}}
-				>
-					{isLocal ? 'Y' : player.name.charAt(0).toUpperCase()}
-				</div>
+				<HanabiPlayerAvatar player={player} showName={false} size="sm" />
 				<p
 					className="hanabi-player-name w-full truncate text-[17px] font-medium leading-6 text-hanabi-text"
 					title={player.name}

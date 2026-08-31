@@ -32,7 +32,7 @@ export default function HanabiHeader({ variant = 'default' }: Props): JSX.Elemen
 						</span>
 					</a>
 					<div className="hanabi-game-header-actions flex min-w-0 items-center gap-3">
-						{code && <HanabiCopyLinkButton compact label="Game code" link={code} />}
+						{code && <HanabiCopyLinkButton label="Game code" link={code} variant="compact" />}
 						<HanabiHeaderMenuButton variant="game" />
 					</div>
 				</div>

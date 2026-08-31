@@ -28,7 +28,7 @@ interface Props {
 	highlight?: boolean;
 	highlightTone?: HanabiTileHighlightTone;
 
-	// Optionally show a little tick mark meaning there has been a clue given
+	// Optionally show a clue seal meaning there has been a clue given
 	// for this tile. This only shows for hidden tiles.
 	notesIndicator?: boolean;
 
@@ -100,7 +100,7 @@ export default function HanabiTileView({
 			{notesIndicator && (
 				<span
 					aria-hidden="true"
-					className="hanabi-tile-note-marker pointer-events-none absolute bottom-1 right-1 z-10 size-1 rounded-full border border-white/70 bg-[#638fd1] shadow-[0_0_4px_rgb(99_143_209_/_62%)]"
+					className="hanabi-clue-token hanabi-tile-note-marker pointer-events-none"
 				/>
 			)}
 		</div>

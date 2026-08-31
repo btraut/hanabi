@@ -36,5 +36,10 @@ describe('Hanabi authored artwork', () => {
 		);
 		expect(publicPaths.every(publicAssetExists)).toBe(true);
 		expect(tileFacePaths.every((path) => path.endsWith('.png'))).toBe(true);
+		expect(
+			HANABI_TILE_COLORS.map(getHanabiTableauEmblemPath).every((path) =>
+				path.startsWith('/images/hanabi/generated/card-emblems/'),
+			),
+		).toBe(true);
 	});
 });

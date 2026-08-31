@@ -26,22 +26,6 @@ export function getHanabiTileFacePath(color: HanabiTileColor): string {
 	return HANABI_TILE_FACE_PATHS[color];
 }
 
-const GENERATED_TABLEAU_COLORS = new Set<HanabiTileColor>([
-	'red',
-	'blue',
-	'green',
-	'yellow',
-	'white',
-]);
-
-export function hasGeneratedHanabiTableauEmblem(color: HanabiTileColor): boolean {
-	return GENERATED_TABLEAU_COLORS.has(color);
-}
-
 export function getHanabiTableauEmblemPath(color: HanabiTileColor): string {
-	if (hasGeneratedHanabiTableauEmblem(color)) {
-		return `/images/hanabi/generated/tableau/${color}.png`;
-	}
-
-	return `/images/hanabi/tableau/${color}.svg`;
+	return `/images/hanabi/generated/card-emblems/${color}.png`;
 }

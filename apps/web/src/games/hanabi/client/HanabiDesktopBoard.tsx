@@ -1,12 +1,10 @@
 import HanabiDesktopStatus from '~/games/hanabi/client/HanabiDesktopStatus';
-import { HanabiBoardLayout } from '~/games/hanabi/client/HanabiBoardLayout';
 import { getHanabiRuleSetColors, HanabiGameData } from '@hanabi/shared';
 import { ReactNode } from 'react';
 
 interface Props {
 	activity?: ReactNode;
 	gameData: HanabiGameData;
-	layout?: HanabiBoardLayout;
 	playerWorkspaces?: ReactNode;
 	tableau?: ReactNode;
 	userId: string;
@@ -15,16 +13,12 @@ interface Props {
 export default function HanabiDesktopBoard({
 	activity,
 	gameData,
-	layout = 'desktop',
 	playerWorkspaces,
 	tableau,
 	userId,
 }: Props): JSX.Element {
 	return (
-		<main
-			className="hanabi-desktop-board mx-auto grid w-[calc(100vw-42px)] max-w-[1660px] items-start pb-5"
-			data-hanabi-layout={layout}
-		>
+		<main className="hanabi-desktop-board mx-auto grid w-[calc(100vw-42px)] max-w-[1660px] items-start pb-5">
 			<HanabiDesktopStatus gameData={gameData} userId={userId} />
 			<div className="col-start-1 row-start-2 min-w-0" data-desktop-region="tableau">
 				{tableau ?? (
@@ -34,7 +28,7 @@ export default function HanabiDesktopBoard({
 			<div className="col-start-2 row-start-2 min-w-0" data-desktop-region="workspaces">
 				{playerWorkspaces ?? <WorkspaceGeometryProbe players={gameData.turnOrder.length} />}
 			</div>
-			<div className="col-start-3 row-span-2 row-start-1 min-w-0" data-desktop-region="activity">
+			<div className="col-start-3 row-start-2 min-w-0" data-desktop-region="activity">
 				{activity ?? <ActivityGeometryProbe actions={gameData.actions.length} />}
 			</div>
 		</main>

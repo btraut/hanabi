@@ -49,19 +49,115 @@ describe('Hanabi desktop visual foundation', () => {
 		expect(styles).not.toContain(
 			'linear-gradient(90deg, transparent 76%, rgb(6 25 44 / 88%) 100%)',
 		);
+		expect(styles).toMatch(
+			/\.hanabi-tableau-lane\[data-tableau-color='rainbow'\]::before\s*\{[^}]*#df5148[^}]*#8d67bd/s,
+		);
+		expect(styles).toMatch(
+			/\.hanabi-tableau-lane\[data-tableau-color='rainbow'\] \.hanabi-tableau-emblem\s*\{[^}]*linear-gradient\([^}]*rgb\(213 64 59 \/ 30%\)[^}]*rgb\(128 87 178 \/ 32%\)/s,
+		);
+		expect(styles).toMatch(
+			/\.hanabi-tableau-divider\s*\{[^}]*height:\s*100%;[^}]*align-self:\s*stretch;[^}]*background:\s*rgb\(var\(--hanabi-tableau-accent\) \/ 28%\);/s,
+		);
+		expect(styles).not.toMatch(
+			/\.hanabi-tableau-play-stack\s*\{[^}]*justify-content:\s*flex-end;/s,
+		);
+		expect(styles).toMatch(
+			/\.hanabi-tableau-lane\s*\{[^}]*height:\s*var\(--hanabi-tableau-row-height, 80px\);/s,
+		);
+		expect(styles).toMatch(
+			/\.hanabi-tableau-emblem\s*\{[^}]*width:\s*var\(--hanabi-tableau-row-height, 80px\);[^}]*padding:\s*8px;/s,
+		);
+		expect(styles.match(/^\s*\.hanabi-tableau-lane\s*\{/gm)).toHaveLength(2);
+		expect(styles.match(/^\s*\.hanabi-tableau-play-stack\s*\{/gm)).toHaveLength(2);
+		expect(styles.match(/^\s*\.hanabi-tableau-emblem\s*\{/gm)).toHaveLength(2);
+		expect(styles).not.toMatch(/grid-template-columns:\s*90px (?:102|112|120|122)px 1px/);
+		expect(styles).toMatch(
+			/\.hanabi-desktop-board\s*\{[^}]*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/,
+		);
+		expect(styles).toMatch(
+			/@media \(width < 1440px\)[^{]*\{[\s\S]*?\.hanabi-desktop-board\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/,
+		);
+		expect(styles).toMatch(
+			/@media \(width < 1440px\)[^{]*\{[\s\S]*?\[data-desktop-region='activity'\]\s*\{[^}]*width:\s*100%;[^}]*grid-column:\s*1 \/ -1;[^}]*justify-self:\s*stretch;/,
+		);
+		expect(styles).toMatch(
+			/@media \(width < 960px\)[^{]*\{[\s\S]*?\[data-desktop-region='tableau'\],[\s\S]*?width:\s*100%;/,
+		);
+		expect(styles).not.toContain('@media (width < 1500px)');
+		expect(styles).not.toContain('@media (width < 1360px)');
+		expect(styles).not.toContain('@media (width < 1280px)');
+		expect(styles).not.toContain('@media (width < 400px)');
 	});
 
 	it('lays out the desktop turn banner and game status as equal-height peers', () => {
 		const styles = readFileSync(new URL('../../../styles/tailwind.css', import.meta.url), 'utf8');
 
 		expect(styles).toMatch(
-			/\.hanabi-status-regions\s*\{[^}]*grid-template-columns:\s*minmax\(270px, 1fr\) 650px;[^}]*height:\s*86px;/s,
+			/\.hanabi-status-regions\s*\{[^}]*grid-column:\s*1 \/ -1;[^}]*grid-template-columns:\s*minmax\(0, 1fr\) minmax\(0, 2fr\);[^}]*height:\s*86px;/s,
+		);
+		expect(styles).toMatch(
+			/@media \(width < 1440px\)[^{]*\{[\s\S]*?\.hanabi-status-regions\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/,
 		);
 		const peerSizingRule = styles.match(
 			/\.hanabi-turn-banner,\s*\.hanabi-desktop-status\s*\{[^}]*\}/s,
 		)?.[0];
-		expect(peerSizingRule).toContain('height: 100%');
+		expect(peerSizingRule).toContain('height: 86px');
 		expect(peerSizingRule).toContain('width: 100%');
+		expect(peerSizingRule).toContain('align-self: stretch');
+		expect(peerSizingRule).toContain('box-sizing: border-box');
+		expect(styles).toMatch(
+			/@media \(width < 960px\)[^{]*\{[\s\S]*?\.hanabi-status-regions\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\);[^}]*height:\s*auto;/,
+		);
+		expect(styles).toMatch(
+			/@media \(width < 960px\)[^{]*\{[\s\S]*?\.hanabi-turn-banner,\s*\.hanabi-desktop-status\s*\{[^}]*height:\s*86px;/,
+		);
+	});
+
+	it('keeps tablet internals stable and gives mobile one deliberate compact composition', () => {
+		const styles = readFileSync(new URL('../../../styles/tailwind.css', import.meta.url), 'utf8');
+		const tabletRules = styles.match(
+			/@media \(width < 1440px\)[^{]*\{[\s\S]*?(?=@media \(width < 960px\))/,
+		)?.[0];
+		const phoneRules = styles.match(
+			/@media \(width < 640px\)[^{]*\{[\s\S]*?(?=@media \(width < 960px\))/,
+		)?.[0];
+		const drawerRules = styles.match(
+			/@media \(width < 960px\)[^{]*\{[\s\S]*?(?=@media \(width < 390px\))/,
+		)?.[0];
+
+		expect(tabletRules).not.toContain('.hanabi-turn-label');
+		expect(tabletRules).not.toContain('.hanabi-status-item');
+		expect(tabletRules).not.toContain('.hanabi-status-label');
+		expect(tabletRules).not.toContain('.hanabi-status-value');
+		expect(tabletRules).not.toContain('.hanabi-activity-tabs');
+		expect(phoneRules).toContain('.hanabi-game-header');
+		expect(phoneRules).toContain('.hanabi-status-regions');
+		expect(phoneRules).toContain('grid-template-rows: 56px 52px');
+		expect(phoneRules).toContain('.hanabi-mobile-game-menu');
+		expect(phoneRules).toContain('.hanabi-tableau-emblem');
+		expect(phoneRules).toContain('--hanabi-played-tile-overlap: -48px');
+		expect(phoneRules).toContain("[data-discard-overlap='true']");
+		expect(phoneRules).not.toContain('.hanabi-player-workspace');
+		expect(drawerRules).toContain("[data-desktop-region='activity']");
+		expect(drawerRules).toContain('.hanabi-mobile-chat-trigger');
+		expect(drawerRules).toContain('.hanabi-mobile-sheet');
+		expect(styles).not.toContain("[data-discard-count='6']");
+		expect(styles).not.toContain("[data-discard-count='10']");
+		expect(styles).not.toContain('@media (width < 420px)');
+		expect(styles).not.toContain('transform: scale(0.68)');
+	});
+
+	it('keeps canonical card geometry while only the narrow workspace rail reflows', () => {
+		const styles = readFileSync(new URL('../../../styles/tailwind.css', import.meta.url), 'utf8');
+
+		expect(styles).toMatch(
+			/@media \(width < 390px\)[^{]*\{[\s\S]*?\.hanabi-player-workspace\s*\{[^}]*grid-template-rows:\s*44px minmax\(0, 1fr\);/,
+		);
+		expect(styles).not.toContain('@media (width < 520px)');
+		expect(styles).not.toContain('@media (width < 350px)');
+		expect(styles).not.toMatch(
+			/@media \(width < (?:640|390)px\)[^{]*\{[\s\S]*?--hanabi-player-tile-(?:width|height):/,
+		);
 	});
 
 	it('keeps every modern card portrait and preserves the square back emblem', () => {
@@ -92,6 +188,9 @@ describe('Hanabi desktop visual foundation', () => {
 		expect(styles).not.toContain('--hanabi-tile-face-background');
 		expect(styles).toMatch(
 			/\.hanabi-tile-number\s*\{[^}]*color:\s*var\(--hanabi-tile-number-color, #fff9eb\) !important;/s,
+		);
+		expect(styles).toMatch(
+			/\.hanabi-tile-number\s*\{[^}]*text-shadow:\s*0 1px 1px rgb\(1 9 19 \/ 48%\);/s,
 		);
 	});
 
@@ -124,7 +223,7 @@ describe('Hanabi desktop visual foundation', () => {
 		const mobileTabRule = styles.match(
 			/\.hanabi-mobile-activity-tabs \.hanabi-activity-tab\s*\{[^}]*\}/s,
 		)?.[0];
-		expect(mobileTabRule).toContain('font-size: 22px');
+		expect(mobileTabRule).not.toContain('font-size:');
 		expect(styles).not.toContain('.hanabi-mobile-activity-tabs .hanabi-activity-tab:first-child');
 	});
 
@@ -190,5 +289,22 @@ describe('Hanabi desktop visual foundation', () => {
 		expect(markup).not.toContain('2300ms');
 		expect(markup).toContain('prefers-reduced-motion: reduce');
 		expect(markup).toContain('animation: none');
+	});
+
+	it('renders clue information as a stable card seal instead of a tiny animated status dot', () => {
+		const markup = renderToStaticMarkup(createElement(HanabiStyles));
+		const styles = readFileSync(new URL('../../../styles/tailwind.css', import.meta.url), 'utf8');
+
+		const markerRule = markup.match(/\.hanabi-tile-note-marker\s*\{[^}]*\}/s)?.[0];
+		expect(markerRule).toMatch(/width:\s*14px;[^}]*height:\s*14px;[^}]*border-width:\s*1px;/s);
+		expect(markerRule).not.toContain('animation:');
+		expect(markup).not.toContain('@keyframes hanabi-note-marker-arrive');
+		expect(markup).toContain('--hanabi-clue-token-inset: 2px');
+		expect(markup).not.toContain('clip-path:');
+		expect(markup).toContain('0 0 9px 3px rgb(73 141 242 / 72%)');
+		expect(styles).toMatch(
+			/\.hanabi-clue-token\s*\{[^}]*border-radius:\s*50%;[^}]*radial-gradient\(circle at 38% 32%/s,
+		);
+		expect(styles).toContain('.hanabi-clue-token::after');
 	});
 });

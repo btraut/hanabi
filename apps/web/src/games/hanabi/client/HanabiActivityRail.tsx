@@ -1,7 +1,6 @@
 import {
 	selectChatTranscript,
 	selectGameplayHistory,
-	selectLatestGameplayAction,
 } from '~/games/hanabi/client/HanabiActionSelectors';
 import HanabiChatInput from '~/games/hanabi/client/HanabiChatInput';
 import { useHanabiHighlightContext } from '~/games/hanabi/client/HanabiHighlightContext';
@@ -23,8 +22,6 @@ type ActivityTab = 'chat' | 'history';
 interface Props {
 	composer?: ReactNode;
 	gameData: HanabiGameData;
-	historyIncludesLatest?: boolean;
-	latestActionId?: string;
 	renderAction?: (action: HanabiGameAction) => ReactNode;
 	userId: string;
 }
@@ -46,8 +43,6 @@ export function countIncomingUnreadChat(
 export default function HanabiActivityRail({
 	composer,
 	gameData,
-	historyIncludesLatest = true,
-	latestActionId,
 	renderAction,
 	userId,
 }: Props): JSX.Element {
@@ -60,7 +55,7 @@ export default function HanabiActivityRail({
 	);
 	const [chatIsNearBottom, setChatIsNearBottom] = useState(true);
 	const [hasNewMessagesBelow, setHasNewMessagesBelow] = useState(false);
-	const isMobile = useIsMobileActivity();
+	const usesActivityDrawer = useUsesActivityDrawer();
 	const previousActionCount = useRef(gameData.actions.length);
 	const previousChatCount = useRef(selectChatTranscript(gameData.actions).length);
 	const historyTabRef = useRef<HTMLButtonElement>(null);
@@ -69,14 +64,7 @@ export default function HanabiActivityRail({
 	const mobileCloseRef = useRef<HTMLButtonElement>(null);
 	const chatScrollerRef = useRef<HTMLDivElement>(null);
 	const tabId = useId();
-	const latestAction = latestActionId
-		? gameData.actions.find((action) => action.id === latestActionId)
-		: selectLatestGameplayAction(gameData.actions);
 	const history = selectGameplayHistory(gameData.actions);
-	const earlierHistory =
-		latestAction && !historyIncludesLatest
-			? history.filter((action) => action.id !== latestAction.id)
-			: history;
 	const chat = selectChatTranscript(gameData.actions);
 	const userCanChat = Boolean(gameData.players[userId]);
 
@@ -89,7 +77,7 @@ export default function HanabiActivityRail({
 	}, []);
 
 	useEffect(() => {
-		const chatIsOpen = activeTab === 'chat' && (!isMobile || mobileSheetOpen);
+		const chatIsOpen = activeTab === 'chat' && (!usesActivityDrawer || mobileSheetOpen);
 		const incoming = countIncomingUnreadChat(
 			gameData.actions,
 			previousActionCount.current,
@@ -103,19 +91,27 @@ export default function HanabiActivityRail({
 		} else if (incoming) {
 			setUnreadChat((count) => count + incoming);
 		}
-	}, [activeTab, gameData.actions, isMobile, mobileSheetOpen, userId]);
+	}, [activeTab, gameData.actions, mobileSheetOpen, userId, usesActivityDrawer]);
 
 	useEffect(() => {
 		const receivedNewChat = chat.length > previousChatCount.current;
 		previousChatCount.current = chat.length;
-		if (!receivedNewChat || activeTab !== 'chat' || (isMobile && !mobileSheetOpen)) return;
+		if (!receivedNewChat || activeTab !== 'chat' || (usesActivityDrawer && !mobileSheetOpen))
+			return;
 
 		if (chatIsNearBottom) {
 			requestAnimationFrame(() => scrollChatToBottom());
 		} else {
 			setHasNewMessagesBelow(true);
 		}
-	}, [activeTab, chat.length, chatIsNearBottom, isMobile, mobileSheetOpen, scrollChatToBottom]);
+	}, [
+		activeTab,
+		chat.length,
+		chatIsNearBottom,
+		mobileSheetOpen,
+		scrollChatToBottom,
+		usesActivityDrawer,
+	]);
 
 	useEffect(() => {
 		if (!mobileSheetOpen) return;
@@ -140,8 +136,8 @@ export default function HanabiActivityRail({
 	}, [mobileSheetOpen]);
 
 	useEffect(() => {
-		if (!isMobile) setMobileSheetOpen(false);
-	}, [isMobile]);
+		if (!usesActivityDrawer) setMobileSheetOpen(false);
+	}, [usesActivityDrawer]);
 
 	const activateTab = (tab: ActivityTab): void => {
 		setActiveTab(tab);
@@ -169,7 +165,7 @@ export default function HanabiActivityRail({
 
 	const renderActivityAction = (
 		action: HanabiGameAction,
-		variant: 'chat' | 'history' | 'latest',
+		variant: 'chat' | 'history',
 		timeLabel?: string,
 	): ReactNode =>
 		renderAction ? (
@@ -179,7 +175,7 @@ export default function HanabiActivityRail({
 		) : (
 			<HanabiDesktopActivityAction
 				action={action}
-				compact={variant === 'latest'}
+				compact={false}
 				gameData={gameData}
 				timeLabel={timeLabel}
 				userId={userId}
@@ -255,8 +251,8 @@ export default function HanabiActivityRail({
 					role="tabpanel"
 					tabIndex={0}
 				>
-					{earlierHistory.length ? (
-						earlierHistory.map((action, index) => {
+					{history.length ? (
+						history.map((action, index) => {
 							const actionHighlight = getHanabiActionHighlight(action);
 							const thisActionHighlighted = highlightedAction === action.id;
 							const content = renderActivityAction(
@@ -342,7 +338,7 @@ export default function HanabiActivityRail({
 		);
 	};
 
-	if (isMobile) {
+	if (usesActivityDrawer) {
 		return createPortal(
 			<div className="hanabi-mobile-activity">
 				<button
@@ -388,23 +384,8 @@ export default function HanabiActivityRail({
 	return (
 		<aside
 			aria-label="Game activity"
-			className="hanabi-activity-rail sticky top-4 flex h-[calc(100dvh-118px)] min-h-[500px] flex-col gap-5"
+			className="hanabi-activity-rail sticky top-4 flex h-[calc(100dvh-118px)] min-h-[500px] flex-col"
 		>
-			<section
-				aria-labelledby={`${tabId}-latest`}
-				className="hanabi-panel h-[132px] shrink-0 rounded-lg px-[26px] py-5"
-			>
-				<h2 className="mb-3 text-[23px] font-semibold text-hanabi-text" id={`${tabId}-latest`}>
-					Latest
-				</h2>
-				<div className="min-h-14 overflow-hidden pt-1 text-[17px] text-hanabi-text">
-					{latestAction ? (
-						renderActivityAction(latestAction, 'latest')
-					) : (
-						<p className="text-hanabi-text-muted">No moves yet</p>
-					)}
-				</div>
-			</section>
 			{activityPanel(false)}
 		</aside>
 	);
@@ -583,20 +564,20 @@ function HanabiDesktopActivityAction({
 	);
 }
 
-function useIsMobileActivity(): boolean {
-	const [isMobile, setIsMobile] = useState(
-		() => typeof window !== 'undefined' && window.matchMedia('(max-width: 639px)').matches,
+function useUsesActivityDrawer(): boolean {
+	const [usesDrawer, setUsesDrawer] = useState(
+		() => typeof window !== 'undefined' && window.matchMedia('(max-width: 959px)').matches,
 	);
 
 	useEffect(() => {
-		const media = window.matchMedia('(max-width: 639px)');
-		const handleChange = (): void => setIsMobile(media.matches);
+		const media = window.matchMedia('(max-width: 959px)');
+		const handleChange = (): void => setUsesDrawer(media.matches);
 		handleChange();
 		media.addEventListener('change', handleChange);
 		return () => media.removeEventListener('change', handleChange);
 	}, []);
 
-	return isMobile;
+	return usesDrawer;
 }
 
 function capitalize(value: string): string {

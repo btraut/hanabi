@@ -3,6 +3,7 @@ import HanabiDropdown from './HanabiDropdown';
 import HanabiLinkButton from './HanabiLinkButton';
 import HanabiMenuButton from './HanabiMenuButton';
 import HanabiTextInput from './HanabiTextInput';
+import HanabiCopyLinkButton from '../HanabiCopyLinkButton';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { readFileSync } from 'node:fs';
@@ -30,6 +31,20 @@ describe('Hanabi controls', () => {
 			expect(control).not.toContain('uppercase');
 		}
 		expect(primaryButton).toContain('hanabi-button-primary');
+	});
+
+	it('renders the game-code action as a regular button when requested', () => {
+		const copyCode = renderToStaticMarkup(
+			createElement(HanabiCopyLinkButton, { link: 'X7K2', variant: 'button' }),
+		);
+
+		expect(copyCode).toContain('hanabi-button hanabi-button-wide hanabi-copy-button');
+		expect(copyCode).toContain('Copy game code');
+		expect(copyCode).toContain('hanabi-copy-button-label');
+		expect(copyCode).toContain('hanabi-copy-button-separator');
+		expect(copyCode).toContain('hanabi-copy-button-code');
+		expect(copyCode).toContain('X7K2');
+		expect(copyCode).not.toContain('hanabi-copy-control');
 	});
 
 	it('uses the same compact field language for text, select, and checkbox inputs', () => {
@@ -91,6 +106,8 @@ describe('Hanabi dialog system', () => {
 
 		expect(menu).toContain('Play sounds');
 		expect(menu).toContain('Restart game');
+		expect(menu).not.toContain('Invite players');
+		expect(menu).toContain('<HanabiCopyLinkButton link={code} variant="button" />');
 		expect(menu).toContain('useHanabiOptionsContext');
 		expect(menu).not.toContain('label="Options"');
 		expect(menu).not.toContain('label="Close"');

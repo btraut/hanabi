@@ -62,6 +62,26 @@ describe('Hanabi history typography', () => {
 	});
 });
 
+describe('Hanabi activity hierarchy', () => {
+	it('uses history as the complete move stream without a duplicate latest summary', () => {
+		const source = readFileSync(new URL('./HanabiActivityRail.tsx', import.meta.url), 'utf8');
+
+		expect(source).not.toContain('>Latest<');
+		expect(source).not.toContain("'latest'");
+		expect(source).not.toContain('historyIncludesLatest');
+		expect(source).not.toContain('latestActionId');
+	});
+});
+
+describe('Hanabi activity drawer breakpoint', () => {
+	it('uses the drawer throughout the single-column layout', () => {
+		const source = readFileSync(new URL('./HanabiActivityRail.tsx', import.meta.url), 'utf8');
+
+		expect(source.match(/window\.matchMedia\('\(max-width: 959px\)'\)/g)).toHaveLength(2);
+		expect(source).not.toContain("window.matchMedia('(max-width: 639px)')");
+	});
+});
+
 describe('Hanabi history highlight replay', () => {
 	it('makes highlightable history rows persistent toggle buttons', () => {
 		const source = readFileSync(new URL('./HanabiActivityRail.tsx', import.meta.url), 'utf8');

@@ -44,8 +44,14 @@ describe('HanabiDesktopTableau', () => {
 		expect(markup).not.toContain('border-l-[3px]');
 		expect(markup).not.toContain('shadow-light');
 		expect(markup).toContain('height:64px;width:50px');
-		expect(markup).toContain('grid-cols-[90px_132px_minmax(0,1fr)]');
-		expect(markup).toContain('hanabi-tableau-emblem h-full w-[90px] object-contain');
+		expect(markup).not.toContain('grid-cols-[');
+		expect(markup).toContain('--hanabi-tableau-row-height:80px');
+		expect(markup).toContain('gap-[13px]');
+		expect(markup).toContain('hanabi-tableau-emblem h-full object-contain');
+		expect(markup).toContain('class="hanabi-tableau-divider"');
+		expect(markup).toContain('hanabi-tableau-discards min-w-0');
+		expect(markup.match(/src="\/images\/hanabi\/generated\/card-emblems\//g)).toHaveLength(5);
+		expect(markup).not.toContain('mask:');
 	});
 
 	it('uses firework sequence order for black-powder top tiles', () => {

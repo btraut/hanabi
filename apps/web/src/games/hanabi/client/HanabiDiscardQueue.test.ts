@@ -34,6 +34,24 @@ describe('getHanabiDiscardQueueGap', () => {
 		);
 
 		expect(markup).toContain('height:64px;width:50px');
+		expect(markup).not.toContain('hover:-translate-y-1');
+		expect(markup).not.toContain('focus-within:-translate-y-1');
+		expect(markup).not.toContain('<button');
+	});
+
+	it('ignores hand-only hover handlers instead of making discards interactive', () => {
+		const tile: HanabiTile = { color: 'red', id: 'red-2', number: 2 };
+		const props = {
+			color: 'red' as const,
+			onTileMouseOut: () => undefined,
+			onTileMouseOver: () => undefined,
+			tiles: [tile],
+		};
+		const markup = renderToStaticMarkup(createElement(HanabiDiscardQueue, props));
+
+		expect(markup).not.toContain('cursor-default');
+		expect(markup).not.toContain('focus:outline-none');
+		expect(markup).not.toContain('hover:-translate-y-1');
 	});
 
 	it('pins the first and last of ten cards inside the available queue width', () => {
@@ -45,6 +63,7 @@ describe('getHanabiDiscardQueueGap', () => {
 		const markup = renderToStaticMarkup(createElement(HanabiDiscardQueue, { color: 'red', tiles }));
 
 		expect(markup).toContain('width:347px');
+		expect(markup).toContain('data-discard-overlap="true"');
 		expect(markup).toContain('left:0;');
 		expect(markup).toContain('left:calc(100% - 50px)');
 	});
