@@ -1,21 +1,26 @@
 import { HANABI_DRAG_TYPES, HanabiTileDragItem } from '~/games/hanabi/client/HanabiDragTypes';
+import { HanabiTileHighlightTone } from '~/games/hanabi/client/HanabiHighlightContext';
 import { useHanabiMoveTileContext } from '~/games/hanabi/client/HanabiMoveTileContext';
-import { useEffect } from 'react';
-import { ConnectDragSource, useDrag } from 'react-dnd';
+import { HANABI_BOARD_SIZE, HANABI_TILE_SIZE } from '@hanabi/shared';
+import { useCallback, useEffect, useRef } from 'react';
+import { useDrag } from 'react-dnd';
 import { getEmptyImage } from 'react-dnd-html5-backend';
 
 export default function useTileDrag(
 	id: string,
 	highlight: boolean,
+	highlightTone: HanabiTileHighlightTone,
 	notesIndicator: boolean,
 	enable = true,
-): { isDragging: boolean; dragRef: ConnectDragSource } {
+	responsiveSurface = false,
+): { isDragging: boolean; dragRef: (element: HTMLElement | null) => void } {
 	// Grab game data so we can look up position.
 	const { tilePositions } = useHanabiMoveTileContext();
 	const position = tilePositions[id];
 
 	// Call out to react-dnd.
-	const [{ isDragging }, dragRef, preview] = useDrag<
+	const elementRef = useRef<HTMLElement | null>(null);
+	const [{ isDragging }, connectDragSource, preview] = useDrag<
 		HanabiTileDragItem,
 		void,
 		{ isDragging: boolean }
@@ -23,18 +28,42 @@ export default function useTileDrag(
 		() => ({
 			type: HANABI_DRAG_TYPES.TILE,
 			canDrag: enable,
-			item: {
-				type: HANABI_DRAG_TYPES.TILE,
-				id,
-				originalPosition: position,
-				highlight,
-				notesIndicator,
+			item: () => {
+				const board = elementRef.current?.closest<HTMLElement>('.hanabi-player-board');
+				const boardRect = board?.getBoundingClientRect();
+				const sourceRect = elementRef.current?.getBoundingClientRect();
+				return {
+					type: HANABI_DRAG_TYPES.TILE,
+					id,
+					originalPosition: position,
+					highlight,
+					highlightTone,
+					notesIndicator,
+					responsiveSurface,
+					renderedTileSize: sourceRect
+						? { height: sourceRect.height, width: sourceRect.width }
+						: HANABI_TILE_SIZE,
+					sourcePosition:
+						boardRect && sourceRect
+							? { x: sourceRect.left - boardRect.left, y: sourceRect.top - boardRect.top }
+							: { x: position.x, y: position.y },
+					surfaceSize: board
+						? { height: board.clientHeight, width: board.clientWidth }
+						: HANABI_BOARD_SIZE,
+				};
 			},
 			collect: (monitor) => ({
 				isDragging: !!monitor.isDragging(),
 			}),
 		}),
-		[enable, id, position, highlight, notesIndicator],
+		[enable, id, position, highlight, highlightTone, notesIndicator, responsiveSurface],
+	);
+	const dragRef = useCallback(
+		(element: HTMLElement | null) => {
+			elementRef.current = element;
+			connectDragSource(element);
+		},
+		[connectDragSource],
 	);
 
 	// By default, HTML5 drag APIs will screenshot the draggable and show a

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 interface Props {
@@ -8,7 +8,7 @@ interface Props {
 
 export default function Portal({ rootId = 'portal', children }: Props): React.ReactPortal {
 	const mount = document.getElementById(rootId);
-	const el = document.createElement('div');
+	const [el] = useState(() => document.createElement('div'));
 
 	if (!mount) {
 		throw new Error('Cannot use Portal without a portal root in the DOM.');

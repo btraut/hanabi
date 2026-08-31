@@ -1,54 +1,122 @@
-import classNames from 'classnames';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface Props {
 	link: string;
+	label?: string;
+	variant?: 'button' | 'compact' | 'default';
 }
 
-export default function HanabiCopyLinkButton({ link }: Props): JSX.Element {
+async function copyText(text: string): Promise<void> {
+	if (navigator.clipboard?.writeText) {
+		await navigator.clipboard.writeText(text);
+		return;
+	}
+
+	const textArea = document.createElement('textarea');
+	textArea.style.width = '1px';
+	textArea.style.height = '1px';
+	textArea.style.opacity = '0';
+	textArea.style.position = 'absolute';
+	textArea.value = text;
+	document.body.append(textArea);
+	textArea.select();
+	document.execCommand('copy');
+	document.body.removeChild(textArea);
+}
+
+export default function HanabiCopyLinkButton({
+	label,
+	link,
+	variant = 'default',
+}: Props): JSX.Element {
 	const copyButtonRef = useRef<HTMLButtonElement | null>(null);
 	const [showCopiedButton, setShowCopiedButton] = useState(false);
 	const showCopiedButtonTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-	const handleLinkClick = () => {
-		const textArea = document.createElement('textarea');
-		textArea.style.width = '1px';
-		textArea.style.height = '1px';
-		textArea.style.opacity = '0';
-		textArea.style.position = 'absolute';
-		textArea.value = link;
-		document.body.append(textArea);
-		textArea.select();
-		document.execCommand('copy');
-		document.body.removeChild(textArea);
-
+	const handleLinkClick = async () => {
+		try {
+			await copyText(link);
+		} catch (error: unknown) {
+			console.error('Could not copy game link:', error);
+			return;
+		}
 		setShowCopiedButton(true);
 
-		if (!showCopiedButtonTimeoutRef.current) {
-			showCopiedButtonTimeoutRef.current = setTimeout(() => {
-				setShowCopiedButton(false);
-			}, 3000);
+		if (showCopiedButtonTimeoutRef.current) clearTimeout(showCopiedButtonTimeoutRef.current);
+		showCopiedButtonTimeoutRef.current = setTimeout(() => {
+			setShowCopiedButton(false);
 			showCopiedButtonTimeoutRef.current = null;
-		}
+		}, 3000);
 
 		copyButtonRef.current?.focus();
 	};
 
+	useEffect(
+		() => () => {
+			if (showCopiedButtonTimeoutRef.current) clearTimeout(showCopiedButtonTimeoutRef.current);
+		},
+		[],
+	);
+
+	if (variant === 'compact') {
+		return (
+			<button
+				aria-label={`Copy game code ${link}`}
+				className="hanabi-focus-ring group flex items-center gap-3 rounded-md text-sm focus:outline-none"
+				onClick={() => void handleLinkClick()}
+				ref={copyButtonRef}
+				type="button"
+			>
+				{label && <span className="hanabi-game-code-label text-hanabi-coral-soft">{label}</span>}
+				<span className="font-mono text-lg font-medium tracking-[0.08em] text-hanabi-text">
+					{link}
+				</span>
+				<span aria-hidden="true" className="relative block h-6 w-5 text-hanabi-text">
+					<span className="absolute left-0 top-0 size-4 rounded-sm border border-current" />
+					<span className="absolute bottom-0 right-0 size-4 rounded-sm border border-current bg-hanabi-table-deep" />
+				</span>
+				<span aria-live="polite" className="sr-only">
+					{showCopiedButton ? 'Copied!' : ''}
+				</span>
+			</button>
+		);
+	}
+
+	if (variant === 'button') {
+		return (
+			<button
+				aria-label={`Copy game code ${link}`}
+				className="hanabi-button hanabi-button-wide hanabi-copy-button"
+				onClick={() => void handleLinkClick()}
+				ref={copyButtonRef}
+				type="button"
+			>
+				<span aria-live="polite" className="hanabi-copy-button-label">
+					{showCopiedButton ? 'Copied!' : 'Copy game code'}
+				</span>
+				<span aria-hidden="true" className="hanabi-copy-button-separator" />
+				<span className="hanabi-copy-button-code font-mono tracking-[0.08em] text-hanabi-text">
+					{link}
+				</span>
+			</button>
+		);
+	}
+
 	return (
 		<div className="grid justify-center">
 			<button
-				className={classNames(
-					'outline-none grid grid-flow-col items-center max-w-screen-md overflow-hidden rounded-lg font-bold text-lg',
-					'group transition-all focus:outline-none',
-				)}
-				onClick={handleLinkClick}
+				aria-label={`Copy game link ${link}`}
+				className="hanabi-copy-control hanabi-focus-ring group"
+				onClick={() => void handleLinkClick()}
 				ref={copyButtonRef}
+				type="button"
 			>
-				<div className="self-stretch items-center flex px-5 text-center text-red-600 group-hover:text-red-600 transition-all bg-gray-300 group-focus:bg-white">
-					{link}
-				</div>
-				<div className="text-white bg-gray-800 px-5 py-3 w-28 group-hover:bg-red-600 transition-all group-focus:border-red-600">
+				<span className="hanabi-copy-control-value">
+					{label && <span className="font-medium text-hanabi-text-muted">{label}</span>}
+					<span className="font-mono tracking-[0.08em] text-hanabi-text">{link}</span>
+				</span>
+				<span className="hanabi-copy-control-action" aria-live="polite">
 					{showCopiedButton ? 'Copied!' : 'Copy'}
-				</div>
+				</span>
 			</button>
 		</div>
 	);

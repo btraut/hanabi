@@ -43,7 +43,6 @@ export default function useTileNotesHandlers(): {
 	);
 
 	const hideNotesForTile = useCallback(() => {
-		console.log('hideNotesForTile');
 		setShowNotesForTile(null);
 	}, []);
 

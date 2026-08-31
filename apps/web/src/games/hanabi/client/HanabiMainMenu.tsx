@@ -60,21 +60,21 @@ export default function HanabiMainMenu(): JSX.Element {
 			<div className="grid grid-flow-row gap-4">
 				<h1 className="mb-10 text-8xl italic text-white text-center text-shadow">Hanabi</h1>
 				<div className="grid grid-flow-col gap-2 justify-center content-center">
-					<HanabiTileView {...generateRandomTile()} border={false} />
-					<HanabiTileView {...generateRandomTile()} border={false} />
-					<HanabiTileView {...generateRandomTile()} border={false} />
-					<HanabiTileView {...generateRandomTile()} border={false} />
-					<HanabiTileView {...generateRandomTile()} border={false} />
-					<HanabiTileView {...generateRandomTile()} border={false} />
-					<HanabiTileView {...generateRandomTile()} border={false} />
-					<HanabiTileView {...generateRandomTile()} border={false} />
+					<HanabiTileView {...generateRandomTile()} />
+					<HanabiTileView {...generateRandomTile()} />
+					<HanabiTileView {...generateRandomTile()} />
+					<HanabiTileView {...generateRandomTile()} />
+					<HanabiTileView {...generateRandomTile()} />
+					<HanabiTileView {...generateRandomTile()} />
+					<HanabiTileView {...generateRandomTile()} />
+					<HanabiTileView {...generateRandomTile()} />
 				</div>
 				<div className="text-lg font-bold text-center px-5 py-3 rounded-xl bg-white text-black">
 					Hanabi is a cooperative puzzle game for 2-5 players.
 				</div>
 			</div>
 			<div className="grid grid-flow-col gap-4 justify-center">
-				<HanabiMenuButton label="Host" onClick={hostButtonHandler} />
+				<HanabiMenuButton label="Host" onClick={hostButtonHandler} variant="primary" />
 				<HanabiMenuButton label="Join" onClick={watchButtonHandler} />
 			</div>
 		</div>

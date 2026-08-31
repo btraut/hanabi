@@ -13,6 +13,7 @@ import {
 	HanabiGameActionType,
 	HanabiStage,
 	getHanabiRuleSetColors,
+	normalizeLegacyHanabiTilePositions,
 } from '@hanabi/shared';
 import HanabiGame, { HanabiGameSerialized } from './HanabiGame.js';
 import GameFactory from '../server/GameFactory.js';
@@ -268,13 +269,17 @@ function validateGameData(value: unknown): void {
 		hydrationError('setup games cannot contain dealt tiles.');
 	}
 	const tilePositions = requireRecord(data.tilePositions, 'data.tilePositions');
+	const validatedTilePositions: Record<string, { x: number; y: number; z: number }> = {};
 	for (const [id, value] of Object.entries(tilePositions)) {
 		if (!tileIds.has(id)) hydrationError(`data.tilePositions.${id} references an unknown tile.`);
 		const position = requireRecord(value, `data.tilePositions.${id}`);
-		requireFiniteNumber(position.x, `data.tilePositions.${id}.x`);
-		requireFiniteNumber(position.y, `data.tilePositions.${id}.y`);
-		requireFiniteNumber(position.z, `data.tilePositions.${id}.z`);
+		validatedTilePositions[id] = {
+			x: requireFiniteNumber(position.x, `data.tilePositions.${id}.x`),
+			y: requireFiniteNumber(position.y, `data.tilePositions.${id}.y`),
+			z: requireFiniteNumber(position.z, `data.tilePositions.${id}.z`),
+		};
 	}
+	data.tilePositions = normalizeLegacyHanabiTilePositions(validatedTilePositions);
 	const tileNotes = requireRecord(data.tileNotes, 'data.tileNotes');
 	for (const [id, value] of Object.entries(tileNotes)) {
 		if (!tileIds.has(id)) hydrationError(`data.tileNotes.${id} references an unknown tile.`);

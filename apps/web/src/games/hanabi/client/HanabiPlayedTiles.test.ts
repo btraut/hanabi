@@ -15,10 +15,12 @@ import { describe, expect, it, vi } from 'vitest';
 describe('HanabiPlayedTiles', () => {
 	it('keeps a placeholder beneath an inert played tile without hand-only decoration', () => {
 		const playedTile = { id: 'played-1', color: 'red' as const, number: 1 as const };
+		const discardedTile = { id: 'discarded-1', color: 'blue' as const, number: 3 as const };
 		const gameData = generateHanabiGameData({
 			stage: HanabiStage.Playing,
-			tiles: { [playedTile.id]: playedTile },
+			tiles: { [discardedTile.id]: discardedTile, [playedTile.id]: playedTile },
 			playedTiles: [playedTile.id],
+			discardedTiles: [discardedTile.id],
 		});
 		const gameContext: HanabiGameContext = {
 			create: vi.fn(),
@@ -29,10 +31,12 @@ describe('HanabiPlayedTiles', () => {
 			code: 'test',
 		};
 		const highlightContext: HanabiHighlightContext = {
-			highlightTiles: vi.fn(),
 			highlightedTiles: new Set([playedTile.id]),
 			highlightAction: vi.fn(),
 			highlightedAction: null,
+			highlightedLabel: null,
+			highlightedRecipientId: null,
+			highlightedTone: 'action',
 		};
 
 		const markup = renderToStaticMarkup(
@@ -49,7 +53,8 @@ describe('HanabiPlayedTiles', () => {
 
 		expect(markup.match(/hanabi-firework-placeholder/g)).toHaveLength(25);
 		expect(markup).toContain('view-transition-name:hanabi-tile-played-1');
-		expect(markup).not.toContain('marquee-highlight');
+		expect(markup).not.toContain('hanabi-tile-emphasis');
 		expect(markup).not.toContain('cursor-');
+		expect(markup).toContain('data-hanabi-tile-color="blue"');
 	});
 });

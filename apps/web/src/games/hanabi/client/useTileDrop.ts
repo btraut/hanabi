@@ -1,12 +1,15 @@
 import { useUserId } from '~/components/SocketContext';
 import {
 	getNewPositionsForTiles,
-	getPositionInContainer,
 	getSlotXForDraggingTile,
 	isTileInTopHalf,
 	Position,
 } from '@hanabi/shared';
-import { HANABI_DRAG_TYPES, HanabiDragTypes } from '~/games/hanabi/client/HanabiDragTypes';
+import {
+	HANABI_DRAG_TYPES,
+	HanabiDragTypes,
+	getHanabiPositionForDrag,
+} from '~/games/hanabi/client/HanabiDragTypes';
 import { useGameData } from '~/games/hanabi/client/HanabiGameContext';
 import { useHanabiMoveTileContext } from '~/games/hanabi/client/HanabiMoveTileContext';
 import { useRef } from 'react';
@@ -26,14 +29,10 @@ export default function useTileDrop(): ConnectDropTarget {
 	const [, dropRef] = useDrop<HanabiDragTypes, void, void>({
 		accept: [HANABI_DRAG_TYPES.TILE],
 		hover: (item, monitor) => {
-			const originalPosition = gameData.tilePositions[item.id];
-
-			const delta = monitor.getDifferenceFromInitialOffset()!;
-			const newPosition = getPositionInContainer(originalPosition, delta);
+			const newPosition = getHanabiPositionForDrag(item, monitor.getDifferenceFromInitialOffset()!);
 
 			const isTopHalf = isTileInTopHalf(newPosition);
 			const tileSlotX = getSlotXForDraggingTile(newPosition.x);
-
 			if (
 				isTopHalf !== previousIsTopHalfRef.current ||
 				(isTopHalf && tileSlotX !== previousTileSlotX.current)
@@ -51,7 +50,6 @@ export default function useTileDrop(): ConnectDropTarget {
 					tilePositions,
 					false,
 				);
-
 				void moveTiles(newPositions, false).catch((error: unknown) => {
 					console.error('Could not preview the tile positions:', error);
 				});
@@ -61,10 +59,7 @@ export default function useTileDrop(): ConnectDropTarget {
 			previousTileSlotX.current = tileSlotX;
 		},
 		drop: (item, monitor) => {
-			const originalPosition = gameData.tilePositions[item.id];
-
-			const delta = monitor.getDifferenceFromInitialOffset()!;
-			const newPosition = getPositionInContainer(originalPosition, delta);
+			const newPosition = getHanabiPositionForDrag(item, monitor.getDifferenceFromInitialOffset()!);
 
 			const tilePositions: { [tileId: string]: Position } = {};
 			for (const tileId of gameData.playerTiles[userId]) {

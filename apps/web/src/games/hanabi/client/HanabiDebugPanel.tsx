@@ -9,6 +9,7 @@ import {
 	HanabiStage,
 	HanabiTile,
 	HanabiTileNumber,
+	canHanabiPlayerDiscard,
 	isHanabiRainbowRuleSet,
 	tileBackgroundClasses,
 } from '@hanabi/shared';
@@ -112,6 +113,7 @@ export default function HanabiDebugPanel(): JSX.Element | null {
 	const fakeTurn = gameData.currentPlayerId === debugPlayerId;
 	const actionsEnabled =
 		gameData.stage === HanabiStage.Playing && fakeTurn && !!debugPlayer && !pending;
+	const discardEnabled = actionsEnabled && canHanabiPlayerDiscard(gameData.clues);
 	const fakeTiles = (gameData.playerTiles[debugPlayerId] ?? []).map(
 		(tileId) => gameData.tiles[tileId],
 	);
@@ -203,7 +205,7 @@ export default function HanabiDebugPanel(): JSX.Element | null {
 														</DebugButton>
 														<DebugButton
 															compact
-															disabled={!actionsEnabled}
+															disabled={!discardEnabled}
 															label={`Discard card ${index + 1}, ${tile.color} ${tile.number}`}
 															onClick={() => {
 																void sendAction(

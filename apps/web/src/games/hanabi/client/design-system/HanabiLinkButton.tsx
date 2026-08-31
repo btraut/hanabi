@@ -1,29 +1,28 @@
-import useFocusVisible from '~/utils/client/useFocusVisible';
 import classNames from 'classnames';
-import { ForwardedRef, forwardRef } from 'react';
+import { AnchorHTMLAttributes, ForwardedRef, forwardRef } from 'react';
 
-interface Props {
+interface Props extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'children'> {
 	href: string;
 	label: string;
+	variant?: 'danger' | 'primary' | 'secondary';
+	wide?: boolean;
 }
 
 function HanabiLinkButton(
-	{ href, label }: Props,
+	{ className, href, label, variant = 'secondary', wide = false, ...anchorProps }: Props,
 	ref: ForwardedRef<HTMLAnchorElement>,
 ): JSX.Element {
-	const isFocusVisible = useFocusVisible();
-
 	return (
 		<a
 			className={classNames(
-				'block px-5 py-3 bg-gray-800 text-center uppercase font-bold rounded-xl border-4 duration-100 focus:outline-none',
-				'border-white cursor-pointer text-white hover:bg-red-600 active:scale-95 select-none',
-				{
-					'focus:border-red-600': isFocusVisible,
-				},
+				'hanabi-button',
+				`hanabi-button-${variant}`,
+				{ 'hanabi-button-wide': wide },
+				className,
 			)}
 			href={href}
 			ref={ref}
+			{...anchorProps}
 		>
 			{label}
 		</a>

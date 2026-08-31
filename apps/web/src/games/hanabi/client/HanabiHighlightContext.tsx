@@ -1,11 +1,15 @@
-import { createContext, useContext } from 'react';
+import { HanabiClueColor } from '@hanabi/shared';
+import { createContext, Dispatch, SetStateAction, useContext } from 'react';
+
+export type HanabiTileHighlightTone = HanabiClueColor | 'action' | 'number';
 
 export interface HanabiHighlightContext {
-	readonly highlightTiles: (tiles: Set<string>) => void;
-	readonly highlightedTiles: Set<string>;
-
-	readonly highlightAction: (id: string | null) => void;
+	readonly highlightAction: Dispatch<SetStateAction<string | null>>;
 	readonly highlightedAction: string | null;
+	readonly highlightedLabel: string | null;
+	readonly highlightedRecipientId: string | null;
+	readonly highlightedTiles: ReadonlySet<string>;
+	readonly highlightedTone: HanabiTileHighlightTone | null;
 }
 
 const context = createContext<HanabiHighlightContext | null>(null);

@@ -1,6 +1,7 @@
 import {
 	HANABI_MAX_ACTIONS,
 	HANABI_MAX_CHAT_LENGTH,
+	HANABI_MAX_CLUES,
 	HANABI_MAX_PLAYERS,
 	HANABI_MIN_PLAYERS,
 	HanabiGameData,
@@ -226,6 +227,54 @@ describe('HanabiGame characterization', () => {
 		const data = serializedData(game);
 		expect(data.playedTiles).toEqual(['black-5', 'black-4', 'black-3', 'black-2', 'black-1']);
 		expect(data.clues).toBe(8);
+	});
+
+	it('rejects discarding when every clue is already available', () => {
+		const scope = getScope(game.title, game.id);
+		const tile: HanabiTile = { id: 'red-1', color: 'red', number: 1 };
+		replaceGameData(
+			playingData({
+				clues: HANABI_MAX_CLUES,
+				tiles: { [tile.id]: tile },
+				playerTiles: { alice: [tile.id], bob: [] },
+			}),
+		);
+		const before = game.serialize();
+
+		sockets.emit('alice', {
+			scope,
+			type: 'DiscardTileMessage',
+			data: { id: tile.id },
+		});
+
+		expect(game.serialize()).toBe(before);
+		expect(sockets.sent.at(-1)?.message).toMatchObject({
+			type: 'DiscardTileResponseMessage',
+			data: { error: 'Cannot discard when all clues are available.' },
+		});
+	});
+
+	it('allows discarding when one clue can still be restored', () => {
+		const scope = getScope(game.title, game.id);
+		const tile: HanabiTile = { id: 'red-1', color: 'red', number: 1 };
+		replaceGameData(
+			playingData({
+				clues: HANABI_MAX_CLUES - 1,
+				remainingTiles: [],
+				tiles: { [tile.id]: tile },
+				playerTiles: { alice: [tile.id], bob: [] },
+			}),
+		);
+
+		sockets.emit('alice', {
+			scope,
+			type: 'DiscardTileMessage',
+			data: { id: tile.id },
+		});
+
+		const data = serializedData(game);
+		expect(data.clues).toBe(HANABI_MAX_CLUES);
+		expect(data.discardedTiles).toEqual([tile.id]);
 	});
 
 	it('wins only after all five colored fireworks and the black firework are complete', () => {
@@ -971,6 +1020,9 @@ describe('HanabiGame characterization', () => {
 				startDebugGame(debugSockets, scope);
 				const serialized = JSON.parse(debugGame.serialize()!) as HanabiGameSerialized;
 				serialized.data.currentPlayerId = 'debug:creator';
+				if (type === 'discard') {
+					serialized.data.clues = HANABI_MAX_CLUES - 1;
+				}
 				debugGame.cleanUp();
 				const saveGame = vi.fn().mockResolvedValue(undefined);
 				const controlledGame = new HanabiGameFactory(HANABI_MIN_PLAYERS, true).hydrate(
@@ -1017,6 +1069,42 @@ describe('HanabiGame characterization', () => {
 				controlledGame.cleanUp();
 			},
 		);
+
+		it('rejects a fake-player discard at maximum clues without mutating state', () => {
+			const { debugGame, debugSockets, scope } = createDebugGame();
+			addDebugPlayer(debugSockets, scope);
+			startDebugGame(debugSockets, scope);
+			const serialized = JSON.parse(debugGame.serialize()!) as HanabiGameSerialized;
+			serialized.data.currentPlayerId = 'debug:creator';
+			serialized.data.clues = HANABI_MAX_CLUES;
+			const tileId = serialized.data.playerTiles['debug:creator'][0];
+			debugGame.cleanUp();
+			const saveGame = vi.fn().mockResolvedValue(undefined);
+			const controlledGame = new HanabiGameFactory(HANABI_MIN_PLAYERS, true).hydrate(
+				JSON.stringify(serialized),
+				debugSockets as unknown as ServerSocketManager,
+				{ saveGame, deleteGame: vi.fn() },
+			);
+			const before = controlledGame.serialize();
+			debugSockets.sent.length = 0;
+
+			emitDebugMessage(debugSockets, 'creator', getScope(controlledGame.title, controlledGame.id), {
+				type: 'DebugPlayerActionMessage',
+				data: { action: { type: 'discard', tileId } },
+			});
+
+			expect(controlledGame.serialize()).toBe(before);
+			expect(debugSockets.sent).toHaveLength(1);
+			expect(debugSockets.sent[0]).toMatchObject({
+				recipients: 'creator',
+				message: {
+					type: 'DebugPlayerActionResponseMessage',
+					data: { error: 'Cannot discard when all clues are available.' },
+				},
+			});
+			expect(saveGame).not.toHaveBeenCalled();
+			controlledGame.cleanUp();
+		});
 
 		it.each(['number', 'color'] as const)(
 			'runs fake %s clues through the normal clue handler',

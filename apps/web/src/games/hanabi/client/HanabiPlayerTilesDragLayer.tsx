@@ -1,18 +1,35 @@
-import { getPositionInContainer } from '@hanabi/shared';
 import { HANABI_DRAG_TYPES, HanabiDragTypes } from '~/games/hanabi/client/HanabiDragTypes';
+import { CSSProperties } from 'react';
 import HanabiTileView from '~/games/hanabi/client/HanabiTileView';
 import { useDragLayer } from 'react-dnd';
+import { createPortal } from 'react-dom';
 
-export default function HanabiPlayerTilesDragLayer(): JSX.Element | null {
-	const { itemType, isDragging, item, delta } = useDragLayer((monitor) => ({
+interface Props {
+	variant?: 'desktop' | 'legacy';
+}
+
+export function getHanabiTileDragPreviewStyle(offset: { x: number; y: number }): CSSProperties {
+	return {
+		left: 0,
+		position: 'fixed',
+		top: 0,
+		transform: `translate3d(${offset.x}px, ${offset.y}px, 0)`,
+		zIndex: 1000000,
+	};
+}
+
+export default function HanabiPlayerTilesDragLayer({
+	variant = 'legacy',
+}: Props): JSX.Element | null {
+	const { itemType, isDragging, item, sourceClientOffset } = useDragLayer((monitor) => ({
 		item: monitor.getItem<HanabiDragTypes>(),
 		itemType: monitor.getItemType(),
-		delta: monitor.getDifferenceFromInitialOffset(),
 		isDragging: monitor.isDragging(),
+		sourceClientOffset: monitor.getSourceClientOffset(),
 	}));
 
 	// If we're not dragging, no need for a drag layer.
-	if (!isDragging || !item || !delta) {
+	if (!isDragging || !item || !sourceClientOffset) {
 		return null;
 	}
 
@@ -21,21 +38,23 @@ export default function HanabiPlayerTilesDragLayer(): JSX.Element | null {
 		return null;
 	}
 
-	const { originalPosition, id, highlight, notesIndicator } = item;
-	const newPosition = getPositionInContainer(originalPosition, delta);
-
-	return (
-		<div className="absolute inset-0 pointer-events-none">
-			<div
-				key={`TileContainer-${id}`}
-				className="absolute top-0 left-0"
-				style={{
-					transform: `translate(${newPosition.x}px, ${newPosition.y}px)`,
-					zIndex: 1000000,
-				}}
-			>
-				<HanabiTileView highlight={highlight} notesIndicator={notesIndicator} />
+	const { highlight, notesIndicator } = item;
+	const dragTile = (
+		<div
+			aria-hidden="true"
+			className="pointer-events-none"
+			style={getHanabiTileDragPreviewStyle(sourceClientOffset)}
+		>
+			<div className={variant === 'desktop' ? 'hanabi-player-tile' : undefined}>
+				<HanabiTileView
+					dimensions={variant === 'desktop' ? item.renderedTileSize : undefined}
+					highlight={highlight}
+					highlightTone={item.highlightTone}
+					notesIndicator={notesIndicator}
+				/>
 			</div>
 		</div>
 	);
+
+	return createPortal(dragTile, document.body);
 }

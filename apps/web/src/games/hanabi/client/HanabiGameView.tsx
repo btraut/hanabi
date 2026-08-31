@@ -57,11 +57,11 @@ export default function HanabiGameView(): JSX.Element | null {
 				<HanabiHighlightTileController>
 					<BreakpointController>
 						<div
-							className="w-screen min-h-screen grid grid-flow-row gap-6 content-start"
+							className="hanabi-responsive-game-surface min-h-screen w-full content-start"
 							ref={connectDropTarget}
 						>
-							<HanabiHeader />
-							<div className="justify-self-center">
+							<HanabiHeader variant="game" />
+							<div className="hanabi-game-board-shell pt-5">
 								<HanabiBoard />
 							</div>
 							<div id="portal" />

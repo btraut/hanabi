@@ -1,7 +1,6 @@
 import { useGameData, useTransitioningTileId } from '~/games/hanabi/client/HanabiGameContext';
 import { useHanabiHighlightContext } from '~/games/hanabi/client/HanabiHighlightContext';
 import { getTileViewTransitionName } from '~/games/hanabi/client/HanabiActionTransition';
-import HanabiInteractiveTileView from '~/games/hanabi/client/HanabiInteractiveTileView';
 import HanabiTileView, { TileViewSize } from '~/games/hanabi/client/HanabiTileView';
 import {
 	HANABI_TILE_SIZE,
@@ -12,15 +11,11 @@ import {
 
 interface Props {
 	readonly tileSize?: TileViewSize;
-	readonly onTileMouseOver?: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
-	readonly onTileMouseOut?: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
 }
 
 export default function HanabiPlayedTiles({
 	tileSize: tileViewSize = TileViewSize.Regular,
-	onTileMouseOver,
-	onTileMouseOut,
-}: Props): JSX.Element {
+}: Props) {
 	const gameData = useGameData();
 	const transitioningTileId = useTransitioningTileId();
 
@@ -88,12 +83,11 @@ export default function HanabiPlayedTiles({
 						{discardedTiles.length > 0 && (
 							<div className="grid grid-flow-col justify-start gap-0.5 xl:gap-1">
 								{discardedTiles.map((tile) => (
-									<HanabiInteractiveTileView
-										key={`discarded-${tile.id}`}
-										tile={tile}
-										onMouseOver={onTileMouseOver}
-										onMouseOut={onTileMouseOut}
+									<HanabiTileView
+										color={tile.color}
 										highlight={highlightedTiles.has(tile.id)}
+										key={`discarded-${tile.id}`}
+										number={tile.number}
 										size={tileViewSize}
 										viewTransitionName={
 											transitioningTileId === tile.id

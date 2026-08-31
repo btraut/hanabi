@@ -1,6 +1,6 @@
 import { useUserId } from '~/components/SocketContext';
+import HanabiDialog from '~/games/hanabi/client/design-system/HanabiDialog';
 import HanabiMenuButton from '~/games/hanabi/client/design-system/HanabiMenuButton';
-import HanabiPopup from '~/games/hanabi/client/design-system/HanabiPopup';
 import { useGameData, useGameMessenger } from '~/games/hanabi/client/HanabiGameContext';
 import { HanabiFinishedReason } from '@hanabi/shared';
 
@@ -19,7 +19,7 @@ const GAME_OVER_MESSAGES: { [key in HanabiFinishedReason]: string } = {
 };
 
 interface Props {
-	onClose?: () => void;
+	onClose: () => void;
 }
 
 export default function HanabiGameOverPopup({ onClose }: Props): JSX.Element | null {
@@ -33,32 +33,31 @@ export default function HanabiGameOverPopup({ onClose }: Props): JSX.Element | n
 	}
 
 	return (
-		<HanabiPopup background={finishedReason === HanabiFinishedReason.Won ? 'green' : 'red'}>
-			<div style={{ width: 480 }}>
-				<h1 className="italic text-4xl text-white font-normal text-center mb-2">
-					{GAME_OVER_TITLES[finishedReason]}
-				</h1>
-				<p className="italic text-2xl text-white font-normal text-center mb-8">
+		<HanabiDialog
+			onClose={onClose}
+			title={GAME_OVER_TITLES[finishedReason]}
+			tone={finishedReason === HanabiFinishedReason.Won ? 'success' : 'danger'}
+		>
+			<div className="grid gap-6">
+				<p className="text-lg leading-6 text-hanabi-text-muted">
 					{GAME_OVER_MESSAGES[finishedReason]}
 				</p>
-				<div className="grid grid-flow-col gap-x-4 justify-center">
+				<div className="flex justify-end">
 					{gameData.players[userId] && (
 						<HanabiMenuButton
-							label="New Game"
+							label="New game"
 							onClick={() => {
-								if (onClose) {
-									onClose();
-								}
+								onClose();
 
 								void gameMessenger.reset().catch((error: unknown) => {
 									console.error('Could not reset the game:', error);
 								});
 							}}
+							variant="primary"
 						/>
 					)}
-					<HanabiMenuButton label="Close" onClick={onClose} />
 				</div>
 			</div>
-		</HanabiPopup>
+		</HanabiDialog>
 	);
 }

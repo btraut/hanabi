@@ -5,6 +5,7 @@ import {
 	type HanabiRuleSet,
 	HanabiStage,
 	addToTileNotes,
+	canHanabiPlayerDiscard,
 	getHanabiCompletionTileCount,
 	getHanabiFireworkSequence,
 	getHanabiMaxScore,
@@ -25,6 +26,12 @@ function orderedTileTypes(ruleSet: HanabiRuleSet, seed: string) {
 }
 
 describe('Hanabi game data', () => {
+	it('only permits discarding when a clue can be restored', () => {
+		expect(canHanabiPlayerDiscard(HANABI_MAX_CLUES - 1)).toBe(true);
+		expect(canHanabiPlayerDiscard(HANABI_MAX_CLUES)).toBe(false);
+		expect(canHanabiPlayerDiscard(HANABI_MAX_CLUES + 1)).toBe(false);
+	});
+
 	it('creates the current setup defaults', () => {
 		const data = generateHanabiGameData({ seed: 'fixed-seed' });
 

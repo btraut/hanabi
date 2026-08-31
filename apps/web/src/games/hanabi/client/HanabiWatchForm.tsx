@@ -47,7 +47,7 @@ export default function HanabiWatchForm(): JSX.Element {
 					/>
 				</div>
 				<div className="flex justify-center">
-					<HanabiMenuButton label="Join" />
+					<HanabiMenuButton label="Join" type="submit" variant="primary" />
 				</div>
 			</form>
 		</div>

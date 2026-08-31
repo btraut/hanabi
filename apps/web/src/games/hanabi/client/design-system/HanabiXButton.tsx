@@ -1,28 +1,27 @@
 import X from '~/games/hanabi/client/icons/X';
-import useFocusVisible from '~/utils/client/useFocusVisible';
-import { useState } from 'react';
+import { ForwardedRef, forwardRef } from 'react';
 
 interface Props {
+	autoFocus?: boolean;
 	onClick: () => void;
 }
 
-export default function HanabiXButton({ onClick }: Props): JSX.Element {
-	const isFocusVisible = useFocusVisible();
-
-	const [focused, setFocused] = useState(false);
-
+function HanabiXButton(
+	{ autoFocus = false, onClick }: Props,
+	ref: ForwardedRef<HTMLButtonElement>,
+): JSX.Element {
 	return (
 		<button
-			className="p-2 focus:outline-none"
+			aria-label="Close dialog"
+			autoFocus={autoFocus}
+			className="hanabi-icon-button"
 			onClick={onClick}
-			onFocus={() => {
-				setFocused(true);
-			}}
-			onBlur={() => {
-				setFocused(false);
-			}}
+			ref={ref}
+			type="button"
 		>
-			<X color={focused && isFocusVisible ? '#E11D48' : 'white'} size={20} />
+			<X color="currentColor" size={18} />
 		</button>
 	);
 }
+
+export default forwardRef<HTMLButtonElement, Props>(HanabiXButton);
