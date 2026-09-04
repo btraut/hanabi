@@ -63,7 +63,10 @@ pnpm dev
 
 This assigns deterministic, collision-safe ports from the Git worktree path, starts both services,
 and writes the authoritative URLs to `.context/dev/current.json`. Different worktrees can run at the
-same time without fighting over ports. Use `pnpm dev:status` to print the current URLs and
+same time without fighting over ports. Running `pnpm dev` again in the same worktree prints the
+existing runtime's status and web/server URLs, then exits successfully without starting another
+instance. If the first launcher is still assigning ports, it reports startup in progress.
+Use `pnpm dev:status` to print the current URLs and
 `pnpm dev:down` to stop the launcher.
 
 #### Single-browser debug player
