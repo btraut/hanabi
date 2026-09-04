@@ -12,7 +12,7 @@ const gamePage: AdminGamesPage = {
 		{
 			roundId: 'round-1',
 			gameCode: 'FIRES',
-			startedAt: '2026-09-03T17:30:00.000Z',
+			recordedAt: '2026-09-03T17:30:00.000Z',
 			status: 'finished',
 			integrity: 'complete',
 			playerNames: ['Ada', 'Grace'],

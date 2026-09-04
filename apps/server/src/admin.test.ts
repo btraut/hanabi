@@ -41,7 +41,7 @@ describe('admin routes', () => {
 				{
 					roundId: 'round-1',
 					gameCode: 'ABCDEF',
-					startedAt: '2026-09-03T10:00:00.000Z',
+					recordedAt: '2026-09-03T10:00:00.000Z',
 					status: 'finished',
 					integrity: 'complete',
 					playerNames: ['Alice', 'Bob'],
