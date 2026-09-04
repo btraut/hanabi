@@ -1503,6 +1503,16 @@ body {
 	}
 }
 
+/* Keep outer shadows outside the surface's folded-corner clip. */
+.hanabi-tile-shell:has(> .hanabi-tile-face) {
+	box-shadow: 0 3px 8px rgb(0 0 0 / 24%);
+}
+
+.hanabi-tile-shell:has(> .hanabi-tile-back),
+.hanabi-player-tile .hanabi-tile-shell:has(> .hanabi-tile-face) {
+	box-shadow: 0 2px 5px rgb(0 0 0 / 20%);
+}
+
 .hanabi-tile-face {
 	--hanabi-card-frame: #e8dcc2;
 	--hanabi-card-hairline: rgb(39 34 27 / 34%);
@@ -1516,7 +1526,6 @@ body {
 	background-size: 100% 100%;
 	border: 1px solid var(--hanabi-card-frame);
 	box-shadow:
-		0 3px 8px rgb(0 0 0 / 24%),
 		inset 0 0 0 1px var(--hanabi-card-hairline),
 		inset 0 1px 0 rgb(255 255 255 / 18%);
 }
@@ -1533,7 +1542,6 @@ body {
 		100% 100%;
 	border: 1px solid #d9cfba;
 	box-shadow:
-		0 2px 5px rgb(0 0 0 / 20%),
 		inset 0 0 0 1px rgb(2 11 22 / 86%),
 		inset 0 0 0 2px rgb(151 169 182 / 28%),
 		inset 0 1px 0 rgb(255 255 255 / 18%);
@@ -1621,7 +1629,6 @@ body {
 	width: var(--hanabi-player-tile-width) !important;
 	border-radius: 8px;
 	box-shadow:
-		0 2px 5px rgb(0 0 0 / 20%),
 		inset 0 0 0 1px var(--hanabi-card-hairline, rgb(2 11 22 / 86%)),
 		inset 0 1px 0 rgb(255 255 255 / 18%);
 }
