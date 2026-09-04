@@ -58,7 +58,8 @@
 	cursor: pointer;
 }
 
-.hanabi-review button:hover:not(:disabled),
+.hanabi-review-header button:hover:not(:disabled),
+.hanabi-review-controls button:hover:not(:disabled),
 .hanabi-review-entry:hover {
 	border-color: var(--color-hanabi-coral);
 }
@@ -177,6 +178,9 @@
 	background: transparent;
 	text-align: left;
 	padding: 10px 14px;
+}
+.hanabi-review-move-list button:hover {
+	background: var(--color-hanabi-surface-raised);
 }
 .hanabi-review-move-list button[aria-current='step'] {
 	border-left-color: var(--color-hanabi-coral);
