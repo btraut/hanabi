@@ -10,11 +10,11 @@ const dateFormatter = new Intl.DateTimeFormat(undefined, {
 });
 
 const RULE_SET_LABELS: Record<AdminGameSummary['initialSettings']['ruleSet'], string> = {
-	'5-color': 'Basic 5-Color',
-	'6-color': 'Basic 6-Color',
-	rainbow: 'Decoy Rainbow',
+	'5-color': '5-color',
+	'6-color': '6-color',
+	rainbow: 'Rainbow',
 	'black-powder': 'Black Powder',
-	'rainbow-black-powder': 'Decoy Rainbow + Black Powder',
+	'rainbow-black-powder': 'Rainbow + Black Powder',
 };
 
 function pageFromSearch(search: string): number {
@@ -53,10 +53,10 @@ function recordedLabel(recordedAt: string): string {
 function modeLabel(settings: AdminGameSummary['initialSettings']): string {
 	return [
 		RULE_SET_LABELS[settings.ruleSet],
-		`critical discard ${settings.criticalGameOver ? 'on' : 'off'}`,
-		`dragging ${settings.allowDragging ? 'on' : 'off'}`,
-		`notes ${settings.showNotes ? 'on' : 'off'}`,
-	].join('; ');
+		...(settings.criticalGameOver ? ['Critical'] : []),
+		...(settings.allowDragging ? ['Dragging'] : []),
+		...(settings.showNotes ? ['Notes'] : []),
+	].join(' · ');
 }
 
 function GameRow({ game }: { readonly game: AdminGameSummary }): JSX.Element {

@@ -105,8 +105,8 @@ describe('AdminPage', () => {
 			'Integrity',
 		]);
 		expect(document.body.textContent).toContain('Ada, Grace');
-		expect(document.body.textContent).toContain(
-			'Decoy Rainbow + Black Powder; critical discard on; dragging off; notes on',
+		expect(document.querySelector('.admin-mode')?.textContent).toBe(
+			'Rainbow + Black Powder · Critical · Notes',
 		);
 		expect(document.querySelector('time')?.dateTime).toBe('2026-09-03T17:30:00.000Z');
 		expect(document.body.textContent).toContain('31');

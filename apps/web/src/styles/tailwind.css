@@ -1792,7 +1792,7 @@ body {
 
 .admin-table {
 	width: 100%;
-	min-width: 1180px;
+	min-width: 1080px;
 	border-collapse: collapse;
 	font-size: 15px;
 	text-align: left;
@@ -1851,7 +1851,7 @@ body {
 }
 
 .admin-mode {
-	min-width: 260px;
+	min-width: 220px;
 }
 
 .admin-number {
