@@ -292,9 +292,6 @@ export default function HanabiReview({
 							</output>
 						</div>
 					</section>
-					<p className="hanabi-review-footnote">
-						Read-only review · Card positions are reconstructed; dragging history is not recorded.
-					</p>
 				</>
 			)}
 		</div>
