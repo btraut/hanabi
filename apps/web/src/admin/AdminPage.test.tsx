@@ -87,6 +87,16 @@ describe('AdminPage', () => {
 		});
 
 		expect(login).toHaveBeenCalledWith('tenfour');
+		expect([...document.querySelectorAll('th')].map((cell) => cell.textContent?.trim())).toEqual([
+			'Date',
+			'Players',
+			'Game',
+			'Status',
+			'Turns',
+			'Result',
+			'Score',
+			'Integrity',
+		]);
 		expect(document.body.textContent).toContain('Ada, Grace');
 		expect(document.querySelector('time')?.dateTime).toBe('2026-09-03T17:30:00.000Z');
 		expect(document.body.textContent).toContain('31');

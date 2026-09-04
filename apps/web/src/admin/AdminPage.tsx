@@ -44,40 +44,20 @@ function recordedLabel(recordedAt: string): string {
 
 function GameRow({ game }: { readonly game: AdminGameSummary }): JSX.Element {
 	return (
-		<article className="admin-game-row">
-			<div className="admin-game-main">
+		<tr>
+			<td>
 				<time className="admin-recorded" dateTime={game.recordedAt}>
 					{recordedLabel(game.recordedAt)}
 				</time>
-				<p className="admin-players">{game.playerNames.join(', ') || 'No named players'}</p>
-			</div>
-			<dl className="admin-game-stats">
-				<div>
-					<dt>Game</dt>
-					<dd>{game.gameCode}</dd>
-				</div>
-				<div>
-					<dt>Status</dt>
-					<dd>{wordsLabel(game.status)}</dd>
-				</div>
-				<div>
-					<dt>Turns</dt>
-					<dd>{game.moveCount}</dd>
-				</div>
-				<div>
-					<dt>Result</dt>
-					<dd>{resultLabel(game)}</dd>
-				</div>
-				<div>
-					<dt>Score</dt>
-					<dd>{game.score ?? '—'}</dd>
-				</div>
-				<div>
-					<dt>Integrity</dt>
-					<dd>{wordsLabel(game.integrity)}</dd>
-				</div>
-			</dl>
-		</article>
+			</td>
+			<td className="admin-players">{game.playerNames.join(', ') || 'No named players'}</td>
+			<td className="admin-code">{game.gameCode}</td>
+			<td>{wordsLabel(game.status)}</td>
+			<td className="admin-number">{game.moveCount}</td>
+			<td>{resultLabel(game)}</td>
+			<td className="admin-number">{game.score ?? '—'}</td>
+			<td>{wordsLabel(game.integrity)}</td>
+		</tr>
 	);
 }
 
@@ -156,7 +136,6 @@ export default function AdminPage(): JSX.Element {
 		return (
 			<main className="admin-login-shell">
 				<section className="admin-login-card" aria-labelledby="admin-login-title">
-					<p className="admin-kicker">Hanabi</p>
 					<h1 id="admin-login-title">Game archive</h1>
 					<p className="admin-login-copy">Enter the dashboard password to continue.</p>
 					<form onSubmit={(event) => void submitPassword(event)}>
@@ -210,16 +189,38 @@ export default function AdminPage(): JSX.Element {
 				<h1>Game archive</h1>
 			</header>
 
-			<section className="admin-ledger" aria-label="Recorded games">
-				{games.items.length === 0 ? (
-					<div className="admin-empty">
-						<h2>No games yet</h2>
-						<p>Completed and active rounds will appear here once they are recorded.</p>
-					</div>
-				) : (
-					games.items.map((game) => <GameRow game={game} key={game.roundId} />)
-				)}
-			</section>
+			<div className="admin-table-wrap">
+				<table className="admin-table">
+					<caption>Recorded games</caption>
+					<thead>
+						<tr>
+							<th scope="col">Date</th>
+							<th scope="col">Players</th>
+							<th scope="col">Game</th>
+							<th scope="col">Status</th>
+							<th className="admin-number" scope="col">
+								Turns
+							</th>
+							<th scope="col">Result</th>
+							<th className="admin-number" scope="col">
+								Score
+							</th>
+							<th scope="col">Integrity</th>
+						</tr>
+					</thead>
+					<tbody>
+						{games.items.length === 0 ? (
+							<tr>
+								<td className="admin-empty" colSpan={8}>
+									No games yet. Completed and active rounds will appear here once recorded.
+								</td>
+							</tr>
+						) : (
+							games.items.map((game) => <GameRow game={game} key={game.roundId} />)
+						)}
+					</tbody>
+				</table>
+			</div>
 
 			<footer className="admin-pagination">
 				<p>{games.total === 0 ? 'No games' : `${firstGame}–${lastGame} of ${games.total}`}</p>
