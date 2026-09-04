@@ -1,0 +1,1 @@
+ALTER TABLE "game_transcripts" ALTER COLUMN "started_at" DROP NOT NULL;

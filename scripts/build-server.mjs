@@ -5,8 +5,11 @@ import { fileURLToPath } from 'node:url';
 const workspaceRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 await build({
-	entryPoints: [path.join(workspaceRoot, 'apps/server/src/main.ts')],
-	outfile: path.join(workspaceRoot, 'dist/apps/server/main.js'),
+	entryPoints: {
+		main: path.join(workspaceRoot, 'apps/server/src/main.ts'),
+		migrate: path.join(workspaceRoot, 'apps/server/src/db/migrate.ts'),
+	},
+	outdir: path.join(workspaceRoot, 'dist/apps/server'),
 	bundle: true,
 	platform: 'node',
 	format: 'esm',

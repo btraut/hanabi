@@ -51,10 +51,21 @@ import GameMessenger from '../server/GameMessenger.js';
 import { SaveGameDelegate } from '../server/GameStore.js';
 import UserConnectionListener, { UserConnectionChange } from '../server/UserConnectionListener.js';
 import ServerSocketManager from '../../utils/SocketManager.js';
+import Logger from '../../utils/Logger.js';
 import { randomUUID } from 'node:crypto';
+import {
+	appendGameTranscriptMove,
+	createGameTranscript,
+	createPartialGameTranscript,
+	GameTranscriptV1,
+	resetGameTranscript,
+	transcriptMatchesRound,
+} from './GameTranscript.js';
+import { GameTranscriptRecorder, NOOP_GAME_TRANSCRIPT_RECORDER } from './GameTranscriptRecorder.js';
 
 export interface HanabiGameSerialized extends GameSerialized {
 	data: HanabiGameData;
+	transcript?: GameTranscriptV1 | null;
 }
 
 const INVALID_MESSAGE_PAYLOAD = 'Invalid message payload.';
@@ -74,6 +85,7 @@ export default class HanabiGame extends Game {
 	private _userConnectionListener: UserConnectionListener;
 	private _lastReadActivitySaveAt = 0;
 	private readonly _debugPlayerControls: boolean;
+	private _transcript: GameTranscriptV1 | null = null;
 
 	constructor(
 		creatorIdOrData: string | HanabiGameSerialized,
@@ -81,6 +93,7 @@ export default class HanabiGame extends Game {
 		saveGameDelegate: SaveGameDelegate,
 		private readonly _minimumPlayers = HANABI_MIN_PLAYERS,
 		debugPlayerControls = false,
+		private readonly _transcriptRecorder: GameTranscriptRecorder = NOOP_GAME_TRANSCRIPT_RECORDER,
 	) {
 		super(
 			typeof creatorIdOrData === 'string' ? creatorIdOrData : creatorIdOrData.creatorId,
@@ -106,6 +119,17 @@ export default class HanabiGame extends Game {
 					]),
 				),
 			};
+			if (this._gameData.stage !== HanabiStage.Setup) {
+				const identity = { gameId: this.id, gameCode: this.code };
+				this._transcript = transcriptMatchesRound(
+					creatorIdOrData.transcript,
+					identity,
+					this._gameData,
+				)
+					? structuredClone(creatorIdOrData.transcript)
+					: createPartialGameTranscript(identity, this._gameData, this.updated.toISOString());
+				this._recordTranscriptSnapshot();
+			}
 		}
 
 		this._messenger = new GameMessenger(socketManager, getScope(HANABI_GAME_TITLE, this.id));
@@ -125,6 +149,7 @@ export default class HanabiGame extends Game {
 		const serialized: HanabiGameSerialized = {
 			...baseSerialized,
 			data: this._gameData,
+			transcript: this._transcript,
 		};
 		return JSON.stringify(serialized);
 	}
@@ -264,7 +289,7 @@ export default class HanabiGame extends Game {
 		}
 	}
 
-	private _appendActions(...actions: HanabiGameAction[]): void {
+	private _appendActions(...actions: HanabiGameAction[]): HanabiGameAction[] {
 		const timestampedActions = actions.map((action) => ({
 			...action,
 			createdAt: action.createdAt ?? new Date().toISOString(),
@@ -272,6 +297,31 @@ export default class HanabiGame extends Game {
 		this._gameData.actions = [...this._gameData.actions, ...timestampedActions].slice(
 			-HANABI_MAX_ACTIONS,
 		);
+		return timestampedActions;
+	}
+
+	private _recordTranscriptSnapshot(): void {
+		if (!this._transcript) return;
+		try {
+			this._transcriptRecorder.record(structuredClone(this._transcript));
+		} catch (error) {
+			Logger.error(
+				`Failed to record Hanabi transcript for game ${this.id}, round ${this._transcript.roundId}.`,
+				error,
+			);
+		}
+	}
+
+	private _recordAcceptedMove(action: HanabiGameAction): void {
+		if (!this._transcript) {
+			this._transcript = createPartialGameTranscript(
+				{ gameId: this.id, gameCode: this.code },
+				this._gameData,
+				action.createdAt ?? new Date().toISOString(),
+			);
+		}
+		this._transcript = appendGameTranscriptMove(this._transcript, action, this._gameData);
+		this._recordTranscriptSnapshot();
 	}
 
 	private _handleMessage = ({
@@ -740,11 +790,17 @@ export default class HanabiGame extends Game {
 		this._gameData.currentPlayerId = this._gameData.turnOrder[0];
 
 		// Record the action.
-		this._appendActions({
+		const [startedAction] = this._appendActions({
 			id: randomUUID(),
 			type: HanabiGameActionType.GameStarted,
 			startingPlayerId: this._gameData.currentPlayerId,
 		});
+		this._transcript = createGameTranscript(
+			{ gameId: this.id, gameCode: this.code },
+			this._gameData,
+			startedAction.createdAt!,
+		);
+		this._recordTranscriptSnapshot();
 
 		// Send success message.
 		this._messenger.send(userId, {
@@ -975,7 +1031,7 @@ export default class HanabiGame extends Game {
 		}
 
 		// Record the action.
-		this._appendActions({
+		const [playAction] = this._appendActions({
 			id: randomUUID(),
 			playerId: userId,
 			type: HanabiGameActionType.Play,
@@ -989,6 +1045,7 @@ export default class HanabiGame extends Game {
 			startShotClockIfDeckEmpty: true,
 			gameWon: this._gameData.playedTiles.length === maxPlayedTiles,
 		});
+		this._recordAcceptedMove(playAction);
 
 		// Send success message.
 		respond({});
@@ -1043,7 +1100,7 @@ export default class HanabiGame extends Game {
 		this._gameData.tilePositions = newPositions;
 
 		// Record the action.
-		this._appendActions({
+		const [discardAction] = this._appendActions({
 			id: randomUUID(),
 			playerId: userId,
 			type: HanabiGameActionType.Discard,
@@ -1062,6 +1119,7 @@ export default class HanabiGame extends Game {
 		}
 
 		this._completeTurn(userId, { startShotClockIfDeckEmpty: true });
+		this._recordAcceptedMove(discardAction);
 
 		// Send success message.
 		respond({});
@@ -1152,7 +1210,7 @@ export default class HanabiGame extends Game {
 		this._gameData.clues -= 1;
 
 		// Record the action.
-		this._appendActions({
+		const [clueAction] = this._appendActions({
 			id: randomUUID(),
 			playerId: userId,
 			type: actionType,
@@ -1177,6 +1235,7 @@ export default class HanabiGame extends Game {
 		}
 
 		this._completeTurn(userId);
+		this._recordAcceptedMove(clueAction);
 
 		// Send success message.
 		respond({});
@@ -1286,12 +1345,18 @@ export default class HanabiGame extends Game {
 			return;
 		}
 
+		if (this._transcript?.lifecycle.status === 'in_progress') {
+			this._transcript = resetGameTranscript(this._transcript, new Date().toISOString());
+			this._recordTranscriptSnapshot();
+		}
+
 		// Generate a new game.
 		this._gameData = generateHanabiGameData({
 			creatorId: this.creatorId,
 			players: this._gameData.players,
 			ruleSet: this._gameData.ruleSet,
 		});
+		this._transcript = null;
 
 		// Send the updated state to all players/watchers.
 		this._messenger.send(userId, {

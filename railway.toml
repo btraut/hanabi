@@ -3,6 +3,7 @@ builder = "RAILPACK"
 buildCommand = "pnpm build"
 
 [deploy]
+preDeployCommand = ["node dist/apps/server/migrate.js"]
 startCommand = "node dist/apps/server/main.js"
 healthcheckPath = "/api/readyz"
 healthcheckTimeout = 300

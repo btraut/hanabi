@@ -4,6 +4,8 @@ import express from 'express';
 import morgan from 'morgan';
 import { randomUUID } from 'node:crypto';
 import { createServer, Server as HTTPServer } from 'node:http';
+import { createAdminRouter } from './admin.js';
+import type { GameTranscriptSummaryReader } from './games/hanabi/PostgresGameTranscriptSummaryReader.js';
 import SocketManager from './utils/SocketManager.js';
 import {
 	assertValidProductionSessionSecret,
@@ -24,6 +26,8 @@ interface RateLimitEntry {
 export interface CreateAppOptions {
 	nodeEnv: string;
 	sessionCookieSecret: string;
+	adminPassword?: string;
+	transcriptSummaryReader?: GameTranscriptSummaryReader;
 }
 
 export interface ServerRuntime {
@@ -45,6 +49,14 @@ export function createApp(options: CreateAppOptions): ServerRuntime {
 	app.use(express.json());
 	app.use(express.urlencoded({ extended: true }));
 	app.use(cookieParser(options.sessionCookieSecret));
+	app.use(
+		'/api/admin',
+		createAdminRouter({
+			nodeEnv: options.nodeEnv,
+			password: options.adminPassword ?? 'tenfour',
+			transcriptSummaryReader: options.transcriptSummaryReader,
+		}),
+	);
 
 	const httpServer = createServer(app);
 	const socketManager = new SocketManager(httpServer);

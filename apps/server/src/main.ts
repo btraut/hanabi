@@ -1,7 +1,10 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { HANABI_MIN_PLAYERS } from '@hanabi/shared';
+import { createDatabaseConnection } from './db/database.js';
 import { env } from './env.js';
+import PostgresGameTranscriptRecorder from './games/hanabi/PostgresGameTranscriptRecorder.js';
+import PostgresGameTranscriptSummaryReader from './games/hanabi/PostgresGameTranscriptSummaryReader.js';
 import { GameStore } from './games/server/GameStore.js';
 import LocalFileGameStore from './games/server/LocalFileGameStore.js';
 import RedisGameStore from './games/server/RedisGameStore.js';
@@ -24,6 +27,15 @@ async function createGameStore(): Promise<GameStore> {
 async function main(): Promise<void> {
 	Logger.init();
 	const gameStore = await createGameStore();
+	const databaseConnection = env.DATABASE_URL
+		? createDatabaseConnection(env.DATABASE_URL)
+		: undefined;
+	const gameTranscriptRecorder = databaseConnection
+		? new PostgresGameTranscriptRecorder(databaseConnection)
+		: undefined;
+	const transcriptSummaryReader = databaseConnection
+		? new PostgresGameTranscriptSummaryReader(databaseConnection.db)
+		: undefined;
 	const runtime = createHanabiRuntime({
 		nodeEnv: env.NODE_ENV,
 		sessionCookieSecret: env.SESSION_COOKIE_SECRET,
@@ -33,6 +45,9 @@ async function main(): Promise<void> {
 		domainBase: env.DOMAIN_BASE,
 		minimumPlayers: env.NODE_ENV === 'development' ? 1 : HANABI_MIN_PLAYERS,
 		debugPlayerControls: env.DEBUG_PLAYER_CONTROLS,
+		gameTranscriptRecorder,
+		adminPassword: env.ADMIN_PASSWORD,
+		transcriptSummaryReader,
 	});
 	await runtime.start(Number(env.PORT));
 
