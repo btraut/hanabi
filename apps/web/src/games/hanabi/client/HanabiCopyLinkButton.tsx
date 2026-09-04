@@ -112,7 +112,9 @@ export default function HanabiCopyLinkButton({
 			>
 				<span className="hanabi-copy-control-value">
 					{label && <span className="font-medium text-hanabi-text-muted">{label}</span>}
-					<span className="font-mono tracking-[0.08em] text-hanabi-text">{link}</span>
+					<span className="min-w-0 truncate font-mono tracking-[0.08em] text-hanabi-text">
+						{link}
+					</span>
 				</span>
 				<span className="hanabi-copy-control-action" aria-live="polite">
 					{showCopiedButton ? 'Copied!' : 'Copy'}

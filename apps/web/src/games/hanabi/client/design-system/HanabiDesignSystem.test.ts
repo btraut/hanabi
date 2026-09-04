@@ -47,6 +47,18 @@ describe('Hanabi controls', () => {
 		expect(copyCode).not.toContain('hanabi-copy-control');
 	});
 
+	it('truncates long lobby links before the copy action', () => {
+		const copyLink = renderToStaticMarkup(
+			createElement(HanabiCopyLinkButton, {
+				link: 'https://hanabi.btraut.com/EXAMPLE',
+			}),
+		);
+
+		expect(copyLink).toContain('hanabi-copy-control');
+		expect(copyLink).toContain('min-w-0 truncate font-mono');
+		expect(copyLink).toContain('aria-label="Copy game link https://hanabi.btraut.com/EXAMPLE"');
+	});
+
 	it('uses the same compact field language for text, select, and checkbox inputs', () => {
 		const textInput = renderToStaticMarkup(createElement(HanabiTextInput, { id: 'name' }));
 		const dropdown = renderToStaticMarkup(
