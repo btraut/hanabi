@@ -7,6 +7,11 @@ import { createApp } from './app.js';
 import HanabiGameFactory from './games/hanabi/HanabiGameFactory.js';
 import GameManager from './games/server/GameManager.js';
 import { GameStore } from './games/server/GameStore.js';
+import {
+	GameTranscriptRecorder,
+	NOOP_GAME_TRANSCRIPT_RECORDER,
+} from './games/hanabi/GameTranscriptRecorder.js';
+import type { GameTranscriptSummaryReader } from './games/hanabi/PostgresGameTranscriptSummaryReader.js';
 
 const PRUNE_INTERVAL_MS = 60_000;
 
@@ -19,6 +24,9 @@ export interface HanabiRuntimeOptions {
 	domainBase?: string;
 	minimumPlayers?: number;
 	debugPlayerControls?: boolean;
+	gameTranscriptRecorder?: GameTranscriptRecorder;
+	adminPassword?: string;
+	transcriptSummaryReader?: GameTranscriptSummaryReader;
 }
 
 export interface HanabiRuntime {
@@ -33,13 +41,17 @@ export function createHanabiRuntime(options: HanabiRuntimeOptions): HanabiRuntim
 	const appRuntime = createApp({
 		nodeEnv: options.nodeEnv,
 		sessionCookieSecret: options.sessionCookieSecret,
+		adminPassword: options.adminPassword,
+		transcriptSummaryReader: options.transcriptSummaryReader,
 	});
 	const { app, socketManager } = appRuntime;
+	const gameTranscriptRecorder = options.gameTranscriptRecorder ?? NOOP_GAME_TRANSCRIPT_RECORDER;
 	const gameManager = new GameManager(socketManager, options.gameStore);
 	gameManager.addGameFactory(
 		new HanabiGameFactory(
 			options.minimumPlayers ?? HANABI_MIN_PLAYERS,
 			options.debugPlayerControls ?? false,
+			gameTranscriptRecorder,
 		),
 	);
 
@@ -101,6 +113,11 @@ export function createHanabiRuntime(options: HanabiRuntimeOptions): HanabiRuntim
 		const errors: unknown[] = [];
 		for (const result of results) {
 			if (result.status === 'rejected') errors.push(result.reason as unknown);
+		}
+		try {
+			await gameTranscriptRecorder.close();
+		} catch (error) {
+			errors.push(error);
 		}
 		if (errors.length > 0) throw new AggregateError(errors, 'Failed to close the server runtime.');
 	};

@@ -50,6 +50,7 @@ export default function HanabiBoard(): JSX.Element {
 		handleTileMouseOver,
 		handleTileMouseOut,
 		handleTileMouseDown,
+		handleTileLongPress,
 	} = useTileNotesHandlers();
 
 	useEffect(() => {
@@ -88,6 +89,14 @@ export default function HanabiBoard(): JSX.Element {
 		),
 	);
 
+	const handleTileActionClick = useCallback(
+		(event: React.MouseEvent<HTMLElement>, tileId: string) => {
+			hideNotesForTile();
+			handleTileClick(event, tileId);
+		},
+		[handleTileClick, hideNotesForTile],
+	);
+
 	return (
 		<>
 			<HanabiActionEffects />
@@ -109,10 +118,15 @@ export default function HanabiBoard(): JSX.Element {
 						renderTileSurface={(playerId) => (
 							<HanabiPlayerTiles
 								id={playerId}
-								onTileClick={gameData.finishedReason === null ? handleTileClick : undefined}
+								onTileClick={gameData.finishedReason === null ? handleTileActionClick : undefined}
 								onTileMouseDown={
 									gameData.showNotes && !showMenuForTile && !isDraggingTile
 										? handleTileMouseDown
+										: undefined
+								}
+								onTileLongPress={
+									gameData.showNotes && !showMenuForTile && !isDraggingTile
+										? handleTileLongPress
 										: undefined
 								}
 								onTileMouseOut={
@@ -151,7 +165,11 @@ export default function HanabiBoard(): JSX.Element {
 				/>
 			)}
 			{shouldShowTileOverlay(showNotesForTile, isDraggingTile) && !showMenuForTile && (
-				<HanabiTileNotesTooltip notes={showNotesForTile.notes} coords={showNotesForTile.coords} />
+				<HanabiTileNotesTooltip
+					notes={showNotesForTile.notes}
+					coords={showNotesForTile.coords}
+					onClose={hideNotesForTile}
+				/>
 			)}
 			{showGameOverPopup && (
 				<HanabiGameOverPopup

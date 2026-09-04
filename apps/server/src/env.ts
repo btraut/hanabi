@@ -20,6 +20,8 @@ export interface RuntimeEnv {
 	SESSION_COOKIE_SECRET: string;
 	GAME_STORE: GameStoreType;
 	REDIS_URL: string;
+	DATABASE_URL: string;
+	ADMIN_PASSWORD: string;
 	REDIRECT_URL_PROTOCOL_AND_SUBDOMAIN: string;
 	DOMAIN_BASE: string;
 	DEBUG_PLAYER_CONTROLS: boolean;
@@ -64,6 +66,22 @@ export function parseEnv(source: NodeJS.ProcessEnv): RuntimeEnv {
 		}
 	}
 
+	const databaseUrl = source.DATABASE_URL || '';
+	if (nodeEnv === 'production' && !databaseUrl) {
+		throw new Error('DATABASE_URL must be configured in production.');
+	}
+	if (databaseUrl) {
+		let parsedDatabaseUrl: URL;
+		try {
+			parsedDatabaseUrl = new URL(databaseUrl);
+		} catch {
+			throw new Error('DATABASE_URL must be a valid postgres:// or postgresql:// URL.');
+		}
+		if (!['postgres:', 'postgresql:'].includes(parsedDatabaseUrl.protocol)) {
+			throw new Error('DATABASE_URL must be a valid postgres:// or postgresql:// URL.');
+		}
+	}
+
 	const sessionCookieSecret = source.SESSION_COOKIE_SECRET || DEVELOPMENT_SESSION_COOKIE_SECRET;
 	assertValidProductionSessionSecret(nodeEnv, sessionCookieSecret);
 	const debugPlayerControlsRequested = source.DEBUG_PLAYER_CONTROLS === 'true';
@@ -77,6 +95,8 @@ export function parseEnv(source: NodeJS.ProcessEnv): RuntimeEnv {
 		SESSION_COOKIE_SECRET: sessionCookieSecret,
 		GAME_STORE: gameStore,
 		REDIS_URL: redisUrl,
+		DATABASE_URL: databaseUrl,
+		ADMIN_PASSWORD: source.ADMIN_PASSWORD || 'tenfour',
 		REDIRECT_URL_PROTOCOL_AND_SUBDOMAIN: source.REDIRECT_URL_PROTOCOL_AND_SUBDOMAIN || '',
 		DOMAIN_BASE: source.DOMAIN_BASE || 'http://localhost:3000',
 		DEBUG_PLAYER_CONTROLS: nodeEnv === 'development' && debugPlayerControlsRequested,

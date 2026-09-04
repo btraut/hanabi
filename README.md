@@ -37,10 +37,21 @@ This project uses:
    ```
 
 2. Set up environment variables:
+
    ```bash
    cp apps/server/.env.example apps/server/.env
    # Edit .env with your credentials
    ```
+
+3. Start PostgreSQL and apply the checked-in schema:
+
+   ```bash
+   pnpm db:up
+   pnpm db:migrate
+   ```
+
+   Transcript persistence is optional when `DATABASE_URL` is absent outside production. The
+   example environment points at the local Compose service.
 
 ### Development
 
@@ -63,6 +74,13 @@ to add a second player. During that player's turns, the panel can play or discar
 valid color or number clues, so the full turn loop works in one browser. The development launcher
 enables the matching server controls; production rejects them.
 
+#### Game archive
+
+Visit `/admin` directly to see the unlinked, read-only game archive. It lists the newest transcript
+rounds first with player names, turn count, score, and result, 25 at a time. The default dashboard
+password is `tenfour`; set `ADMIN_PASSWORD` to override it. Successful sign-in creates a signed,
+HTTP-only browser-session cookie and the password is never stored by the web client.
+
 ### Available Commands
 
 | Command             | Description                           |
@@ -77,6 +95,10 @@ enables the matching server controls; production rejects them.
 | `pnpm format:check` | Check code formatting                 |
 | `pnpm clean`        | Remove build artifacts                |
 | `pnpm graph`        | View Nx dependency graph              |
+| `pnpm db:up`        | Start local PostgreSQL                |
+| `pnpm db:migrate`   | Apply checked-in database migrations  |
+| `pnpm db:generate`  | Generate migration SQL from Drizzle   |
+| `pnpm db:down`      | Stop local PostgreSQL                 |
 
 ### Project Structure
 
@@ -103,12 +125,14 @@ packages/
 ```bash
 NODE_ENV=production \
 SESSION_COOKIE_SECRET=<at-least-32-character-secret> \
+ADMIN_PASSWORD=<dashboard-password> \
 GAME_STORE=redis \
 REDIS_URL=<redis-or-rediss-url> \
+DATABASE_URL=<postgres-or-postgresql-url> \
 node dist/apps/server/main.js
 ```
 
-Production requires an explicit store and refuses weak cookie secrets. The file store is intended for
+Production requires Redis/file active-game storage, PostgreSQL transcript storage, and a strong cookie secret. The file store is intended for
 local use; an intentional single-process production run must set both `GAME_STORE=file` and
 `ALLOW_FILE_GAME_STORE=true`.
 

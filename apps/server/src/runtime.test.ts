@@ -5,6 +5,7 @@ import path from 'node:path';
 import { AddressInfo } from 'node:net';
 import { GameStore } from './games/server/GameStore.js';
 import { createHanabiRuntime, HanabiRuntime } from './runtime.js';
+import { GameTranscriptRecorder } from './games/hanabi/GameTranscriptRecorder.js';
 
 const runtimes: HanabiRuntime[] = [];
 const temporaryDirectories: string[] = [];
@@ -76,5 +77,31 @@ describe('createHanabiRuntime', () => {
 
 		await expect(runtime.start(0, '127.0.0.1')).rejects.toBe(restoreError);
 		expect(runtime.ready).toBe(false);
+	});
+
+	it('closes the injected transcript recorder after the game store stops', async () => {
+		const closeStore = vi.fn().mockResolvedValue(undefined);
+		const closeRecorder = vi.fn().mockResolvedValue(undefined);
+		const gameStore = createStore({ close: closeStore });
+		const recorder: GameTranscriptRecorder = {
+			record: vi.fn(),
+			close: closeRecorder,
+		};
+		const runtime = createHanabiRuntime({
+			nodeEnv: 'development',
+			sessionCookieSecret: 'dev-secret',
+			gameStore,
+			gameTranscriptRecorder: recorder,
+			webDistPath: await createWebDist(),
+		});
+		runtimes.push(runtime);
+		await runtime.start(0, '127.0.0.1');
+
+		await runtime.close();
+
+		expect(closeRecorder).toHaveBeenCalledOnce();
+		expect(closeStore.mock.invocationCallOrder[0]).toBeLessThan(
+			closeRecorder.mock.invocationCallOrder[0],
+		);
 	});
 });

@@ -1,3 +1,4 @@
+import AdminPage from '~/admin/AdminPage';
 import HanabiPage from '~/games/hanabi/HanabiPage';
 import Page from '~/pages/Page';
 import { ReactNode } from 'react';
@@ -9,6 +10,11 @@ interface RouteConfig {
 }
 
 const routes: RouteConfig[] = [
+	{
+		path: '/admin',
+		element: <AdminPage />,
+		Component: AdminPage,
+	},
 	{
 		path: '/*',
 		element: <HanabiPage />,

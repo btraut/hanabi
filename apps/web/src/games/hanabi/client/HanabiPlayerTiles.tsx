@@ -12,6 +12,7 @@ import { useHanabiMoveTileContext } from '~/games/hanabi/client/HanabiMoveTileCo
 import { getTileViewTransitionName } from '~/games/hanabi/client/HanabiActionTransition';
 import HanabiPlayerTilesDragLayer from '~/games/hanabi/client/HanabiPlayerTilesDragLayer';
 import { HanabiDragTypes, getHanabiPositionForDrag } from '~/games/hanabi/client/HanabiDragTypes';
+import { getHanabiTileNotesDescription } from '~/games/hanabi/client/HanabiTileNotesTooltip';
 import useJustTookAction from '~/games/hanabi/client/useJustTookAction';
 import {
 	HANABI_BOARD_SIZE,
@@ -30,6 +31,7 @@ interface Props {
 	onTileMouseOver?: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
 	onTileMouseOut?: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
 	onTileMouseDown?: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
+	onTileLongPress?: (element: HTMLElement, tileId: string) => void;
 }
 
 export function getHanabiPlayerTilePermissions({
@@ -95,6 +97,7 @@ export default function HanabiPlayerTiles({
 	onTileMouseOver,
 	onTileMouseOut,
 	onTileMouseDown,
+	onTileLongPress,
 }: Props): JSX.Element {
 	const gameData = useGameData();
 	const transitioningTileId = useTransitioningTileId();
@@ -164,6 +167,13 @@ export default function HanabiPlayerTiles({
 					});
 					const highlighted = !isTransitioning && highlightedTiles.has(tileId);
 					const visualDimensions = getHanabiDesktopTileVisualDimensions(permissions.hidden);
+					const tileHasNotes = hasHanabiTileNotes(gameData.tileNotes[tileId]);
+					const ownerLabel = permissions.ownTiles
+						? `Your tile ${index + 1}`
+						: `${gameData.players[id].name}'s tile ${index + 1}`;
+					const tileLabel = tileHasNotes
+						? `${ownerLabel}, ${getHanabiTileNotesDescription(gameData.tileNotes[tileId])}`
+						: ownerLabel;
 
 					return (
 						<div
@@ -187,16 +197,13 @@ export default function HanabiPlayerTiles({
 							<div className={variant === 'desktop' ? 'hanabi-player-tile' : undefined}>
 								<HanabiInteractiveTileView
 									tile={gameData.tiles[tileId]}
-									ariaLabel={
-										permissions.ownTiles
-											? `Your tile ${index + 1}`
-											: `${gameData.players[id].name}'s tile ${index + 1}`
-									}
+									ariaLabel={tileLabel}
 									hidden={permissions.hidden}
 									onClick={permissions.canAct ? onTileClick : undefined}
 									onMouseOver={isTransitioning ? undefined : onTileMouseOver}
 									onMouseOut={isTransitioning ? undefined : onTileMouseOut}
 									onMouseDown={isTransitioning ? undefined : onTileMouseDown}
+									onLongPress={isTransitioning ? undefined : onTileLongPress}
 									draggable={permissions.draggable}
 									dimensions={variant === 'desktop' ? visualDimensions : undefined}
 									notesIndicator={
@@ -204,7 +211,7 @@ export default function HanabiPlayerTiles({
 										gameStillPlaying &&
 										permissions.ownTiles &&
 										gameData.showNotes &&
-										hasHanabiTileNotes(gameData.tileNotes[tileId])
+										tileHasNotes
 									}
 									highlight={variant === 'legacy' && highlighted}
 									highlightTone={highlightedTone ?? 'action'}

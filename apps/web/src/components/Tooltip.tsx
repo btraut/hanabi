@@ -19,11 +19,12 @@ export default function Tooltip({
 	fadeIn = false,
 }: Props): JSX.Element {
 	const tooltipRef = useRef<HTMLDivElement | null>(null);
-	const viewportWidth = typeof window === 'undefined' ? Number.POSITIVE_INFINITY : window.innerWidth;
+	const viewportWidth =
+		typeof window === 'undefined' ? Number.POSITIVE_INFINITY : window.innerWidth;
 	const constrainedLeft = Math.min(Math.max(left, 130), Math.max(130, viewportWidth - 130));
 
-	const handleBodyClick = useCallback(
-		(event: MouseEvent) => {
+	const handleBodyPointerDown = useCallback(
+		(event: PointerEvent) => {
 			const isTooltip = event.target instanceof Node && tooltipRef.current?.contains(event.target);
 
 			if (onClose && !isTooltip) {
@@ -33,12 +34,12 @@ export default function Tooltip({
 		[onClose],
 	);
 	useEffect(() => {
-		document.body.addEventListener('mousedown', handleBodyClick, true);
+		document.body.addEventListener('pointerdown', handleBodyPointerDown, true);
 
 		return () => {
-			document.body.removeEventListener('mousedown', handleBodyClick, true);
+			document.body.removeEventListener('pointerdown', handleBodyPointerDown, true);
 		};
-	}, [handleBodyClick]);
+	}, [handleBodyPointerDown]);
 
 	const [visible, setVisible] = useState(!fadeIn);
 	useEffect(() => {
@@ -58,15 +59,12 @@ export default function Tooltip({
 				top,
 				left: constrainedLeft,
 			}}
-			className={classNames(
-				'absolute z-[100] max-w-[calc(100vw-24px)] transform transition-all',
-				{
+			className={classNames('absolute z-[100] max-w-[calc(100vw-24px)] transform transition-all', {
 				'-translate-y-full -translate-x-1/2': position === 'above',
 				'-translate-x-1/2': position === 'below',
 				'opacity-0': !visible,
 				'opacity-100': visible,
-				},
-			)}
+			})}
 		>
 			{children}
 		</div>
