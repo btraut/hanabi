@@ -1,6 +1,8 @@
 import { createServer } from 'node:net';
 import { EventEmitter } from 'node:events';
-import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, mkdtemp, readFile, realpath, writeFile } from 'node:fs/promises';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -12,6 +14,7 @@ import {
 	preferredPort,
 	releaseLock,
 	reportRuntimeFailure,
+	reportExistingRuntime,
 	startServicesSequentially,
 	terminateChildren,
 	waitForUrl,
@@ -126,10 +129,107 @@ describe('development runtime lifecycle', () => {
 				target,
 				isRunning: () => true,
 			}),
-		).rejects.toThrow('Hanabi is already running for this worktree (PID 123).');
+		).resolves.toEqual(activeLock);
 		await expect(releaseLock('failed-second-run', target)).resolves.toBe(false);
 		expect(JSON.parse(await readFile(target, 'utf8'))).toEqual(activeLock);
 		await expect(releaseLock('active-run', target)).resolves.toBe(true);
+	});
+
+	it('allows exactly one simultaneous launcher to acquire a new lock', async () => {
+		const directory = await mkdtemp(join(tmpdir(), 'hanabi-runtime-lock-'));
+		const target = join(directory, 'lock.json');
+		const results = await Promise.all(
+			['first', 'second', 'third'].map((runId) => acquireLock(directory, runId, { target })),
+		);
+		const lock = JSON.parse(await readFile(target, 'utf8'));
+		expect(results.filter((result) => result === null)).toHaveLength(1);
+		expect(results.filter(Boolean)).toEqual([lock, lock]);
+	});
+
+	it('reclaims a dead launcher lock', async () => {
+		const directory = await mkdtemp(join(tmpdir(), 'hanabi-runtime-lock-'));
+		const target = join(directory, 'lock.json');
+		await writeFile(target, JSON.stringify({ launcherPid: 123, runId: 'old' }));
+		await expect(
+			acquireLock(directory, 'new', { target, isRunning: () => false }),
+		).resolves.toBeNull();
+		expect(JSON.parse(await readFile(target, 'utf8')).runId).toBe('new');
+	});
+
+	it.each(['ready', 'starting'])(
+		'exits the duplicate CLI successfully for a %s runtime',
+		async (status) => {
+			const directory = await realpath(await mkdtemp(join(tmpdir(), 'hanabi-runtime-cli-')));
+			await mkdir(join(directory, 'scripts'));
+			await mkdir(join(directory, '.context/dev'), { recursive: true });
+			const script = join(directory, 'scripts/dev-runtime.mjs');
+			await copyFile(new URL('./dev-runtime.mjs', import.meta.url), script);
+			const lock = { runId: 'active', worktreeRoot: directory, launcherPid: process.pid };
+			const manifest = {
+				...lock,
+				status,
+				urls: { web: 'http://127.0.0.1:5200', server: 'http://127.0.0.1:3100' },
+			};
+			const target = join(directory, '.context/dev/current.json');
+			const lockTarget = join(directory, '.context/dev/lock.json');
+			await writeFile(lockTarget, JSON.stringify(lock));
+			await writeManifest(manifest, target);
+
+			const { stdout, stderr } = await promisify(execFile)(process.execPath, [script, 'start']);
+			expect(stderr).toBe('');
+			expect(stdout).toContain('Hanabi is already running for this worktree');
+			expect(stdout).toContain(`PID ${process.pid}, ${status}`);
+			expect(stdout).toContain(`Hanabi web: ${manifest.urls.web}`);
+			expect(stdout).toContain(`Hanabi server: ${manifest.urls.server}`);
+			expect(JSON.parse(await readFile(lockTarget, 'utf8'))).toEqual(lock);
+			expect(JSON.parse(await readFile(target, 'utf8'))).toEqual(manifest);
+		},
+	);
+
+	it('waits for a matching manifest before reporting URLs', async () => {
+		const directory = await mkdtemp(join(tmpdir(), 'hanabi-runtime-'));
+		const target = join(directory, 'current.json');
+		const lock = { runId: 'new', worktreeRoot: directory, launcherPid: process.pid };
+		const manifest = {
+			...lock,
+			status: 'starting',
+			urls: { web: 'http://127.0.0.1:5200', server: 'http://127.0.0.1:3100' },
+		};
+		await writeManifest({ ...manifest, runId: 'old' }, target);
+		const output: string[] = [];
+		const reporting = reportExistingRuntime(lock, { target, log: (line) => output.push(line) });
+		await writeManifest(manifest, target);
+		await reporting;
+		expect(output.join('\n')).toContain(manifest.urls.web);
+		expect(output.join('\n')).toContain(manifest.urls.server);
+	});
+
+	it.each(['missing', 'stale'])(
+		'reports startup without inventing URLs for a %s manifest',
+		async (state) => {
+			const directory = await mkdtemp(join(tmpdir(), 'hanabi-runtime-'));
+			const target = join(directory, 'current.json');
+			const lock = { runId: 'new', worktreeRoot: directory, launcherPid: process.pid };
+			if (state === 'stale') {
+				await writeManifest({ ...lock, runId: 'old', urls: { web: 'stale-url' } }, target);
+			}
+			const output: string[] = [];
+			await reportExistingRuntime(lock, { target, timeoutMs: 0, log: (line) => output.push(line) });
+			expect(output.join('\n')).toContain('already starting');
+			expect(output.join('\n')).toContain('pnpm dev:status');
+			expect(output.join('\n')).not.toContain('stale-url');
+		},
+	);
+
+	it('reports an existing launcher that stopped or failed as an error', async () => {
+		const directory = await mkdtemp(join(tmpdir(), 'hanabi-runtime-'));
+		const target = join(directory, 'current.json');
+		const lock = { runId: 'active', worktreeRoot: directory, launcherPid: process.pid };
+		await expect(reportExistingRuntime(lock, { target, isRunning: () => false })).rejects.toThrow(
+			'existing Hanabi launcher stopped',
+		);
+		await writeManifest({ ...lock, status: 'failed', error: 'server exited' }, target);
+		await expect(reportExistingRuntime(lock, { target })).rejects.toThrow('server exited');
 	});
 
 	it('records child spawn errors before running cleanup', async () => {

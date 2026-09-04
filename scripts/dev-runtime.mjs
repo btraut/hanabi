@@ -1,6 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto';
-import { constants } from 'node:fs';
-import { access, mkdir, readFile, realpath, rename, rm, writeFile } from 'node:fs/promises';
+import { link, mkdir, readFile, realpath, rename, rm, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:net';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -64,6 +63,7 @@ async function readJson(path) {
 }
 
 function processIsRunning(pid) {
+	if (!Number.isInteger(pid) || pid <= 0) return false;
 	try {
 		process.kill(pid, 0);
 		return true;
@@ -76,22 +76,80 @@ export async function acquireLock(worktreeRoot, runId, options = {}) {
 	const target = options.target ?? lockPath;
 	const isRunning = options.isRunning ?? processIsRunning;
 	await mkdir(dirname(target), { recursive: true });
-	try {
-		await access(target, constants.F_OK);
-		const lock = await readJson(target);
-		if (lock.worktreeRoot === worktreeRoot && isRunning(lock.launcherPid)) {
-			throw new Error(`Hanabi is already running for this worktree (PID ${lock.launcherPid}).`);
-		}
-		await rm(target, { force: true });
-	} catch (error) {
-		if (error?.code !== 'ENOENT') throw error;
-	}
-
+	const temporaryPath = `${target}.${process.pid}.${randomUUID()}.tmp`;
 	await writeFile(
-		target,
+		temporaryPath,
 		`${JSON.stringify({ runId, worktreeRoot, launcherPid: process.pid }, null, 2)}\n`,
-		{ encoding: 'utf8', flag: 'wx' },
+		'utf8',
 	);
+	try {
+		for (;;) {
+			try {
+				// Publish a complete lock atomically without replacing another launcher's lock.
+				await link(temporaryPath, target);
+				return null;
+			} catch (error) {
+				if (error?.code !== 'EEXIST') throw error;
+			}
+			try {
+				const lock = await readJson(target);
+				if (isRunning(lock.launcherPid)) {
+					if (lock.worktreeRoot !== worktreeRoot) {
+						throw new Error(`Hanabi runtime lock belongs to ${lock.worktreeRoot}.`);
+					}
+					return lock;
+				}
+				await rm(target, { force: true });
+			} catch (error) {
+				if (error?.code !== 'ENOENT') throw error;
+			}
+		}
+	} finally {
+		await rm(temporaryPath, { force: true });
+	}
+}
+
+export async function reportExistingRuntime(lock, options = {}) {
+	const target = options.target ?? manifestPath;
+	const isRunning = options.isRunning ?? processIsRunning;
+	const log = options.log ?? console.log;
+	const deadline = Date.now() + (options.timeoutMs ?? 5_000);
+	for (;;) {
+		if (!isRunning(lock.launcherPid)) {
+			throw new Error('The existing Hanabi launcher stopped. Run pnpm dev again to start it.');
+		}
+		let manifest;
+		try {
+			manifest = await readJson(target);
+		} catch (error) {
+			if (error?.code !== 'ENOENT') throw error;
+		}
+		if (
+			manifest?.runId === lock.runId &&
+			manifest.worktreeRoot === lock.worktreeRoot &&
+			manifest.launcherPid === lock.launcherPid
+		) {
+			if (manifest.status === 'failed') {
+				throw new Error(`The existing Hanabi runtime failed: ${manifest.error}`);
+			}
+			log(
+				`Hanabi is already running for this worktree (PID ${lock.launcherPid}, ${manifest.status}).`,
+			);
+			printRuntimeUrls(manifest, log);
+			return;
+		}
+		if (Date.now() >= deadline) {
+			log(`Hanabi is already starting for this worktree (PID ${lock.launcherPid}).`);
+			log('URLs are not available yet. Run pnpm dev:status to check startup progress.');
+			return;
+		}
+		await new Promise((resolveWait) => setTimeout(resolveWait, 100));
+	}
+}
+
+function printRuntimeUrls(manifest, log = console.log) {
+	log(`Hanabi web: ${manifest.urls.web}`);
+	log(`Hanabi server: ${manifest.urls.server}`);
 }
 
 export async function releaseLock(runId, target = lockPath) {
@@ -211,7 +269,11 @@ export async function startServicesSequentially(startServer, startWeb) {
 export async function start() {
 	const worktreeRoot = await realpath(repoRoot);
 	const runId = randomUUID();
-	await acquireLock(worktreeRoot, runId);
+	const existingLock = await acquireLock(worktreeRoot, runId);
+	if (existingLock) {
+		await reportExistingRuntime(existingLock);
+		return;
+	}
 	let server = null;
 	let web = null;
 	let manifest = null;
@@ -302,8 +364,7 @@ export async function start() {
 		);
 		manifest.status = 'ready';
 		await writeManifest(manifest);
-		console.log(`Hanabi web: ${urls.web}`);
-		console.log(`Hanabi server: ${urls.server}`);
+		printRuntimeUrls(manifest);
 		await Promise.all([waitForChildExit(server), waitForChildExit(web)]);
 	} catch (error) {
 		if (!shuttingDown) {
@@ -328,7 +389,10 @@ export async function status(json = false) {
 		launcherRunning: processIsRunning(manifest.launcherPid),
 	};
 	if (json) console.log(JSON.stringify(result));
-	else console.log(`${result.status}: ${result.urls.web} (launcher ${result.launcherPid})`);
+	else {
+		console.log(`${result.status} (launcher ${result.launcherPid})`);
+		printRuntimeUrls(result);
+	}
 	return result;
 }
 
