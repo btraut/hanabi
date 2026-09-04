@@ -1,5 +1,14 @@
-export type AdminGameStatus = 'in_progress' | 'finished' | 'reset';
+import type { HanabiRuleSet } from '@hanabi/shared';
+
+export type AdminGameStatus = 'in_progress' | 'finished' | 'reset' | 'abandoned';
 export type AdminGameIntegrity = 'complete' | 'partial' | 'conflicted';
+
+export interface AdminGameInitialSettings {
+	ruleSet: HanabiRuleSet;
+	criticalGameOver: boolean;
+	allowDragging: boolean;
+	showNotes: boolean;
+}
 
 export interface AdminGameSummary {
 	roundId: string;
@@ -7,6 +16,7 @@ export interface AdminGameSummary {
 	recordedAt: string;
 	status: AdminGameStatus;
 	integrity: AdminGameIntegrity;
+	initialSettings: AdminGameInitialSettings;
 	playerNames: string[];
 	moveCount: number;
 	score: number | null;
