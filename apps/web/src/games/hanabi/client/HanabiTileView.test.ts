@@ -43,12 +43,50 @@ describe('HanabiTileView artwork', () => {
 		const markup = renderToStaticMarkup(
 			createElement(HanabiTileView, { highlight: true, notesIndicator: true }),
 		);
+		const visibleFace = renderToStaticMarkup(
+			createElement(HanabiTileView, { color: 'red', number: 3, notesIndicator: true }),
+		);
 
 		expect(markup).toContain('tile-back-firework-v5.png');
 		expect(markup).toContain('hanabi-tile-emphasis');
 		expect(markup).toContain('hanabi-tile-emphasis-action');
-		expect(markup).toContain('hanabi-clue-token');
+		expect(markup).toContain('hanabi-tile-shell');
+		expect(markup).toContain('hanabi-tile-surface');
+		expect(markup).toContain('hanabi-tile-surface-clipped');
 		expect(markup).toContain('hanabi-tile-note-marker');
+		expect(markup).toContain('viewBox="0 0 15 15"');
+		expect(markup).toContain('hanabi-tile-note-shadow');
+		expect(markup).toContain('<feGaussianBlur');
+		expect(markup).toContain('transform="translate(');
+		expect(markup).not.toContain('hanabi-tile-note-underfold');
+		expect(markup).toContain('hanabi-tile-note-paper');
+		expect(markup).not.toContain('hanabi-tile-note-highlight');
+		expect(markup).not.toContain('hanabi-tile-note-crease');
+		expect(markup.indexOf('hanabi-tile-note-shadow')).toBeLessThan(
+			markup.indexOf('hanabi-tile-note-paper'),
+		);
+		expect(markup).not.toContain('hanabi-clue-token');
 		expect(markup).not.toContain('MagnifyingGlass');
+		expect(visibleFace).not.toContain('hanabi-tile-note-marker');
+		expect(visibleFace).not.toContain('hanabi-tile-surface-clipped');
+	});
+
+	it('scopes the folded-corner paint definitions to each concealed tile', () => {
+		const markup = renderToStaticMarkup(
+			createElement(
+				'div',
+				null,
+				createElement(HanabiTileView, { notesIndicator: true }),
+				createElement(HanabiTileView, { notesIndicator: true }),
+			),
+		);
+		const paperIds = [...markup.matchAll(/<(?:linear|radial)Gradient id="([^"]+)"/g)].map(
+			(match) => match[1],
+		);
+		const shadowIds = [...markup.matchAll(/<filter id="([^"]+)"/g)].map((match) => match[1]);
+
+		expect(new Set(paperIds).size).toBe(2);
+		expect(new Set(shadowIds).size).toBe(2);
+		for (const id of [...paperIds, ...shadowIds]) expect(markup).toContain(`url(#${id})`);
 	});
 });

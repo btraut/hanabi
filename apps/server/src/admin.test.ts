@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AddressInfo } from 'node:net';
+import { HanabiFinishedReason } from '@hanabi/shared';
 import { ADMIN_SESSION_COOKIE_NAME } from './admin.js';
 import { createApp, ServerRuntime } from './app.js';
 import type {
@@ -53,7 +54,7 @@ describe('admin routes', () => {
 					playerNames: ['Alice', 'Bob'],
 					moveCount: 18,
 					score: 12,
-					finishedReason: 'OutOfTurns',
+					finishedReason: HanabiFinishedReason.OutOfTurns,
 				},
 			],
 			page: 2,

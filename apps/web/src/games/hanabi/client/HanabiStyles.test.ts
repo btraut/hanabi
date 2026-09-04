@@ -291,17 +291,36 @@ describe('Hanabi desktop visual foundation', () => {
 		expect(markup).toContain('animation: none');
 	});
 
-	it('renders clue information as a stable card seal instead of a tiny animated status dot', () => {
+	it('renders clue information as a folded card corner instead of a clue token', () => {
 		const markup = renderToStaticMarkup(createElement(HanabiStyles));
 		const styles = readFileSync(new URL('../../../styles/tailwind.css', import.meta.url), 'utf8');
 
+		const shellRule = markup.match(/\.hanabi-tile-shell\s*\{[^}]*\}/s)?.[0];
+		expect(shellRule).toContain('--hanabi-tile-note-fold-size: 15px');
+		const clippedSurfaceRule = markup.match(/\.hanabi-tile-surface-clipped\s*\{[^}]*\}/s)?.[0];
+		expect(clippedSurfaceRule).toContain('clip-path: polygon(');
+		expect(clippedSurfaceRule).toContain('100% calc(100% - var(--hanabi-tile-note-fold-size))');
+		expect(clippedSurfaceRule).toContain('calc(100% - var(--hanabi-tile-note-fold-size)) 100%');
 		const markerRule = markup.match(/\.hanabi-tile-note-marker\s*\{[^}]*\}/s)?.[0];
-		expect(markerRule).toMatch(/width:\s*14px;[^}]*height:\s*14px;[^}]*border-width:\s*1px;/s);
+		expect(markerRule).toMatch(/right:\s*0;[^}]*bottom:\s*0;/s);
+		expect(markerRule).toContain('width: var(--hanabi-tile-note-fold-size)');
+		expect(markerRule).toContain('height: var(--hanabi-tile-note-fold-size)');
+		expect(markerRule).toContain('overflow: hidden');
+		expect(markerRule).toContain('border-bottom-right-radius: inherit');
+		expect(markup).toContain('.hanabi-tile-note-shadow');
+		expect(markup).toContain('fill: rgb(0 0 0 / 78%)');
+		const shadowRule = markup.match(/\.hanabi-tile-note-shadow\s*\{[^}]*\}/s)?.[0];
+		expect(shadowRule).not.toContain('filter:');
+		expect(markup).not.toContain('.hanabi-tile-note-underfold');
+		expect(markup).not.toContain('.hanabi-tile-note-paper');
+		expect(markup).not.toContain('.hanabi-tile-note-highlight');
+		expect(markup).not.toContain('.hanabi-tile-note-crease');
+		expect(markup).not.toContain('.hanabi-tile-note-marker::before');
+		expect(markup).not.toContain('.hanabi-tile-note-marker::after');
 		expect(markerRule).not.toContain('animation:');
-		expect(markup).not.toContain('@keyframes hanabi-note-marker-arrive');
-		expect(markup).toContain('--hanabi-clue-token-inset: 2px');
-		expect(markup).not.toContain('clip-path:');
-		expect(markup).toContain('0 0 9px 3px rgb(73 141 242 / 72%)');
+		expect(markerRule).not.toContain('border-radius: 50%');
+		expect(markerRule).not.toContain('73 141 242');
+		expect(markup).not.toContain('--hanabi-clue-token-inset');
 		expect(styles).toMatch(
 			/\.hanabi-clue-token\s*\{[^}]*border-radius:\s*50%;[^}]*radial-gradient\(circle at 38% 32%/s,
 		);

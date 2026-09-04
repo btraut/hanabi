@@ -10,6 +10,7 @@ import {
 import HanabiGameMessenger from '~/games/hanabi/client/HanabiGameMessenger';
 import { HanabiHighlightContextProvider } from '~/games/hanabi/client/HanabiHighlightContext';
 import { HanabiDesktopPlayerWorkspaces } from '~/games/hanabi/client/HanabiPlayerWorkspace';
+import { hasHanabiTileNotes } from '~/games/hanabi/client/HanabiPlayerTiles';
 import HanabiTileView from '~/games/hanabi/client/HanabiTileView';
 import {
 	HANABI_DESKTOP_SURFACE_HEIGHT,
@@ -152,6 +153,10 @@ export default function HanabiDesktopFixtureView(): JSX.Element {
 															<HanabiTileView
 																color={fixture.userId === playerId ? undefined : tile.color}
 																dimensions={HANABI_DESKTOP_TILE_SIZE}
+																notesIndicator={
+																	fixture.userId === playerId &&
+																	hasHanabiTileNotes(fixture.gameData.tileNotes[tileId])
+																}
 																number={fixture.userId === playerId ? undefined : tile.number}
 															/>
 														</div>

@@ -1,5 +1,9 @@
 import { getHanabiDesktopFixtures } from '~/games/hanabi/client/dev/HanabiDesktopFixtures';
+import HanabiDesktopFixtureView from '~/games/hanabi/client/dev/HanabiDesktopFixtureView';
 import { getHanabiRuleSetColors, HANABI_BOARD_SIZE, HanabiStage } from '@hanabi/shared';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 
 describe('Hanabi desktop fixtures', () => {
@@ -38,6 +42,33 @@ describe('Hanabi desktop fixtures', () => {
 		];
 
 		expect(renderedTileIds.some((tileId) => sixColor.tiles[tileId].color === 'purple')).toBe(true);
+	});
+
+	it('shows clue-note markers on two concealed cards in the standard fixture', () => {
+		const fixture = getHanabiDesktopFixtures().standard;
+		const localHand = fixture.gameData.playerTiles[fixture.userId];
+
+		expect(fixture.gameData.tileNotes[localHand[1]]).toEqual({ colors: ['green'], numbers: [2] });
+		expect(fixture.gameData.tileNotes[localHand[4]]).toEqual({ colors: ['red'], numbers: [5] });
+	});
+
+	it('renders the standard fixture clue notes as two folded card corners', () => {
+		const markup = renderToStaticMarkup(
+			createElement(
+				MemoryRouter,
+				{ initialEntries: ['/dev/desktop/standard'] },
+				createElement(
+					Routes,
+					null,
+					createElement(Route, {
+						element: createElement(HanabiDesktopFixtureView),
+						path: '/dev/desktop/:fixture',
+					}),
+				),
+			),
+		);
+
+		expect(markup.match(/hanabi-tile-note-marker/g)).toHaveLength(2);
 	});
 
 	it('models the maximum width and height constraints', () => {
