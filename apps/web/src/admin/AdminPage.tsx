@@ -46,8 +46,10 @@ function GameRow({ game }: { readonly game: AdminGameSummary }): JSX.Element {
 	return (
 		<article className="admin-game-row">
 			<div className="admin-game-main">
+				<time className="admin-started" dateTime={game.startedAt ?? undefined}>
+					{startedLabel(game.startedAt)}
+				</time>
 				<p className="admin-players">{game.playerNames.join(', ') || 'No named players'}</p>
-				<p className="admin-started">{startedLabel(game.startedAt)}</p>
 			</div>
 			<dl className="admin-game-stats">
 				<div>
@@ -87,7 +89,6 @@ export default function AdminPage(): JSX.Element {
 	const [games, setGames] = useState<AdminGamesPage | null>(null);
 	const [password, setPassword] = useState('');
 	const [loginError, setLoginError] = useState('');
-	const [actionError, setActionError] = useState('');
 	const [busy, setBusy] = useState(false);
 	const requestId = useRef(0);
 
@@ -142,21 +143,6 @@ export default function AdminPage(): JSX.Element {
 					? 'That password is not right.'
 					: 'The dashboard is unavailable right now.',
 			);
-		} finally {
-			setBusy(false);
-		}
-	}
-
-	async function logout(): Promise<void> {
-		setBusy(true);
-		setActionError('');
-		try {
-			await AdminApi.logout();
-			requestId.current += 1;
-			setGames(null);
-			setView('locked');
-		} catch {
-			setActionError('Sign out failed. Try again.');
 		} finally {
 			setBusy(false);
 		}
@@ -221,24 +207,7 @@ export default function AdminPage(): JSX.Element {
 	return (
 		<main className="admin-shell">
 			<header className="admin-header">
-				<div>
-					<p className="admin-kicker">Hanabi telemetry</p>
-					<h1>Game archive</h1>
-					<p>{games.total === 1 ? '1 recorded game' : `${games.total} recorded games`}</p>
-					{actionError && (
-						<p className="admin-action-error" role="alert">
-							{actionError}
-						</p>
-					)}
-				</div>
-				<button
-					className="admin-quiet-button"
-					disabled={busy}
-					onClick={() => void logout()}
-					type="button"
-				>
-					Sign out
-				</button>
+				<h1>Game archive</h1>
 			</header>
 
 			<section className="admin-ledger" aria-label="Recorded games">
