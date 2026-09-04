@@ -21,14 +21,15 @@ export default function useTileNotesHandlers(): {
 	handleTileMouseOver: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
 	handleTileMouseOut: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
 	handleTileMouseDown: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
+	handleTileLongPress: (element: HTMLElement, tileId: string) => void;
 } {
 	const gameData = useGameData();
 
 	const [showNotesForTile, setShowNotesForTile] = useState<NotesDetails | null>(null);
 
-	const handleTileMouseOver = useCallback(
-		(event: React.MouseEvent<HTMLElement>, tileId: string) => {
-			const rect = event.currentTarget.getBoundingClientRect();
+	const showNotes = useCallback(
+		(element: HTMLElement, tileId: string) => {
+			const rect = element.getBoundingClientRect();
 
 			setShowNotesForTile({
 				tileId,
@@ -42,6 +43,13 @@ export default function useTileNotesHandlers(): {
 		[gameData],
 	);
 
+	const handleTileMouseOver = useCallback(
+		(event: React.MouseEvent<HTMLElement>, tileId: string) => {
+			showNotes(event.currentTarget, tileId);
+		},
+		[showNotes],
+	);
+
 	const hideNotesForTile = useCallback(() => {
 		setShowNotesForTile(null);
 	}, []);
@@ -52,5 +60,6 @@ export default function useTileNotesHandlers(): {
 		handleTileMouseOver,
 		handleTileMouseOut: hideNotesForTile,
 		handleTileMouseDown: hideNotesForTile,
+		handleTileLongPress: showNotes,
 	};
 }

@@ -18,9 +18,21 @@ export enum HanabiTileActionsTooltipType {
 interface Props {
 	notes: HanabiTileNotes | undefined;
 	coords: { left: number; top: number };
+	onClose: () => void;
 }
 
-export default function HanabiTileNotesTooltip({ notes, coords }: Props): JSX.Element {
+export function getHanabiTileNotesDescription(notes: HanabiTileNotes | undefined): string {
+	if (!notes || (notes.colors.length === 0 && notes.numbers.length === 0)) {
+		return 'No clues recorded for this card.';
+	}
+
+	const descriptions: string[] = [];
+	if (notes.colors.length > 0) descriptions.push(`Color clues: ${notes.colors.join(', ')}.`);
+	if (notes.numbers.length > 0) descriptions.push(`Number clues: ${notes.numbers.join(', ')}.`);
+	return descriptions.join(' ');
+}
+
+export default function HanabiTileNotesTooltip({ notes, coords, onClose }: Props): JSX.Element {
 	const gameData = useGameData();
 
 	const allColors: HanabiClueColor[] = ['red', 'blue', 'green', 'yellow', 'white'];
@@ -32,10 +44,11 @@ export default function HanabiTileNotesTooltip({ notes, coords }: Props): JSX.El
 
 	return (
 		<Portal>
-			<Tooltip top={coords.top} left={coords.left} position="below" fadeIn>
-				<div className="mt-1">
+			<Tooltip top={coords.top} left={coords.left} position="below" fadeIn onClose={onClose}>
+				<div className="mt-1" role="tooltip" aria-live="polite">
+					<span className="sr-only">{getHanabiTileNotesDescription(notes)}</span>
 					<div className="bg-gray-900 rounded-lg pb-2 pt-1 px-2">
-						<div className="grid grid-flow-col gap-1.5 justify-center">
+						<div aria-hidden="true" className="grid grid-flow-col gap-1.5 justify-center">
 							{allNumbers.map((number) => (
 								<div
 									key={number}
@@ -47,7 +60,7 @@ export default function HanabiTileNotesTooltip({ notes, coords }: Props): JSX.El
 								</div>
 							))}
 						</div>
-						<div className="grid grid-flow-col gap-1 justify-center">
+						<div aria-hidden="true" className="grid grid-flow-col gap-1 justify-center">
 							{allColors.map((color) => (
 								<div
 									key={color}
