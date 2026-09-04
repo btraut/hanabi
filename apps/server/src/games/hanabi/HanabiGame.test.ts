@@ -838,6 +838,12 @@ describe('HanabiGame characterization', () => {
 		const scope = getScope(game.title, game.id);
 		sockets.emit('alice', { scope, type: 'AddPlayerMessage', data: { name: 'Alice' } });
 		sockets.emit('bob', { scope, type: 'AddPlayerMessage', data: { name: 'Bob' } });
+		// A randomly dealt critical card must not end this multi-turn recording scenario.
+		sockets.emit('alice', {
+			scope,
+			type: 'ChangeGameSettingsMessage',
+			data: { criticalGameOver: false },
+		});
 		sockets.emit('alice', { scope, type: 'StartGameMessage', data: undefined });
 
 		const started = serializedData(game);
@@ -858,6 +864,7 @@ describe('HanabiGame characterization', () => {
 			integrity: { status: 'complete' },
 		});
 		const dealtTileIds = startSnapshot.dealOrder!.flatMap(({ tileIds }) => tileIds);
+		if (!startSnapshot.deck) throw new Error('Expected the complete starting deck.');
 		expect(startSnapshot.deck.map(({ id }) => id)).toEqual([
 			...dealtTileIds,
 			...[...started.remainingTiles].reverse(),
