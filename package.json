@@ -18,12 +18,17 @@
 		"format": "prettier --cache --write .",
 		"format:check": "prettier --cache --check .",
 		"graph": "nx graph",
-		"clean": "rimraf ./dist"
+		"clean": "rimraf ./dist",
+		"db:generate": "drizzle-kit generate",
+		"db:migrate": "tsx apps/server/src/db/migrate.ts",
+		"db:up": "docker compose up -d postgres",
+		"db:down": "docker compose down"
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.39.5",
 		"@nx/eslint": "^20.8.4",
 		"@types/node": "^24.13.3",
+		"drizzle-kit": "0.31.10",
 		"esbuild": "^0.28.1",
 		"eslint": "^9.39.5",
 		"eslint-config-prettier": "^10.1.8",

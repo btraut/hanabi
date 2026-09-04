@@ -19,6 +19,7 @@ import HanabiGame, { HanabiGameSerialized } from './HanabiGame.js';
 import GameFactory from '../server/GameFactory.js';
 import { SaveGameDelegate } from '../server/GameStore.js';
 import ServerSocketManager from '../../utils/SocketManager.js';
+import { GameTranscriptRecorder, NOOP_GAME_TRANSCRIPT_RECORDER } from './GameTranscriptRecorder.js';
 
 const TILE_NUMBERS = [1, 2, 3, 4, 5] as const;
 const STAGES = Object.values(HanabiStage);
@@ -329,6 +330,7 @@ export default class HanabiGameFactory extends GameFactory {
 	constructor(
 		private readonly _minimumPlayers = HANABI_MIN_PLAYERS,
 		private readonly _debugPlayerControls = false,
+		private readonly _transcriptRecorder: GameTranscriptRecorder = NOOP_GAME_TRANSCRIPT_RECORDER,
 	) {
 		super();
 	}
@@ -348,6 +350,7 @@ export default class HanabiGameFactory extends GameFactory {
 			saveGameDelegate,
 			this._minimumPlayers,
 			this._debugPlayerControls,
+			this._transcriptRecorder,
 		);
 	}
 
@@ -362,6 +365,7 @@ export default class HanabiGameFactory extends GameFactory {
 			saveGameDelegate,
 			this._minimumPlayers,
 			this._debugPlayerControls,
+			this._transcriptRecorder,
 		);
 	}
 }

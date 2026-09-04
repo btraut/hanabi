@@ -1651,6 +1651,311 @@ body {
 	outline-offset: 3px;
 }
 
+/* The admin archive is intentionally separate from the game UI. */
+.admin-login-shell,
+.admin-state-shell,
+.admin-shell {
+	min-height: 100svh;
+	color: var(--color-hanabi-text);
+}
+
+.admin-login-shell,
+.admin-state-shell {
+	display: grid;
+	place-items: center;
+	padding: 24px;
+}
+
+.admin-login-card {
+	width: min(100%, 390px);
+	padding: 36px;
+	border: 1px solid var(--color-hanabi-border);
+	border-radius: 16px;
+	background: rgb(11 23 40 / 92%);
+	box-shadow: var(--hanabi-panel-shadow);
+}
+
+.admin-kicker {
+	margin: 0 0 5px;
+	color: var(--color-hanabi-coral-soft);
+	font-size: 14px;
+	font-weight: 700;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+}
+
+.admin-login-card h1,
+.admin-header h1,
+.admin-state-shell h1 {
+	margin: 0;
+	color: var(--color-hanabi-ivory);
+	font-size: clamp(34px, 5vw, 48px);
+	font-weight: 600;
+	letter-spacing: -0.02em;
+	line-height: 1;
+}
+
+.admin-login-copy {
+	margin: 14px 0 26px;
+	color: var(--color-hanabi-text-muted);
+	font-size: 17px;
+}
+
+.admin-login-card form {
+	display: grid;
+	gap: 10px;
+}
+
+.admin-login-card label,
+.admin-game-stats dt {
+	color: var(--color-hanabi-text-muted);
+	font-size: 13px;
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.admin-login-card input {
+	min-height: 46px;
+	padding: 9px 12px;
+	border: 1px solid var(--color-hanabi-border-bright);
+	border-radius: 8px;
+	background: rgb(3 14 27 / 78%);
+	color: var(--color-hanabi-text);
+	font-size: 18px;
+}
+
+.admin-login-card input:focus,
+.admin-login-card button:focus-visible,
+.admin-state-shell button:focus-visible,
+.admin-header button:focus-visible,
+.admin-pagination button:focus-visible {
+	outline: 2px solid var(--color-hanabi-coral-soft);
+	outline-offset: 3px;
+}
+
+.admin-login-card button,
+.admin-state-shell button,
+.admin-pagination button {
+	min-height: 42px;
+	padding: 9px 16px;
+	border: 1px solid rgb(229 143 131 / 78%);
+	border-radius: 8px;
+	background: var(--color-hanabi-coral);
+	color: #fffaf3;
+	font-size: 16px;
+	font-weight: 600;
+}
+
+.admin-login-card button {
+	margin-top: 8px;
+}
+
+.admin-login-card button:disabled,
+.admin-pagination button:disabled,
+.admin-header button:disabled {
+	cursor: not-allowed;
+	opacity: 0.4;
+}
+
+.admin-form-error {
+	margin: 1px 0 0;
+	color: #f2a59b;
+}
+
+.admin-state-shell {
+	align-content: center;
+	gap: 14px;
+	text-align: center;
+}
+
+.admin-state-shell p {
+	margin: 0;
+	color: var(--color-hanabi-text-muted);
+	font-size: 18px;
+}
+
+.admin-state-shell button {
+	justify-self: center;
+}
+
+.admin-shell {
+	width: min(100%, 1120px);
+	margin: 0 auto;
+	padding: 54px 32px 36px;
+}
+
+.admin-header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 24px;
+	margin-bottom: 30px;
+}
+
+.admin-header > div > p:last-child {
+	margin: 9px 0 0;
+	color: var(--color-hanabi-text-muted);
+	font-size: 17px;
+}
+
+.admin-header .admin-action-error {
+	color: #f2a59b;
+}
+
+.admin-quiet-button {
+	min-height: 38px;
+	padding: 7px 13px;
+	border: 1px solid var(--color-hanabi-border);
+	border-radius: 8px;
+	background: rgb(11 23 40 / 76%);
+	color: var(--color-hanabi-text-muted);
+	font-size: 15px;
+	font-weight: 600;
+}
+
+.admin-quiet-button:hover {
+	border-color: var(--color-hanabi-border-bright);
+	color: var(--color-hanabi-text);
+}
+
+.admin-ledger {
+	overflow: hidden;
+	border: 1px solid var(--color-hanabi-border);
+	border-radius: 14px;
+	background: rgb(11 23 40 / 88%);
+	box-shadow: var(--hanabi-panel-shadow);
+}
+
+.admin-game-row {
+	position: relative;
+	display: grid;
+	grid-template-columns: minmax(220px, 1.15fr) minmax(600px, 2.85fr);
+	gap: 28px;
+	align-items: center;
+	padding: 21px 24px;
+	border-bottom: 1px solid rgb(35 56 84 / 80%);
+}
+
+.admin-game-row:last-child {
+	border-bottom: 0;
+}
+
+.admin-players,
+.admin-started,
+.admin-game-stats dd {
+	margin: 0;
+}
+
+.admin-players {
+	overflow: hidden;
+	color: var(--color-hanabi-ivory);
+	font-size: 19px;
+	font-weight: 600;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.admin-started {
+	margin-top: 3px;
+	color: var(--color-hanabi-text-muted);
+	font-size: 14px;
+}
+
+.admin-game-stats {
+	display: grid;
+	grid-template-columns: 0.65fr 0.75fr 0.5fr 1fr 0.4fr 0.65fr;
+	gap: 14px;
+	margin: 0;
+}
+
+.admin-game-stats dd {
+	margin-top: 2px;
+	color: var(--color-hanabi-text);
+	font-size: 17px;
+	font-weight: 600;
+}
+
+.admin-empty {
+	padding: 60px 24px;
+	text-align: center;
+}
+
+.admin-empty h2 {
+	margin: 0;
+	color: var(--color-hanabi-ivory);
+	font-size: 26px;
+}
+
+.admin-empty p {
+	margin: 7px 0 0;
+	color: var(--color-hanabi-text-muted);
+}
+
+.admin-pagination {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 20px;
+	padding: 18px 2px 0;
+}
+
+.admin-pagination p {
+	margin: 0;
+	color: var(--color-hanabi-text-muted);
+}
+
+.admin-pagination > div {
+	display: flex;
+	gap: 8px;
+}
+
+.admin-pagination button {
+	min-width: 86px;
+	border-color: var(--color-hanabi-border-bright);
+	background: rgb(16 33 57 / 92%);
+	color: var(--color-hanabi-text);
+}
+
+@media (max-width: 920px) {
+	.admin-shell {
+		padding: 32px 16px 24px;
+	}
+
+	.admin-login-card {
+		padding: 28px 24px;
+	}
+
+	.admin-header {
+		align-items: center;
+	}
+
+	.admin-game-row {
+		grid-template-columns: 1fr;
+		gap: 17px;
+		padding: 20px;
+	}
+
+	.admin-game-stats {
+		grid-template-columns: repeat(2, 1fr);
+		row-gap: 13px;
+	}
+
+	.admin-players {
+		white-space: normal;
+	}
+
+	.admin-pagination {
+		align-items: flex-start;
+		flex-direction: column;
+	}
+
+	.admin-pagination > div,
+	.admin-pagination button {
+		width: 100%;
+	}
+}
+
 @keyframes hanabi-unread-pulse {
 	0%,
 	100% {

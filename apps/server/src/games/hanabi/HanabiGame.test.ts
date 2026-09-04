@@ -20,6 +20,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import HanabiGame, { HanabiGameSerialized } from './HanabiGame.js';
 import HanabiGameFactory from './HanabiGameFactory.js';
 import ServerSocketManager from '../../utils/SocketManager.js';
+import { GameTranscriptSnapshot } from './GameTranscript.js';
+import { GameTranscriptRecorder } from './GameTranscriptRecorder.js';
 
 class FakeSocketManager {
 	readonly onMessage = new PubSub<{ userId: string | undefined; message: HanabiMessage }>();
@@ -38,6 +40,21 @@ class FakeSocketManager {
 
 function serializedData(game: HanabiGame): HanabiGameData {
 	return (JSON.parse(game.serialize()!) as HanabiGameSerialized).data;
+}
+
+function serializedGame(game: HanabiGame): HanabiGameSerialized {
+	return JSON.parse(game.serialize()!) as HanabiGameSerialized;
+}
+
+function createTranscriptRecorder() {
+	const snapshots: GameTranscriptSnapshot[] = [];
+	const record = vi.fn((snapshot: GameTranscriptSnapshot) => snapshots.push(snapshot));
+	const close = vi.fn().mockResolvedValue(undefined);
+	const recorder: GameTranscriptRecorder = {
+		record,
+		close,
+	};
+	return { recorder, snapshots, record, close };
 }
 
 function refreshFor(sockets: FakeSocketManager, userId: string): HanabiGameData {
@@ -805,6 +822,240 @@ describe('HanabiGame characterization', () => {
 
 		expect(serializedData(hydrated).creatorId).toBe('creator');
 		hydrated.cleanUp();
+	});
+
+	it('records a complete start snapshot and one post-turn snapshot per accepted move', () => {
+		game.cleanUp();
+		const { recorder, snapshots, record } = createTranscriptRecorder();
+		game = new HanabiGame(
+			'creator',
+			sockets as unknown as ServerSocketManager,
+			{ saveGame: vi.fn(), deleteGame: vi.fn() },
+			HANABI_MIN_PLAYERS,
+			false,
+			recorder,
+		);
+		const scope = getScope(game.title, game.id);
+		sockets.emit('alice', { scope, type: 'AddPlayerMessage', data: { name: 'Alice' } });
+		sockets.emit('bob', { scope, type: 'AddPlayerMessage', data: { name: 'Bob' } });
+		sockets.emit('alice', { scope, type: 'StartGameMessage', data: undefined });
+
+		const started = serializedData(game);
+		const startSnapshot = snapshots[0];
+		expect(record).toHaveBeenCalledTimes(1);
+		expect(startSnapshot).toMatchObject({
+			version: 1,
+			revision: 1,
+			roundId: started.seed,
+			gameId: game.id,
+			players: [
+				{ id: 'alice', name: 'Alice' },
+				{ id: 'bob', name: 'Bob' },
+			],
+			turnOrder: started.turnOrder,
+			moves: [],
+			lifecycle: { status: 'in_progress' },
+			integrity: { status: 'complete' },
+		});
+		const dealtTileIds = startSnapshot.dealOrder!.flatMap(({ tileIds }) => tileIds);
+		expect(startSnapshot.deck.map(({ id }) => id)).toEqual([
+			...dealtTileIds,
+			...[...started.remainingTiles].reverse(),
+		]);
+		expect(new Set(startSnapshot.deck.map(({ id }) => id)).size).toBe(
+			Object.keys(started.tiles).length,
+		);
+
+		const clueActor = started.currentPlayerId!;
+		const clueRecipient = started.turnOrder.find((id) => id !== clueActor)!;
+		const clueTile = started.tiles[started.playerTiles[clueRecipient][0]];
+		sockets.emit(clueActor, {
+			scope,
+			type: 'GiveClueMessage',
+			data: { to: clueRecipient, number: clueTile.number },
+		});
+
+		const afterClue = serializedData(game);
+		const discardActor = afterClue.currentPlayerId!;
+		const discardedTileId = afterClue.playerTiles[discardActor][0];
+		sockets.emit(discardActor, {
+			scope,
+			type: 'DiscardTileMessage',
+			data: { id: discardedTileId },
+		});
+
+		const afterDiscard = serializedData(game);
+		const playActor = afterDiscard.currentPlayerId!;
+		const playedTileId = afterDiscard.playerTiles[playActor][0];
+		sockets.emit(playActor, {
+			scope,
+			type: 'PlayTileMessage',
+			data: { id: playedTileId },
+		});
+
+		expect(record).toHaveBeenCalledTimes(4);
+		expect(snapshots[0].moves).toEqual([]);
+		const moves = snapshots.at(-1)!.moves;
+		expect(moves).toHaveLength(3);
+		expect(moves[0]).toMatchObject({
+			type: 'clue',
+			index: 0,
+			actorId: clueActor,
+			recipientId: clueRecipient,
+			clue: { type: 'number', value: clueTile.number },
+			postTurn: { nextPlayerId: discardActor, clues: 7 },
+		});
+		if (moves[0].type !== 'clue') throw new Error('Expected a clue transcript move.');
+		expect(moves[0].selectedTileIds).toContain(clueTile.id);
+		expect(moves[1]).toMatchObject({
+			type: 'discard',
+			index: 1,
+			actorId: discardActor,
+			tileId: discardedTileId,
+			postTurn: { nextPlayerId: playActor, clues: 8 },
+		});
+		expect(moves[2]).toMatchObject({
+			type: 'play',
+			index: 2,
+			actorId: playActor,
+			tileId: playedTileId,
+			postTurn: { nextPlayerId: discardActor },
+		});
+		expect(snapshots.at(-1)?.revision).toBe(4);
+
+		record.mockClear();
+		sockets.emit(playActor, {
+			scope,
+			type: 'PlayTileMessage',
+			data: { id: serializedData(game).playerTiles[playActor][0] },
+		});
+		sockets.emit(discardActor, {
+			scope,
+			type: 'PlayTileMessage',
+			data: { id: 'not-a-tile' },
+		});
+		expect(record).not.toHaveBeenCalled();
+	});
+
+	it('finalizes a reset round and starts a distinct transcript under the same game id', () => {
+		game.cleanUp();
+		const { recorder, snapshots } = createTranscriptRecorder();
+		game = new HanabiGame(
+			'creator',
+			sockets as unknown as ServerSocketManager,
+			{ saveGame: vi.fn(), deleteGame: vi.fn() },
+			HANABI_MIN_PLAYERS,
+			false,
+			recorder,
+		);
+		const scope = getScope(game.title, game.id);
+		sockets.emit('alice', { scope, type: 'AddPlayerMessage', data: { name: 'Alice' } });
+		sockets.emit('bob', { scope, type: 'AddPlayerMessage', data: { name: 'Bob' } });
+		sockets.emit('alice', { scope, type: 'StartGameMessage', data: undefined });
+		const firstRoundId = snapshots.at(-1)!.roundId;
+
+		sockets.emit('bob', { scope, type: 'ResetGameMessage', data: undefined });
+		expect(snapshots.at(-1)).toMatchObject({
+			gameId: game.id,
+			roundId: firstRoundId,
+			revision: 2,
+			lifecycle: { status: 'reset' },
+		});
+		sockets.emit('alice', { scope, type: 'StartGameMessage', data: undefined });
+
+		expect(snapshots.at(-1)).toMatchObject({
+			gameId: game.id,
+			revision: 1,
+			lifecycle: { status: 'in_progress' },
+		});
+		expect(snapshots.at(-1)!.roundId).not.toBe(firstRoundId);
+		expect(serializedGame(game).transcript?.roundId).toBe(snapshots.at(-1)!.roundId);
+	});
+
+	it('continues hydrated transcripts and marks legacy hydrated rounds partial', () => {
+		game.cleanUp();
+		const initialRecorder = createTranscriptRecorder();
+		game = new HanabiGame(
+			'creator',
+			sockets as unknown as ServerSocketManager,
+			{ saveGame: vi.fn(), deleteGame: vi.fn() },
+			HANABI_MIN_PLAYERS,
+			false,
+			initialRecorder.recorder,
+		);
+		const scope = getScope(game.title, game.id);
+		sockets.emit('alice', { scope, type: 'AddPlayerMessage', data: { name: 'Alice' } });
+		sockets.emit('bob', { scope, type: 'AddPlayerMessage', data: { name: 'Bob' } });
+		sockets.emit('alice', { scope, type: 'StartGameMessage', data: undefined });
+		const persisted = serializedGame(game);
+		const roundId = persisted.data.seed;
+		game.cleanUp();
+
+		const hydratedSockets = new FakeSocketManager();
+		const hydratedRecorder = createTranscriptRecorder();
+		const hydrated = new HanabiGame(
+			persisted,
+			hydratedSockets as unknown as ServerSocketManager,
+			{ saveGame: vi.fn(), deleteGame: vi.fn() },
+			HANABI_MIN_PLAYERS,
+			false,
+			hydratedRecorder.recorder,
+		);
+		expect(hydratedRecorder.snapshots).toHaveLength(1);
+		expect(hydratedRecorder.snapshots[0]).toMatchObject({ roundId, revision: 1 });
+		const actor = persisted.data.currentPlayerId!;
+		const recipient = persisted.data.turnOrder.find((id) => id !== actor)!;
+		const recipientTile = persisted.data.tiles[persisted.data.playerTiles[recipient][0]];
+		hydratedSockets.emit(actor, {
+			scope: getScope(hydrated.title, hydrated.id),
+			type: 'GiveClueMessage',
+			data: { to: recipient, number: recipientTile.number },
+		});
+		expect(hydratedRecorder.snapshots).toHaveLength(2);
+		expect(hydratedRecorder.snapshots[1]).toMatchObject({
+			roundId,
+			revision: 2,
+			integrity: { status: 'complete' },
+			moves: [expect.objectContaining({ type: 'clue', index: 0 })],
+		});
+		hydrated.cleanUp();
+
+		const legacy = structuredClone(persisted);
+		delete legacy.transcript;
+		const legacySockets = new FakeSocketManager();
+		const legacyRecorder = createTranscriptRecorder();
+		const legacyGame = new HanabiGame(
+			legacy,
+			legacySockets as unknown as ServerSocketManager,
+			{ saveGame: vi.fn(), deleteGame: vi.fn() },
+			HANABI_MIN_PLAYERS,
+			false,
+			legacyRecorder.recorder,
+		);
+		expect(legacyRecorder.snapshots).toHaveLength(1);
+		expect(legacyRecorder.snapshots[0]).toMatchObject({
+			roundId,
+			revision: 1,
+			integrity: { status: 'partial' },
+		});
+		expect(serializedGame(legacyGame).transcript).toMatchObject({
+			roundId,
+			deck: null,
+			dealOrder: null,
+			integrity: { status: 'partial' },
+		});
+		legacySockets.emit(actor, {
+			scope: getScope(legacyGame.title, legacyGame.id),
+			type: 'GiveClueMessage',
+			data: { to: recipient, number: recipientTile.number },
+		});
+		expect(legacyRecorder.snapshots[1]).toMatchObject({
+			roundId,
+			revision: 2,
+			integrity: { status: 'partial' },
+			moves: [expect.objectContaining({ type: 'clue', index: 0 })],
+		});
+		legacyGame.cleanUp();
 	});
 
 	describe('debug player controls', () => {
