@@ -1,0 +1,298 @@
+.hanabi-review {
+	padding-bottom: 20px;
+	color: var(--color-hanabi-text);
+}
+
+.hanabi-review .hanabi-desktop-board {
+	grid-template-rows: auto auto;
+	padding-bottom: 20px;
+}
+
+.hanabi-review-header,
+.hanabi-review-transport,
+.hanabi-review-footnote,
+.hanabi-review-unavailable {
+	width: calc(100% - 42px);
+	max-width: 1660px;
+	margin-inline: auto;
+}
+
+.hanabi-review-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 20px;
+	padding-block: 20px;
+}
+
+.hanabi-review h1 {
+	font-size: 26px;
+	font-weight: 600;
+}
+.hanabi-review-perspective {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 20px;
+}
+.hanabi-review label {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+.hanabi-review input {
+	accent-color: var(--color-hanabi-coral);
+}
+.hanabi-review select {
+	max-width: 190px;
+}
+
+.hanabi-review button,
+.hanabi-review select,
+.hanabi-review-entry {
+	font: inherit;
+	border: 1px solid var(--color-hanabi-border);
+	border-radius: 6px;
+	background: var(--color-hanabi-table-deep);
+	color: var(--color-hanabi-text);
+	padding: 8px 16px;
+	cursor: pointer;
+}
+
+.hanabi-review button:hover:not(:disabled),
+.hanabi-review-entry:hover {
+	border-color: var(--color-hanabi-coral);
+}
+.hanabi-review button:disabled {
+	opacity: 0.4;
+	cursor: default;
+}
+.hanabi-review :focus-visible,
+.hanabi-review-entry:focus-visible {
+	outline: 2px solid var(--color-hanabi-coral);
+	outline-offset: 3px;
+}
+.hanabi-review-header > button {
+	border-color: transparent;
+	background: transparent;
+	padding-left: 0;
+}
+
+.hanabi-review-status {
+	grid-column: 1 / -1;
+	grid-row: 1;
+	border: 1px solid var(--color-hanabi-border);
+	border-radius: 8px;
+	background: var(--color-hanabi-surface);
+	overflow: hidden;
+}
+.hanabi-review-turn {
+	display: flex;
+	justify-content: space-between;
+	gap: 10px;
+	flex-wrap: wrap;
+	padding: 10px 20px;
+	border-bottom: 1px solid var(--color-hanabi-border);
+}
+.hanabi-review-turn span {
+	color: var(--color-hanabi-coral-soft);
+}
+.hanabi-review-status dl {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.hanabi-review-status dl > div {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 12px;
+	padding: 10px;
+}
+.hanabi-review-status dt {
+	color: var(--color-hanabi-text-muted);
+}
+.hanabi-review-status dd {
+	font-size: 25px;
+	font-variant-numeric: tabular-nums;
+}
+
+.hanabi-review .hanabi-player-workspace {
+	height: 140px;
+	box-shadow: none;
+}
+.hanabi-review-hand {
+	display: flex;
+	align-items: flex-start;
+	gap: 7px;
+	padding: 14px 10px;
+	min-height: 138px;
+}
+.hanabi-review .hanabi-review-card {
+	position: relative;
+	padding: 0;
+	border: 0;
+	border-radius: 8px;
+	background: transparent;
+}
+.hanabi-review .hanabi-review-card:disabled {
+	opacity: 1;
+}
+.hanabi-review-card-highlight {
+	position: absolute;
+	inset: -3px;
+	border: 2px solid var(--color-hanabi-coral);
+	border-radius: 10px;
+	pointer-events: none;
+}
+.hanabi-review-card[aria-pressed='true'] {
+	outline: 2px solid var(--color-hanabi-text);
+	outline-offset: 3px;
+}
+
+.hanabi-review-moves {
+	border: 1px solid var(--color-hanabi-border);
+	border-radius: 8px;
+	background: var(--color-hanabi-surface);
+	overflow: hidden;
+}
+.hanabi-review-moves h2 {
+	padding: 12px 16px;
+	border-bottom: 1px solid var(--color-hanabi-border);
+	font-weight: 600;
+}
+.hanabi-review-move-list {
+	position: relative;
+	max-height: 370px;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+}
+.hanabi-review-move-list button {
+	display: grid;
+	grid-template-columns: 28px minmax(0, 1fr);
+	gap: 10px;
+	width: 100%;
+	border: 0;
+	border-bottom: 1px solid var(--color-hanabi-border);
+	border-left: 3px solid transparent;
+	border-radius: 0;
+	background: transparent;
+	text-align: left;
+	padding: 10px 14px;
+}
+.hanabi-review-move-list button[aria-current='step'] {
+	border-left-color: var(--color-hanabi-coral);
+	background: var(--color-hanabi-table);
+}
+.hanabi-review-move-list button:focus-visible {
+	outline-offset: -3px;
+}
+.hanabi-review .hanabi-review-future,
+.hanabi-review-moves > p {
+	color: var(--color-hanabi-text-muted);
+}
+.hanabi-review-moves > p {
+	padding: 10px 16px;
+	font-size: 16px;
+}
+
+.hanabi-review-transport {
+	position: sticky;
+	bottom: 12px;
+	z-index: 10;
+	border: 1px solid var(--color-hanabi-border);
+	border-radius: 8px;
+	background: var(--color-hanabi-table-deep);
+	box-shadow: 0 8px 30px #0005;
+}
+.hanabi-review-caption {
+	padding: 10px 18px;
+	border-bottom: 1px solid var(--color-hanabi-border);
+}
+.hanabi-review-notes {
+	padding: 8px 18px;
+	color: var(--color-hanabi-coral-soft);
+}
+.hanabi-review-controls {
+	display: grid;
+	grid-template-columns: auto auto minmax(80px, 1fr) auto auto auto;
+	align-items: center;
+	gap: 12px;
+	padding: 12px 18px;
+}
+.hanabi-review-controls input {
+	width: 100%;
+	cursor: pointer;
+}
+.hanabi-review-controls output {
+	min-width: 66px;
+	text-align: center;
+	font-variant-numeric: tabular-nums;
+}
+.hanabi-review-footnote {
+	padding-top: 12px;
+	font-size: 15px;
+	color: var(--color-hanabi-text-muted);
+}
+
+@media (max-width: 1439px) {
+	.hanabi-review-move-list {
+		max-height: 230px;
+	}
+}
+
+@media (max-width: 959px) {
+	.hanabi-review-header {
+		flex-wrap: wrap;
+		gap: 12px;
+	}
+	.hanabi-review-perspective {
+		width: 100%;
+		justify-content: space-between;
+		gap: 12px;
+	}
+	.hanabi-review [data-desktop-region='activity'] {
+		display: block;
+		grid-column: 1;
+		grid-row: 4;
+	}
+	.hanabi-review .hanabi-desktop-board {
+		grid-template-rows: auto auto auto auto;
+	}
+	.hanabi-review .hanabi-player-workspace {
+		height: 140px;
+	}
+	.hanabi-review .hanabi-player-workspace > div:first-child {
+		padding-top: 10px;
+	}
+	.hanabi-review-hand {
+		gap: 5px;
+		padding-inline: 7px;
+	}
+	.hanabi-review-card > div {
+		width: clamp(30px, 8.5vw, 50px) !important;
+		height: clamp(39px, 10.88vw, 64px) !important;
+	}
+	.hanabi-review-transport {
+		position: static;
+	}
+	.hanabi-review-controls {
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: 8px;
+		padding: 12px;
+	}
+	.hanabi-review-controls input {
+		grid-column: 1 / 4;
+		grid-row: 1;
+	}
+	.hanabi-review-controls output {
+		grid-column: 4;
+		grid-row: 1;
+	}
+	.hanabi-review-controls button {
+		padding: 8px 4px;
+	}
+	.hanabi-review-status dl > div {
+		flex-direction: column;
+		gap: 0;
+	}
+}

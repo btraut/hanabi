@@ -6,6 +6,7 @@ interface Props {
 	activity?: ReactNode;
 	gameData: HanabiGameData;
 	playerWorkspaces?: ReactNode;
+	status?: ReactNode;
 	tableau?: ReactNode;
 	userId: string;
 }
@@ -14,12 +15,13 @@ export default function HanabiDesktopBoard({
 	activity,
 	gameData,
 	playerWorkspaces,
+	status,
 	tableau,
 	userId,
 }: Props): JSX.Element {
 	return (
 		<main className="hanabi-desktop-board mx-auto grid w-[calc(100vw-42px)] max-w-[1660px] items-start pb-5">
-			<HanabiDesktopStatus gameData={gameData} userId={userId} />
+			{status ?? <HanabiDesktopStatus gameData={gameData} userId={userId} />}
 			<div className="col-start-1 row-start-2 min-w-0" data-desktop-region="tableau">
 				{tableau ?? (
 					<TableauGeometryProbe lanes={getHanabiRuleSetColors(gameData.ruleSet).length} />

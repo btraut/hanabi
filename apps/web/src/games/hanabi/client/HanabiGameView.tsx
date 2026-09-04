@@ -5,13 +5,25 @@ import { useGameData } from '~/games/hanabi/client/HanabiGameContext';
 import HanabiHeader from '~/games/hanabi/client/HanabiHeader';
 import HanabiHighlightTileController from '~/games/hanabi/client/HanabiHighlightController';
 import HanabiLobby from '~/games/hanabi/client/HanabiLobby';
+import HanabiReview from '~/games/hanabi/client/HanabiReview';
+import { useUserId } from '~/components/SocketContext';
 import useTileDrop from '~/games/hanabi/client/useTileDrop';
-import { HanabiStage } from '@hanabi/shared';
+import { GameTranscriptV1, HanabiStage, isReplayableTranscript } from '@hanabi/shared';
 import { useCallback, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 
 export default function HanabiGameView(): JSX.Element | null {
 	const gameData = useGameData();
+	const userId = useUserId();
+	const [reviewTranscript, setReviewTranscript] = useState<GameTranscriptV1 | null>(null);
+	const [reviewOpen, setReviewOpen] = useState(false);
+	const canReview = isReplayableTranscript(gameData.reviewTranscript);
+	const openReview = canReview
+		? () => {
+				setReviewTranscript(gameData.reviewTranscript!);
+				setReviewOpen(true);
+			}
+		: undefined;
 	const { search } = useLocation();
 	const [debugPanelOpen, setDebugPanelOpen] = useState(
 		() => new URLSearchParams(search).get('debug') === '1',
@@ -50,8 +62,31 @@ export default function HanabiGameView(): JSX.Element | null {
 		[dropRef],
 	);
 
+	if (reviewOpen && reviewTranscript) {
+		return (
+			<HanabiReview
+				key={reviewTranscript.roundId}
+				transcript={reviewTranscript}
+				userId={userId}
+				onExit={() => setReviewOpen(false)}
+				exitLabel={
+					gameData.seed === reviewTranscript.roundId && gameData.stage === HanabiStage.Finished
+						? 'Back to game'
+						: 'Back to lobby'
+				}
+			/>
+		);
+	}
+
 	return (
 		<>
+			{reviewTranscript && gameData.seed !== reviewTranscript.roundId && (
+				<div className="mx-auto max-w-[1660px] px-5 py-3">
+					<button className="hanabi-review-entry" type="button" onClick={() => setReviewOpen(true)}>
+						Review previous game
+					</button>
+				</div>
+			)}
 			{gameData.stage === HanabiStage.Setup && <HanabiLobby />}
 			{(gameData.stage === HanabiStage.Playing || gameData.stage === HanabiStage.Finished) && (
 				<HanabiHighlightTileController>
@@ -61,8 +96,24 @@ export default function HanabiGameView(): JSX.Element | null {
 							ref={connectDropTarget}
 						>
 							<HanabiHeader variant="game" />
+							{gameData.stage === HanabiStage.Finished && (
+								<div className="mx-auto flex max-w-[1660px] justify-end px-5 pt-3">
+									{openReview ? (
+										<button className="hanabi-review-entry" type="button" onClick={openReview}>
+											Review game
+										</button>
+									) : (
+										<p className="text-hanabi-text-muted">
+											Review unavailable: this round has no complete transcript.
+										</p>
+									)}
+								</div>
+							)}
 							<div className="hanabi-game-board-shell pt-5">
-								<HanabiBoard />
+								<HanabiBoard
+									onReview={openReview}
+									initiallyDismissGameOver={reviewTranscript?.roundId === gameData.seed}
+								/>
 							</div>
 							<div id="portal" />
 						</div>

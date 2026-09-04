@@ -1,4 +1,5 @@
 import { shuffle } from '../../utils/shuffle.js';
+import type { GameTranscriptV1 } from './GameTranscript.js';
 
 export const HANABI_GAME_TITLE = 'hanabi';
 
@@ -289,6 +290,8 @@ export type HanabiTileNotes = {
 
 export interface HanabiGameData {
 	creatorId: string;
+	// Available only in finished, fully recorded recipient snapshots.
+	reviewTranscript?: GameTranscriptV1;
 
 	// What seed was used for the random number generator? This seed should
 	// dictate all the same tile types/order at the beginning of the game.

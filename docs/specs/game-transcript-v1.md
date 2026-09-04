@@ -1,6 +1,8 @@
 # Hanabi Game Transcript v1
 
-Hanabi game transcripts are server-only replay and telemetry documents. One transcript represents one round, identified by the round seed in `roundId`; resetting a lobby ends the current round and a later start creates another transcript under the same `gameId`.
+Hanabi game transcripts are server-recorded replay and telemetry documents. One transcript represents one round, identified by the round seed in `roundId`; resetting a lobby ends the current round and a later start creates another transcript under the same `gameId`.
+
+Complete, finished transcripts are included as `reviewTranscript` in recipient game snapshots for post-game review. In-progress, reset, partial, and conflicted recordings are not exposed for review. The field is not stored in authoritative game state. Replay uses the shared version-1 types and can run without a database; persisted review links and admin entry are separate work.
 
 ## Replay semantics
 
