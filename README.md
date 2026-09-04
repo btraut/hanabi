@@ -100,6 +100,17 @@ HTTP-only browser-session cookie and the password is never stored by the web cli
 | `pnpm db:generate`  | Generate migration SQL from Drizzle   |
 | `pnpm db:down`      | Stop local PostgreSQL                 |
 
+### Continuous integration
+
+GitHub Actions runs the **Build and test** check on every pull request to `main` and every push to
+`main`. It installs the locked dependencies, checks TypeScript, runs the test suite, and builds both
+apps. A temporary PostgreSQL 17 service runs the database integration test without production secrets.
+Node and pnpm versions come from `.tool-versions` and `package.json`.
+
+The `main` branch requires pull requests with a passing **Build and test** check against the latest
+base branch before merging, including for administrators. No human review approval is required.
+These merge requirements are configured in GitHub branch protection, separately from the workflow.
+
 ### Project Structure
 
 ```
