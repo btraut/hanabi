@@ -1786,37 +1786,7 @@ body {
 }
 
 .admin-header {
-	display: flex;
-	align-items: flex-start;
-	justify-content: space-between;
-	gap: 24px;
 	margin-bottom: 30px;
-}
-
-.admin-header > div > p:last-child {
-	margin: 9px 0 0;
-	color: var(--color-hanabi-text-muted);
-	font-size: 17px;
-}
-
-.admin-header .admin-action-error {
-	color: #f2a59b;
-}
-
-.admin-quiet-button {
-	min-height: 38px;
-	padding: 7px 13px;
-	border: 1px solid var(--color-hanabi-border);
-	border-radius: 8px;
-	background: rgb(11 23 40 / 76%);
-	color: var(--color-hanabi-text-muted);
-	font-size: 15px;
-	font-weight: 600;
-}
-
-.admin-quiet-button:hover {
-	border-color: var(--color-hanabi-border-bright);
-	color: var(--color-hanabi-text);
 }
 
 .admin-ledger {
@@ -1857,9 +1827,13 @@ body {
 }
 
 .admin-started {
-	margin-top: 3px;
-	color: var(--color-hanabi-text-muted);
-	font-size: 14px;
+	display: block;
+	margin-bottom: 4px;
+	color: var(--color-hanabi-yellow);
+	font-size: 13px;
+	font-weight: 700;
+	letter-spacing: 0.045em;
+	text-transform: uppercase;
 }
 
 .admin-game-stats {
@@ -1924,10 +1898,6 @@ body {
 
 	.admin-login-card {
 		padding: 28px 24px;
-	}
-
-	.admin-header {
-		align-items: center;
 	}
 
 	.admin-game-row {

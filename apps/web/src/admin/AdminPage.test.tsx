@@ -75,7 +75,7 @@ describe('AdminPage', () => {
 		act(() => {
 			Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(
 				input,
-				'hanabi',
+				'tenfour',
 			);
 			input.dispatchEvent(new Event('input', { bubbles: true }));
 		});
@@ -86,13 +86,17 @@ describe('AdminPage', () => {
 			await Promise.resolve();
 		});
 
-		expect(login).toHaveBeenCalledWith('hanabi');
+		expect(login).toHaveBeenCalledWith('tenfour');
 		expect(document.body.textContent).toContain('Ada, Grace');
+		expect(document.querySelector('time')?.dateTime).toBe('2026-09-03T17:30:00.000Z');
 		expect(document.body.textContent).toContain('31');
 		expect(document.body.textContent).toContain('Finished');
 		expect(document.body.textContent).toContain('Complete');
 		expect(document.body.textContent).toContain('Out of turns');
 		expect(document.body.textContent).toContain('22');
+		expect(document.body.textContent).not.toContain('Hanabi telemetry');
+		expect(document.body.textContent).not.toContain('recorded game');
+		expect(document.body.textContent).not.toContain('Sign out');
 		expect(document.querySelector('input[type="password"]')).toBeNull();
 	});
 
@@ -171,23 +175,5 @@ describe('AdminPage', () => {
 		expect(games.mock.calls).toEqual([[2], [1]]);
 		expect(document.body.textContent).toContain('Ada, Grace');
 		expect(document.body.textContent).toContain('1–25 of 26');
-	});
-
-	it('keeps the archive visible when sign-out fails', async () => {
-		vi.spyOn(AdminApi, 'games').mockResolvedValue(gamePage);
-		vi.spyOn(AdminApi, 'logout').mockRejectedValue(new Error('offline'));
-
-		await renderPage();
-		const signOut = [...document.querySelectorAll('button')].find(
-			(button) => button.textContent === 'Sign out',
-		)!;
-		await act(async () => {
-			signOut.click();
-			await Promise.resolve();
-		});
-
-		expect(document.body.textContent).toContain('Ada, Grace');
-		expect(document.body.textContent).toContain('Sign out failed. Try again.');
-		expect(document.querySelector('input[type="password"]')).toBeNull();
 	});
 });
