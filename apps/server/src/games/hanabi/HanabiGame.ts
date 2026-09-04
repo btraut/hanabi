@@ -11,6 +11,7 @@ import {
 	isHanabiFireworkCompletion,
 	isHanabiRainbowRuleSet,
 	isHanabiRuleSet,
+	isReplayableTranscript,
 	HANABI_BOARD_SIZE,
 	HANABI_DEFAULT_TILE_POSITIONS,
 	HANABI_GAME_TITLE,
@@ -119,6 +120,8 @@ export default class HanabiGame extends Game {
 					]),
 				),
 			};
+			// Review data belongs to recipient snapshots, never authoritative game state.
+			delete this._gameData.reviewTranscript;
 			if (this._gameData.stage !== HanabiStage.Setup) {
 				const identity = { gameId: this.id, gameCode: this.code };
 				this._transcript = transcriptMatchesRound(
@@ -246,6 +249,10 @@ export default class HanabiGame extends Game {
 
 	private _gameDataForRecipient(userId: string): HanabiGameData {
 		if (this._gameData.stage === HanabiStage.Finished) {
+			const transcript = this._transcript;
+			if (transcript && isReplayableTranscript(transcript)) {
+				return { ...this._gameData, reviewTranscript: structuredClone(transcript) };
+			}
 			return this._gameData;
 		}
 

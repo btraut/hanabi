@@ -1,0 +1,644 @@
+{
+	"version": 1,
+	"revision": 17,
+	"roundId": "e5ad8334-5bf2-4c9d-80bd-0ef1c99ac05c",
+	"gameId": "bc9cd854-5420-493e-b0ad-cbdbe967e964",
+	"gameCode": "gg5avj",
+	"rules": {
+		"ruleSet": "5-color",
+		"criticalGameOver": false,
+		"allowDragging": true,
+		"showNotes": true
+	},
+	"players": [
+		{
+			"id": "alice",
+			"name": "Alice"
+		},
+		{
+			"id": "ben",
+			"name": "Ben"
+		},
+		{
+			"id": "chika",
+			"name": "Chika"
+		}
+	],
+	"dealOrder": [
+		{
+			"playerId": "alice",
+			"tileIds": [
+				"b13aed6b-4ce1-4f02-b46f-1bb70c3fff90",
+				"77c8f524-6dd7-4def-910d-8c2b33c50ccf",
+				"ff13da59-35ad-499b-8e0a-ea87ab5de990",
+				"b23c726c-8a57-42e0-bb5b-1ee23a0a9458",
+				"a3ba1133-b9b2-40a0-8303-9f26fcae60e8"
+			]
+		},
+		{
+			"playerId": "ben",
+			"tileIds": [
+				"bf468092-46d3-4c70-9403-d5d87b019b80",
+				"43ef570f-96aa-4eeb-b7a1-64b74258e77b",
+				"2c83910b-ec1d-41df-9744-647f24235626",
+				"a33bd727-3c62-4160-8a64-33c75854cd03",
+				"c100073a-4e85-4026-94f6-d1d8b76568c1"
+			]
+		},
+		{
+			"playerId": "chika",
+			"tileIds": [
+				"d31d9722-10ef-4513-9cf9-114c5dbc3cea",
+				"416d70c8-2f48-48f6-a505-c4658e5f6e87",
+				"979fffda-39cc-45ba-ac38-fce6785ff99d",
+				"53a6adf6-e074-43dd-9d0c-8b37d037abd7",
+				"9aed6d4c-7647-42a6-9ea8-5762d180fff3"
+			]
+		}
+	],
+	"turnOrder": ["ben", "alice", "chika"],
+	"deck": [
+		{
+			"id": "b13aed6b-4ce1-4f02-b46f-1bb70c3fff90",
+			"color": "yellow",
+			"number": 4
+		},
+		{
+			"id": "77c8f524-6dd7-4def-910d-8c2b33c50ccf",
+			"color": "red",
+			"number": 4
+		},
+		{
+			"id": "ff13da59-35ad-499b-8e0a-ea87ab5de990",
+			"color": "white",
+			"number": 3
+		},
+		{
+			"id": "b23c726c-8a57-42e0-bb5b-1ee23a0a9458",
+			"color": "yellow",
+			"number": 2
+		},
+		{
+			"id": "a3ba1133-b9b2-40a0-8303-9f26fcae60e8",
+			"color": "red",
+			"number": 2
+		},
+		{
+			"id": "bf468092-46d3-4c70-9403-d5d87b019b80",
+			"color": "blue",
+			"number": 1
+		},
+		{
+			"id": "43ef570f-96aa-4eeb-b7a1-64b74258e77b",
+			"color": "red",
+			"number": 3
+		},
+		{
+			"id": "2c83910b-ec1d-41df-9744-647f24235626",
+			"color": "red",
+			"number": 1
+		},
+		{
+			"id": "a33bd727-3c62-4160-8a64-33c75854cd03",
+			"color": "green",
+			"number": 2
+		},
+		{
+			"id": "c100073a-4e85-4026-94f6-d1d8b76568c1",
+			"color": "red",
+			"number": 3
+		},
+		{
+			"id": "d31d9722-10ef-4513-9cf9-114c5dbc3cea",
+			"color": "red",
+			"number": 2
+		},
+		{
+			"id": "416d70c8-2f48-48f6-a505-c4658e5f6e87",
+			"color": "green",
+			"number": 4
+		},
+		{
+			"id": "979fffda-39cc-45ba-ac38-fce6785ff99d",
+			"color": "blue",
+			"number": 4
+		},
+		{
+			"id": "53a6adf6-e074-43dd-9d0c-8b37d037abd7",
+			"color": "green",
+			"number": 3
+		},
+		{
+			"id": "9aed6d4c-7647-42a6-9ea8-5762d180fff3",
+			"color": "yellow",
+			"number": 2
+		},
+		{
+			"id": "970f5533-9ec5-419b-bd58-2096131e35bb",
+			"color": "white",
+			"number": 1
+		},
+		{
+			"id": "99b481a3-6539-442b-869f-e3f0774a8aec",
+			"color": "blue",
+			"number": 3
+		},
+		{
+			"id": "97b28ae2-d70a-465c-89bb-02bb3bc80247",
+			"color": "red",
+			"number": 1
+		},
+		{
+			"id": "7cf388bb-ee7c-4023-ba1c-3b738e86ce0b",
+			"color": "white",
+			"number": 5
+		},
+		{
+			"id": "b8e4b297-1c84-4080-abcb-b14622e42e8c",
+			"color": "red",
+			"number": 1
+		},
+		{
+			"id": "7015ea8a-c6e1-428f-9551-e612287ba118",
+			"color": "green",
+			"number": 1
+		},
+		{
+			"id": "fc5c6114-67b0-4669-b4e1-815834de09c1",
+			"color": "green",
+			"number": 3
+		},
+		{
+			"id": "7ef2f0ce-f81a-4592-9d8b-8aa87c7cb03c",
+			"color": "green",
+			"number": 4
+		},
+		{
+			"id": "b6b7d37e-ff03-4faa-a04a-9a0872ac519f",
+			"color": "blue",
+			"number": 1
+		},
+		{
+			"id": "b196c47f-a51c-43b5-bb94-3cf8949facf9",
+			"color": "yellow",
+			"number": 4
+		},
+		{
+			"id": "629ef2d6-bdfe-4580-94dc-ba3bffdca448",
+			"color": "white",
+			"number": 3
+		},
+		{
+			"id": "0d9004bf-908f-4c9e-8cba-ad93b7370b69",
+			"color": "blue",
+			"number": 3
+		},
+		{
+			"id": "eef3288d-bc57-4fe1-8f55-e097243b580d",
+			"color": "green",
+			"number": 1
+		},
+		{
+			"id": "11fed61e-c608-4266-8eef-e6f7c550088c",
+			"color": "blue",
+			"number": 2
+		},
+		{
+			"id": "1e24bbf2-6a3e-4b37-83c7-291f2790aa48",
+			"color": "yellow",
+			"number": 3
+		},
+		{
+			"id": "a888002f-1c6d-4ebd-9aac-08128bc23c97",
+			"color": "yellow",
+			"number": 1
+		},
+		{
+			"id": "cd5d95da-472b-4df8-92a3-ec8dc1147fd4",
+			"color": "green",
+			"number": 2
+		},
+		{
+			"id": "e2c99aee-ec19-4d28-a43a-9c5df3e85418",
+			"color": "red",
+			"number": 4
+		},
+		{
+			"id": "abf9f97c-d335-49e6-b6b1-f26ab3a2b1ee",
+			"color": "white",
+			"number": 2
+		},
+		{
+			"id": "941f5332-03d3-43cf-b2ed-ed8efa63a3b9",
+			"color": "white",
+			"number": 2
+		},
+		{
+			"id": "9212adf6-2479-4a81-9a15-760a7fda8983",
+			"color": "white",
+			"number": 1
+		},
+		{
+			"id": "bc09a6ac-5247-4218-a288-1d6b6385d5a8",
+			"color": "white",
+			"number": 4
+		},
+		{
+			"id": "532df547-fc88-4ebd-b56c-730508edf50e",
+			"color": "red",
+			"number": 5
+		},
+		{
+			"id": "b2be9bf7-ccde-405a-8c06-49618e10813a",
+			"color": "yellow",
+			"number": 1
+		},
+		{
+			"id": "b9ed2182-18a8-43fe-a93a-b07042e9f179",
+			"color": "blue",
+			"number": 2
+		},
+		{
+			"id": "67839627-db93-46f8-be6c-2e18672451b7",
+			"color": "yellow",
+			"number": 1
+		},
+		{
+			"id": "59ec749e-6248-485d-b3af-fdcfe8677a0e",
+			"color": "yellow",
+			"number": 3
+		},
+		{
+			"id": "b55bd315-90f7-465c-a838-f98245879efd",
+			"color": "blue",
+			"number": 5
+		},
+		{
+			"id": "f73d4ef5-8178-4a4f-b4c6-d26317c30a9c",
+			"color": "blue",
+			"number": 1
+		},
+		{
+			"id": "e0942c08-296b-46a0-971c-253e134318a5",
+			"color": "white",
+			"number": 4
+		},
+		{
+			"id": "15b3d32e-80d6-43d5-91cd-0cd6c76ef790",
+			"color": "white",
+			"number": 1
+		},
+		{
+			"id": "39c485f3-265c-4d1c-9386-0c752dc232a8",
+			"color": "blue",
+			"number": 4
+		},
+		{
+			"id": "8d2acca7-b489-4b88-bb64-90845ad1ebc0",
+			"color": "green",
+			"number": 1
+		},
+		{
+			"id": "164a0289-4c73-4d58-b12a-0cbaa4724fa0",
+			"color": "green",
+			"number": 5
+		},
+		{
+			"id": "3951a991-9cda-4610-8480-0ee967969691",
+			"color": "yellow",
+			"number": 5
+		}
+	],
+	"moves": [
+		{
+			"actionId": "458d0091-bd95-438f-ada2-5179edcdc67e",
+			"index": 0,
+			"createdAt": "2026-09-04T20:40:35.056Z",
+			"actorId": "ben",
+			"postTurn": {
+				"nextPlayerId": "alice",
+				"clues": 7,
+				"lives": 3,
+				"remainingTurns": null,
+				"score": 0,
+				"status": "in_progress"
+			},
+			"type": "clue",
+			"recipientId": "alice",
+			"clue": {
+				"type": "number",
+				"value": 4
+			},
+			"selectedTileIds": [
+				"b13aed6b-4ce1-4f02-b46f-1bb70c3fff90",
+				"77c8f524-6dd7-4def-910d-8c2b33c50ccf"
+			]
+		},
+		{
+			"actionId": "f9ac9b01-8ff0-4390-a709-ee29f2d0e980",
+			"index": 1,
+			"createdAt": "2026-09-04T20:40:35.057Z",
+			"actorId": "alice",
+			"postTurn": {
+				"nextPlayerId": "chika",
+				"clues": 8,
+				"lives": 3,
+				"remainingTurns": null,
+				"score": 0,
+				"status": "in_progress"
+			},
+			"type": "discard",
+			"tileId": "b13aed6b-4ce1-4f02-b46f-1bb70c3fff90"
+		},
+		{
+			"actionId": "872c0871-bf86-4b3c-a96b-0a8848091721",
+			"index": 2,
+			"createdAt": "2026-09-04T20:40:35.057Z",
+			"actorId": "chika",
+			"postTurn": {
+				"nextPlayerId": "ben",
+				"clues": 7,
+				"lives": 3,
+				"remainingTurns": null,
+				"score": 0,
+				"status": "in_progress"
+			},
+			"type": "clue",
+			"recipientId": "ben",
+			"clue": {
+				"type": "number",
+				"value": 1
+			},
+			"selectedTileIds": [
+				"bf468092-46d3-4c70-9403-d5d87b019b80",
+				"2c83910b-ec1d-41df-9744-647f24235626"
+			]
+		},
+		{
+			"actionId": "44754905-e7ac-4210-8c25-02b3f05e8009",
+			"index": 3,
+			"createdAt": "2026-09-04T20:40:35.057Z",
+			"actorId": "ben",
+			"postTurn": {
+				"nextPlayerId": "alice",
+				"clues": 8,
+				"lives": 3,
+				"remainingTurns": null,
+				"score": 0,
+				"status": "in_progress"
+			},
+			"type": "discard",
+			"tileId": "bf468092-46d3-4c70-9403-d5d87b019b80"
+		},
+		{
+			"actionId": "41b296f0-fc50-4040-b985-b0853d1bf20b",
+			"index": 4,
+			"createdAt": "2026-09-04T20:40:35.058Z",
+			"actorId": "alice",
+			"postTurn": {
+				"nextPlayerId": "chika",
+				"clues": 7,
+				"lives": 3,
+				"remainingTurns": null,
+				"score": 0,
+				"status": "in_progress"
+			},
+			"type": "clue",
+			"recipientId": "ben",
+			"clue": {
+				"type": "number",
+				"value": 3
+			},
+			"selectedTileIds": [
+				"43ef570f-96aa-4eeb-b7a1-64b74258e77b",
+				"c100073a-4e85-4026-94f6-d1d8b76568c1",
+				"99b481a3-6539-442b-869f-e3f0774a8aec"
+			]
+		},
+		{
+			"actionId": "4fd504af-25ea-4e15-b83f-d9e4fc982e7d",
+			"index": 5,
+			"createdAt": "2026-09-04T20:40:35.058Z",
+			"actorId": "chika",
+			"postTurn": {
+				"nextPlayerId": "ben",
+				"clues": 8,
+				"lives": 3,
+				"remainingTurns": null,
+				"score": 0,
+				"status": "in_progress"
+			},
+			"type": "discard",
+			"tileId": "d31d9722-10ef-4513-9cf9-114c5dbc3cea"
+		},
+		{
+			"actionId": "2171d9a2-c53c-4ec4-b750-3ff560a2c85a",
+			"index": 6,
+			"createdAt": "2026-09-04T20:40:35.058Z",
+			"actorId": "ben",
+			"postTurn": {
+				"nextPlayerId": "alice",
+				"clues": 7,
+				"lives": 3,
+				"remainingTurns": null,
+				"score": 0,
+				"status": "in_progress"
+			},
+			"type": "clue",
+			"recipientId": "alice",
+			"clue": {
+				"type": "number",
+				"value": 4
+			},
+			"selectedTileIds": ["77c8f524-6dd7-4def-910d-8c2b33c50ccf"]
+		},
+		{
+			"actionId": "27d3fd02-214e-4eca-b993-e7abae774a3e",
+			"index": 7,
+			"createdAt": "2026-09-04T20:40:35.059Z",
+			"actorId": "alice",
+			"postTurn": {
+				"nextPlayerId": "chika",
+				"clues": 8,
+				"lives": 3,
+				"remainingTurns": null,
+				"score": 0,
+				"status": "in_progress"
+			},
+			"type": "discard",
+			"tileId": "77c8f524-6dd7-4def-910d-8c2b33c50ccf"
+		},
+		{
+			"actionId": "5456fb9c-84bb-429f-b788-534c4efcad6c",
+			"index": 8,
+			"createdAt": "2026-09-04T20:40:35.059Z",
+			"actorId": "chika",
+			"postTurn": {
+				"nextPlayerId": "ben",
+				"clues": 7,
+				"lives": 3,
+				"remainingTurns": null,
+				"score": 0,
+				"status": "in_progress"
+			},
+			"type": "clue",
+			"recipientId": "ben",
+			"clue": {
+				"type": "number",
+				"value": 3
+			},
+			"selectedTileIds": [
+				"43ef570f-96aa-4eeb-b7a1-64b74258e77b",
+				"c100073a-4e85-4026-94f6-d1d8b76568c1",
+				"99b481a3-6539-442b-869f-e3f0774a8aec"
+			]
+		},
+		{
+			"actionId": "3e3e14f5-417c-4e03-821a-f3db7e657f0c",
+			"index": 9,
+			"createdAt": "2026-09-04T20:40:35.060Z",
+			"actorId": "ben",
+			"postTurn": {
+				"nextPlayerId": "alice",
+				"clues": 8,
+				"lives": 3,
+				"remainingTurns": null,
+				"score": 0,
+				"status": "in_progress"
+			},
+			"type": "discard",
+			"tileId": "43ef570f-96aa-4eeb-b7a1-64b74258e77b"
+		},
+		{
+			"actionId": "cb923f7e-e359-4364-9ef4-d88e4a6c4e9b",
+			"index": 10,
+			"createdAt": "2026-09-04T20:40:35.060Z",
+			"actorId": "alice",
+			"postTurn": {
+				"nextPlayerId": "chika",
+				"clues": 7,
+				"lives": 3,
+				"remainingTurns": null,
+				"score": 0,
+				"status": "in_progress"
+			},
+			"type": "clue",
+			"recipientId": "ben",
+			"clue": {
+				"type": "number",
+				"value": 1
+			},
+			"selectedTileIds": [
+				"2c83910b-ec1d-41df-9744-647f24235626",
+				"b8e4b297-1c84-4080-abcb-b14622e42e8c"
+			]
+		},
+		{
+			"actionId": "67e6cf28-cd21-44ae-9469-f59750852491",
+			"index": 11,
+			"createdAt": "2026-09-04T20:40:35.060Z",
+			"actorId": "chika",
+			"postTurn": {
+				"nextPlayerId": "ben",
+				"clues": 8,
+				"lives": 3,
+				"remainingTurns": null,
+				"score": 0,
+				"status": "in_progress"
+			},
+			"type": "discard",
+			"tileId": "416d70c8-2f48-48f6-a505-c4658e5f6e87"
+		},
+		{
+			"actionId": "4737dbad-bdd1-4cc1-a5ae-7e7b613f8e03",
+			"index": 12,
+			"createdAt": "2026-09-04T20:40:35.061Z",
+			"actorId": "ben",
+			"postTurn": {
+				"nextPlayerId": "alice",
+				"clues": 8,
+				"lives": 3,
+				"remainingTurns": null,
+				"score": 1,
+				"status": "in_progress"
+			},
+			"type": "play",
+			"tileId": "2c83910b-ec1d-41df-9744-647f24235626",
+			"valid": true
+		},
+		{
+			"actionId": "f90a55ff-de4a-4711-88f6-f86afd1b00f6",
+			"index": 13,
+			"createdAt": "2026-09-04T20:40:35.061Z",
+			"actorId": "alice",
+			"postTurn": {
+				"nextPlayerId": "chika",
+				"clues": 8,
+				"lives": 2,
+				"remainingTurns": null,
+				"score": 1,
+				"status": "in_progress"
+			},
+			"type": "play",
+			"tileId": "ff13da59-35ad-499b-8e0a-ea87ab5de990",
+			"valid": false
+		},
+		{
+			"actionId": "7088ba93-7334-4d4e-85ea-b7a20832a7ef",
+			"index": 14,
+			"createdAt": "2026-09-04T20:40:35.062Z",
+			"actorId": "chika",
+			"postTurn": {
+				"nextPlayerId": "ben",
+				"clues": 8,
+				"lives": 1,
+				"remainingTurns": null,
+				"score": 1,
+				"status": "in_progress"
+			},
+			"type": "play",
+			"tileId": "979fffda-39cc-45ba-ac38-fce6785ff99d",
+			"valid": false
+		},
+		{
+			"actionId": "801dc847-7256-4a1f-b1b5-e5c404a448ad",
+			"index": 15,
+			"createdAt": "2026-09-04T20:40:35.062Z",
+			"actorId": "ben",
+			"postTurn": {
+				"nextPlayerId": "alice",
+				"clues": 8,
+				"lives": 0,
+				"remainingTurns": null,
+				"score": 1,
+				"status": "finished",
+				"result": {
+					"finishedReason": "OutOfLives",
+					"score": 1,
+					"clues": 8,
+					"lives": 0,
+					"remainingTurns": null
+				}
+			},
+			"type": "play",
+			"tileId": "a33bd727-3c62-4160-8a64-33c75854cd03",
+			"valid": false
+		}
+	],
+	"lifecycle": {
+		"status": "finished",
+		"startedAt": "2026-09-04T20:40:35.054Z",
+		"updatedAt": "2026-09-04T20:40:35.062Z",
+		"endedAt": "2026-09-04T20:40:35.062Z"
+	},
+	"integrity": {
+		"status": "complete"
+	},
+	"result": {
+		"finishedReason": "OutOfLives",
+		"score": 1,
+		"clues": 8,
+		"lives": 0,
+		"remainingTurns": null
+	}
+}
