@@ -12,6 +12,8 @@ interface WorkspaceProps {
 	finished: boolean;
 	isLocal: boolean;
 	player: HanabiPlayer;
+	review?: boolean;
+	reviewPerspective?: boolean;
 }
 
 interface WorkspacesProps {
@@ -82,17 +84,19 @@ export default function HanabiPlayerWorkspace({
 	finished,
 	isLocal,
 	player,
+	review = false,
+	reviewPerspective = false,
 }: WorkspaceProps): JSX.Element {
 	return (
 		<section
-			aria-label={`${player.name}${isLocal ? ', you' : ''}${active ? ', playing' : ''}`}
+			aria-label={`${player.name}${isLocal ? ', you' : ''}${reviewPerspective ? ', viewing as' : ''}${active ? (review ? ', to act' : ', playing') : ''}`}
 			className={classNames(
 				'hanabi-player-workspace grid h-[186px] w-full min-w-0 grid-cols-[80px_minmax(0,1fr)] overflow-hidden rounded-md border bg-hanabi-surface shadow-[0_10px_24px_rgb(0_0_0_/_16%)]',
 				{
 					'border-hanabi-border': !active,
 					'border-hanabi-coral shadow-[0_0_0_1px_rgb(255_114_95_/_22%),0_14px_34px_rgb(0_0_0_/_26%)]':
 						active,
-					'opacity-70': !player.connected,
+					'opacity-70': !player.connected && !review,
 				},
 			)}
 		>
@@ -112,12 +116,13 @@ export default function HanabiPlayerWorkspace({
 					{isLocal ? 'You' : player.name}
 				</p>
 				<div className="flex flex-wrap items-center justify-center gap-1.5">
+					{reviewPerspective && <span className="text-sm text-hanabi-text-muted">Viewing as</span>}
 					{active && !finished && (
 						<span className="rounded-md border border-hanabi-coral-soft/45 bg-hanabi-coral px-2 py-0.5 text-[12px] font-medium leading-5 text-white shadow-[0_2px_7px_rgb(0_0_0_/_22%)]">
-							Playing
+							{review ? 'To act' : 'Playing'}
 						</span>
 					)}
-					{!player.connected && (
+					{!player.connected && !review && (
 						<span className="text-[12px] font-medium leading-5 text-hanabi-text-muted">
 							Offline
 						</span>

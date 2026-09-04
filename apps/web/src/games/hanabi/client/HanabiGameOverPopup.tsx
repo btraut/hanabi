@@ -20,9 +20,10 @@ const GAME_OVER_MESSAGES: { [key in HanabiFinishedReason]: string } = {
 
 interface Props {
 	onClose: () => void;
+	onReview?: () => void;
 }
 
-export default function HanabiGameOverPopup({ onClose }: Props): JSX.Element | null {
+export default function HanabiGameOverPopup({ onClose, onReview }: Props): JSX.Element | null {
 	const gameMessenger = useGameMessenger();
 	const gameData = useGameData();
 	const userId = useUserId();
@@ -42,7 +43,16 @@ export default function HanabiGameOverPopup({ onClose }: Props): JSX.Element | n
 				<p className="text-lg leading-6 text-hanabi-text-muted">
 					{GAME_OVER_MESSAGES[finishedReason]}
 				</p>
-				<div className="flex justify-end">
+				<div className="flex flex-wrap justify-end gap-3">
+					{onReview && (
+						<HanabiMenuButton
+							label="Review game"
+							onClick={() => {
+								onClose();
+								onReview();
+							}}
+						/>
+					)}
 					{gameData.players[userId] && (
 						<HanabiMenuButton
 							label="New game"

@@ -24,7 +24,13 @@ export function shouldShowTileOverlay<T>(overlay: T | null, isDraggingTile: bool
 	return overlay !== null && !isDraggingTile;
 }
 
-export default function HanabiBoard(): JSX.Element {
+export default function HanabiBoard({
+	onReview,
+	initiallyDismissGameOver = false,
+}: {
+	onReview?: () => void;
+	initiallyDismissGameOver?: boolean;
+}): JSX.Element {
 	const gameData = useGameData();
 	const transitioningTileId = useTransitioningTileId();
 	const userId = useUserId();
@@ -69,7 +75,9 @@ export default function HanabiBoard(): JSX.Element {
 	}, [handleActionsTooltipOnClose, hideNotesForTile]);
 
 	// Show the game over popup when the game ends for any reason.
-	const [showGameOverPopup, setShowGameOverPopup] = useState(!!gameData.finishedReason);
+	const [showGameOverPopup, setShowGameOverPopup] = useState(
+		!!gameData.finishedReason && !initiallyDismissGameOver,
+	);
 	const gameFinishedReasonChanged = useValueChanged(gameData.finishedReason);
 	useEffect(() => {
 		if (gameFinishedReasonChanged) {
@@ -173,6 +181,7 @@ export default function HanabiBoard(): JSX.Element {
 			)}
 			{showGameOverPopup && (
 				<HanabiGameOverPopup
+					onReview={onReview}
 					onClose={() => {
 						setShowGameOverPopup(false);
 					}}
