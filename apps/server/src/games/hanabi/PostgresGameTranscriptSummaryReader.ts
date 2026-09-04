@@ -13,7 +13,7 @@ export const ADMIN_TRANSCRIPT_PAGE_SIZE = 25;
 export interface AdminTranscriptSummary {
 	roundId: string;
 	gameCode: string;
-	startedAt: string | null;
+	recordedAt: string;
 	status: GameTranscriptStatus;
 	integrity: GameTranscriptIntegrityStatus;
 	playerNames: string[];
@@ -47,6 +47,7 @@ export default class PostgresGameTranscriptSummaryReader implements GameTranscri
 				roundId: gameTranscripts.roundId,
 				gameCode: gameTranscripts.gameCode,
 				startedAt: gameTranscripts.startedAt,
+				createdAt: gameTranscripts.createdAt,
 				status: gameTranscripts.status,
 				integrity: gameTranscripts.integrity,
 				players: sql<GameTranscriptV1['players']>`${gameTranscripts.transcript} -> 'players'`,
@@ -56,8 +57,7 @@ export default class PostgresGameTranscriptSummaryReader implements GameTranscri
 			})
 			.from(gameTranscripts)
 			.orderBy(
-				sql`${gameTranscripts.startedAt} desc nulls last`,
-				desc(gameTranscripts.createdAt),
+				desc(sql`coalesce(${gameTranscripts.startedAt}, ${gameTranscripts.createdAt})`),
 				desc(gameTranscripts.roundId),
 			)
 			.limit(ADMIN_TRANSCRIPT_PAGE_SIZE)
@@ -69,7 +69,7 @@ export default class PostgresGameTranscriptSummaryReader implements GameTranscri
 			items: rows.map((row) => ({
 				roundId: row.roundId,
 				gameCode: row.gameCode,
-				startedAt: row.startedAt?.toISOString() ?? null,
+				recordedAt: (row.startedAt ?? row.createdAt).toISOString(),
 				status: row.status as GameTranscriptStatus,
 				integrity: row.integrity as GameTranscriptIntegrityStatus,
 				playerNames: row.players.map(({ name }) => name),

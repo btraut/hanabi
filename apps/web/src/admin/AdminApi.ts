@@ -4,7 +4,7 @@ export type AdminGameIntegrity = 'complete' | 'partial' | 'conflicted';
 export interface AdminGameSummary {
 	roundId: string;
 	gameCode: string;
-	startedAt: string | null;
+	recordedAt: string;
 	status: AdminGameStatus;
 	integrity: AdminGameIntegrity;
 	playerNames: string[];

@@ -1812,7 +1812,7 @@ body {
 }
 
 .admin-players,
-.admin-started,
+.admin-recorded,
 .admin-game-stats dd {
 	margin: 0;
 }
@@ -1826,7 +1826,7 @@ body {
 	white-space: nowrap;
 }
 
-.admin-started {
+.admin-recorded {
 	display: block;
 	margin-bottom: 4px;
 	color: var(--color-hanabi-yellow);

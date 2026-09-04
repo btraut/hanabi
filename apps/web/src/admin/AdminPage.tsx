@@ -38,16 +38,16 @@ function wordsLabel(value: string): string {
 		.join(' ');
 }
 
-function startedLabel(startedAt: string | null): string {
-	return startedAt ? dateFormatter.format(new Date(startedAt)) : 'Unknown';
+function recordedLabel(recordedAt: string): string {
+	return dateFormatter.format(new Date(recordedAt));
 }
 
 function GameRow({ game }: { readonly game: AdminGameSummary }): JSX.Element {
 	return (
 		<article className="admin-game-row">
 			<div className="admin-game-main">
-				<time className="admin-started" dateTime={game.startedAt ?? undefined}>
-					{startedLabel(game.startedAt)}
+				<time className="admin-recorded" dateTime={game.recordedAt}>
+					{recordedLabel(game.recordedAt)}
 				</time>
 				<p className="admin-players">{game.playerNames.join(', ') || 'No named players'}</p>
 			</div>
