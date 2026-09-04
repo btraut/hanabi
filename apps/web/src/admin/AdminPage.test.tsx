@@ -15,6 +15,12 @@ const gamePage: AdminGamesPage = {
 			recordedAt: '2026-09-03T17:30:00.000Z',
 			status: 'finished',
 			integrity: 'complete',
+			initialSettings: {
+				ruleSet: 'rainbow-black-powder',
+				criticalGameOver: true,
+				allowDragging: false,
+				showNotes: true,
+			},
 			playerNames: ['Ada', 'Grace'],
 			moveCount: 31,
 			score: 22,
@@ -91,6 +97,7 @@ describe('AdminPage', () => {
 			'Date',
 			'Players',
 			'Game',
+			'Mode',
 			'Status',
 			'Turns',
 			'Result',
@@ -98,6 +105,9 @@ describe('AdminPage', () => {
 			'Integrity',
 		]);
 		expect(document.body.textContent).toContain('Ada, Grace');
+		expect(document.body.textContent).toContain(
+			'Decoy Rainbow + Black Powder; critical discard on; dragging off; notes on',
+		);
 		expect(document.querySelector('time')?.dateTime).toBe('2026-09-03T17:30:00.000Z');
 		expect(document.body.textContent).toContain('31');
 		expect(document.body.textContent).toContain('Finished');

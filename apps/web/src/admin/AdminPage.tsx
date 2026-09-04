@@ -9,6 +9,14 @@ const dateFormatter = new Intl.DateTimeFormat(undefined, {
 	timeStyle: 'short',
 });
 
+const RULE_SET_LABELS: Record<AdminGameSummary['initialSettings']['ruleSet'], string> = {
+	'5-color': 'Basic 5-Color',
+	'6-color': 'Basic 6-Color',
+	rainbow: 'Decoy Rainbow',
+	'black-powder': 'Black Powder',
+	'rainbow-black-powder': 'Decoy Rainbow + Black Powder',
+};
+
 function pageFromSearch(search: string): number {
 	const value = Number(new URLSearchParams(search).get('page') ?? '1');
 	return Number.isSafeInteger(value) && value > 0 ? value : 1;
@@ -42,6 +50,15 @@ function recordedLabel(recordedAt: string): string {
 	return dateFormatter.format(new Date(recordedAt));
 }
 
+function modeLabel(settings: AdminGameSummary['initialSettings']): string {
+	return [
+		RULE_SET_LABELS[settings.ruleSet],
+		`critical discard ${settings.criticalGameOver ? 'on' : 'off'}`,
+		`dragging ${settings.allowDragging ? 'on' : 'off'}`,
+		`notes ${settings.showNotes ? 'on' : 'off'}`,
+	].join('; ');
+}
+
 function GameRow({ game }: { readonly game: AdminGameSummary }): JSX.Element {
 	return (
 		<tr>
@@ -52,6 +69,7 @@ function GameRow({ game }: { readonly game: AdminGameSummary }): JSX.Element {
 			</td>
 			<td className="admin-players">{game.playerNames.join(', ') || 'No named players'}</td>
 			<td className="admin-code">{game.gameCode}</td>
+			<td className="admin-mode">{modeLabel(game.initialSettings)}</td>
 			<td>{wordsLabel(game.status)}</td>
 			<td className="admin-number">{game.moveCount}</td>
 			<td>{resultLabel(game)}</td>
@@ -197,6 +215,7 @@ export default function AdminPage(): JSX.Element {
 							<th scope="col">Date</th>
 							<th scope="col">Players</th>
 							<th scope="col">Game</th>
+							<th scope="col">Mode</th>
 							<th scope="col">Status</th>
 							<th className="admin-number" scope="col">
 								Turns
@@ -211,7 +230,7 @@ export default function AdminPage(): JSX.Element {
 					<tbody>
 						{games.items.length === 0 ? (
 							<tr>
-								<td className="admin-empty" colSpan={8}>
+								<td className="admin-empty" colSpan={9}>
 									No games yet. Completed and active rounds will appear here once recorded.
 								</td>
 							</tr>

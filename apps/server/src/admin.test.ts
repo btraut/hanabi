@@ -44,6 +44,12 @@ describe('admin routes', () => {
 					recordedAt: '2026-09-03T10:00:00.000Z',
 					status: 'finished',
 					integrity: 'complete',
+					initialSettings: {
+						ruleSet: '5-color',
+						criticalGameOver: false,
+						allowDragging: true,
+						showNotes: true,
+					},
 					playerNames: ['Alice', 'Bob'],
 					moveCount: 18,
 					score: 12,

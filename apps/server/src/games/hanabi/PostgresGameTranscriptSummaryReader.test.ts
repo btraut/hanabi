@@ -12,8 +12,15 @@ describe('PostgresGameTranscriptSummaryReader', () => {
 				gameCode: 'ABCDEF',
 				startedAt: new Date('2026-09-03T10:00:00.000Z'),
 				createdAt: new Date('2026-09-03T11:00:00.000Z'),
+				updatedAt: new Date('2026-09-03T10:20:00.000Z'),
 				status: 'finished',
 				integrity: 'complete',
+				initialSettings: {
+					ruleSet: 'rainbow',
+					criticalGameOver: true,
+					allowDragging: false,
+					showNotes: true,
+				},
 				players: [
 					{ id: 'player-a', name: 'Alice' },
 					{ id: 'player-b', name: 'Bob' },
@@ -27,8 +34,15 @@ describe('PostgresGameTranscriptSummaryReader', () => {
 				gameCode: 'LEGACY',
 				startedAt: null,
 				createdAt: new Date('2026-09-02T09:00:00.000Z'),
+				updatedAt: new Date('2026-09-03T11:29:59.999Z'),
 				status: 'in_progress',
 				integrity: 'partial',
+				initialSettings: {
+					ruleSet: '5-color',
+					criticalGameOver: false,
+					allowDragging: true,
+					showNotes: false,
+				},
 				players: [{ id: 'player-c', name: 'Grace' }],
 				moveCount: 0,
 				score: null,
@@ -45,7 +59,10 @@ describe('PostgresGameTranscriptSummaryReader', () => {
 			.mockReturnValueOnce({ from: itemFrom })
 			.mockReturnValueOnce({ from: totalFrom });
 		const db = { select } as unknown as DatabaseConnection['db'];
-		const reader = new PostgresGameTranscriptSummaryReader(db);
+		const reader = new PostgresGameTranscriptSummaryReader(
+			db,
+			() => new Date('2026-09-03T12:00:00.000Z'),
+		);
 
 		await expect(reader.list(2)).resolves.toEqual({
 			items: [
@@ -55,6 +72,12 @@ describe('PostgresGameTranscriptSummaryReader', () => {
 					recordedAt: '2026-09-03T10:00:00.000Z',
 					status: 'finished',
 					integrity: 'complete',
+					initialSettings: {
+						ruleSet: 'rainbow',
+						criticalGameOver: true,
+						allowDragging: false,
+						showNotes: true,
+					},
 					playerNames: ['Alice', 'Bob'],
 					moveCount: 18,
 					score: 12,
@@ -64,8 +87,14 @@ describe('PostgresGameTranscriptSummaryReader', () => {
 					roundId: 'round-1',
 					gameCode: 'LEGACY',
 					recordedAt: '2026-09-02T09:00:00.000Z',
-					status: 'in_progress',
+					status: 'abandoned',
 					integrity: 'partial',
+					initialSettings: {
+						ruleSet: '5-color',
+						criticalGameOver: false,
+						allowDragging: true,
+						showNotes: false,
+					},
 					playerNames: ['Grace'],
 					moveCount: 0,
 					score: null,
@@ -78,6 +107,45 @@ describe('PostgresGameTranscriptSummaryReader', () => {
 		});
 		expect(limit).toHaveBeenCalledWith(ADMIN_TRANSCRIPT_PAGE_SIZE);
 		expect(offset).toHaveBeenCalledWith(ADMIN_TRANSCRIPT_PAGE_SIZE);
+	});
+
+	it('keeps an in-progress game active at exactly the 30-minute boundary', async () => {
+		const row = {
+			roundId: 'round-active',
+			gameCode: 'ACTIVE',
+			startedAt: new Date('2026-09-03T11:00:00.000Z'),
+			createdAt: new Date('2026-09-03T11:00:00.000Z'),
+			updatedAt: new Date('2026-09-03T11:30:00.000Z'),
+			status: 'in_progress',
+			integrity: 'complete',
+			initialSettings: {
+				ruleSet: '6-color',
+				criticalGameOver: false,
+				allowDragging: false,
+				showNotes: false,
+			},
+			players: [{ id: 'player-a', name: 'Alice' }],
+			moveCount: 1,
+			score: null,
+			finishedReason: null,
+		};
+		const offset = vi.fn().mockResolvedValue([row]);
+		const limit = vi.fn().mockReturnValue({ offset });
+		const orderBy = vi.fn().mockReturnValue({ limit });
+		const itemFrom = vi.fn().mockReturnValue({ orderBy });
+		const totalFrom = vi.fn().mockResolvedValue([{ total: 1 }]);
+		const select = vi
+			.fn()
+			.mockReturnValueOnce({ from: itemFrom })
+			.mockReturnValueOnce({ from: totalFrom });
+		const reader = new PostgresGameTranscriptSummaryReader(
+			{ select } as unknown as DatabaseConnection['db'],
+			() => new Date('2026-09-03T12:00:00.000Z'),
+		);
+
+		const page = await reader.list(1);
+
+		expect(page.items[0]?.status).toBe('in_progress');
 	});
 
 	it('rejects page numbers whose offset cannot be represented safely', async () => {
