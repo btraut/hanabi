@@ -18,9 +18,11 @@ describe('Hanabi board responsive layout', () => {
 	it('keeps the tile action host mounted while a drag is active', () => {
 		const source = readFileSync(new URL('./HanabiBoard.tsx', import.meta.url), 'utf8');
 
-		expect(source).toContain('gameData.finishedReason === null ? handleTileClick : undefined');
+		expect(source).toContain(
+			'gameData.finishedReason === null ? handleTileActionClick : undefined',
+		);
 		expect(source).not.toContain(
-			'gameData.finishedReason === null && !isDraggingTile ? handleTileClick : undefined',
+			'gameData.finishedReason === null && !isDraggingTile ? handleTileActionClick : undefined',
 		);
 	});
 
