@@ -367,18 +367,10 @@ body {
 
 .hanabi-dialog[data-tone='danger'] {
 	border-color: rgb(211 107 101 / 58%);
-	box-shadow:
-		0 28px 80px rgb(0 0 0 / 56%),
-		inset 3px 0 rgb(211 107 101 / 82%),
-		inset 0 1px rgb(255 255 255 / 6%);
 }
 
 .hanabi-dialog[data-tone='success'] {
 	border-color: rgb(108 171 127 / 58%);
-	box-shadow:
-		0 28px 80px rgb(0 0 0 / 56%),
-		inset 3px 0 rgb(108 171 127 / 82%),
-		inset 0 1px rgb(255 255 255 / 6%);
 }
 
 .hanabi-dialog-header {
