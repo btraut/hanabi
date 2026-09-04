@@ -10,7 +10,6 @@
 
 .hanabi-review-header,
 .hanabi-review-transport,
-.hanabi-review-footnote,
 .hanabi-review-unavailable {
 	width: calc(100% - 42px);
 	max-width: 1660px;
@@ -227,11 +226,6 @@
 	min-width: 66px;
 	text-align: center;
 	font-variant-numeric: tabular-nums;
-}
-.hanabi-review-footnote {
-	padding-top: 12px;
-	font-size: 15px;
-	color: var(--color-hanabi-text-muted);
 }
 
 @media (max-width: 1439px) {

@@ -64,6 +64,7 @@ describe('HanabiReview', () => {
 	it('starts at the initial deal with bounded navigation and no gameplay provider', () => {
 		render();
 		expect(document.querySelector('[role="alert"]')).toBeNull();
+		expect(document.body.textContent).not.toContain('Read-only review');
 		expect(cursor()).toBe(0);
 		expect(button('Start').disabled).toBe(true);
 		expect(button('Previous').disabled).toBe(true);
