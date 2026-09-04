@@ -24,21 +24,40 @@ export default function HanabiStyles(): JSX.Element {
 	}
 }
 
-.hanabi-tile-note-marker {
-	--hanabi-clue-token-inset: 2px;
+.hanabi-tile-shell {
+	--hanabi-tile-note-fold-size: 15px;
+}
 
+.hanabi-tile-surface-clipped {
+	clip-path: polygon(
+		0 0,
+		100% 0,
+		100% calc(100% - var(--hanabi-tile-note-fold-size)),
+		calc(100% - var(--hanabi-tile-note-fold-size)) 100%,
+		0 100%
+	);
+}
+
+.hanabi-tile-note-marker {
 	position: absolute;
-	right: 3px;
-	bottom: 3px;
+	right: 0;
+	bottom: 0;
 	z-index: 24;
-	width: 14px;
-	height: 14px;
-	border-width: 1px;
-	box-shadow:
-		inset 0 1px 1px rgb(255 255 255 / 28%),
-		inset 0 -1px 2px rgb(3 20 53 / 52%),
-		0 0 0 2px rgb(3 16 39 / 82%),
-		0 0 9px 3px rgb(73 141 242 / 72%);
+	width: var(--hanabi-tile-note-fold-size);
+	height: var(--hanabi-tile-note-fold-size);
+	overflow: hidden;
+	border-bottom-right-radius: inherit;
+}
+
+.hanabi-tile-note-marker svg {
+	display: block;
+	width: 100%;
+	height: 100%;
+	overflow: visible;
+}
+
+.hanabi-tile-note-shadow {
+	fill: rgb(0 0 0 / 78%);
 }
 
 .hanabi-tile-emphasis,

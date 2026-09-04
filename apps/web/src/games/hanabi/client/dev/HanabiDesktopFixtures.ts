@@ -11,6 +11,7 @@ import {
 	HanabiTile,
 	HanabiTileColor,
 	HanabiTileNumber,
+	HanabiTileNotes,
 	Position,
 } from '@hanabi/shared';
 
@@ -116,7 +117,7 @@ function makeFixtureData({
 	const { players, turnOrder } = makePlayers(playerCount);
 	const tiles: Record<string, HanabiTile> = {};
 	const tilePositions: Record<string, Position> = {};
-	const tileNotes: HanabiGameData['tileNotes'] = {};
+	const tileNotes: Record<string, HanabiTileNotes> = {};
 	const playerTiles: Record<string, string[]> = {};
 
 	turnOrder.forEach((playerId, playerIndex) => {
@@ -146,12 +147,18 @@ function makeFixtureData({
 					z: freeform ? tileIndex : 0,
 				};
 			}
-			(tileNotes as Record<string, { colors: []; numbers: [] }>)[tileId] = {
+			tileNotes[tileId] = {
 				colors: [],
 				numbers: [],
 			};
 		}
 	});
+
+	if (targetFixture) {
+		const localHand = playerTiles[turnOrder[0]];
+		tileNotes[localHand[1]] = { colors: ['green'], numbers: [2] };
+		tileNotes[localHand[4]] = { colors: ['red'], numbers: [5] };
+	}
 
 	const playedTiles: string[] = [];
 	const playedColors = getHanabiRuleSetColors(ruleSet);
