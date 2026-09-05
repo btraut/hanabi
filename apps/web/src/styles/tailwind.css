@@ -38,9 +38,16 @@
 	--color-hanabi-black: #738096;
 }
 
+html {
+	color-scheme: dark;
+	background-color: var(--color-hanabi-table-deep);
+}
+
 body {
 	min-height: 100vh;
-	background: var(--hanabi-table-gradient);
+	/* Safari samples the solid color beneath the gradient for its browser chrome. */
+	background-color: var(--color-hanabi-table-deep);
+	background-image: var(--hanabi-table-gradient);
 	color: var(--color-hanabi-text);
 	font-family: var(--font-sans);
 	font-weight: 500;
