@@ -150,29 +150,34 @@ export default function HanabiReview({
 		<div className="hanabi-game-surface hanabi-review min-h-screen" data-review-cursor={cursor}>
 			<header className="hanabi-review-header">
 				<button ref={exitRef} type="button" onClick={onExit}>
-					← {exitLabel}
+					<span aria-hidden="true">←</span> {exitLabel}
 				</button>
 				<h1>Game review</h1>
 				<div className="hanabi-review-perspective">
 					<label>
 						Perspective{' '}
-						<select
-							value={perspective === null ? 'all' : `player:${perspective}`}
-							onChange={(event) => {
-								setPerspective(
-									event.target.value === 'all' ? null : event.target.value.slice('player:'.length),
-								);
-								setSelectedCard(null);
-							}}
-						>
-							<option value="all">All hands</option>
-							<hr />
-							{transcript.turnOrder.map((id) => (
-								<option key={id} value={`player:${id}`}>
-									{transcript.players.find((player) => player.id === id)?.name ?? 'Player'}
-								</option>
-							))}
-						</select>
+						<span className="hanabi-select-wrap">
+							<select
+								value={perspective === null ? 'all' : `player:${perspective}`}
+								onChange={(event) => {
+									setPerspective(
+										event.target.value === 'all'
+											? null
+											: event.target.value.slice('player:'.length),
+									);
+									setSelectedCard(null);
+								}}
+							>
+								<option value="all">All hands</option>
+								<hr />
+								{transcript.turnOrder.map((id) => (
+									<option key={id} value={`player:${id}`}>
+										{transcript.players.find((player) => player.id === id)?.name ?? 'Player'}
+									</option>
+								))}
+							</select>
+							<span aria-hidden="true" className="hanabi-select-chevron" />
+						</span>
 					</label>
 					{revealAll && <span>All hands revealed</span>}
 				</div>
