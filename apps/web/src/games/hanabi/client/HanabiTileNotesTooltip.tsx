@@ -1,6 +1,6 @@
 import Portal from '~/components/Portal';
 import Tooltip from '~/components/Tooltip';
-import { useGameData } from '~/games/hanabi/client/HanabiGameContext';
+import { useBoardData } from '~/games/hanabi/client/HanabiGameContext';
 import {
 	HanabiClueColor,
 	HanabiTileNotes,
@@ -33,7 +33,7 @@ export function getHanabiTileNotesDescription(notes: HanabiTileNotes | undefined
 }
 
 export default function HanabiTileNotesTooltip({ notes, coords, onClose }: Props): JSX.Element {
-	const gameData = useGameData();
+	const gameData = useBoardData();
 
 	const allColors: HanabiClueColor[] = ['red', 'blue', 'green', 'yellow', 'white'];
 	if (gameData.ruleSet === '6-color') {

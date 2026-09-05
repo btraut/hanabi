@@ -21,11 +21,18 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('./HanabiGameContext', () => ({
-	useGameData: mocks.useGameData,
+	useGameSelector: (select: (game: HanabiGameData) => unknown) => select(mocks.useGameData()),
 	useGameMessenger: () => mocks.messenger,
 }));
 vi.mock('~/components/SocketContext', () => ({ useUserId: () => 'alice' }));
 vi.mock('./useTileDrop', () => ({ default: () => mocks.dropTarget }));
+vi.mock('./HanabiBoardPresentation', () => ({
+	default: ({ children }: { children: ReactNode }) => children,
+}));
+vi.mock('./HanabiMoveTileController', () => ({
+	default: ({ children }: { children: ReactNode }) => children,
+}));
+vi.mock('./HanabiBotTurnStatus', () => ({ default: () => null }));
 vi.mock('./HanabiHeader', () => ({ default: () => <header>Live game header</header> }));
 vi.mock('./HanabiLobby', () => ({
 	default: () => <section data-testid="lobby">Current lobby</section>,

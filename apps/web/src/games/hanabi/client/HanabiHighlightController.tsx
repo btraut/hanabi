@@ -1,5 +1,5 @@
 import { HanabiHighlightContextProvider } from '~/games/hanabi/client/HanabiHighlightContext';
-import { useGameData } from '~/games/hanabi/client/HanabiGameContext';
+import { useBoardData } from '~/games/hanabi/client/HanabiGameContext';
 import { getHanabiActionHighlight } from '~/games/hanabi/client/useActionHighlighter';
 import { useMemo, useState } from 'react';
 
@@ -8,7 +8,7 @@ interface Props {
 }
 
 export default function HanabiHighlightController({ children }: Props): JSX.Element {
-	const gameData = useGameData();
+	const gameData = useBoardData();
 	const [highlightedAction, setHighlightedAction] = useState<string | null>(null);
 	const actionHighlight = useMemo(() => {
 		const action = gameData.actions.find(({ id }) => id === highlightedAction);

@@ -12,6 +12,7 @@ import {
 	NOOP_GAME_TRANSCRIPT_RECORDER,
 } from './games/hanabi/GameTranscriptRecorder.js';
 import type { GameTranscriptSummaryReader } from './games/hanabi/PostgresGameTranscriptSummaryReader.js';
+import { BotRuntime } from './games/hanabi/bots/BotRuntime.js';
 
 const PRUNE_INTERVAL_MS = 60_000;
 
@@ -27,6 +28,7 @@ export interface HanabiRuntimeOptions {
 	gameTranscriptRecorder?: GameTranscriptRecorder;
 	adminPassword?: string;
 	transcriptSummaryReader?: GameTranscriptSummaryReader;
+	botRuntime?: BotRuntime;
 }
 
 export interface HanabiRuntime {
@@ -52,6 +54,7 @@ export function createHanabiRuntime(options: HanabiRuntimeOptions): HanabiRuntim
 			options.minimumPlayers ?? HANABI_MIN_PLAYERS,
 			options.debugPlayerControls ?? false,
 			gameTranscriptRecorder,
+			options.botRuntime,
 		),
 	);
 
@@ -142,6 +145,7 @@ export function createHanabiRuntime(options: HanabiRuntimeOptions): HanabiRuntim
 				socketPruneInterval.unref();
 				gamePruneInterval.unref();
 				ready = true;
+				gameManager.startBackgroundWork();
 			} catch (error) {
 				await close().catch(() => undefined);
 				throw error;

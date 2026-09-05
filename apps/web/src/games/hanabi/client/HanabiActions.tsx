@@ -1,6 +1,6 @@
 import { useUserId } from '~/components/SocketContext';
 import HanabiAction from '~/games/hanabi/client/HanabiAction';
-import { useGameData } from '~/games/hanabi/client/HanabiGameContext';
+import { useActivityData } from '~/games/hanabi/client/HanabiGameContext';
 import { ActionsFilterOption, HanabiGameAction, HanabiGameActionType } from '@hanabi/shared';
 import classNames from 'classnames';
 
@@ -47,7 +47,7 @@ function filterActions(
 }
 
 export default function HanabiActions({ filter = 'all' }: Props): JSX.Element {
-	const gameData = useGameData();
+	const gameData = useActivityData();
 
 	const userId = useUserId();
 

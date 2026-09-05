@@ -1,6 +1,12 @@
 import { getHanabiDesktopFixtures } from '~/games/hanabi/client/dev/HanabiDesktopFixtures';
 import HanabiDesktopFixtureView from '~/games/hanabi/client/dev/HanabiDesktopFixtureView';
-import { getHanabiRuleSetColors, HANABI_BOARD_SIZE, HanabiStage } from '@hanabi/shared';
+import {
+	getHanabiRuleSetColors,
+	HANABI_BOARD_SIZE,
+	HANABI_DEFAULT_TILE_POSITIONS,
+	HanabiStage,
+	isTileInTopHalf,
+} from '@hanabi/shared';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -18,6 +24,8 @@ describe('Hanabi desktop fixtures', () => {
 			'activity',
 			'spectator',
 			'disconnected',
+			'bot-thinking',
+			'bot-clue',
 			'finished',
 		]);
 
@@ -93,6 +101,24 @@ describe('Hanabi desktop fixtures', () => {
 		}
 	});
 
+	it('packs every upper carousel into consecutive slots starting at the left', () => {
+		for (const fixture of Object.values(getHanabiDesktopFixtures())) {
+			const { playerTiles, tilePositions } = fixture.gameData;
+			for (const tileIds of Object.values(playerTiles)) {
+				const orderedPositions = tileIds
+					.map((tileId) => tilePositions[tileId])
+					.filter(isTileInTopHalf)
+					.sort((a, b) => a.x - b.x);
+				expect(orderedPositions.map(({ x, y }) => ({ x, y }))).toEqual(
+					orderedPositions.map((_, index) => {
+						const { x, y } = HANABI_DEFAULT_TILE_POSITIONS[index];
+						return { x, y };
+					}),
+				);
+			}
+		}
+	});
+
 	it('models spectator, disconnected, and finished semantics', () => {
 		const fixtures = getHanabiDesktopFixtures();
 
@@ -100,5 +126,17 @@ describe('Hanabi desktop fixtures', () => {
 		expect(fixtures.disconnected.gameData.players['player-2'].connected).toBe(false);
 		expect(fixtures.finished.gameData.stage).toBe(HanabiStage.Finished);
 		expect(fixtures.finished.gameData.currentPlayerId).toBeNull();
+	});
+
+	it('keeps the human active while a bot considers a clue', () => {
+		const fixture = getHanabiDesktopFixtures()['bot-clue'];
+		expect(fixture.gameData.currentPlayerId).toBe(fixture.userId);
+		expect(fixture.gameData.players[fixture.userId].kind).not.toBe('bot');
+		expect(fixture.gameData.bots?.turn).toEqual({
+			playerId: 'player-2',
+			status: 'thinking',
+			canRetry: false,
+			opportunity: 'clue',
+		});
 	});
 });

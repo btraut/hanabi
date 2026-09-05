@@ -10,13 +10,13 @@ import {
 	HanabiDragTypes,
 	getHanabiPositionForDrag,
 } from '~/games/hanabi/client/HanabiDragTypes';
-import { useGameData } from '~/games/hanabi/client/HanabiGameContext';
+import { useBoardData } from '~/games/hanabi/client/HanabiGameContext';
 import { useHanabiMoveTileContext } from '~/games/hanabi/client/HanabiMoveTileContext';
 import { useRef } from 'react';
 import { ConnectDropTarget, useDrop } from 'react-dnd';
 
 export default function useTileDrop(): ConnectDropTarget {
-	const gameData = useGameData();
+	const gameData = useBoardData();
 	const userId = useUserId();
 	const { moveTiles } = useHanabiMoveTileContext();
 

@@ -7,6 +7,7 @@ import {
 	HanabiTileNumber,
 	Position,
 	AddPlayerResponseMessage,
+	AddBotResponseMessage,
 	ChangeGameSettingsResponseMessage,
 	CreateDebugPlayerResponseMessage,
 	DebugPlayerAction,
@@ -20,6 +21,7 @@ import {
 	RefreshGameDataMessage,
 	RemovePlayerResponseMessage,
 	ResetGameResponseMessage,
+	RetryBotTurnResponseMessage,
 	SendChatResponseMessage,
 	StartGameResponseMessage,
 	DistributiveOmit,
@@ -170,6 +172,33 @@ export default class HanabiGameMessenger {
 		}
 
 		return response.data.playerId;
+	}
+
+	public async addBot(): Promise<void> {
+		this._sendMessage({ type: 'AddBotMessage', data: undefined });
+		const response = await this._socketManager.expectMessageOfType<AddBotResponseMessage>(
+			'AddBotResponseMessage',
+			this._scope,
+		);
+		if (response.data.error) throw new Error(response.data.error);
+	}
+
+	public async removeBot(playerId: string): Promise<void> {
+		this._sendMessage({ type: 'RemovePlayerMessage', data: { playerId } });
+		const response = await this._socketManager.expectMessageOfType<RemovePlayerResponseMessage>(
+			'RemovePlayerResponseMessage',
+			this._scope,
+		);
+		if (response.data.error) throw new Error(response.data.error);
+	}
+
+	public async retryBotTurn(): Promise<void> {
+		this._sendMessage({ type: 'RetryBotTurnMessage', data: undefined });
+		const response = await this._socketManager.expectMessageOfType<RetryBotTurnResponseMessage>(
+			'RetryBotTurnResponseMessage',
+			this._scope,
+		);
+		if (response.data.error) throw new Error(response.data.error);
 	}
 
 	public async debugPlayerAction(action: DebugPlayerAction): Promise<void> {

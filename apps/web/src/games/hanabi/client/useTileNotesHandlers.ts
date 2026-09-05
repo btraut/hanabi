@@ -2,7 +2,7 @@
 // HanabiBoard, but crowded up that component. It defines the data and handlers
 // pertaining to hovering over a tile to see its notes.
 
-import { useGameData } from '~/games/hanabi/client/HanabiGameContext';
+import { useBoardData } from '~/games/hanabi/client/HanabiGameContext';
 import { HanabiTileNotes } from '@hanabi/shared';
 import { useCallback, useState } from 'react';
 
@@ -23,7 +23,7 @@ export default function useTileNotesHandlers(): {
 	handleTileMouseDown: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
 	handleTileLongPress: (element: HTMLElement, tileId: string) => void;
 } {
-	const gameData = useGameData();
+	const gameData = useBoardData();
 
 	const [showNotesForTile, setShowNotesForTile] = useState<NotesDetails | null>(null);
 

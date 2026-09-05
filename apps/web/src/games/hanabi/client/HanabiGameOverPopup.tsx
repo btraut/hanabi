@@ -1,7 +1,7 @@
 import { useUserId } from '~/components/SocketContext';
 import HanabiDialog from '~/games/hanabi/client/design-system/HanabiDialog';
 import HanabiMenuButton from '~/games/hanabi/client/design-system/HanabiMenuButton';
-import { useGameData, useGameMessenger } from '~/games/hanabi/client/HanabiGameContext';
+import { useBoardData, useGameMessenger } from '~/games/hanabi/client/HanabiGameContext';
 import { HanabiFinishedReason } from '@hanabi/shared';
 
 const GAME_OVER_TITLES: { [key in HanabiFinishedReason]: string } = {
@@ -25,7 +25,7 @@ interface Props {
 
 export default function HanabiGameOverPopup({ onClose, onReview }: Props): JSX.Element | null {
 	const gameMessenger = useGameMessenger();
-	const gameData = useGameData();
+	const gameData = useBoardData();
 	const userId = useUserId();
 
 	const { finishedReason } = gameData;

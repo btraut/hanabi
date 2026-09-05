@@ -1,35 +1,16 @@
-// useJustTookAction is a hook that returns true if a game action was just
-// taken. This is useful if we need to enable animations for a period of time
-// after an action was taken, but then disable later.
+import { useLatestTileAction } from '~/games/hanabi/client/useLatestActions';
+import { useEffect, useState } from 'react';
 
-import { useGameData } from '~/games/hanabi/client/HanabiGameContext';
-import { useEffect, useRef } from 'react';
-
+// Enable hand movement effects briefly after a newly observed gameplay action.
 export default function useJustTookAction(duration = 200): boolean {
-	const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-	const gameData = useGameData();
-
-	const actionsLength = gameData.actions.length;
-
-	const lastActionsLengthRef = useRef(actionsLength);
+	const actionId = useLatestTileAction()?.id ?? null;
+	const [completedActionId, setCompletedActionId] = useState<string | null>(null);
 
 	useEffect(() => {
-		if (timeoutRef.current) {
-			clearTimeout(timeoutRef.current);
-		}
+		if (actionId === null) return;
+		const timeout = setTimeout(() => setCompletedActionId(actionId), duration);
+		return () => clearTimeout(timeout);
+	}, [actionId, duration]);
 
-		timeoutRef.current = setTimeout(() => {
-			timeoutRef.current = null;
-			lastActionsLengthRef.current = actionsLength;
-		}, duration);
-
-		return () => {
-			if (timeoutRef.current) {
-				clearTimeout(timeoutRef.current);
-			}
-		};
-	}, [actionsLength, duration]);
-
-	return actionsLength !== lastActionsLengthRef.current;
+	return actionId !== null && actionId !== completedActionId;
 }

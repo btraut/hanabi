@@ -1,9 +1,11 @@
 import { useUserId } from '~/components/SocketContext';
 import HanabiActionEffects from '~/games/hanabi/client/HanabiActionEffects';
-import HanabiActivityRail from '~/games/hanabi/client/HanabiActivityRail';
+import HanabiLiveActivityRail from './HanabiLiveActivityRail';
+import HanabiLiveDesktopStatus from './HanabiLiveDesktopStatus';
+import HanabiLivePlayerWorkspace from './HanabiLivePlayerWorkspace';
 import HanabiDesktopBoard from '~/games/hanabi/client/HanabiDesktopBoard';
 import HanabiDesktopTableau from '~/games/hanabi/client/HanabiDesktopTableau';
-import { useGameData } from '~/games/hanabi/client/HanabiGameContext';
+import { useBoardData } from '~/games/hanabi/client/HanabiGameContext';
 import { useTransitioningTileId } from '~/games/hanabi/client/HanabiGameContext';
 import HanabiGameOverPopup from '~/games/hanabi/client/HanabiGameOverPopup';
 import { useHanabiHighlightContext } from '~/games/hanabi/client/HanabiHighlightContext';
@@ -31,11 +33,10 @@ export default function HanabiBoard({
 	onReview?: () => void;
 	initiallyDismissGameOver?: boolean;
 }): JSX.Element {
-	const gameData = useGameData();
+	const gameData = useBoardData();
 	const transitioningTileId = useTransitioningTileId();
 	const userId = useUserId();
-	const { highlightedLabel, highlightedRecipientId, highlightedTiles, highlightedTone } =
-		useHanabiHighlightContext();
+	const { highlightedTiles, highlightedTone } = useHanabiHighlightContext();
 
 	const isDraggingTile = useDragLayer(
 		(monitor) => monitor.isDragging() && monitor.getItemType() === HANABI_DRAG_TYPES.TILE,
@@ -109,19 +110,12 @@ export default function HanabiBoard({
 		<>
 			<HanabiActionEffects />
 			<HanabiDesktopBoard
-				activity={<HanabiActivityRail gameData={gameData} userId={userId} />}
+				activity={<HanabiLiveActivityRail />}
+				status={<HanabiLiveDesktopStatus gameData={gameData} userId={userId} />}
 				gameData={gameData}
 				playerWorkspaces={
 					<HanabiDesktopPlayerWorkspaces
-						clueHighlight={
-							highlightedLabel && highlightedRecipientId && highlightedTone
-								? {
-										label: highlightedLabel,
-										recipientId: highlightedRecipientId,
-										tone: highlightedTone,
-									}
-								: undefined
-						}
+						workspaceComponent={HanabiLivePlayerWorkspace}
 						gameData={gameData}
 						renderTileSurface={(playerId) => (
 							<HanabiPlayerTiles

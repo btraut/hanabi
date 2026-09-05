@@ -74,6 +74,20 @@ instance. If the first launcher is still assigning ports, it reports startup in 
 Use `pnpm dev:status` to print the current URLs and
 `pnpm dev:down` to stop the launcher.
 
+#### Client state and animations
+
+`HanabiGameStore` receives complete socket snapshots and publishes separate board,
+activity, and bot-status channels. Equal JSON branches retain their identity;
+React subscriptions use `useSyncExternalStore`. The session context contains the
+store and commands, so chat updates do not invalidate the board's context.
+
+`HanabiBoardPresentation` owns the card animation coordinator and the displayed
+board snapshot. Tile rendering, drag positions, and gameplay effects subscribe to
+that presentation. Chat and bot indicators subscribe to authoritative state and
+update during animation capture or playback. Gameplay tracking uses action IDs
+and its own bounded history, so chat retention cannot trigger an animation or
+hide a newly played card. Review and static fixtures use independent snapshots.
+
 #### Single-browser debug player
 
 Press **Option-D** anywhere on the page to toggle the development-only **Debug Player Controls**
@@ -81,6 +95,80 @@ panel. `?debug=1` remains available for opening it directly. After joining as th
 to add a second player. During that player's turns, the panel can play or discard any card and give
 valid color or number clues, so the full turn loop works in one browser. The development launcher
 enables the matching server controls; production rejects them.
+
+#### Server-run bots
+
+Set `HANABI_BOTS_ENABLED=true` and `OPENAI_API_KEY` in the ignored `apps/server/.env`, then
+restart the server. Join a lobby as its creator and click **Add bot**. Bots occupy normal seats
+within the five-player limit; at least one human must join before starting. The creator can
+remove bots before the game starts. API calls run on the server and continue if the browser closes.
+New bots receive a random robot name from `bots/BotNames.ts`, excluding names already used by
+any player in that lobby. Existing bots keep their names across reloads and game resets.
+
+Edit [conventions.md](apps/server/src/games/hanabi/bots/conventions.md) to coach the bot. New rounds
+compose this Markdown with the active mode's rules and enabled options: five colors, six colors,
+Rainbow, Black Powder, or Rainbow plus Black Powder. Restart development or rebuild/redeploy
+production, then start a new round to adopt edits. Each round snapshots its prompt, rules, coaching,
+model, effort, and communication contract. The defaults are `gpt-6-astra` and `high`; override them
+with `HANABI_BOT_MODEL` and `HANABI_BOT_REASONING_EFFORT`.
+
+Every request contains the bot's permitted view: visible teammate cards, resources, fireworks,
+discards, every player's upper-row order and lower-area placements, and the complete recorded
+history of clues, plays, discards, draws, and committed arrangements. Stable card IDs carry positive
+and negative clue evidence, source events, and possible identities. Replacement draws start with
+fresh knowledge. Clue events preserve their original board and layout context. The bot's own faces,
+undealt cards, and shuffle seed are excluded. Requests have no tools or shared conversation.
+
+Literal knowledge is separate from convention interpretation. A teammate's visible face does not
+become that teammate's clue knowledge. Own-card `observerPossibleIdentities` can additionally account
+for copies visible in other hands. Conventions such as a single-card clue usually suggesting a play
+remain conditional; missed clues never create hard identity exclusions.
+
+New rounds also give each bot a private notepad, persisted for that seat and round. Every accepted
+decision explanation is appended automatically; the bot may return an additional `notes` string of
+up to 8,000 characters, or `null` for no extra note. The full notepad accompanies every request to
+that bot. Use it for concise hypotheses, corrections, reminders, and source-event references;
+its contents are revisable model beliefs, not factual clue evidence. The journal and extra notes
+are excluded from other bots' requests, public game state, and transcripts. The decision explanation
+also appears in public debug chat.
+
+A bot has two decision opportunities: its own turn, and immediately after receiving a clue when
+dragging is enabled. On its turn, it returns one supplied action ID, a nullable full-hand arrangement,
+and a brief explanation, with optional extra notes. An off-turn clue opportunity permits an optional
+arrangement, explanation, and notes; its action ID is null. If the clue makes it the next player, one request combines the
+arrangement and turn action. Arrangement consumes no turn. Setting touched cards aside is coaching,
+not an automatic move: the bot may keep them in place, move them below, or reorder its discard queue.
+Bots do not receive other off-turn opportunities. Humans retain ordinary off-turn dragging.
+
+The server validates the entire decision before applying it, then posts its explanation as a chat
+message from the bot, prefixed with `Debug: `. Every accepted turn or clue response produces one
+message, including a clue response that keeps the layout unchanged. The complete explanation can
+contain up to 1,000 characters plus the prefix; ordinary player messages retain their 500-character
+limit. Debug messages are visible to every player and watcher and may reveal teammate cards their
+owners cannot see. They are persisted with chat, consume no turn, and are excluded from bot
+observations, factual history, and gameplay transcripts. Explanations are not written to the server
+console. Rejected or stale decisions produce no debug message.
+Existing v1 rounds keep their saved prompt and action-only contract. Existing v2 rounds without
+`notepadVersion` retain their three-field decision contract; new rounds enable the private notepad. Old saves without layout history are marked incomplete rather than
+assigned invented events.
+
+A failed request pauses that bot decision opportunity and shows **Retry** when another attempt is
+allowed. Seated humans can retry; the bot never makes an arbitrary fallback move. A failed optional
+clue response is skipped if it would block a different bot's normal turn, leaving the cards unchanged. The default
+deadline is 120 seconds with at most one automatic retry for transient API failures. Each response
+allows up to 16,384 output tokens, including internal reasoning and the final decision. Turn and clue opportunities share these limits. The server
+allows three concurrent requests, 200 attempts / 2 million reserved tokens per round, and
+500 attempts / 5 million reserved tokens per rolling hour across the process. The environment
+examples list all configurable limits. Reservations conservatively estimate request size and
+settle against reported usage; these are operational limits, not a dollar billing cap.
+
+V2 requests include the complete history and enabled private notepad within a 512,000-byte combined
+input limit. Oversized requests pause inference without truncating saved events or notes, or blocking
+human movement.
+
+Round budgets and recovery state use existing active-game persistence. Global limits reset with
+the process. A crash can lose the latest unflushed save, so persistence does not guarantee
+exactly-once API billing. Disabled or unconfigured bots do not prevent human-only games.
 
 #### Game archive
 

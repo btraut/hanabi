@@ -76,23 +76,6 @@ export default function HanabiStyles(): JSX.Element {
 .hanabi-tile-emphasis-rainbow { --hanabi-emphasis-rgb: 237 149 136; }
 .hanabi-tile-emphasis-action { --hanabi-emphasis-rgb: 218 113 99; }
 
-.hanabi-clue-pill {
-	--hanabi-emphasis-rgb: 213 173 97;
-	color: rgb(var(--hanabi-emphasis-rgb));
-	background: rgb(var(--hanabi-emphasis-rgb) / 12%);
-	border-color: rgb(var(--hanabi-emphasis-rgb) / 55%);
-	box-shadow: 0 0 10px rgb(var(--hanabi-emphasis-rgb) / 16%);
-}
-.hanabi-clue-pill-red { --hanabi-emphasis-rgb: 211 107 101; }
-.hanabi-clue-pill-blue { --hanabi-emphasis-rgb: 99 143 209; }
-.hanabi-clue-pill-green { --hanabi-emphasis-rgb: 108 171 127; }
-.hanabi-clue-pill-yellow,
-.hanabi-clue-pill-number { --hanabi-emphasis-rgb: 213 173 97; }
-.hanabi-clue-pill-white { --hanabi-emphasis-rgb: 238 233 223; }
-.hanabi-clue-pill-purple { --hanabi-emphasis-rgb: 146 120 196; }
-.hanabi-clue-pill-black { --hanabi-emphasis-rgb: 115 128 150; }
-.hanabi-clue-pill-rainbow { --hanabi-emphasis-rgb: 237 149 136; }
-
 .hanabi-tile-emphasis::after,
 .hanabi-player-tile-emphasis::after {
 	content: '';

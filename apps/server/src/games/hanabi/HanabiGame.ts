@@ -1,7 +1,11 @@
 import {
 	getNewPositionsForTiles,
+	getHanabiPositionsForLayout,
+	packHanabiHandPositions,
 	addToTileNotes,
 	getHanabiCompletionTileCount,
+	getHanabiClueColors,
+	doesHanabiTileMatchClue,
 	canHanabiPlayerDiscard,
 	getHanabiFireworkSequence,
 	generateHanabiGameData,
@@ -9,7 +13,6 @@ import {
 	generateRandomDeck,
 	HANABI_CLUE_COLORS,
 	isHanabiFireworkCompletion,
-	isHanabiRainbowRuleSet,
 	isHanabiRuleSet,
 	isReplayableTranscript,
 	HANABI_BOARD_SIZE,
@@ -64,10 +67,21 @@ import {
 	transcriptMatchesRound,
 } from './GameTranscript.js';
 import { GameTranscriptRecorder, NOOP_GAME_TRANSCRIPT_RECORDER } from './GameTranscriptRecorder.js';
+import { BotRuntime } from './bots/BotRuntime.js';
+import { BotTurnCoordinator, type BotTurn } from './bots/BotTurnCoordinator.js';
+import { type BotRound } from './bots/BotRound.js';
+import { createBotHistory, appendBotHistory, appendBotArrangement } from './bots/BotHistory.js';
+import { createRoundBotPolicy } from './bots/BotPolicy.js';
+import { isV2BotDecision, type BotDecision } from './bots/OpenAiBot.js';
+import { getBotLegalActions } from './bots/BotLegalActions.js';
+import { createBotDecisionChat } from './bots/BotDecisionChat.js';
+import { getBotNotepadCheckpoint } from './bots/BotNotepad.js';
+import { chooseBotName } from './bots/BotNames.js';
 
 export interface HanabiGameSerialized extends GameSerialized {
 	data: HanabiGameData;
 	transcript?: GameTranscriptV1 | null;
+	botRound?: BotRound | null;
 }
 
 const INVALID_MESSAGE_PAYLOAD = 'Invalid message payload.';
@@ -88,6 +102,8 @@ export default class HanabiGame extends Game {
 	private _lastReadActivitySaveAt = 0;
 	private readonly _debugPlayerControls: boolean;
 	private _transcript: GameTranscriptV1 | null = null;
+	private _botRound: BotRound | null = null;
+	private readonly _botCoordinator?: BotTurnCoordinator;
 
 	constructor(
 		creatorIdOrData: string | HanabiGameSerialized,
@@ -96,6 +112,7 @@ export default class HanabiGame extends Game {
 		private readonly _minimumPlayers = HANABI_MIN_PLAYERS,
 		debugPlayerControls = false,
 		private readonly _transcriptRecorder: GameTranscriptRecorder = NOOP_GAME_TRANSCRIPT_RECORDER,
+		private readonly _botRuntime?: BotRuntime,
 	) {
 		super(
 			typeof creatorIdOrData === 'string' ? creatorIdOrData : creatorIdOrData.creatorId,
@@ -117,12 +134,14 @@ export default class HanabiGame extends Game {
 				players: Object.fromEntries(
 					Object.entries(creatorIdOrData.data.players).map(([id, player]) => [
 						id,
-						{ ...player, connected: false },
+						{ ...player, connected: player.kind === 'bot' },
 					]),
 				),
 			};
 			// Review data belongs to recipient snapshots, never authoritative game state.
 			delete this._gameData.reviewTranscript;
+			delete this._gameData.bots;
+			this._botRound = creatorIdOrData.botRound ? structuredClone(creatorIdOrData.botRound) : null;
 			if (this._gameData.stage !== HanabiStage.Setup) {
 				const identity = { gameId: this.id, gameCode: this.code };
 				this._transcript = transcriptMatchesRound(
@@ -141,9 +160,38 @@ export default class HanabiGame extends Game {
 
 		this._userConnectionListener = new UserConnectionListener(socketManager);
 		this._userConnectionListener.start(this._handleUserConnectionChange);
+		if (_botRuntime) {
+			this._botCoordinator = new BotTurnCoordinator(_botRuntime, {
+				gameId: this.id,
+				getTurn: () => this._currentBotTurn(),
+				persist: async () => {
+					this._update();
+					await this.flushSaves();
+				},
+				onFailure: () => {
+					if (this._discardFailedClueForOtherBot()) this._invalidateBotTurn(true);
+				},
+				notify: () => {
+					this._broadcastGameData();
+					this._update();
+				},
+				apply: (playerId, action, decision) => this._applyBotDecision(playerId, action, decision),
+				applyClueResponse: (playerId, decision, sourceIds) =>
+					this._applyBotDecision(playerId, null, decision, sourceIds),
+			});
+		}
+	}
+
+	public override startBackgroundWork(): void {
+		this._botCoordinator?.start();
+	}
+
+	public override stopBackgroundWork(): void {
+		this._botCoordinator?.stop();
 	}
 
 	public cleanUp(): void {
+		this.stopBackgroundWork();
 		this._messenger.disconnect();
 		this._userConnectionListener.stop();
 	}
@@ -154,6 +202,7 @@ export default class HanabiGame extends Game {
 			...baseSerialized,
 			data: this._gameData,
 			transcript: this._transcript,
+			...(this._botRound ? { botRound: this._botRound } : {}),
 		};
 		return JSON.stringify(serialized);
 	}
@@ -172,6 +221,8 @@ export default class HanabiGame extends Game {
 			case 'GetGameDataMessage':
 			case 'StartGameMessage':
 			case 'ResetGameMessage':
+			case 'AddBotMessage':
+			case 'RetryBotTurnMessage':
 				return data === undefined;
 			case 'AddPlayerMessage':
 				return this._isRecord(data) && typeof data.name === 'string';
@@ -218,6 +269,12 @@ export default class HanabiGame extends Game {
 			case 'AddPlayerMessage':
 				this._messenger.send(userId, { type: 'AddPlayerResponseMessage', data });
 				break;
+			case 'AddBotMessage':
+				this._messenger.send(userId, { type: 'AddBotResponseMessage', data });
+				break;
+			case 'RetryBotTurnMessage':
+				this._messenger.send(userId, { type: 'RetryBotTurnResponseMessage', data });
+				break;
 			case 'RemovePlayerMessage':
 				this._messenger.send(userId, { type: 'RemovePlayerResponseMessage', data });
 				break;
@@ -249,12 +306,35 @@ export default class HanabiGame extends Game {
 	}
 
 	private _gameDataForRecipient(userId: string): HanabiGameData {
+		const currentPlayer =
+			this._gameData.currentPlayerId && this._gameData.players[this._gameData.currentPlayerId];
+		const bots = {
+			available: !!this._botRuntime,
+			canManage:
+				this._gameData.stage === HanabiStage.Setup &&
+				userId === this.creatorId &&
+				!!this._gameData.players[userId] &&
+				this._gameData.players[userId].kind !== 'bot',
+			turn:
+				this._botCoordinator?.status() ??
+				(this._gameData.stage === HanabiStage.Playing &&
+				currentPlayer &&
+				currentPlayer.kind === 'bot'
+					? {
+							playerId: currentPlayer.id,
+							status: 'disabled' as const,
+							canRetry: false,
+							message:
+								'Bots are unavailable. Ask the server operator to enable them, or reset the game to remove bot seats.',
+						}
+					: null),
+		};
 		if (this._gameData.stage === HanabiStage.Finished) {
 			const transcript = this._transcript;
 			if (transcript && isReplayableTranscript(transcript)) {
-				return { ...this._gameData, reviewTranscript: structuredClone(transcript) };
+				return { ...this._gameData, bots, reviewTranscript: structuredClone(transcript) };
 			}
-			return this._gameData;
+			return { ...this._gameData, bots };
 		}
 
 		const concealedTileIds = new Set(this._gameData.remainingTiles);
@@ -285,7 +365,7 @@ export default class HanabiGame extends Game {
 			};
 		});
 
-		return { ...this._gameData, seed: '', tiles, actions };
+		return { ...this._gameData, seed: '', tiles, actions, bots };
 	}
 
 	private _broadcastGameData(additionalUserIds: readonly string[] = []): void {
@@ -320,7 +400,20 @@ export default class HanabiGame extends Game {
 		}
 	}
 
-	private _recordAcceptedMove(action: HanabiGameAction): void {
+	private _recordAcceptedMove(action: HanabiGameAction, before?: HanabiGameData): void {
+		if (this._botRound) {
+			const previousOpportunity = before ? this._botOpportunityKey(before) : undefined;
+			this._botRound.history = appendBotHistory(
+				this._botRound.history,
+				action,
+				this._gameData,
+				before,
+			);
+			this._queueBotClueOpportunity(action);
+			const opportunityChanged = !before || previousOpportunity !== this._botOpportunityKey();
+			const skippedFailedClue = !opportunityChanged && this._discardFailedClueForOtherBot();
+			this._invalidateBotTurn(opportunityChanged || skippedFailedClue);
+		}
 		if (!this._transcript) {
 			this._transcript = createPartialGameTranscript(
 				{ gameId: this.id, gameCode: this.code },
@@ -339,6 +432,8 @@ export default class HanabiGame extends Game {
 		userId: string;
 		message: HanabiMessage;
 	}): void => {
+		// Bot seats have no socket credentials; only the internal dispatcher may act for them.
+		if (this._gameData.players[userId]?.kind === 'bot' || userId.startsWith('bot:')) return;
 		if (!this._messagePayloadIsValid(message)) {
 			this._sendInvalidPayloadResponse(userId, message);
 			return;
@@ -351,6 +446,22 @@ export default class HanabiGame extends Game {
 			case 'AddPlayerMessage':
 				this._handleAddPlayerMessage(message, userId);
 				break;
+			case 'AddBotMessage':
+				this._handleAddBot(userId);
+				break;
+			case 'RetryBotTurnMessage': {
+				const player = this._gameData.players[userId];
+				const error =
+					!player || player.kind === 'bot'
+						? 'Only players can retry the bot.'
+						: (this._botCoordinator?.retry() ??
+							(this._botCoordinator ? null : 'Bots are unavailable.'));
+				this._messenger.send(userId, {
+					type: 'RetryBotTurnResponseMessage',
+					data: error ? { error } : {},
+				});
+				break;
+			}
 			case 'RemovePlayerMessage':
 				this._handleRemovePlayerMessage(message, userId);
 				break;
@@ -388,7 +499,7 @@ export default class HanabiGame extends Game {
 	};
 
 	private _handleUserConnectionChange = (userId: string, change: UserConnectionChange) => {
-		if (!this._gameData.players[userId]) {
+		if (!this._gameData.players[userId] || this._gameData.players[userId].kind === 'bot') {
 			return;
 		}
 
@@ -465,6 +576,284 @@ export default class HanabiGame extends Game {
 	private _addPlayer(playerId: string, name: string): void {
 		const player = generatePlayer({ id: playerId, name });
 		this._gameData.players = { ...this._gameData.players, [playerId]: player };
+	}
+
+	private _handleAddBot(userId: string): void {
+		const error = !this._botRuntime
+			? 'Bots are unavailable on this server.'
+			: userId !== this.creatorId || !this._gameData.players[userId]
+				? 'Only the joined host can add a bot.'
+				: this._gameData.stage !== HanabiStage.Setup
+					? 'Cannot add a bot after the game has started.'
+					: Object.keys(this._gameData.players).length >= HANABI_MAX_PLAYERS
+						? `Hanabi supports at most ${HANABI_MAX_PLAYERS} players.`
+						: null;
+		if (error) {
+			this._messenger.send(userId, { type: 'AddBotResponseMessage', data: { error } });
+			return;
+		}
+		const playerId = `bot:${randomUUID()}`;
+		const name = chooseBotName(Object.values(this._gameData.players).map((player) => player.name));
+		this._gameData.players = {
+			...this._gameData.players,
+			[playerId]: generatePlayer({ id: playerId, name, kind: 'bot' }),
+		};
+		this._messenger.send(userId, { type: 'AddBotResponseMessage', data: { playerId } });
+		this._broadcastGameData();
+		this._update();
+	}
+
+	private _currentBotTurn(): BotTurn | null {
+		const pending = this._botRound?.version === 2 ? this._botRound.pendingClues?.[0] : undefined;
+		const playerId = pending?.playerId ?? this._gameData.currentPlayerId;
+		if (
+			this._gameData.stage !== HanabiStage.Playing ||
+			!playerId ||
+			this._gameData.players[playerId]?.kind !== 'bot' ||
+			!this._botRound
+		)
+			return null;
+		return {
+			playerId,
+			gameData: this._gameData,
+			round: this._botRound,
+			...(this._botRound.version === 2
+				? {
+						opportunity:
+							playerId === this._gameData.currentPlayerId ? ('turn' as const) : ('clue' as const),
+						sourceClueEventIds: pending?.eventIds ?? [],
+					}
+				: {}),
+		};
+	}
+
+	/** A failed optional response must not prevent another bot from taking its turn. */
+	private _discardFailedClueForOtherBot(): boolean {
+		const round = this._botRound;
+		const pending = round?.version === 2 ? round.pendingClues?.[0] : undefined;
+		const currentPlayerId = this._gameData.currentPlayerId;
+		if (
+			!round ||
+			!pending ||
+			!['error', 'exhausted'].includes(round.status) ||
+			!currentPlayerId ||
+			pending.playerId === currentPlayerId ||
+			this._gameData.players[currentPlayerId]?.kind !== 'bot'
+		)
+			return false;
+		Logger.warn(
+			`Skipped failed optional bot clue response game=${this.id} player=${pending.playerId} code=${round.failure ?? 'transient'}`,
+		);
+		round.pendingClues = round.pendingClues!.slice(1);
+		return true;
+	}
+
+	private _botOpportunityKey(gameData: HanabiGameData = this._gameData): string {
+		const pending = this._botRound?.pendingClues?.[0];
+		const playerId = pending?.playerId ?? gameData.currentPlayerId;
+		return JSON.stringify([
+			playerId,
+			playerId === gameData.currentPlayerId ? 'turn' : 'clue',
+			pending?.eventIds ?? [],
+		]);
+	}
+
+	private _invalidateBotTurn(advance: boolean): void {
+		if (!this._botRound) return;
+		this._botRound.revision += 1;
+		if (advance || this._botRound.status === 'thinking') {
+			this._botRound.status = 'ready';
+			delete this._botRound.failure;
+		}
+		this._botCoordinator?.changed();
+	}
+
+	private _applyPlayerAction(playerId: string, action: DebugPlayerAction): string | null {
+		let error: string | null = null;
+		const respond: ActionResponseDelegate = (result) => {
+			error = result.error ?? null;
+		};
+		const scope = getScope(HANABI_GAME_TITLE, this.id);
+		switch (action.type) {
+			case 'play':
+				this._handlePlayTileMessage(
+					{ scope, type: 'PlayTileMessage', data: { id: action.tileId } },
+					playerId,
+					respond,
+				);
+				break;
+			case 'discard':
+				this._handleDiscardTileMessage(
+					{ scope, type: 'DiscardTileMessage', data: { id: action.tileId } },
+					playerId,
+					respond,
+				);
+				break;
+			case 'clue':
+				this._handleGiveClueMessage(
+					{
+						scope,
+						type: 'GiveClueMessage',
+						data: { to: action.to, color: action.color, number: action.number },
+					},
+					playerId,
+					respond,
+				);
+				break;
+		}
+		return error;
+	}
+
+	private _applyBotDecision(
+		playerId: string,
+		action: DebugPlayerAction | null,
+		decision?: BotDecision,
+		sourceClueEventIds?: string[],
+	): string | null {
+		const round = this._botRound;
+		if (!round || round.version === 1)
+			return action ? this._applyPlayerAction(playerId, action) : 'Invalid bot opportunity.';
+		const hand = this._gameData.playerTiles[playerId] ?? [];
+		const opportunity = action ? 'turn' : 'clue';
+		const current = this._currentBotTurn();
+		if (
+			this._gameData.players[playerId]?.kind !== 'bot' ||
+			current?.playerId !== playerId ||
+			current.opportunity !== opportunity ||
+			!isV2BotDecision(
+				decision,
+				hand,
+				this._gameData.allowDragging,
+				opportunity,
+				round.policy.notepadVersion === 1,
+			) ||
+			(action !== null &&
+				!getBotLegalActions(this._gameData, playerId).some(
+					(candidate) =>
+						candidate.id === decision.actionId &&
+						JSON.stringify(candidate.action) === JSON.stringify(action),
+				)) ||
+			(opportunity === 'clue' &&
+				JSON.stringify(current.sourceClueEventIds) !== JSON.stringify(sourceClueEventIds))
+		)
+			return 'Invalid bot decision.';
+
+		const positions =
+			decision.arrangement === null
+				? null
+				: getHanabiPositionsForLayout(hand, decision.arrangement);
+		if (decision.arrangement !== null && !positions) return 'Invalid bot arrangement.';
+		const beforePositions = this._gameData.tilePositions;
+		const beforeTranscript = this._transcript;
+		const beforeHistory = round.history;
+		const observedAt = getBotNotepadCheckpoint(beforeHistory);
+		const beforePendingClues = round.pendingClues;
+		const sources = current.sourceClueEventIds ?? [];
+		// All checks finish before mutation; these synchronous handlers cannot interleave.
+		// Stage the arrangement without notifications or invalidating its own request.
+		if (positions) this._commitArrangement(playerId, positions, sources.at(-1));
+		round.pendingClues = round.pendingClues?.filter((pending) => pending.playerId !== playerId);
+		const error = action ? this._applyPlayerAction(playerId, action) : null;
+		if (error) {
+			this._gameData.tilePositions = beforePositions;
+			this._transcript = beforeTranscript;
+			round.history = beforeHistory;
+			round.pendingClues = beforePendingClues;
+			return error;
+		}
+		const decisionId = randomUUID();
+		if (round.policy.notepadVersion === 1) {
+			const notepad = round.notepads?.[playerId] ?? { version: 1 as const, entries: [] };
+			round.notepads = {
+				...round.notepads,
+				[playerId]: {
+					version: 1,
+					entries: [
+						...notepad.entries,
+						{
+							decisionId,
+							opportunity,
+							observedAt,
+							recordedAt: getBotNotepadCheckpoint(round.history),
+							sourceClueEventIds: [...sources],
+							explanation: decision.explanation,
+							notes: decision.notes ?? null,
+						},
+					],
+				},
+			};
+		}
+		this._appendActions(createBotDecisionChat(playerId, decisionId, decision.explanation));
+		if (!action) {
+			if (this._transcript !== beforeTranscript) this._recordTranscriptSnapshot();
+			this._invalidateBotTurn(true);
+		}
+		this._broadcastGameData();
+		this._update();
+		return null;
+	}
+
+	private _commitArrangement(
+		playerId: string,
+		positions: Record<string, Position>,
+		sourceClueEventId?: string,
+	): boolean {
+		const previous = this._gameData.tilePositions;
+		const changedPositions = Object.fromEntries(
+			Object.entries(positions).filter(([id, next]) => {
+				const current = previous[id];
+				return current.x !== next.x || current.y !== next.y || current.z !== next.z;
+			}),
+		);
+		if (Object.keys(changedPositions).length === 0) return false;
+		this._gameData.tilePositions = { ...previous, ...positions };
+		if (this._botRound)
+			this._botRound.history = appendBotArrangement(
+				this._botRound.history,
+				playerId,
+				previous,
+				this._gameData,
+				sourceClueEventId,
+			);
+		const createdAt = new Date().toISOString();
+		this._transcript ??= createPartialGameTranscript(
+			{ gameId: this.id, gameCode: this.code },
+			this._gameData,
+			createdAt,
+		);
+		this._transcript = appendGameTranscriptHandMovement(this._transcript, {
+			id: randomUUID(),
+			createdAt,
+			actorId: playerId,
+			positions: changedPositions,
+		});
+		return true;
+	}
+
+	private _queueBotClueOpportunity(action: HanabiGameAction): void {
+		const round = this._botRound;
+		if (
+			!round ||
+			round.version !== 2 ||
+			round.history.version !== 2 ||
+			!round.policy.arrangementAfterClue ||
+			!this._gameData.allowDragging ||
+			this._gameData.stage !== HanabiStage.Playing ||
+			(action.type !== HanabiGameActionType.GiveColorClue &&
+				action.type !== HanabiGameActionType.GiveNumberClue) ||
+			this._gameData.players[action.recipientId]?.kind !== 'bot'
+		)
+			return;
+		const sourceClueEventId = round.history.events.at(-1)?.eventId;
+		if (!sourceClueEventId) return;
+		const playerId = action.recipientId;
+		const pending = round.pendingClues?.find((entry) => entry.playerId === playerId);
+		if (pending) pending.eventIds = [...pending.eventIds, sourceClueEventId];
+		else
+			round.pendingClues = [
+				...(round.pendingClues ?? []),
+				{ playerId, eventIds: [sourceClueEventId] },
+			];
 	}
 
 	private _debugPlayerId(): string {
@@ -614,6 +1003,13 @@ export default class HanabiGame extends Game {
 		}
 
 		const { [removeUserId]: _removedPlayer, ...remainingPlayers } = this._gameData.players;
+		if (_removedPlayer?.kind === 'bot' && !this._gameData.players[userId]) {
+			this._messenger.send(userId, {
+				type: 'RemovePlayerResponseMessage',
+				data: { error: 'Only the joined host can remove a bot.' },
+			});
+			return;
+		}
 		this._gameData.players = remainingPlayers;
 
 		this._messenger.send(userId, {
@@ -767,6 +1163,16 @@ export default class HanabiGame extends Game {
 		}
 
 		// Start the game!
+		if (
+			Object.values(this._gameData.players).some((player) => player.kind === 'bot') &&
+			!this._botRuntime
+		) {
+			this._messenger.send(userId, {
+				type: 'StartGameResponseMessage',
+				data: { error: 'Bots are unavailable. Remove bot seats to start a human game.' },
+			});
+			return;
+		}
 		this._gameData.stage = HanabiStage.Playing;
 
 		// Generate a fresh deck and randomize the tiles.
@@ -796,6 +1202,21 @@ export default class HanabiGame extends Game {
 		// Set up turn order.
 		this._gameData.turnOrder = shuffle(players.map((player) => player.id));
 		this._gameData.currentPlayerId = this._gameData.turnOrder[0];
+		if (this._botRuntime && players.some((player) => player.kind === 'bot')) {
+			this._botRound = {
+				version: 2,
+				roundId: this._gameData.seed,
+				policy: createRoundBotPolicy(this._botRuntime.policy, this._gameData),
+				history: createBotHistory(this._gameData, 2),
+				revision: 0,
+				attempts: 0,
+				tokens: 0,
+				status: 'ready',
+				lastAttemptAt: 0,
+				pendingClues: [],
+				notepads: {},
+			};
+		}
 
 		// Record the action.
 		const [startedAction] = this._appendActions({
@@ -821,6 +1242,7 @@ export default class HanabiGame extends Game {
 
 		// Touch the games last updated time.
 		this._update();
+		this._botCoordinator?.changed();
 	}
 
 	private _validateGameAction(userId: string): string | null {
@@ -981,6 +1403,7 @@ export default class HanabiGame extends Game {
 			respond({ error: "That tile isn't in your hand!" });
 			return;
 		}
+		const before = this._botRound?.version === 2 ? structuredClone(this._gameData) : undefined;
 
 		// Remove the tile from the player.
 		const newPlayerTiles = this._gameData.playerTiles[userId].filter(
@@ -991,6 +1414,11 @@ export default class HanabiGame extends Game {
 		// Pick up another tile if available.
 		if (this._gameData.remainingTiles.length) {
 			this._pickUpNextTile(userId);
+		} else {
+			this._gameData.tilePositions = {
+				...this._gameData.tilePositions,
+				...packHanabiHandPositions(newPlayerTiles, this._gameData.tilePositions),
+			};
 		}
 
 		// Check if the tile is valid. If so, play it.
@@ -1053,7 +1481,7 @@ export default class HanabiGame extends Game {
 			startShotClockIfDeckEmpty: true,
 			gameWon: this._gameData.playedTiles.length === maxPlayedTiles,
 		});
-		this._recordAcceptedMove(playAction);
+		this._recordAcceptedMove(playAction, before);
 
 		// Send success message.
 		respond({});
@@ -1087,6 +1515,7 @@ export default class HanabiGame extends Game {
 			respond({ error: "That tile isn't in your hand!" });
 			return;
 		}
+		const before = this._botRound?.version === 2 ? structuredClone(this._gameData) : undefined;
 
 		// Remove the tile from the player.
 		const newPlayerTiles = this._gameData.playerTiles[userId].filter(
@@ -1100,6 +1529,11 @@ export default class HanabiGame extends Game {
 		// Pick up another tile if available.
 		if (this._gameData.remainingTiles.length) {
 			this._pickUpNextTile(userId);
+		} else {
+			this._gameData.tilePositions = {
+				...this._gameData.tilePositions,
+				...packHanabiHandPositions(newPlayerTiles, this._gameData.tilePositions),
+			};
 		}
 
 		// Remove the tile position.
@@ -1127,7 +1561,7 @@ export default class HanabiGame extends Game {
 		}
 
 		this._completeTurn(userId, { startShotClockIfDeckEmpty: true });
-		this._recordAcceptedMove(discardAction);
+		this._recordAcceptedMove(discardAction, before);
 
 		// Send success message.
 		respond({});
@@ -1164,10 +1598,7 @@ export default class HanabiGame extends Game {
 			respond({ error: 'You cannot give yourself a clue.' });
 			return;
 		}
-		const validColorClues: HanabiClueColor[] = ['red', 'yellow', 'green', 'blue', 'white'];
-		if (this._gameData.ruleSet === '6-color') {
-			validColorClues.push('purple');
-		}
+		const validColorClues = getHanabiClueColors(this._gameData.ruleSet);
 		if (
 			(message.data.color !== undefined && !validColorClues.includes(message.data.color)) ||
 			(message.data.number !== undefined && ![1, 2, 3, 4, 5].includes(message.data.number))
@@ -1186,17 +1617,7 @@ export default class HanabiGame extends Game {
 
 		const selectedTiles = recipientTiles
 			.map((tid: string) => this._gameData.tiles[tid])
-			.filter((t: HanabiTile) => {
-				if (message.data.color) {
-					if (isHanabiRainbowRuleSet(this._gameData.ruleSet)) {
-						return t.color === message.data.color || t.color === 'rainbow';
-					} else {
-						return t.color === message.data.color;
-					}
-				} else {
-					return t.number === message.data.number;
-				}
-			});
+			.filter((t: HanabiTile) => doesHanabiTileMatchClue(t, this._gameData.ruleSet, message.data));
 
 		if (selectedTiles.length === 0) {
 			respond({ error: 'Clues must select at least 1 tile.' });
@@ -1213,6 +1634,7 @@ export default class HanabiGame extends Game {
 			respond({ error: 'No clues remaining.' });
 			return;
 		}
+		const before = this._botRound?.version === 2 ? structuredClone(this._gameData) : undefined;
 
 		// Decrement clue count.
 		this._gameData.clues -= 1;
@@ -1243,7 +1665,7 @@ export default class HanabiGame extends Game {
 		}
 
 		this._completeTurn(userId);
-		this._recordAcceptedMove(clueAction);
+		this._recordAcceptedMove(clueAction, before);
 
 		// Send success message.
 		respond({});
@@ -1268,6 +1690,13 @@ export default class HanabiGame extends Game {
 			this._messenger.send(userId, {
 				type: 'MoveTilesResponseMessage',
 				data: { error: "The game isn't being played right now.!" },
+			});
+			return;
+		}
+		if (!this._gameData.allowDragging) {
+			this._messenger.send(userId, {
+				type: 'MoveTilesResponseMessage',
+				data: { error: 'Card movement is disabled for this game.' },
 			});
 			return;
 		}
@@ -1325,32 +1754,23 @@ export default class HanabiGame extends Game {
 			}
 		}
 
-		const changedPositions = Object.fromEntries(
-			Object.entries(requestedPositions as Record<string, Position>).filter(([id, position]) => {
-				const previous = this._gameData.tilePositions[id];
-				return previous.x !== position.x || previous.y !== position.y || previous.z !== position.z;
+		// All tiles are validated. Commit the packed hand as one arrangement.
+		const normalizedPositions = Object.fromEntries(
+			Object.entries(requestedPositions).map(([id, value]) => {
+				const { x, y, z } = value as Position;
+				return [id, { x, y, z }];
 			}),
 		);
-
-		// All tiles are validated. We can update positions now.
-		this._gameData.tilePositions = {
-			...this._gameData.tilePositions,
-			...structuredClone(changedPositions),
-		};
-		if (Object.keys(changedPositions).length > 0) {
-			const createdAt = new Date().toISOString();
-			this._transcript ??= createPartialGameTranscript(
-				{ gameId: this.id, gameCode: this.code },
-				this._gameData,
-				createdAt,
-			);
-			this._transcript = appendGameTranscriptHandMovement(this._transcript, {
-				id: randomUUID(),
-				createdAt,
-				actorId: userId,
-				positions: changedPositions,
-			});
+		const moved = this._commitArrangement(
+			userId,
+			packHanabiHandPositions(this._gameData.playerTiles[userId], {
+				...this._gameData.tilePositions,
+				...normalizedPositions,
+			}),
+		);
+		if (moved) {
 			this._recordTranscriptSnapshot();
+			this._invalidateBotTurn(false);
 		}
 
 		// Send success message.
@@ -1381,6 +1801,8 @@ export default class HanabiGame extends Game {
 		}
 
 		// Generate a new game.
+		this._botCoordinator?.changed();
+		this._botRound = null;
 		this._gameData = generateHanabiGameData({
 			creatorId: this.creatorId,
 			players: this._gameData.players,

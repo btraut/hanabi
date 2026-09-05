@@ -1,5 +1,5 @@
 import { useUserId } from '~/components/SocketContext';
-import { useGameData, useTransitioningTileId } from '~/games/hanabi/client/HanabiGameContext';
+import { useBoardData, useTransitioningTileId } from '~/games/hanabi/client/HanabiGameContext';
 import {
 	HANABI_DESKTOP_SURFACE_HEIGHT,
 	HANABI_DESKTOP_ZONE_HEIGHT,
@@ -99,7 +99,7 @@ export default function HanabiPlayerTiles({
 	onTileMouseDown,
 	onTileLongPress,
 }: Props): JSX.Element {
-	const gameData = useGameData();
+	const gameData = useBoardData();
 	const transitioningTileId = useTransitioningTileId();
 	const userId = useUserId();
 	const { tilePositions } = useHanabiMoveTileContext();

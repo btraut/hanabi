@@ -3,7 +3,7 @@ import {
 	getTileViewTransitionName,
 	HanabiActionTransitionCoordinator,
 } from './HanabiActionTransition';
-import { HanabiGameActionType } from '@hanabi/shared';
+import { HanabiGameActionType, HanabiStage } from '@hanabi/shared';
 import { describe, expect, it, vi } from 'vitest';
 
 type TestAction = {
@@ -12,7 +12,13 @@ type TestAction = {
 	tile?: { id: string };
 };
 
-type TestState = { actions: readonly TestAction[]; botStatus?: string };
+type TestState = {
+	actions: readonly TestAction[];
+	positions?: readonly { tileId: string; x: number }[];
+	notes?: string;
+	stage?: HanabiStage;
+	seed?: string;
+};
 
 function action(id: string, type: HanabiGameActionType, tileId?: string): TestAction {
 	return { id, type, tile: tileId ? { id: tileId } : undefined };
@@ -57,9 +63,59 @@ describe('getNewTileActionId', () => {
 
 	it('ignores appended actions that do not move a tile', () => {
 		const previous = [action('started', HanabiGameActionType.GameStarted)];
-		const next = [...previous, action('chat', HanabiGameActionType.Chat)];
+		const next = [...previous, action('clue', HanabiGameActionType.GiveNumberClue)];
 
 		expect(getNewTileActionId(previous, next)).toBeNull();
+	});
+
+	it('detects one play when the oldest action leaves a capped 1000-action history', () => {
+		const previous = Array.from({ length: 1000 }, (_, index) =>
+			action(`prior-${index}`, HanabiGameActionType.GiveNumberClue),
+		);
+		const next = [...previous.slice(1), action('played', HanabiGameActionType.Play, 'tile-1')];
+
+		expect(next).toHaveLength(previous.length);
+		expect(getNewTileActionId(previous, next)).toBe('tile-1');
+	});
+
+	it('skips reconnect batches in a shifted bounded history', () => {
+		const previous = Array.from({ length: 1000 }, (_, index) =>
+			action(`prior-${index}`, HanabiGameActionType.GiveNumberClue),
+		);
+		const next = [
+			...previous.slice(2),
+			action('played', HanabiGameActionType.Play, 'tile-1'),
+			action('discarded', HanabiGameActionType.Discard, 'tile-2'),
+		];
+
+		expect(getNewTileActionId(previous, next)).toBeNull();
+	});
+
+	it('rejects an inconsistent overlap even when the last prior action appears', () => {
+		const previous = [
+			action('started', HanabiGameActionType.GameStarted),
+			action('clue-1', HanabiGameActionType.GiveNumberClue),
+			action('clue-2', HanabiGameActionType.GiveNumberClue),
+		];
+		const next = [
+			action('different-clue', HanabiGameActionType.GiveNumberClue),
+			previous[2],
+			action('played', HanabiGameActionType.Play, 'tile-1'),
+		];
+
+		expect(getNewTileActionId(previous, next)).toBeNull();
+	});
+
+	it('does not animate a new round appended to a retained history', () => {
+		const previous = [action('finished', HanabiGameActionType.GameFinished)];
+		const next = [
+			...previous,
+			action('started', HanabiGameActionType.GameStarted),
+			action('played', HanabiGameActionType.Play, 'tile-1'),
+		];
+
+		expect(getNewTileActionId(previous, next)).toBeNull();
+		expect(getNewTileActionId([], next)).toBeNull();
 	});
 
 	it('does not replay hydrated, reset, or replaced action histories', () => {
@@ -173,25 +229,27 @@ describe('HanabiActionTransitionCoordinator', () => {
 	});
 
 	it.each([HanabiGameActionType.Play, HanabiGameActionType.Discard])(
-		'preserves a pending %s animation through bot status refreshes',
+		'preserves a pending %s animation through position and note refreshes',
 		(type) => {
 			const harness = setup();
 			const initial = state(action('started', HanabiGameActionType.GameStarted));
 			const played = state(...initial.actions, action('played', type, 'tile-1'));
-			const thinking = { ...played, botStatus: 'thinking' };
+			const arranged = { ...played, positions: [{ tileId: 'tile-2', x: 100 }] };
+			const annotated = { ...arranged, notes: 'Save tile-2' };
 			harness.coordinator.update(initial);
 			harness.coordinator.update(played);
-			harness.coordinator.update(thinking);
+			harness.coordinator.update(arranged);
+			harness.coordinator.update(annotated);
 
 			expect(harness.transitions[0].skipTransition).not.toHaveBeenCalled();
 			expect(harness.applied).toEqual([{ state: initial, tileId: null }]);
 			harness.transitions[0].update();
-			expect(harness.applied.at(-1)).toEqual({ state: thinking, tileId: 'tile-1' });
+			expect(harness.applied.at(-1)).toEqual({ state: annotated, tileId: 'tile-1' });
 			expect(harness.transitions).toHaveLength(1);
 		},
 	);
 
-	it('applies status refreshes during the slide without removing its tile identity', async () => {
+	it('applies position and note refreshes during the slide without removing its tile identity', async () => {
 		const harness = setup();
 		const initial = state(action('started', HanabiGameActionType.GameStarted));
 		const played = state(...initial.actions, action('played', HanabiGameActionType.Play, 'tile-1'));
@@ -199,32 +257,36 @@ describe('HanabiActionTransitionCoordinator', () => {
 		harness.coordinator.update(played);
 		harness.transitions[0].update();
 
-		const thinking = { ...played, botStatus: 'thinking' };
-		harness.coordinator.update(thinking);
+		const arranged = { ...played, positions: [{ tileId: 'tile-2', x: 100 }] };
+		const annotated = { ...arranged, notes: 'Save tile-2' };
+		harness.coordinator.update(arranged);
+		harness.coordinator.update(annotated);
 		expect(harness.transitions[0].skipTransition).not.toHaveBeenCalled();
-		expect(harness.applied.at(-1)).toEqual({ state: thinking, tileId: 'tile-1' });
+		expect(harness.applied.at(-1)).toEqual({ state: annotated, tileId: 'tile-1' });
 		harness.transitions[0].finished.resolve();
 		await harness.transitions[0].finished.promise;
 		await Promise.resolve();
 		expect(harness.cleared).toBe(1);
-		harness.coordinator.update({ ...thinking, botStatus: 'ready' });
+		harness.coordinator.update({ ...annotated, notes: '' });
 		expect(harness.applied.at(-1)?.tileId).toBeNull();
 		expect(harness.transitions).toHaveLength(1);
 	});
 
-	it('never lets a delayed callback overwrite a newer refresh', () => {
+	it('never lets a delayed callback overwrite a newer gameplay action', () => {
 		const harness = setup();
 		const initial = state(action('started', HanabiGameActionType.GameStarted));
 		const played = state(...initial.actions, action('played', HanabiGameActionType.Play, 'tile-1'));
-		const chatted = state(...played.actions, action('chat', HanabiGameActionType.Chat));
+		const arranged = { ...played, positions: [{ tileId: 'tile-2', x: 100 }] };
+		const clued = state(...arranged.actions, action('clue', HanabiGameActionType.GiveNumberClue));
 
 		harness.coordinator.update(initial);
 		harness.coordinator.update(played);
-		harness.coordinator.update(chatted);
+		harness.coordinator.update(arranged);
+		harness.coordinator.update(clued);
 		harness.transitions[0].update();
 
 		expect(harness.transitions[0].skipTransition).toHaveBeenCalledOnce();
-		expect(harness.applied.at(-1)).toEqual({ state: chatted, tileId: null });
+		expect(harness.applied.at(-1)).toEqual({ state: clued, tileId: null });
 		expect(harness.applied).not.toContainEqual({ state: played, tileId: 'tile-1' });
 	});
 
@@ -240,12 +302,68 @@ describe('HanabiActionTransitionCoordinator', () => {
 		const played = state(...initial.actions, action('played', HanabiGameActionType.Play, 'tile-1'));
 		harness.coordinator.update(initial);
 		harness.coordinator.update(played);
-		harness.coordinator.update({ ...played, botStatus: 'thinking' });
+		harness.coordinator.update({ ...played, notes: 'Save tile-2' });
 		harness.coordinator.update(replacement);
 		harness.transitions[0].update();
 		expect(harness.transitions[0].skipTransition).toHaveBeenCalledOnce();
 		expect(harness.applied.at(-1)).toEqual({ state: replacement, tileId: null });
 	});
+
+	it('animates a play after a capped gameplay history shifts', () => {
+		const harness = setup();
+		const initial = state(
+			...Array.from({ length: 1000 }, (_, index) =>
+				action(`prior-${index}`, HanabiGameActionType.GiveNumberClue),
+			),
+		);
+		const played = state(
+			...initial.actions.slice(1),
+			action('played', HanabiGameActionType.Play, 'tile-1'),
+		);
+		harness.coordinator.update(initial);
+		harness.coordinator.update(played);
+
+		expect(harness.transitions).toHaveLength(1);
+		expect(harness.applied).toEqual([{ state: initial, tileId: null }]);
+		harness.transitions[0].update();
+		expect(harness.applied.at(-1)).toEqual({ state: played, tileId: 'tile-1' });
+	});
+
+	it.each(['setup', 'new round'] as const)(
+		'cancels a pending slide on %s when live seeds are empty',
+		(boundary) => {
+			const harness = setup();
+			const initial: TestState = {
+				...state(action('started', HanabiGameActionType.GameStarted)),
+				stage: HanabiStage.Playing,
+				seed: '',
+			};
+			const played = {
+				...initial,
+				actions: [...initial.actions, action('played', HanabiGameActionType.Play, 'tile-1')],
+			};
+			const replacement =
+				boundary === 'setup'
+					? { ...played, stage: HanabiStage.Setup }
+					: {
+							...played,
+							actions: [
+								...played.actions,
+								action('next-round', HanabiGameActionType.GameStarted),
+								action('next-play', HanabiGameActionType.Play, 'tile-2'),
+							],
+						};
+
+			harness.coordinator.update(initial);
+			harness.coordinator.update(played);
+			harness.coordinator.update(replacement);
+			harness.transitions[0].update();
+
+			expect(harness.transitions).toHaveLength(1);
+			expect(harness.transitions[0].skipTransition).toHaveBeenCalledOnce();
+			expect(harness.applied.at(-1)).toEqual({ state: replacement, tileId: null });
+		},
+	);
 
 	it('keeps a newer tile transition when the canceled one finishes', async () => {
 		const harness = setup();
@@ -263,10 +381,10 @@ describe('HanabiActionTransitionCoordinator', () => {
 		await harness.transitions[0].finished.promise;
 		await Promise.resolve();
 		expect(harness.cleared).toBe(0);
-		const thinking = { ...discarded, botStatus: 'thinking' };
-		harness.coordinator.update(thinking);
+		const arranged = { ...discarded, positions: [{ tileId: 'tile-3', x: 100 }] };
+		harness.coordinator.update(arranged);
 		harness.transitions[1].update();
-		expect(harness.applied.at(-1)).toEqual({ state: thinking, tileId: 'tile-2' });
+		expect(harness.applied.at(-1)).toEqual({ state: arranged, tileId: 'tile-2' });
 		expect(harness.transitions[1].skipTransition).not.toHaveBeenCalled();
 	});
 

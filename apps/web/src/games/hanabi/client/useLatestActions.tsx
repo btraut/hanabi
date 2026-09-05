@@ -1,27 +1,31 @@
-import { useGameData } from '~/games/hanabi/client/HanabiGameContext';
+import { useBoardData } from '~/games/hanabi/client/HanabiGameContext';
 import { HanabiGameAction, HanabiGameActionType } from '@hanabi/shared';
 import { useEffect, useState } from 'react';
 
+const NO_ACTIONS: readonly HanabiGameAction[] = [];
+
+export function getAppendedActions(
+	previous: readonly HanabiGameAction[],
+	next: readonly HanabiGameAction[],
+): readonly HanabiGameAction[] {
+	const previousId = previous.at(-1)?.id;
+	if (!previousId) return next;
+	const overlap = next.findIndex(({ id }) => id === previousId);
+	// A replacement log is a reset or a reconnect without a shared cursor.
+	// Treat it as the baseline rather than replaying its historical events.
+	return overlap < 0 ? NO_ACTIONS : next.slice(overlap + 1);
+}
+
+function useAppendedActions(actions: readonly HanabiGameAction[]): readonly HanabiGameAction[] {
+	const [observed, setObserved] = useState({ actions, appended: NO_ACTIONS });
+	if (observed.actions !== actions) {
+		setObserved({ actions, appended: getAppendedActions(observed.actions, actions) });
+	}
+	return observed.appended;
+}
+
 export default function useLatestActions(): readonly HanabiGameAction[] {
-	const gameData = useGameData();
-
-	const { actions } = gameData;
-	const actionsLength = gameData.actions.length;
-
-	const [latestActionIndex, setLatestActionIndex] = useState(gameData.actions.length);
-	const [actionsToProcess, setActionsToProcess] = useState<readonly HanabiGameAction[]>([]);
-
-	useEffect(() => {
-		if (actionsLength > latestActionIndex) {
-			setLatestActionIndex(actions.length);
-			setActionsToProcess(actions.slice(latestActionIndex));
-		} else if (actionsLength < latestActionIndex) {
-			setLatestActionIndex(actions.length);
-			setActionsToProcess(actions);
-		}
-	}, [actions, actionsLength, latestActionIndex]);
-
-	return actionsToProcess;
+	return useAppendedActions(useBoardData().actions);
 }
 
 const TILE_ACTION_TYPES = new Set<HanabiGameActionType>([
@@ -32,21 +36,22 @@ const TILE_ACTION_TYPES = new Set<HanabiGameActionType>([
 ]);
 
 export function useLatestTileAction(): HanabiGameAction | undefined {
-	const latestActions = useLatestActions();
-
-	for (let i = latestActions.length - 1; i >= 0; i -= 1) {
-		if (TILE_ACTION_TYPES.has(latestActions[i].type)) {
-			return latestActions[i];
-		}
-	}
-
-	return undefined;
+	const tileActions = useLatestActions().filter((action) => TILE_ACTION_TYPES.has(action.type));
+	// Several missed turns can arrive together after reconnecting. There is no
+	// individual presentation for those turns, so skip their sounds and effects.
+	return tileActions.length === 1 ? tileActions[0] : undefined;
 }
 
-export function useLatestActionEffect(handler: (action: HanabiGameAction | null) => void): void {
-	const latestActions = useLatestActions();
-	const latestAction = latestActions.length ? latestActions[latestActions.length - 1] : null;
+export function useActionListEffect(
+	actions: readonly HanabiGameAction[],
+	handler: (action: HanabiGameAction | null) => void,
+): void {
+	const latestAction = useAppendedActions(actions).at(-1) ?? null;
 	useEffect(() => {
 		handler(latestAction);
 	}, [handler, latestAction]);
+}
+
+export function useLatestActionEffect(handler: (action: HanabiGameAction | null) => void): void {
+	useActionListEffect(useBoardData().actions, handler);
 }

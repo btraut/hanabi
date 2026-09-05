@@ -3,7 +3,7 @@ import {
 	HanabiTileHighlightTone,
 	useHanabiHighlightContext,
 } from '~/games/hanabi/client/HanabiHighlightContext';
-import { useGameData } from '~/games/hanabi/client/HanabiGameContext';
+import { useBoardData } from '~/games/hanabi/client/HanabiGameContext';
 import { HanabiGameAction, HanabiGameActionType } from '@hanabi/shared';
 import { useEffect } from 'react';
 
@@ -60,7 +60,7 @@ export function getLatestHanabiTileAction(
 
 export default function useActionHighlighter(): void {
 	const userId = useUserId();
-	const gameData = useGameData();
+	const gameData = useBoardData();
 	const { highlightAction } = useHanabiHighlightContext();
 	const latestTileAction = getLatestHanabiTileAction(gameData.actions);
 	const latestTileActionId = latestTileAction?.id ?? null;

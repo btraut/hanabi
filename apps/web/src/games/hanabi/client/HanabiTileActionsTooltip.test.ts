@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 
+import { HanabiGameStore } from './HanabiGameStore';
 import { HanabiGameContextProvider } from './HanabiGameContext';
 import HanabiTileActionsTooltip, { HanabiTileActionsTooltipType } from './HanabiTileActionsTooltip';
 import { HANABI_MAX_CLUES, generateHanabiGameData } from '@hanabi/shared';
@@ -38,9 +39,8 @@ describe('HanabiTileActionsTooltip discard rule', () => {
 						value: {
 							code: 'test',
 							create: vi.fn(),
-							gameData,
+							store: new HanabiGameStore(gameData),
 							gameMessenger: null,
-							transitioningTileId: null,
 							watch: vi.fn(),
 						},
 					},

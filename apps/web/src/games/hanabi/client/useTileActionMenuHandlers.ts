@@ -4,7 +4,7 @@
 // actions.
 
 import { useUserId } from '~/components/SocketContext';
-import { useGameData, useGameMessenger } from '~/games/hanabi/client/HanabiGameContext';
+import { useBoardData, useGameMessenger } from '~/games/hanabi/client/HanabiGameContext';
 import { HanabiTileActionsTooltipType } from '~/games/hanabi/client/HanabiTileActionsTooltip';
 import {
 	HanabiClueColor,
@@ -34,7 +34,7 @@ export default function useTileActionMenuHandlers(): {
 	handleActionsTooltipOnClose: () => void;
 } {
 	const gameMessenger = useGameMessenger();
-	const gameData = useGameData();
+	const gameData = useBoardData();
 	const userId = useUserId();
 
 	const [showMenuForTile, setShowMenuForTile] = useState<ActionMenuDetails | null>(null);

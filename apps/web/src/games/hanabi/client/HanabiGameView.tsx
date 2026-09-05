@@ -1,7 +1,10 @@
 import BreakpointController from '~/components/BreakpointController';
+import HanabiBoardPresentation from './HanabiBoardPresentation';
+import HanabiMoveTileController from './HanabiMoveTileController';
 import HanabiBoard from '~/games/hanabi/client/HanabiBoard';
+import HanabiBotTurnStatus from '~/games/hanabi/client/HanabiBotTurnStatus';
 import HanabiDebugPanel from '~/games/hanabi/client/HanabiDebugPanel';
-import { useGameData } from '~/games/hanabi/client/HanabiGameContext';
+import { useGameSelector } from '~/games/hanabi/client/HanabiGameContext';
 import HanabiHeader from '~/games/hanabi/client/HanabiHeader';
 import HanabiHighlightTileController from '~/games/hanabi/client/HanabiHighlightController';
 import HanabiLobby from '~/games/hanabi/client/HanabiLobby';
@@ -9,18 +12,20 @@ import HanabiReview from '~/games/hanabi/client/HanabiReview';
 import { useUserId } from '~/components/SocketContext';
 import useTileDrop from '~/games/hanabi/client/useTileDrop';
 import { GameTranscriptV1, HanabiStage, isReplayableTranscript } from '@hanabi/shared';
-import { useCallback, useEffect, useState } from 'react';
+import { ReactNode, useCallback, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 
 export default function HanabiGameView(): JSX.Element | null {
-	const gameData = useGameData();
+	const stage = useGameSelector((game) => game!.stage);
+	const seed = useGameSelector((game) => game!.seed);
+	const availableReviewTranscript = useGameSelector((game) => game!.reviewTranscript);
 	const userId = useUserId();
 	const [reviewTranscript, setReviewTranscript] = useState<GameTranscriptV1 | null>(null);
 	const [reviewOpen, setReviewOpen] = useState(false);
-	const canReview = isReplayableTranscript(gameData.reviewTranscript);
+	const canReview = isReplayableTranscript(availableReviewTranscript);
 	const openReview = canReview
 		? () => {
-				setReviewTranscript(gameData.reviewTranscript!);
+				setReviewTranscript(availableReviewTranscript!);
 				setReviewOpen(true);
 			}
 		: undefined;
@@ -51,17 +56,6 @@ export default function HanabiGameView(): JSX.Element | null {
 
 	const showDebugPanel = import.meta.env.DEV && debugPanelOpen;
 
-	// The entire screen should be used as a drop target. This is to work around a
-	// limitation of react-dnd where the "return animation" is played when
-	// dropping things outside drop targets.
-	const dropRef = useTileDrop();
-	const connectDropTarget = useCallback(
-		(element: HTMLDivElement | null) => {
-			dropRef(element);
-		},
-		[dropRef],
-	);
-
 	if (reviewOpen && reviewTranscript) {
 		return (
 			<HanabiReview
@@ -70,7 +64,7 @@ export default function HanabiGameView(): JSX.Element | null {
 				userId={userId}
 				onExit={() => setReviewOpen(false)}
 				exitLabel={
-					gameData.seed === reviewTranscript.roundId && gameData.stage === HanabiStage.Finished
+					seed === reviewTranscript.roundId && stage === HanabiStage.Finished
 						? 'Back to game'
 						: 'Back to lobby'
 				}
@@ -80,47 +74,68 @@ export default function HanabiGameView(): JSX.Element | null {
 
 	return (
 		<>
-			{reviewTranscript && gameData.seed !== reviewTranscript.roundId && (
+			{reviewTranscript && seed !== reviewTranscript.roundId && (
 				<div className="mx-auto max-w-[1660px] px-5 py-3">
 					<button className="hanabi-review-entry" type="button" onClick={() => setReviewOpen(true)}>
 						Review previous game
 					</button>
 				</div>
 			)}
-			{gameData.stage === HanabiStage.Setup && <HanabiLobby />}
-			{(gameData.stage === HanabiStage.Playing || gameData.stage === HanabiStage.Finished) && (
-				<HanabiHighlightTileController>
-					<BreakpointController>
-						<div
-							className="hanabi-responsive-game-surface min-h-screen w-full content-start"
-							ref={connectDropTarget}
-						>
-							<HanabiHeader variant="game" />
-							{gameData.stage === HanabiStage.Finished && (
-								<div className="mx-auto flex max-w-[1660px] justify-end px-5 pt-3">
-									{openReview ? (
-										<button className="hanabi-review-entry" type="button" onClick={openReview}>
-											Review game
-										</button>
-									) : (
-										<p className="text-hanabi-text-muted">
-											Review unavailable: this round has no complete transcript.
-										</p>
+			{stage === HanabiStage.Setup && <HanabiLobby />}
+			{(stage === HanabiStage.Playing || stage === HanabiStage.Finished) && (
+				<HanabiBoardPresentation>
+					<HanabiMoveTileController>
+						<HanabiHighlightTileController>
+							<BreakpointController>
+								<HanabiGameSurface>
+									<HanabiHeader variant="game" />
+									{stage === HanabiStage.Finished && (
+										<div className="mx-auto flex max-w-[1660px] justify-end px-5 pt-3">
+											{openReview ? (
+												<button className="hanabi-review-entry" type="button" onClick={openReview}>
+													Review game
+												</button>
+											) : (
+												<p className="text-hanabi-text-muted">
+													Review unavailable: this round has no complete transcript.
+												</p>
+											)}
+										</div>
 									)}
-								</div>
-							)}
-							<div className="hanabi-game-board-shell pt-5">
-								<HanabiBoard
-									onReview={openReview}
-									initiallyDismissGameOver={reviewTranscript?.roundId === gameData.seed}
-								/>
-							</div>
-							<div id="portal" />
-						</div>
-					</BreakpointController>
-				</HanabiHighlightTileController>
+									<div className="hanabi-game-board-shell pt-5">
+										<HanabiBotTurnStatus />
+										<HanabiBoard
+											onReview={openReview}
+											initiallyDismissGameOver={reviewTranscript?.roundId === seed}
+										/>
+									</div>
+									<div id="portal" />
+								</HanabiGameSurface>
+							</BreakpointController>
+						</HanabiHighlightTileController>
+					</HanabiMoveTileController>
+				</HanabiBoardPresentation>
 			)}
 			{showDebugPanel && <HanabiDebugPanel />}
 		</>
+	);
+}
+
+function HanabiGameSurface({ children }: { children: ReactNode }): JSX.Element {
+	// Cover the screen to suppress react-dnd's return animation for outside drops.
+	const dropRef = useTileDrop();
+	const connectDropTarget = useCallback(
+		(element: HTMLDivElement | null) => {
+			dropRef(element);
+		},
+		[dropRef],
+	);
+	return (
+		<div
+			className="hanabi-responsive-game-surface min-h-screen w-full content-start"
+			ref={connectDropTarget}
+		>
+			{children}
+		</div>
 	);
 }
