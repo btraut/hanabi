@@ -1,5 +1,7 @@
 import {
 	getScope,
+	getHanabiReviewSteps,
+	replayHanabiReview,
 	HanabiGameData,
 	HanabiMessage,
 	HanabiStage,
@@ -93,6 +95,87 @@ function finishGame(context: ReturnType<typeof createGame>) {
 }
 
 describe('finished game review delivery', () => {
+	it('records non-turn hand movements, restores their order, and replays exact layouts through draws', () => {
+		let context = startGame();
+		const initial = snapshot(context.game).data;
+		const actorId = initial.turnOrder.find((id) => id !== initial.currentPlayerId)!;
+		const tileId = initial.playerTiles[actorId][0];
+		const moments = [initial];
+		const moveHand = (x: number, y: number, z: number) => {
+			context.emit(actorId, {
+				scope: context.scope,
+				type: 'MoveTilesMessage',
+				data: { [tileId]: { x, y, z } },
+			});
+			moments.push(snapshot(context.game).data);
+		};
+		moveHand(200, 75, 3);
+		moveHand(20, 80, 4);
+		const saved = snapshot(context.game);
+		expect(saved.transcript!.moves).toHaveLength(0);
+		expect(saved.transcript!.revision).toBe(3);
+		expect(saved.transcript!.handMovements).toMatchObject([
+			{ actorId, afterMoveIndex: 0, positions: { [tileId]: { x: 200, y: 75, z: 3 } } },
+			{ actorId, afterMoveIndex: 0, positions: { [tileId]: { x: 20, y: 80, z: 4 } } },
+		]);
+		context.game.cleanUp();
+		context = createGame(saved);
+		// A clue advances the turn without changing either hand zone.
+		const beforeClue = snapshot(context.game).data;
+		context.emit(beforeClue.currentPlayerId!, {
+			scope: context.scope,
+			type: 'GiveClueMessage',
+			data: { to: actorId, number: beforeClue.tiles[tileId].number },
+		});
+		moments.push(snapshot(context.game).data);
+		moveHand(250, 70, 5);
+		// Playing a different tile exercises the server's replacement-draw reflow.
+		context.emit(actorId, {
+			scope: context.scope,
+			type: 'DiscardTileMessage',
+			data: { id: initial.playerTiles[actorId][1] },
+		});
+		moments.push(snapshot(context.game).data);
+		moments.push(...finishGame(context).slice(1));
+		const transcript = snapshot(context.game).transcript!;
+		expect(
+			getHanabiReviewSteps(transcript)
+				.slice(0, 5)
+				.map((step) => step.type),
+		).toEqual(['reposition', 'reposition', 'clue', 'reposition', 'discard']);
+		expect(getHanabiReviewSteps(transcript)).toHaveLength(transcript.moves.length + 3);
+		for (const [cursor, moment] of moments.entries()) {
+			const replay = replayHanabiReview(transcript, cursor);
+			expect(replay.tilePositions).toEqual(moment.tilePositions);
+			expect(replay.playerTiles).toEqual(moment.playerTiles);
+			expect(replay.currentPlayerId).toEqual(moment.currentPlayerId);
+			expect(replay.clues).toBe(moment.clues);
+		}
+		expect(replayHanabiReview(transcript, 1).tilePositions[tileId]).toEqual({
+			x: 200,
+			y: 75,
+			z: 3,
+		});
+		context.game.cleanUp();
+	});
+
+	it('omits rejected movements and unchanged positions from the transcript', () => {
+		const context = startGame();
+		const initial = snapshot(context.game);
+		const tileId = initial.data.playerTiles.alice[0];
+		for (const [actorId, positions] of [
+			['alice', {}],
+			['alice', { [tileId]: initial.data.tilePositions[tileId] }],
+			['ben', { [tileId]: { x: 100, y: 100, z: 1 } }],
+			['alice', { [tileId]: { x: -1, y: 100, z: 1 } }],
+		] as const) {
+			context.emit(actorId, { scope: context.scope, type: 'MoveTilesMessage', data: positions });
+		}
+		expect(snapshot(context.game).transcript).toEqual(initial.transcript);
+		expect(snapshot(context.game).data.tilePositions).toEqual(initial.data.tilePositions);
+		context.game.cleanUp();
+	});
+
 	it('reconstructs every accepted move from actual server gameplay', () => {
 		const context = startGame();
 		const moments = finishGame(context);
@@ -101,6 +184,7 @@ describe('finished game review delivery', () => {
 			expect(replayHanabiTranscript(transcript, cursor)).toMatchObject({
 				stage: moment.stage,
 				finishedReason: moment.finishedReason,
+				tilePositions: moment.tilePositions,
 				playerTiles: moment.playerTiles,
 				remainingTiles: moment.remainingTiles,
 				playedTiles: moment.playedTiles,

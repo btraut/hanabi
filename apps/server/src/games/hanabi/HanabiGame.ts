@@ -56,6 +56,7 @@ import Logger from '../../utils/Logger.js';
 import { randomUUID } from 'node:crypto';
 import {
 	appendGameTranscriptMove,
+	appendGameTranscriptHandMovement,
 	createGameTranscript,
 	createPartialGameTranscript,
 	GameTranscriptV1,
@@ -1324,11 +1325,33 @@ export default class HanabiGame extends Game {
 			}
 		}
 
+		const changedPositions = Object.fromEntries(
+			Object.entries(requestedPositions as Record<string, Position>).filter(([id, position]) => {
+				const previous = this._gameData.tilePositions[id];
+				return previous.x !== position.x || previous.y !== position.y || previous.z !== position.z;
+			}),
+		);
+
 		// All tiles are validated. We can update positions now.
 		this._gameData.tilePositions = {
 			...this._gameData.tilePositions,
-			...(requestedPositions as Record<string, Position>),
+			...structuredClone(changedPositions),
 		};
+		if (Object.keys(changedPositions).length > 0) {
+			const createdAt = new Date().toISOString();
+			this._transcript ??= createPartialGameTranscript(
+				{ gameId: this.id, gameCode: this.code },
+				this._gameData,
+				createdAt,
+			);
+			this._transcript = appendGameTranscriptHandMovement(this._transcript, {
+				id: randomUUID(),
+				createdAt,
+				actorId: userId,
+				positions: changedPositions,
+			});
+			this._recordTranscriptSnapshot();
+		}
 
 		// Send success message.
 		this._messenger.send(userId, {
