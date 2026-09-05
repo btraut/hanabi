@@ -16,7 +16,7 @@ const defaultConventions =
 		? readFileSync(new URL('./conventions.md', import.meta.url), 'utf8')
 		: __HANABI_BOT_CONVENTIONS__;
 
-export const DEFAULT_BOT_MODEL = 'gpt-6-astra';
+export const DEFAULT_BOT_MODEL = 'gpt-5.6-sol';
 export const BOT_REASONING_EFFORTS = [
 	'none',
 	'minimal',
@@ -27,7 +27,7 @@ export const BOT_REASONING_EFFORTS = [
 	'max',
 ] as const;
 export type BotReasoningEffort = (typeof BOT_REASONING_EFFORTS)[number];
-export const DEFAULT_BOT_REASONING_EFFORT: BotReasoningEffort = 'high';
+export const DEFAULT_BOT_REASONING_EFFORT: BotReasoningEffort = 'medium';
 
 export function isBotReasoningEffort(value: unknown): value is BotReasoningEffort {
 	return BOT_REASONING_EFFORTS.some((effort) => effort === value);

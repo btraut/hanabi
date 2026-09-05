@@ -113,7 +113,7 @@ Edit [conventions.md](apps/server/src/games/hanabi/bots/conventions.md) to coach
 compose this Markdown with the active mode's rules and enabled options: five colors, six colors,
 Rainbow, Black Powder, or Rainbow plus Black Powder. Restart development or rebuild/redeploy
 production, then start a new round to adopt edits. Each round snapshots its prompt, rules, coaching,
-model, effort, and communication contract. The defaults are `gpt-6-astra` and `high`; override them
+model, effort, and communication contract. The defaults are `gpt-5.6-sol` and `medium`; override them
 with `HANABI_BOT_MODEL` and `HANABI_BOT_REASONING_EFFORT`.
 
 Every request contains the bot's permitted view: visible teammate cards, resources, fireworks,
