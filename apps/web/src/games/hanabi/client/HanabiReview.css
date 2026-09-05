@@ -78,57 +78,8 @@
 	padding-left: 0;
 }
 
-.hanabi-review-status {
-	grid-column: 1 / -1;
-	grid-row: 1;
-	border: 1px solid var(--color-hanabi-border);
-	border-radius: 8px;
-	background: var(--color-hanabi-surface);
-	overflow: hidden;
-}
-.hanabi-review-turn {
-	display: flex;
-	justify-content: space-between;
-	gap: 10px;
-	flex-wrap: wrap;
-	padding: 10px 20px;
-	border-bottom: 1px solid var(--color-hanabi-border);
-}
-.hanabi-review-turn span {
-	color: var(--color-hanabi-coral-soft);
-}
-.hanabi-review-status dl {
-	display: grid;
-	grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-.hanabi-review-status dl > div {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	gap: 12px;
-	padding: 10px;
-}
-.hanabi-review-status dt {
-	color: var(--color-hanabi-text-muted);
-}
-.hanabi-review-status dd {
-	font-size: 25px;
-	font-variant-numeric: tabular-nums;
-}
-
-.hanabi-review .hanabi-player-workspace {
-	height: 140px;
-	box-shadow: none;
-}
-.hanabi-review-hand {
-	display: flex;
-	align-items: flex-start;
-	gap: 7px;
-	padding: 14px 10px;
-	min-height: 138px;
-}
 .hanabi-review .hanabi-review-card {
-	position: relative;
+	position: absolute;
 	padding: 0;
 	border: 0;
 	border-radius: 8px;
@@ -256,20 +207,6 @@
 	.hanabi-review .hanabi-desktop-board {
 		grid-template-rows: auto auto auto auto;
 	}
-	.hanabi-review .hanabi-player-workspace {
-		height: 140px;
-	}
-	.hanabi-review .hanabi-player-workspace > div:first-child {
-		padding-top: 10px;
-	}
-	.hanabi-review-hand {
-		gap: 5px;
-		padding-inline: 7px;
-	}
-	.hanabi-review-card > div {
-		width: clamp(30px, 8.5vw, 50px) !important;
-		height: clamp(39px, 10.88vw, 64px) !important;
-	}
 	.hanabi-review-transport {
 		position: static;
 	}
@@ -289,8 +226,10 @@
 	.hanabi-review-controls button {
 		padding: 8px 4px;
 	}
-	.hanabi-review-status dl > div {
-		flex-direction: column;
-		gap: 0;
+}
+
+@media (width < 640px) {
+	.hanabi-review .hanabi-status-regions {
+		grid-template-columns: minmax(0, 1fr);
 	}
 }

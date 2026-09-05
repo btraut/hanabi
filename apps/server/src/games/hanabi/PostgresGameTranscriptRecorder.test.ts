@@ -228,6 +228,40 @@ describe('PostgresGameTranscriptRecorder queue', () => {
 });
 
 describe('reconcileTranscriptSnapshot', () => {
+	it('persists movement-only revisions and rejects rewrites or missing movement history', () => {
+		const durable = snapshot('round-1', 2, ['move-1']);
+		durable.handMovements = [
+			{
+				type: 'reposition',
+				id: 'drag-1',
+				createdAt: '2026-09-02T04:00:00.000Z',
+				actorId: 'alice',
+				afterMoveIndex: 0,
+				positions: { tile: { x: 1, y: 1, z: 1 } },
+			},
+		];
+		const incoming = structuredClone(durable);
+		incoming.revision += 1;
+		incoming.handMovements!.push({
+			...incoming.handMovements![0],
+			id: 'drag-2',
+			afterMoveIndex: 1,
+			positions: { tile: { x: 2, y: 2, z: 2 } },
+		});
+		const row = { revision: durable.revision, transcript: durable };
+		expect(reconcileTranscriptSnapshot(row, incoming)).toMatchObject({
+			action: 'write',
+			transcript: incoming,
+		});
+		incoming.handMovements![1].afterMoveIndex = 0;
+		expect(reconcileTranscriptSnapshot(row, incoming).action).toBe('conflict');
+		incoming.handMovements![1].afterMoveIndex = 1;
+		incoming.handMovements![0].positions.tile.x = 9;
+		expect(reconcileTranscriptSnapshot(row, incoming).action).toBe('conflict');
+		delete incoming.handMovements;
+		expect(reconcileTranscriptSnapshot(row, incoming).action).toBe('conflict');
+	});
+
 	it('inserts a missing row and ignores exact duplicate or stale snapshots', () => {
 		const durable = snapshot('round-1', 2, ['move-1']);
 

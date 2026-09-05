@@ -1,4 +1,9 @@
-import { GAME_TRANSCRIPT_VERSION, type GameTranscriptV1 } from './GameTranscript.js';
+import {
+	GAME_TRANSCRIPT_VERSION,
+	type GameTranscriptV1,
+	type GameTranscriptMove,
+	type GameTranscriptHandMovement,
+} from './GameTranscript.js';
 import {
 	addToTileNotes,
 	generateHanabiGameData,
@@ -26,20 +31,56 @@ export function isReplayableTranscript(transcript: GameTranscriptV1 | null | und
 	);
 }
 
-/**
- * Rebuild the authoritative board after `cursor` accepted moves (zero is the deal).
- * Recorded post-turn values are authoritative; replay does not re-adjudicate rules.
- * Hand positions use deal/draw order because transcripts do not record dragging.
- */
+export type HanabiReviewStep = GameTranscriptMove | GameTranscriptHandMovement;
+
+/** Interleave hand movements in server acceptance order without changing turn numbers. */
+export function getHanabiReviewSteps(transcript: GameTranscriptV1): HanabiReviewStep[] {
+	const steps: HanabiReviewStep[] = [];
+	const movements = transcript.handMovements ?? [];
+	let movementIndex = 0;
+	for (let moveIndex = 0; moveIndex <= transcript.moves.length; moveIndex += 1) {
+		while (movements[movementIndex]?.afterMoveIndex === moveIndex) {
+			steps.push(movements[movementIndex++]);
+		}
+		if (moveIndex < transcript.moves.length) steps.push(transcript.moves[moveIndex]);
+	}
+	if (movementIndex !== movements.length) {
+		throw new Error('Recorded hand movements are outside the accepted move sequence.');
+	}
+	return steps;
+}
+
+/** Rebuild after `cursor` review steps, where zero is the original deal. */
+export function replayHanabiReview(transcript: GameTranscriptV1, cursor: number): HanabiGameData {
+	return replaySteps(transcript, getHanabiReviewSteps(transcript), cursor);
+}
+
+/** Rebuild after `cursor` accepted gameplay moves; hand movements do not change this API's cursor. */
 export function replayHanabiTranscript(
 	transcript: GameTranscriptV1,
+	cursor: number,
+): HanabiGameData {
+	return replaySteps(transcript, transcript.moves, cursor);
+}
+
+function defaultHandPositions(data: HanabiGameData): Record<string, Position> {
+	return Object.fromEntries(
+		Object.values(data.playerTiles).flatMap((hand) =>
+			hand.map((id, index) => [id, { ...HANABI_DEFAULT_TILE_POSITIONS[index] }]),
+		),
+	);
+}
+
+function replaySteps(
+	transcript: GameTranscriptV1,
+	steps: HanabiReviewStep[],
 	cursor: number,
 ): HanabiGameData {
 	if (!isReplayableTranscript(transcript)) {
 		throw new Error('Only complete, finished game transcripts can be reviewed.');
 	}
-	if (!Number.isInteger(cursor) || cursor < 0 || cursor > transcript.moves.length) {
-		throw new Error('Review position must be an integer within the recorded moves.');
+	if (!Number.isInteger(cursor) || cursor < 0 || cursor > steps.length) {
+		throw new Error('Review position must be an integer within the recorded steps.');
 	}
 
 	const deck = transcript.deck!;
@@ -73,9 +114,20 @@ export function replayHanabiTranscript(
 			.map(({ id }) => id)
 			.reverse(),
 	});
+	data.tilePositions = structuredClone(
+		transcript.initialTilePositions ?? defaultHandPositions(data),
+	);
 	const actions: HanabiGameAction[] = [];
 
-	for (const move of transcript.moves.slice(0, cursor)) {
+	for (const move of steps.slice(0, cursor)) {
+		if (move.type === 'reposition') {
+			const hand = data.playerTiles[move.actorId];
+			if (!hand || Object.keys(move.positions).some((id) => !hand.includes(id))) {
+				throw new Error('A recorded hand movement refers to a tile outside the actor hand.');
+			}
+			data.tilePositions = { ...data.tilePositions, ...structuredClone(move.positions) };
+			continue;
+		}
 		const base = { id: move.actionId, createdAt: move.createdAt, playerId: move.actorId };
 		if (move.type === 'clue') {
 			const hand = data.playerTiles[move.recipientId];
@@ -133,6 +185,7 @@ export function replayHanabiTranscript(
 				data.discardedTiles = [...data.discardedTiles, tile.id];
 			}
 		}
+		data.tilePositions = structuredClone(move.postTurn.tilePositions ?? defaultHandPositions(data));
 		data.currentPlayerId = move.postTurn.nextPlayerId;
 		data.clues = move.postTurn.clues;
 		data.lives = move.postTurn.lives;
@@ -144,13 +197,6 @@ export function replayHanabiTranscript(
 				: null;
 	}
 
-	const positions: Record<string, Position> = {};
-	for (const hand of Object.values(data.playerTiles)) {
-		for (const [index, tileId] of hand.entries()) {
-			positions[tileId] = { ...HANABI_DEFAULT_TILE_POSITIONS[index] };
-		}
-	}
-	data.tilePositions = positions;
 	data.actions = actions;
 	return data;
 }
