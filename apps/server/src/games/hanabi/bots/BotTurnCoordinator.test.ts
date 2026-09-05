@@ -2,10 +2,11 @@ import {
 	generateHanabiGameData,
 	generatePlayer,
 	HanabiStage,
+	HanabiGameActionType,
 	type DebugPlayerAction,
 } from '@hanabi/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { appendBotArrangement, createBotHistory } from './BotHistory.js';
+import { appendBotArrangement, appendBotHistory, createBotHistory } from './BotHistory.js';
 import { createBotPolicy, createRoundBotPolicy } from './BotPolicy.js';
 import { isBotRound, type BotRound } from './BotRound.js';
 import { BotRuntime, type BotLimits } from './BotRuntime.js';
@@ -59,6 +60,35 @@ function botTurn(roundOverrides: Partial<BotRound> = {}, tileId = 'own'): BotTur
 			...roundOverrides,
 		},
 	};
+}
+
+function resultTurn(stage = HanabiStage.Playing): BotTurn {
+	const turn = botTurn();
+	const before = structuredClone(turn.gameData);
+	const initial = createBotHistory(before, 2);
+	turn.gameData.stage = stage;
+	turn.gameData.tiles = { ...turn.gameData.tiles, draw: { id: 'draw', color: 'green', number: 4 } };
+	turn.gameData.playerTiles = { ...turn.gameData.playerTiles, bot: ['draw'] };
+	turn.round.version = 2;
+	turn.round.pendingClues = [];
+	turn.round.pendingResult = { playerId: 'bot', eventId: 'event-1' };
+	turn.round.policy = createRoundBotPolicy(turn.round.policy, turn.gameData);
+	turn.round.history = appendBotHistory(
+		initial,
+		{
+			id: 'action-1',
+			type: HanabiGameActionType.Play,
+			playerId: 'bot',
+			tile: before.tiles.own,
+			valid: true,
+			remainingLives: turn.gameData.lives,
+		},
+		turn.gameData,
+		before,
+	);
+	turn.opportunity = 'result';
+	turn.sourceActionEventId = 'event-1';
+	return turn;
 }
 
 function harness(
@@ -732,6 +762,103 @@ describe('BotTurnCoordinator', () => {
 		expect(coordinator.status()).toBeNull();
 	});
 
+	it.each([HanabiStage.Playing, HanabiStage.Finished])(
+		'dispatches %s results through their hook with brief limits and no actions',
+		async (stage) => {
+			const turn = resultTurn(stage);
+			let active: BotTurn | null = turn;
+			const decision = {
+				actionId: null,
+				arrangement: null,
+				explanation: 'The revealed play succeeded.',
+				notes: null,
+			};
+			const chooseAction = vi.fn<BotDecisionProvider['chooseAction']>().mockResolvedValue(decision);
+			const apply = vi.fn();
+			const applyResultResponse = vi.fn(() => {
+				active = null;
+				return null;
+			});
+			const coordinator = new BotTurnCoordinator(
+				new BotRuntime({ chooseAction }, turn.round.policy),
+				{
+					gameId: 'result-game',
+					getTurn: () => active,
+					persist: () => Promise.resolve(),
+					notify: vi.fn(),
+					apply,
+					applyResultResponse,
+				},
+			);
+			coordinators.push(coordinator);
+			coordinator.start();
+			await flush();
+			expect(chooseAction).toHaveBeenCalledOnce();
+			expect(chooseAction.mock.calls[0][0]).toMatchObject({
+				opportunity: 'result',
+				sourceActionEventId: 'event-1',
+				sourceClueEventIds: [],
+				legalActions: [],
+				resultTimeoutMs: 5000,
+				resultMaxOutputTokens: 2048,
+				observation: { stage, legalActions: [] },
+			});
+			expect(chooseAction.mock.calls[0][0].observation.players[0].hand[0].face).toBeNull();
+			expect(applyResultResponse).toHaveBeenCalledExactlyOnceWith('bot', decision, 'event-1');
+			expect(apply).not.toHaveBeenCalled();
+		},
+	);
+
+	it('times out result reflection on its short deadline without another attempt', async () => {
+		const chooseAction = vi
+			.fn<BotDecisionProvider['chooseAction']>()
+			.mockReturnValue(new Promise(() => {}));
+		const h = tracked({
+			turn: resultTurn(),
+			provider: { chooseAction },
+			limits: { timeoutMs: 120000, resultTimeoutMs: 50 },
+		});
+		h.coordinator.start();
+		await flush();
+		await vi.advanceTimersByTimeAsync(51);
+		await flush();
+		expect(h.original.round.failure).toBe('timeout');
+		expect(chooseAction).toHaveBeenCalledOnce();
+		expect(h.original.round.attempts).toBe(1);
+		expect(h.apply).not.toHaveBeenCalled();
+	});
+
+	it('does not retry transient result errors', async () => {
+		const chooseAction = vi
+			.fn<BotDecisionProvider['chooseAction']>()
+			.mockRejectedValue(new BotDecisionError('transient'));
+		const h = tracked({ turn: resultTurn(), provider: { chooseAction } });
+		h.coordinator.start();
+		await flush();
+		expect(h.original.round.failure).toBe('transient');
+		expect(chooseAction).toHaveBeenCalledOnce();
+	});
+
+	it('rejects missing or foreign result sources before reserving budget', async () => {
+		for (const source of [undefined, 'missing']) {
+			const turn = resultTurn();
+			turn.sourceActionEventId = source;
+			const h = tracked({ turn });
+			h.coordinator.start();
+			await flush();
+			expect(h.original.round).toMatchObject({ failure: 'invalid_action', attempts: 0 });
+			expect(h.chooseAction).not.toHaveBeenCalled();
+		}
+		const turn = resultTurn();
+		if (turn.round.history.version !== 2) throw new Error('Expected v2');
+		turn.round.history.events[0].actorId = 'human';
+		const h = tracked({ turn });
+		h.coordinator.start();
+		await flush();
+		expect(h.original.round.failure).toBe('invalid_action');
+		expect(h.chooseAction).not.toHaveBeenCalled();
+	});
+
 	it('rejects malformed v2 pending queues and mixed policy/history contracts without throwing', () => {
 		const turn = botTurn();
 		const round: BotRound = {
@@ -742,6 +869,17 @@ describe('BotTurnCoordinator', () => {
 			pendingClues: [],
 		};
 		expect(isBotRound(round)).toBe(true);
+		expect(isBotRound({ ...round, pendingResult: { playerId: 'bot', eventId: 'event-1' } })).toBe(
+			true,
+		);
+		for (const pendingResult of [
+			null,
+			{},
+			{ playerId: 'bot', eventId: '' },
+			{ playerId: '', eventId: 'event-1' },
+		]) {
+			expect(isBotRound({ ...round, pendingResult })).toBe(false);
+		}
 		for (const pendingClues of [
 			[null],
 			[{}],

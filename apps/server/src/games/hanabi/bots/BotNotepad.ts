@@ -11,10 +11,11 @@ export interface BotNotepadCheckpoint {
 
 export interface BotNotepadEntry {
 	decisionId: string;
-	opportunity: 'turn' | 'clue';
+	opportunity: 'turn' | 'clue' | 'result';
 	observedAt: BotNotepadCheckpoint;
 	recordedAt: BotNotepadCheckpoint;
 	sourceClueEventIds: string[];
+	sourceActionEventId?: string;
 	explanation: string;
 	notes: string | null;
 }
@@ -80,16 +81,23 @@ function entry(value: unknown): value is BotNotepadEntry {
 			'observedAt',
 			'recordedAt',
 			'sourceClueEventIds',
+			'sourceActionEventId',
 			'explanation',
 			'notes',
 		]) &&
 		text(value.decisionId, 256) &&
-		(value.opportunity === 'turn' || value.opportunity === 'clue') &&
+		(value.opportunity === 'turn' ||
+			value.opportunity === 'clue' ||
+			value.opportunity === 'result') &&
+		(value.opportunity === 'result'
+			? text(value.sourceActionEventId, 256)
+			: value.sourceActionEventId === undefined) &&
 		checkpoint(value.observedAt) &&
 		checkpoint(value.recordedAt) &&
 		Array.isArray(value.sourceClueEventIds) &&
 		value.sourceClueEventIds.every((id) => text(id, 256)) &&
 		new Set(value.sourceClueEventIds).size === value.sourceClueEventIds.length &&
+		(value.opportunity !== 'result' || value.sourceClueEventIds.length === 0) &&
 		text(value.explanation, 1_000) &&
 		(value.notes === null || text(value.notes, MAX_BOT_NOTE_LENGTH))
 	);
@@ -140,6 +148,7 @@ export function botNotepadsMatchHistory(
 	for (const [ownerId, notepad] of Object.entries(notepads)) {
 		if (!owners.has(ownerId)) return false;
 		let previousRecordedSequence = 0;
+		const reflectedActionIds = new Set<string>();
 		for (const item of notepad.entries) {
 			if (
 				decisionIds.has(item.decisionId) ||
@@ -150,7 +159,23 @@ export function botNotepadsMatchHistory(
 				(item.opportunity === 'clue' && item.sourceClueEventIds.length === 0)
 			)
 				return false;
-			if (stages[item.observedAt.sequence] !== HanabiStage.Playing) return false;
+			if (item.opportunity !== 'result' && stages[item.observedAt.sequence] !== HanabiStage.Playing)
+				return false;
+			if (item.opportunity === 'result') {
+				const source = events.get(item.sourceActionEventId!);
+				if (
+					!source ||
+					(source.type !== 'play' && source.type !== 'discard') ||
+					source.actorId !== ownerId ||
+					source.sequence > item.observedAt.sequence ||
+					reflectedActionIds.has(source.eventId) ||
+					history.events
+						.slice(source.sequence, item.observedAt.sequence)
+						.some((event) => event.actorId === ownerId && event.type !== 'arrangement')
+				)
+					return false;
+				reflectedActionIds.add(source.eventId);
+			}
 			const committed = history.events.slice(item.observedAt.sequence, item.recordedAt.sequence);
 			if (item.opportunity === 'turn') {
 				const action = committed.at(-1);
@@ -166,7 +191,8 @@ export function botNotepadsMatchHistory(
 				)
 					return false;
 			} else if (
-				currentPlayers[item.observedAt.sequence] === ownerId ||
+				(item.opportunity === 'clue' && currentPlayers[item.observedAt.sequence] === ownerId) ||
+				(stages[item.observedAt.sequence] !== HanabiStage.Playing && committed.length !== 0) ||
 				item.recordedAt.turnIndex !== item.observedAt.turnIndex ||
 				committed.length > 1 ||
 				(committed.length === 1 &&
@@ -178,7 +204,11 @@ export function botNotepadsMatchHistory(
 				if (
 					source?.type !== 'clue' ||
 					source.recipientId !== ownerId ||
-					source.sequence > item.observedAt.sequence
+					source.sequence > item.observedAt.sequence ||
+					reflectedActionIds.has(source.eventId) ||
+					history.events
+						.slice(source.sequence, item.observedAt.sequence)
+						.some((event) => event.actorId === ownerId && event.type !== 'arrangement')
 				)
 					return false;
 			}

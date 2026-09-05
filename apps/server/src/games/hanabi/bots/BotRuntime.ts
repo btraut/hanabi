@@ -4,6 +4,8 @@ import type { BotPolicy } from './BotPolicy.js';
 export interface BotLimits {
 	timeoutMs: number;
 	maxOutputTokens: number;
+	resultTimeoutMs: number;
+	resultMaxOutputTokens: number;
 	maxConcurrent: number;
 	roundMaxAttempts: number;
 	roundMaxTokens: number;
@@ -15,6 +17,8 @@ export interface BotLimits {
 export const DEFAULT_BOT_LIMITS: BotLimits = {
 	timeoutMs: 120_000,
 	maxOutputTokens: 16_384,
+	resultTimeoutMs: 5_000,
+	resultMaxOutputTokens: 2_048,
 	maxConcurrent: 3,
 	roundMaxAttempts: 200,
 	roundMaxTokens: 2_000_000,

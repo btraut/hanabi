@@ -97,7 +97,15 @@ describe('round bot policies', () => {
 		expect(disabled.arrangementAfterClue).toBe(false);
 		expect(disabled.instructions).toContain('Arrangement opportunities after clues are disabled');
 		expect(base.instructions).toContain('This is optional: you may set cards aside');
-		expect(base.instructions).toContain('No other off-turn bot opportunities are scheduled');
+		expect(base.reflectionAfterAction).toBe(true);
+		expect(disabled.reflectionAfterAction).toBe(true);
+		expect(base.instructions).toContain('After your own play or discard');
+		expect(disabled.instructions).toContain(
+			'Apply reservation and discard-queue conventions logically',
+		);
+		expect(disabled.instructions).toContain('Return arrangement null on every opportunity');
+		expect(isBotPolicy({ ...base, reflectionAfterAction: undefined })).toBe(false);
+		expect(isBotPolicy({ ...base, reflectionAfterAction: false })).toBe(false);
 		for (const field of ['showNotes', 'criticalGameOver', 'allowDragging'] as const) {
 			expect(createRoundBotPolicy(source, { ...game, [field]: false }).hash).not.toBe(base.hash);
 		}
@@ -167,6 +175,7 @@ describe('private notepad policy versions', () => {
 			instructions: 'Saved v2 instructions.',
 		};
 		delete saved.notepadVersion;
+		delete saved.reflectionAfterAction;
 		const { hash: _hash, ...historicalIdentity } = saved;
 		saved.hash = createHash('sha256')
 			.update(
@@ -180,6 +189,8 @@ describe('private notepad policy versions', () => {
 			)
 			.digest('hex');
 		expect(isBotPolicy(saved)).toBe(true);
+		expect(isBotPolicy({ ...saved, reflectionAfterAction: undefined })).toBe(true);
+		expect(isBotPolicy({ ...saved, reflectionAfterAction: true })).toBe(false);
 		expect(isBotPolicy({ ...saved, notepadVersion: undefined })).toBe(true);
 		expect(isBotPolicy({ ...saved, notepadVersion: 1 })).toBe(false);
 	});

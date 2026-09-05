@@ -1,5 +1,6 @@
 import {
 	getHanabiPositionsForLayout,
+	HanabiStage,
 	type DebugPlayerAction,
 	type HanabiHandLayout,
 } from '@hanabi/shared';
@@ -9,7 +10,7 @@ import type { BotPolicy } from './BotPolicy.js';
 import { MAX_BOT_NOTE_LENGTH, type BotNotepad } from './BotNotepad.js';
 import { MAX_BOT_EXPLANATION_LENGTH } from './BotDecisionChat.js';
 
-export type BotDecisionOpportunity = 'turn' | 'clue';
+export type BotDecisionOpportunity = 'turn' | 'clue' | 'result';
 
 export interface BotDecisionRequest {
 	observation: BotObservation;
@@ -18,7 +19,11 @@ export interface BotDecisionRequest {
 	signal: AbortSignal;
 	opportunity?: BotDecisionOpportunity;
 	sourceClueEventIds?: readonly string[];
+	sourceActionEventId?: string;
 	notepad?: BotNotepad;
+	/** Result-only limits supplied by the runtime; gameplay keeps the provider configuration. */
+	resultTimeoutMs?: number;
+	resultMaxOutputTokens?: number;
 }
 
 export interface BotDecision {
@@ -46,7 +51,7 @@ export function isV2BotDecision(
 	if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
 	const decision = value as Partial<BotDecision>;
 	if (
-		(opportunity === 'clue'
+		(opportunity !== 'turn'
 			? decision.actionId !== null
 			: typeof decision.actionId !== 'string' || !decision.actionId.trim()) ||
 		typeof decision.explanation !== 'string' ||
@@ -94,7 +99,9 @@ function decisionSchema(request: BotDecisionRequest, ownTileIds: readonly string
 		};
 	}
 	const arrangement =
-		request.observation.rules.allowDragging && ownTileIds.length > 0
+		request.observation.rules.allowDragging &&
+		request.observation.stage === HanabiStage.Playing &&
+		ownTileIds.length > 0
 			? {
 					anyOf: [
 						{ type: 'null' },
@@ -131,7 +138,7 @@ function decisionSchema(request: BotDecisionRequest, ownTileIds: readonly string
 	return {
 		type: 'object',
 		properties: {
-			actionId: request.opportunity === 'clue' ? { type: 'null' } : actionId,
+			actionId: request.opportunity && request.opportunity !== 'turn' ? { type: 'null' } : actionId,
 			arrangement,
 			explanation: { type: 'string', minLength: 1, maxLength: MAX_BOT_EXPLANATION_LENGTH },
 			...(request.policy.notepadVersion === 1
@@ -204,7 +211,13 @@ export class OpenAiBot implements BotDecisionProvider {
 		const opportunity = request.opportunity ?? 'turn';
 		if (
 			(opportunity === 'turn' && request.legalActions.length === 0) ||
-			(opportunity === 'clue' && (!v2 || !request.policy.arrangementAfterClue))
+			(opportunity === 'clue' && (!v2 || !request.policy.arrangementAfterClue)) ||
+			(opportunity === 'result' &&
+				(!v2 ||
+					!request.policy.reflectionAfterAction ||
+					typeof request.sourceActionEventId !== 'string' ||
+					!request.sourceActionEventId.trim())) ||
+			(opportunity !== 'turn' && request.legalActions.length !== 0)
 		) {
 			throw new BotDecisionError('invalid_action');
 		}
@@ -213,12 +226,18 @@ export class OpenAiBot implements BotDecisionProvider {
 			request.observation.players
 				.find(({ id }) => id === request.observation.playerId)
 				?.hand.map(({ tileId }) => tileId) ?? [];
-		const deadline = AbortSignal.timeout(this.timeoutMs);
+		const timeoutMs =
+			opportunity === 'result' ? (request.resultTimeoutMs ?? 5_000) : this.timeoutMs;
+		const maxOutputTokens =
+			opportunity === 'result' ? (request.resultMaxOutputTokens ?? 2_048) : this.maxOutputTokens;
+		const deadline = AbortSignal.timeout(timeoutMs);
 		const signal = AbortSignal.any([request.signal, deadline]);
 		// Preserve the effective settings of legacy saved policies.
 		const reasoningEffort =
-			request.policy.reasoningEffort ??
-			(request.policy.model.startsWith('gpt-5.4-mini') ? 'none' : undefined);
+			opportunity === 'result'
+				? 'low'
+				: (request.policy.reasoningEffort ??
+					(request.policy.model.startsWith('gpt-5.4-mini') ? 'none' : undefined));
 		try {
 			const response = await this.client.responses.create(
 				{
@@ -228,19 +247,24 @@ export class OpenAiBot implements BotDecisionProvider {
 						v2
 							? {
 									...request.observation,
+									...(opportunity !== 'turn' ? { legalActions: [] } : {}),
 									...(notepadEnabled
 										? { privateNotepad: request.notepad ?? { version: 1, entries: [] } }
 										: {}),
 									decisionContext: {
 										opportunity,
-										sourceClueEventIds: request.sourceClueEventIds ?? [],
+										sourceClueEventIds:
+											opportunity === 'result' ? [] : (request.sourceClueEventIds ?? []),
+										...(opportunity === 'result'
+											? { sourceActionEventId: request.sourceActionEventId }
+											: {}),
 									},
 								}
 							: request.observation,
 					),
 					store: false,
 					...(reasoningEffort ? { reasoning: { effort: reasoningEffort } } : {}),
-					max_output_tokens: this.maxOutputTokens,
+					max_output_tokens: maxOutputTokens,
 					text: {
 						format: {
 							type: 'json_schema',
@@ -250,7 +274,7 @@ export class OpenAiBot implements BotDecisionProvider {
 						},
 					},
 				},
-				{ signal, timeout: this.timeoutMs, maxRetries: 0 },
+				{ signal, timeout: timeoutMs, maxRetries: 0 },
 			);
 			if (signal.aborted) {
 				throw new BotDecisionError(request.signal.aborted ? 'cancelled' : 'timeout');
@@ -279,7 +303,8 @@ export class OpenAiBot implements BotDecisionProvider {
 					!isV2BotDecision(
 						result,
 						ownTileIds,
-						request.observation.rules.allowDragging,
+						request.observation.rules.allowDragging &&
+							request.observation.stage === HanabiStage.Playing,
 						opportunity,
 						notepadEnabled,
 					) ||

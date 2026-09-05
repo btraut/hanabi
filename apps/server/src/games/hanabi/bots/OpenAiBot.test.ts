@@ -232,6 +232,7 @@ describe('OpenAiBot v2 decisions', () => {
 			instructions: 'Saved v2 action, arrangement, and explanation instructions.',
 		};
 		delete saved.notepadVersion;
+		delete saved.reflectionAfterAction;
 		const { hash: _hash, ...identity } = saved;
 		saved.hash = createHash('sha256')
 			.update(
@@ -393,6 +394,100 @@ describe('OpenAiBot v2 decisions', () => {
 			),
 		).toBe(true);
 		expect(isV2BotDecision({ ...base, notes: ' ' }, ['a'], true, 'turn', true)).toBe(false);
+	});
+
+	it.each([true, false])(
+		'uses brief result requests with dragging %s and no gameplay action',
+		async (allowDragging) => {
+			const input = v2Request(allowDragging);
+			input.opportunity = 'result';
+			input.sourceActionEventId = 'event-4';
+			input.legalActions = [];
+			input.observation.legalActions = [];
+			const policyBefore = JSON.stringify(input.policy);
+			const decision = {
+				actionId: null,
+				arrangement: allowDragging ? { orderedRow: ['a'], lowerArea: [] } : null,
+				explanation: 'The revealed card corrects my earlier interpretation.',
+				notes: 'Reserve card a after the failed play.',
+			};
+			const fetchMock = vi
+				.fn<typeof fetch>()
+				.mockResolvedValue(completedResponse(JSON.stringify(decision)));
+			const provider = new OpenAiBot({ apiKey: 'test-key', fetch: fetchMock });
+			await expect(provider.chooseAction(input)).resolves.toMatchObject(decision);
+			const sent = JSON.parse(fetchMock.mock.calls[0][1]?.body as string) as {
+				input: string;
+				reasoning: { effort: string };
+				max_output_tokens: number;
+				text: { format: { schema: { properties: { actionId: unknown; arrangement: unknown } } } };
+			};
+			expect(JSON.parse(sent.input) as unknown).toMatchObject({
+				legalActions: [],
+				decisionContext: {
+					opportunity: 'result',
+					sourceClueEventIds: [],
+					sourceActionEventId: 'event-4',
+				},
+			});
+			expect(sent.reasoning).toEqual({ effort: 'low' });
+			expect(sent.max_output_tokens).toBe(2048);
+			expect(sent.text.format.schema.properties.actionId).toEqual({ type: 'null' });
+			if (!allowDragging)
+				expect(sent.text.format.schema.properties.arrangement).toEqual({ type: 'null' });
+			expect(JSON.stringify(input.policy)).toBe(policyBefore);
+		},
+	);
+
+	it('accepts terminal result notes but forbids terminal arrangements and further gameplay', async () => {
+		const input = v2Request();
+		input.opportunity = 'result';
+		input.sourceActionEventId = 'event-final';
+		input.legalActions = [];
+		input.observation.stage = HanabiStage.Finished;
+		const decision = {
+			actionId: null,
+			arrangement: null,
+			explanation: 'The final play ended the round.',
+			notes: null,
+		};
+		const fetchMock = vi
+			.fn<typeof fetch>()
+			.mockResolvedValue(completedResponse(JSON.stringify(decision)));
+		const provider = new OpenAiBot({ apiKey: 'test-key', fetch: fetchMock });
+		await expect(provider.chooseAction(input)).resolves.toMatchObject(decision);
+		const sent = JSON.parse(fetchMock.mock.calls[0][1]?.body as string) as {
+			text: { format: { schema: { properties: { arrangement: unknown } } } };
+		};
+		expect(sent.text.format.schema.properties.arrangement).toEqual({ type: 'null' });
+		for (const invalid of [
+			{ ...decision, actionId: 'action-0' },
+			{ ...decision, arrangement: { orderedRow: ['a'], lowerArea: [] } },
+		]) {
+			fetchMock.mockResolvedValue(completedResponse(JSON.stringify(invalid)));
+			await expect(provider.chooseAction(input)).rejects.toMatchObject({ code: 'invalid_action' });
+		}
+	});
+
+	it('rejects result requests without the capability or source and with supplied gameplay actions', async () => {
+		const input = {
+			...v2Request(),
+			opportunity: 'result' as const,
+			sourceActionEventId: 'event-1',
+			legalActions: [],
+		};
+		const fetchMock = vi.fn<typeof fetch>();
+		const provider = new OpenAiBot({ apiKey: 'test-key', fetch: fetchMock });
+		for (const invalid of [
+			{ ...input, sourceActionEventId: undefined },
+			{ ...input, sourceActionEventId: ' ' },
+			{ ...input, policy: historicalV2Policy() },
+			{ ...input, legalActions: request().legalActions },
+		])
+			await expect(provider.chooseAction(invalid)).rejects.toMatchObject({
+				code: 'invalid_action',
+			});
+		expect(fetchMock).not.toHaveBeenCalled();
 	});
 
 	it('sends the complete layout and explanation contract constrained to its own hand', async () => {

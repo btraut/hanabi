@@ -66,7 +66,7 @@ function decision(
 ): BotDecision {
 	const action = request.legalActions.find(({ action }) => action.type === 'clue');
 	return {
-		actionId: request.opportunity === 'clue' ? null : action!.id,
+		actionId: request.opportunity && request.opportunity !== 'turn' ? null : action!.id,
 		arrangement,
 		explanation: 'Keep the current queue until stronger evidence arrives.',
 		...(request.policy.notepadVersion === 1 ? { notes: null } : {}),
@@ -383,18 +383,23 @@ describe('bot turn and clue decision opportunities', () => {
 		async (type) => {
 			const harness = seeded({ botStarts: true });
 			harness.chooseAction.mockImplementation((request) =>
-				Promise.resolve({
-					...decision(request, reverseLayout(request)),
-					actionId: request.legalActions.find(({ action }) => action.type === type)!.id,
-				}),
+				Promise.resolve(
+					request.opportunity === 'result'
+						? decision(request)
+						: {
+								...decision(request, reverseLayout(request)),
+								actionId: request.legalActions.find(({ action }) => action.type === type)!.id,
+							},
+				),
 			);
 			const before = snapshot(harness.game);
 			harness.game.startBackgroundWork();
 			await vi.waitFor(() => expect(snapshot(harness.game).data.currentPlayerId).toBe('host'));
 			await settle();
 			const after = snapshot(harness.game);
-			expect(harness.chooseAction).toHaveBeenCalledOnce();
+			expect(harness.chooseAction).toHaveBeenCalledTimes(type === 'clue' ? 1 : 2);
 			expect(harness.chooseAction.mock.calls[0][0].opportunity).toBe('turn');
+			if (type !== 'clue') expect(harness.chooseAction.mock.calls[1][0].opportunity).toBe('result');
 			expect(historyEvents(harness).map(({ type }) => type)).toEqual(['arrangement', type]);
 			expect(after.botRound?.history.moves).toHaveLength(1);
 			expect(after.transcript?.moves).toHaveLength(1);
@@ -756,7 +761,7 @@ describe('bot turn and clue decision opportunities', () => {
 					'utf8',
 				),
 			);
-			if (request.opportunity === 'clue') return Promise.resolve(decision(request));
+			if (request.opportunity !== 'turn') return Promise.resolve(decision(request));
 			const type = request.observation.clues < 8 ? 'discard' : 'clue';
 			if (request.observation.version !== 2) throw new Error('Expected v2 observation.');
 			const ownLayout = request.observation.players.find(({ id }) => id === harness.botId)!.layout;
@@ -771,6 +776,7 @@ describe('bot turn and clue decision opportunities', () => {
 				() => {
 					const state = snapshot(harness.game);
 					expect(state.botRound?.failure).toBeUndefined();
+					expect(state.botRound?.pendingResult).toBeUndefined();
 					if (state.data.stage === HanabiStage.Finished) return;
 					expect(state.botRound?.pendingClues).toEqual([]);
 					expect(state.data.currentPlayerId).not.toBe(harness.botId);

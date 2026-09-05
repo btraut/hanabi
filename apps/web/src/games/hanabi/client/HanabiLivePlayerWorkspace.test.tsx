@@ -1,6 +1,11 @@
 // @vitest-environment happy-dom
 
-import { generateHanabiGameData, HanabiGameData, HanabiStage } from '@hanabi/shared';
+import {
+	generateHanabiGameData,
+	HanabiFinishedReason,
+	HanabiGameData,
+	HanabiStage,
+} from '@hanabi/shared';
 import { act, useSyncExternalStore } from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -88,16 +93,31 @@ describe('HanabiLivePlayerWorkspace', () => {
 		expect([...document.querySelectorAll('[data-tile-surface]')]).toEqual(tileSurfaces);
 	});
 
-	it('reads authoritative turn and clue status while tile presentation retains an earlier turn', () => {
+	it.each(['clue', 'result'] as const)(
+		'reads authoritative turn and %s status while tile presentation retains an earlier turn',
+		(opportunity) => {
+			render();
+			publish({
+				...gameData,
+				currentPlayerId: 'alice',
+				bots: { ...gameData.bots!, turn: { ...gameData.bots!.turn!, opportunity } },
+			});
+			expect(document.querySelector('[aria-label="Alice, you, playing"]')).not.toBeNull();
+			expect(document.querySelector('[aria-label="Ember, bot, thinking"]')).not.toBeNull();
+			expect(document.body.textContent).toContain(`Considering ${opportunity}…`);
+			expect(tileRender).toHaveBeenCalledTimes(2);
+		},
+	);
+	it('shows the final result without marking either player as active', () => {
 		render();
 		publish({
 			...gameData,
-			currentPlayerId: 'alice',
-			bots: { ...gameData.bots!, turn: { ...gameData.bots!.turn!, opportunity: 'clue' } },
+			stage: HanabiStage.Finished,
+			finishedReason: HanabiFinishedReason.OutOfTurns,
+			bots: { ...gameData.bots!, turn: { ...gameData.bots!.turn!, opportunity: 'result' } },
 		});
-		expect(document.querySelector('[aria-label="Alice, you, playing"]')).not.toBeNull();
 		expect(document.querySelector('[aria-label="Ember, bot, thinking"]')).not.toBeNull();
-		expect(document.body.textContent).toContain('Considering clue…');
-		expect(tileRender).toHaveBeenCalledTimes(2);
+		expect(document.body.textContent).toContain('Considering result…');
+		expect(document.body.textContent).not.toContain('Playing');
 	});
 });
