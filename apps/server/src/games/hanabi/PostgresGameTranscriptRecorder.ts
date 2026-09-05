@@ -10,10 +10,7 @@ export const MAX_PENDING_TRANSCRIPT_ROUNDS = 1_000;
 export const DEFAULT_TRANSCRIPT_WRITE_ATTEMPTS = 3;
 export const MAX_RECORDED_TRANSCRIPT_ERRORS = 100;
 
-function moveHistoryIsPrefix(
-	prefix: GameTranscriptSnapshot['moves'],
-	candidate: GameTranscriptSnapshot['moves'],
-): boolean {
+function moveHistoryIsPrefix(prefix: readonly unknown[], candidate: readonly unknown[]): boolean {
 	return (
 		prefix.length <= candidate.length &&
 		prefix.every((move, index) => isDeepStrictEqual(move, candidate[index]))
@@ -59,6 +56,7 @@ function replayDefinition(transcript: GameTranscriptSnapshot) {
 		rules: transcript.rules,
 		players: transcript.players,
 		dealOrder: transcript.dealOrder,
+		initialTilePositions: transcript.initialTilePositions,
 		turnOrder: transcript.turnOrder,
 		deck: transcript.deck,
 	};
@@ -87,7 +85,11 @@ export function reconcileTranscriptSnapshot(
 
 	if (
 		!isDeepStrictEqual(replayDefinition(existing), replayDefinition(snapshot)) ||
-		!moveHistoryIsPrefix(existing.moves, snapshot.moves)
+		!moveHistoryIsPrefix(existing.moves, snapshot.moves) ||
+		!moveHistoryIsPrefix(existing.handMovements ?? [], snapshot.handMovements ?? []) ||
+		(snapshot.handMovements ?? [])
+			.slice(existing.handMovements?.length ?? 0)
+			.some((movement) => movement.afterMoveIndex < existing.moves.length)
 	) {
 		return {
 			action: 'conflict',

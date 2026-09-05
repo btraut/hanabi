@@ -4,6 +4,7 @@ import type {
 	HanabiRuleSet,
 	HanabiTile,
 	HanabiTileNumber,
+	Position,
 } from './HanabiGameData.js';
 
 export const GAME_TRANSCRIPT_VERSION = 1 as const;
@@ -37,6 +38,8 @@ export interface GameTranscriptResult {
 }
 
 export interface GameTranscriptPostTurn {
+	/** Exact hand layout after the action, including replacement draws. */
+	tilePositions?: Record<string, Position>;
 	nextPlayerId: string | null;
 	clues: number;
 	lives: number;
@@ -76,6 +79,17 @@ export interface GameTranscriptClueMove extends GameTranscriptMoveBase<'clue'> {
 export type GameTranscriptMove =
 	GameTranscriptPlayMove | GameTranscriptDiscardMove | GameTranscriptClueMove;
 
+/** A completed hand rearrangement, recorded independently of gameplay turns. */
+export interface GameTranscriptHandMovement {
+	type: 'reposition';
+	id: string;
+	createdAt: string;
+	actorId: string;
+	/** Number of accepted gameplay moves before this movement. Array order breaks ties. */
+	afterMoveIndex: number;
+	positions: Record<string, Position>;
+}
+
 export interface GameTranscriptV1 {
 	version: typeof GAME_TRANSCRIPT_VERSION;
 	revision: number;
@@ -88,6 +102,9 @@ export interface GameTranscriptV1 {
 	turnOrder: string[];
 	deck: HanabiTile[] | null;
 	moves: GameTranscriptMove[];
+	/** Absent on older recordings that did not retain hand layouts. */
+	initialTilePositions?: Record<string, Position>;
+	handMovements?: GameTranscriptHandMovement[];
 	lifecycle: {
 		status: GameTranscriptStatus;
 		startedAt: string | null;

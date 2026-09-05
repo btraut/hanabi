@@ -2,6 +2,7 @@ import {
 	getHanabiScore,
 	GAME_TRANSCRIPT_VERSION,
 	type GameTranscriptMove,
+	type GameTranscriptHandMovement,
 	type GameTranscriptPlayer,
 	type GameTranscriptPostTurn,
 	type GameTranscriptResult,
@@ -42,6 +43,7 @@ function statusFor(gameData: HanabiGameData): Exclude<GameTranscriptStatus, 'res
 function postTurnFor(gameData: HanabiGameData): GameTranscriptPostTurn {
 	const result = resultFor(gameData);
 	return {
+		tilePositions: structuredClone(gameData.tilePositions),
 		nextPlayerId: gameData.currentPlayerId,
 		clues: gameData.clues,
 		lives: gameData.lives,
@@ -92,6 +94,8 @@ export function createGameTranscript(
 		turnOrder: [...gameData.turnOrder],
 		deck: deckIds.map((tileId) => ({ ...gameData.tiles[tileId] })),
 		moves: [],
+		initialTilePositions: structuredClone(gameData.tilePositions),
+		handMovements: [],
 		lifecycle: {
 			status: statusFor(gameData),
 			startedAt,
@@ -200,6 +204,21 @@ export function appendGameTranscriptMove(
 			endedAt: status === 'finished' ? move.createdAt : null,
 		},
 		...(result ? { result } : {}),
+	};
+}
+
+export function appendGameTranscriptHandMovement(
+	transcript: GameTranscriptV1,
+	movement: Omit<GameTranscriptHandMovement, 'type' | 'afterMoveIndex'>,
+): GameTranscriptV1 {
+	return {
+		...transcript,
+		revision: transcript.revision + 1,
+		handMovements: [
+			...(transcript.handMovements ?? []),
+			{ ...structuredClone(movement), type: 'reposition', afterMoveIndex: transcript.moves.length },
+		],
+		lifecycle: { ...transcript.lifecycle, updatedAt: movement.createdAt },
 	};
 }
 

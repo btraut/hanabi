@@ -17,6 +17,8 @@ import {
 } from './HanabiGameData.js';
 import {
 	isReplayableTranscript,
+	getHanabiReviewSteps,
+	replayHanabiReview,
 	projectHanabiReplay,
 	replayHanabiTranscript,
 } from './HanabiReplay.js';
@@ -102,6 +104,37 @@ function fixture(ruleSet: HanabiRuleSet = '5-color'): GameTranscriptV1 {
 }
 
 describe('Hanabi replay', () => {
+	it('keeps old recordings and their gameplay cursor behavior unchanged', () => {
+		const transcript = fixture();
+		expect(getHanabiReviewSteps(transcript)).toEqual(transcript.moves);
+		for (let cursor = 0; cursor <= transcript.moves.length; cursor += 1) {
+			expect(replayHanabiReview(transcript, cursor)).toEqual(
+				replayHanabiTranscript(transcript, cursor),
+			);
+		}
+	});
+
+	it('uses acceptance order for simultaneous movements and rejects corrupt anchors', () => {
+		const transcript = fixture();
+		const tileId = transcript.dealOrder![0].tileIds[0];
+		transcript.handMovements = [1, 2].map((index) => ({
+			type: 'reposition',
+			id: `drag-${index}`,
+			actorId: 'a',
+			createdAt: '2026-09-04T12:00:00.000Z',
+			afterMoveIndex: 0,
+			positions: { [tileId]: { x: index * 10, y: 100, z: index } },
+		}));
+		const saved = structuredClone(transcript);
+		expect(replayHanabiReview(transcript, 2).tilePositions[tileId].x).toBe(20);
+		expect(replayHanabiReview(transcript, 1).tilePositions[tileId].x).toBe(10);
+		expect(replayHanabiReview(transcript, 2).actions).toEqual([]);
+		expect(replayHanabiReview(transcript, 0).tilePositions[tileId].y).not.toBe(100);
+		expect(transcript).toEqual(saved);
+		transcript.handMovements[0].afterMoveIndex = 99;
+		expect(() => getHanabiReviewSteps(transcript)).toThrow(/sequence/);
+	});
+
 	it.each(HANABI_RULE_SETS)('reconstructs initial, intermediate and final %s boards', (ruleSet) => {
 		const transcript = fixture(ruleSet);
 		const initial = replayHanabiTranscript(transcript, 0);

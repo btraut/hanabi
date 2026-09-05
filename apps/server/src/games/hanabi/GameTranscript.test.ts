@@ -91,6 +91,7 @@ describe('GameTranscript', () => {
 				tileId: tile.id,
 				valid: true,
 				postTurn: {
+					tilePositions: {},
 					nextPlayerId: 'bob',
 					clues: 7,
 					lives: 3,

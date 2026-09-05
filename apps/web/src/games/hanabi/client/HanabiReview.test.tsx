@@ -1,6 +1,10 @@
 // @vitest-environment happy-dom
 
-import { GameTranscriptV1 } from '@hanabi/shared';
+import {
+	GameTranscriptV1,
+	HANABI_DEFAULT_TILE_POSITIONS,
+	HANABI_WORKSPACE_ZONE_BOUNDARY,
+} from '@hanabi/shared';
 import { act } from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, Mock, vi } from 'vitest';
@@ -69,8 +73,8 @@ describe('HanabiReview', () => {
 		expect(button('Start').disabled).toBe(true);
 		expect(button('Previous').disabled).toBe(true);
 		expect(button('Next').disabled).toBe(false);
-		expect(document.querySelector('[aria-label="Review state"]')?.textContent).toContain(
-			'Before turn 1 · Ben to act',
+		expect(document.querySelector('[aria-label="Current turn"]')?.textContent).toContain(
+			"Ben's turn",
 		);
 		expect(document.activeElement).toBe(button('← Back to game'));
 
@@ -85,12 +89,68 @@ describe('HanabiReview', () => {
 		expect(cursor()).toBe(transcript.moves.length);
 		expect(button('Next').disabled).toBe(true);
 		expect(button('End').disabled).toBe(true);
-		expect(document.querySelector('[aria-label="Review state"]')?.textContent).toContain(
+		expect(document.querySelector('[aria-label="Current turn"]')?.textContent).toContain(
 			'Game over',
 		);
 		expect(document.querySelector('.hanabi-review-caption')?.textContent).toContain('Final score');
 		click('Start');
 		expect(cursor()).toBe(0);
+	});
+
+	it('restores both hand zones and each rearrangement without advancing the game turn', () => {
+		const data = structuredClone(transcript);
+		const tileId = data.dealOrder!.find((hand) => hand.playerId === 'alice')!.tileIds[0];
+		data.handMovements = [
+			{
+				type: 'reposition',
+				id: 'drag-one',
+				actorId: 'alice',
+				createdAt: data.moves[0].createdAt,
+				afterMoveIndex: 0,
+				positions: { [tileId]: { x: 120, y: HANABI_WORKSPACE_ZONE_BOUNDARY + 10, z: 5 } },
+			},
+			{
+				type: 'reposition',
+				id: 'drag-two',
+				actorId: 'alice',
+				createdAt: data.moves[0].createdAt,
+				afterMoveIndex: 0,
+				positions: { [tileId]: { ...HANABI_DEFAULT_TILE_POSITIONS[1] } },
+			},
+		];
+		render('alice', data);
+		const tile = () => document.querySelector<HTMLButtonElement>(`[data-review-tile="${tileId}"]`)!;
+		const initialStyle = tile().getAttribute('style');
+		expect(document.querySelectorAll('[data-review-hand-zone="freeform"]')).toHaveLength(
+			data.players.length,
+		);
+		expect(document.querySelector('[aria-label="Game status"]')).not.toBeNull();
+		expect(document.querySelector('.hanabi-turn-banner')).not.toBeNull();
+		expect(document.querySelector('.hanabi-mobile-game-menu')).toBeNull();
+		expect(document.body.textContent).not.toContain('rearranged');
+		click('Next');
+		expect(tile().style.top).toMatch(/px$/);
+		expect(tile().style.zIndex).toBe('5');
+		expect(tile().getAttribute('aria-label')).toContain(': hidden');
+		expect(document.querySelector('.hanabi-review-caption')?.textContent).toBe(
+			'Before turn 1 · Alice rearranged their hand',
+		);
+		expect(document.querySelector('[aria-label="Current turn"]')?.textContent).toContain(
+			"Ben's turn",
+		);
+		click('Next');
+		expect(tile().style.left).toBe('var(--hanabi-player-tile-slot-1)');
+		click('Next');
+		expect(document.querySelector('.hanabi-review-caption')?.textContent).toBe(
+			'Turn 1 · Ben gave Alice a 4 clue',
+		);
+		click('Previous');
+		click('Previous');
+		expect(tile().style.zIndex).toBe('5');
+		click('Start');
+		expect(tile().getAttribute('style')).toBe(initialStyle);
+		click('End');
+		expect(cursor()).toBe(transcript.moves.length + 2);
 	});
 
 	it('jumps to the state after a selected move or slider position', () => {
@@ -111,7 +171,7 @@ describe('HanabiReview', () => {
 			slider.dispatchEvent(new Event('input', { bubbles: true }));
 		});
 		expect(cursor()).toBe(1);
-		expect(slider.getAttribute('aria-valuetext')).toContain('1 of 16 moves');
+		expect(slider.getAttribute('aria-valuetext')).toContain('1 of 16 steps');
 	});
 
 	it('supports bounded keyboard controls without stealing input or modified shortcuts', () => {
@@ -214,6 +274,24 @@ describe('HanabiReview', () => {
 	it('exits through its callback and defaults visitors to the first seat', () => {
 		render('visitor');
 		expect(document.querySelector('select')?.value).toBe(`player:${transcript.turnOrder[0]}`);
+		click('← Back to game');
+		expect(onExit).toHaveBeenCalledOnce();
+	});
+
+	it('keeps invalid movement histories inside the unavailable screen', () => {
+		const data = structuredClone(transcript);
+		data.handMovements = [
+			{
+				type: 'reposition',
+				id: 'invalid',
+				actorId: 'alice',
+				afterMoveIndex: -1,
+				createdAt: data.moves[0].createdAt,
+				positions: {},
+			},
+		];
+		render('alice', data);
+		expect(document.querySelector('[role="alert"]')?.textContent).toContain('Review unavailable');
 		click('← Back to game');
 		expect(onExit).toHaveBeenCalledOnce();
 	});

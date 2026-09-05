@@ -7,6 +7,8 @@ import { CSSProperties } from 'react';
 interface Props {
 	gameData: HanabiGameData;
 	userId: string;
+	turnLabel?: string;
+	showGameMenu?: boolean;
 }
 
 export interface HanabiDesktopStatusData {
@@ -47,7 +49,12 @@ export function getHanabiDesktopStatusData(
 	};
 }
 
-export default function HanabiDesktopStatus({ gameData, userId }: Props): JSX.Element {
+export default function HanabiDesktopStatus({
+	gameData,
+	userId,
+	turnLabel,
+	showGameMenu = true,
+}: Props): JSX.Element {
 	const status = getHanabiDesktopStatusData(gameData, userId);
 
 	return (
@@ -61,12 +68,14 @@ export default function HanabiDesktopStatus({ gameData, userId }: Props): JSX.El
 					className="size-9 shrink-0 rounded-full border-[3px] border-white shadow-[0_0_16px_rgb(255_255_255_/_18%)]"
 				/>
 				<p className="hanabi-turn-label truncate text-[36px] font-medium tracking-[-0.025em] text-white">
-					{status.turnLabel}
+					{turnLabel ?? status.turnLabel}
 				</p>
 			</section>
-			<div className="hanabi-mobile-game-menu">
-				<HanabiHeaderMenuButton variant="game" />
-			</div>
+			{showGameMenu && (
+				<div className="hanabi-mobile-game-menu">
+					<HanabiHeaderMenuButton variant="game" />
+				</div>
+			)}
 			<section
 				aria-label="Game status"
 				className="hanabi-panel hanabi-desktop-status min-w-0 overflow-hidden rounded-lg"
