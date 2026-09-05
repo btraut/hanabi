@@ -738,7 +738,7 @@ body {
 
 .hanabi-feed-header {
 	display: flex;
-	min-height: 76px;
+	min-height: 60px;
 	flex: none;
 	align-items: center;
 	justify-content: space-between;
@@ -751,12 +751,6 @@ body {
 	font-size: 23px;
 	font-weight: 600;
 	line-height: 1.1;
-}
-
-.hanabi-feed-header p {
-	margin-top: 4px;
-	color: var(--color-hanabi-text-muted);
-	font-size: 14px;
 }
 
 .hanabi-feed-transcript {
@@ -842,7 +836,7 @@ body {
 	min-width: 0;
 	align-items: baseline;
 	gap: 10px;
-	padding: 8px 0 8px 10px;
+	padding: 8px 10px;
 }
 
 .hanabi-feed-event-summary {

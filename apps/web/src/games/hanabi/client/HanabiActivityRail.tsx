@@ -156,7 +156,6 @@ export default function HanabiActivityRail({
 			<header className="hanabi-feed-header">
 				<div>
 					<h2 id={headingId}>Activity</h2>
-					<p>Moves &amp; messages</p>
 				</div>
 				{mobile && (
 					<button
@@ -402,7 +401,6 @@ function HanabiDesktopActivityAction({
 		action.type === HanabiGameActionType.GiveNumberClue
 	) {
 		const recipient = gameData.players[action.recipientId];
-		summary = `clued ${recipient?.name ?? 'another player'}`;
 		const clueLabel =
 			action.type === HanabiGameActionType.GiveColorClue
 				? `${capitalize(action.color ?? 'color')} clue`
@@ -411,8 +409,10 @@ function HanabiDesktopActivityAction({
 			action.type === HanabiGameActionType.GiveColorClue
 				? ACTION_ACCENTS[action.color ?? '']
 				: undefined;
-		detail = (
+		summary = (
 			<>
+				clued {recipient?.name ?? 'another player'}
+				{' · '}
 				<span className="font-medium text-hanabi-text" style={{ color: clueColor }}>
 					{clueLabel}
 				</span>
