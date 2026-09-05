@@ -1,3 +1,4 @@
+import { HanabiGameActionChat, HanabiGameActionType } from '@hanabi/shared';
 import HanabiDesktopBoard from '~/games/hanabi/client/HanabiDesktopBoard';
 import HanabiActivityRail from '~/games/hanabi/client/HanabiActivityRail';
 import { HANABI_BRAND_MARK_PATH } from '~/games/hanabi/client/HanabiArtwork';
@@ -28,8 +29,9 @@ import { useParams } from 'react-router-dom';
 
 export default function HanabiDesktopFixtureView(): JSX.Element {
 	const { fixture: fixtureName } = useParams();
-	const fixtures = getHanabiDesktopFixtures();
+	const fixtures = useMemo(() => getHanabiDesktopFixtures(), []);
 	const fixture = fixtures[fixtureName as HanabiDesktopFixtureName];
+	const [incomingMessages, setIncomingMessages] = useState<HanabiGameActionChat[]>([]);
 	const [highlightedAction, highlightAction] = useState<string | null>(null);
 	const highlightContext = useMemo(
 		() => ({
@@ -110,12 +112,34 @@ export default function HanabiDesktopFixtureView(): JSX.Element {
 													Message the table…
 												</div>
 											</div>
-											<div className="hanabi-chat-send opacity-40">
+											<button
+												aria-label="Simulate incoming chat message"
+												className="hanabi-chat-send"
+												onClick={() =>
+													setIncomingMessages((messages) => [
+														...messages,
+														{
+															id: `incoming-${messages.length}`,
+															playerId: 'player-2',
+															message:
+																`Incoming message ${messages.length + 1}. ` +
+																'Keep the saved cards while checking the clues and the next playable number. '.repeat(
+																	12,
+																),
+															type: HanabiGameActionType.Chat,
+														},
+													])
+												}
+												type="button"
+											>
 												<PaperPlane size={23} />
-											</div>
+											</button>
 										</div>
 									}
-									gameData={fixture.gameData}
+									gameData={{
+										...fixture.gameData,
+										actions: [...fixture.gameData.actions, ...incomingMessages],
+									}}
 									userId={fixture.userId}
 								/>
 							}
