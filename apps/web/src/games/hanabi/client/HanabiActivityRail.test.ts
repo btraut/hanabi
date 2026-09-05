@@ -94,10 +94,12 @@ describe('Hanabi history clue descriptions', () => {
 		type: HanabiGameActionType.GiveColorClue,
 	};
 
-	it('labels the affected-tile count separately from the color clue', () => {
+	it('shows the color clue without an affected-tile count', () => {
 		const text = renderActions([redClue]).replace(/<[^>]*>/g, '');
 		expect(text).toContain('Alice clued You');
-		expect(text).toContain('Red clue · 1 tile');
+		expect(text).toContain('Red clue');
+		expect(text).not.toContain('tile');
+		expect(text).not.toContain('Touches');
 		expect(text).not.toContain('Red: 1');
 		expect(text).not.toContain('Red 5');
 	});
@@ -118,14 +120,15 @@ describe('Hanabi history clue descriptions', () => {
 				type: HanabiGameActionType.Chat,
 			},
 		]);
-		expect(markup.indexOf('Before the clue')).toBeLessThan(markup.indexOf('Red clue'));
-		expect(markup.indexOf('Red clue')).toBeLessThan(markup.indexOf('After the clue'));
+		const text = markup.replace(/<[^>]*>/g, '');
+		expect(text.indexOf('Before the clue')).toBeLessThan(text.indexOf('Red clue'));
+		expect(text.indexOf('Red clue')).toBeLessThan(text.indexOf('After the clue'));
 		expect(markup.match(/class="hanabi-feed-chat"/g)).toHaveLength(2);
 		expect(markup.match(/class="hanabi-feed-event"/g)).toHaveLength(1);
 		expect(markup).not.toContain('role="tab"');
 	});
 
-	it('shows the number clue and affected count without a suit color', () => {
+	it('shows only the clue number without a competing count or suit color', () => {
 		const markup = renderActions([
 			{
 				id: 'number-clue',
@@ -139,7 +142,10 @@ describe('Hanabi history clue descriptions', () => {
 				type: HanabiGameActionType.GiveNumberClue,
 			},
 		]);
-		expect(markup.replace(/<[^>]*>/g, '')).toContain('Number 5 clue · 2 tiles');
+		const text = markup.replace(/<[^>]*>/g, '');
+		expect(text).toContain('5 clue');
+		expect(text).not.toContain('tiles');
+		expect(text).not.toContain('Touches');
 		expect(markup).not.toContain('#d5ad61');
 		expect(markup).not.toContain('rounded-full border-2');
 	});
