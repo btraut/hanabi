@@ -258,6 +258,23 @@ Production requires Redis/file active-game storage, PostgreSQL transcript storag
 local use; an intentional single-process production run must set both `GAME_STORE=file` and
 `ALLOW_FILE_GAME_STORE=true`.
 
+### Restart and reconnect
+
+Active games are saved in the configured game store and restored before the server accepts
+connections. A returning browser can refresh the same game URL to recover the saved round;
+an open game also reconnects automatically. PostgreSQL transcripts support game review and
+are separate from the Redis/file snapshots used to resume active games.
+
+The signed, HTTP-only `SESSION` cookie identifies the player for one year. Preserve
+`SESSION_COOKIE_SECRET` across deployments so the same browser retains its seat and creator
+permissions. The game code allows finding and watching a game, but does not grant another
+player's identity. A new browser, cleared cookies, or an invalid cookie receives a new identity.
+
+Graceful shutdown flushes pending game saves. An abrupt process crash can lose changes whose
+asynchronous save has not finished. Keep Redis data or the file-store directory durable across
+restarts. Games with no recorded activity for 24 hours are pruned, including during startup;
+reconnecting does not restore a pruned game from its transcript.
+
 ## VS Code
 
 This project works great with VS Code. The TypeScript integration is automatic.
