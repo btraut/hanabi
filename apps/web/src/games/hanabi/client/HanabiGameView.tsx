@@ -18,6 +18,7 @@ export default function HanabiGameView(): JSX.Element | null {
 	const stage = useGameSelector((game) => game!.stage);
 	const seed = useGameSelector((game) => game!.seed);
 	const availableReviewTranscript = useGameSelector((game) => game!.reviewTranscript);
+	const roundId = availableReviewTranscript?.roundId ?? seed;
 	const userId = useUserId();
 	const [reviewTranscript, setReviewTranscript] = useState<GameTranscriptV1 | null>(null);
 	const [reviewOpen, setReviewOpen] = useState(false);
@@ -63,7 +64,7 @@ export default function HanabiGameView(): JSX.Element | null {
 				userId={userId}
 				onExit={() => setReviewOpen(false)}
 				exitLabel={
-					seed === reviewTranscript.roundId && stage === HanabiStage.Finished
+					roundId === reviewTranscript.roundId && stage === HanabiStage.Finished
 						? 'Back to game'
 						: 'Back to lobby'
 				}
@@ -73,7 +74,7 @@ export default function HanabiGameView(): JSX.Element | null {
 
 	return (
 		<>
-			{reviewTranscript && seed !== reviewTranscript.roundId && (
+			{reviewTranscript && roundId !== reviewTranscript.roundId && (
 				<div className="mx-auto max-w-[1660px] px-5 py-3">
 					<button className="hanabi-review-entry" type="button" onClick={() => setReviewOpen(true)}>
 						Review previous game
@@ -88,23 +89,10 @@ export default function HanabiGameView(): JSX.Element | null {
 							<BreakpointController>
 								<HanabiGameSurface>
 									<HanabiHeader variant="game" />
-									{stage === HanabiStage.Finished && (
-										<div className="mx-auto flex max-w-[1660px] justify-end px-5 pt-3">
-											{openReview ? (
-												<button className="hanabi-review-entry" type="button" onClick={openReview}>
-													Review game
-												</button>
-											) : (
-												<p className="text-hanabi-text-muted">
-													Review unavailable: this round has no complete transcript.
-												</p>
-											)}
-										</div>
-									)}
 									<div className="hanabi-game-board-shell pt-5">
 										<HanabiBoard
 											onReview={openReview}
-											initiallyDismissGameOver={reviewTranscript?.roundId === seed}
+											initiallyDismissGameOver={reviewTranscript?.roundId === roundId}
 										/>
 									</div>
 									<div id="portal" />

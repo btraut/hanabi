@@ -66,7 +66,7 @@ describe('HanabiDesktopStatus', () => {
 			turnOrder: ['alice', 'ben'],
 		});
 
-		expect(getHanabiDesktopStatusData(gameData, 'alice').turnLabel).toBe('Game finished');
+		expect(getHanabiDesktopStatusData(gameData, 'alice').turnLabel).toBe('Game over');
 	});
 
 	it('shows a bot thinking or paused without marking it disconnected', () => {

@@ -5,14 +5,14 @@ import { useBoardData, useGameMessenger } from '~/games/hanabi/client/HanabiGame
 import { HanabiFinishedReason } from '@hanabi/shared';
 
 const GAME_OVER_TITLES: { [key in HanabiFinishedReason]: string } = {
-	Won: 'Congratulations!',
-	DiscardedFatalTile: 'Game over!',
-	OutOfTurns: 'Game over!',
-	OutOfLives: 'Game over!',
+	Won: 'You Win',
+	DiscardedFatalTile: 'Game over',
+	OutOfTurns: 'Game over',
+	OutOfLives: 'Game over',
 };
 
 const GAME_OVER_MESSAGES: { [key in HanabiFinishedReason]: string } = {
-	Won: 'You won!',
+	Won: 'You completed every firework.',
 	DiscardedFatalTile: 'You no longer have the tiles needed to win.',
 	OutOfTurns: 'You ran out of turns.',
 	OutOfLives: 'You ran out of lives.',

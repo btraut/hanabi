@@ -1,7 +1,13 @@
 import Star from '~/games/hanabi/client/icons/Star';
 import { HANABI_TILE_BACK_PATH } from '~/games/hanabi/client/HanabiArtwork';
 import HanabiHeaderMenuButton from '~/games/hanabi/client/HanabiHeaderMenuButton';
-import { getHanabiMaxScore, getHanabiScore, HanabiGameData, HanabiStage } from '@hanabi/shared';
+import {
+	getHanabiMaxScore,
+	getHanabiScore,
+	HanabiGameData,
+	HanabiStage,
+	HanabiFinishedReason,
+} from '@hanabi/shared';
 import { CSSProperties } from 'react';
 
 interface Props {
@@ -9,6 +15,7 @@ interface Props {
 	userId: string;
 	turnLabel?: string;
 	showGameMenu?: boolean;
+	onShowResult?: () => void;
 }
 
 export interface HanabiDesktopStatusData {
@@ -26,7 +33,7 @@ export function getHanabiDesktopStatusData(
 ): HanabiDesktopStatusData {
 	let turnLabel = 'Preparing the next turn';
 	if (gameData.stage === HanabiStage.Finished || gameData.finishedReason !== null) {
-		turnLabel = 'Game finished';
+		turnLabel = gameData.finishedReason === HanabiFinishedReason.Won ? 'You Win' : 'Game over';
 	} else if (gameData.currentPlayerId === userId) {
 		turnLabel = 'Your turn';
 	} else if (gameData.currentPlayerId) {
@@ -64,8 +71,10 @@ export default function HanabiDesktopStatus({
 	userId,
 	turnLabel,
 	showGameMenu = true,
+	onShowResult,
 }: Props): JSX.Element {
 	const status = getHanabiDesktopStatusData(gameData, userId);
+	const TurnLabel = onShowResult ? 'button' : 'p';
 
 	return (
 		<div className="hanabi-status-regions">
@@ -77,13 +86,16 @@ export default function HanabiDesktopStatus({
 					aria-hidden="true"
 					className="size-9 shrink-0 rounded-full border-[3px] border-white shadow-[0_0_16px_rgb(255_255_255_/_18%)]"
 				/>
-				<p
+				<TurnLabel
 					aria-live="polite"
-					className="hanabi-turn-label truncate text-[36px] font-medium tracking-[-0.025em] text-white"
+					className="hanabi-turn-label hanabi-focus-ring truncate text-left text-[36px] font-medium tracking-[-0.025em] text-white"
+					onClick={onShowResult}
+					type={onShowResult ? 'button' : undefined}
+					aria-label={onShowResult ? `${status.turnLabel}: show game result` : undefined}
 					title={turnLabel ?? status.turnLabel}
 				>
 					{turnLabel ?? status.turnLabel}
-				</p>
+				</TurnLabel>
 			</section>
 			{showGameMenu && (
 				<div className="hanabi-mobile-game-menu">
