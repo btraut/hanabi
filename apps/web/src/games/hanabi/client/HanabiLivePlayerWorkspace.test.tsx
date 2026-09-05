@@ -103,12 +103,18 @@ describe('HanabiLivePlayerWorkspace', () => {
 				bots: { ...gameData.bots!, turn: { ...gameData.bots!.turn!, opportunity } },
 			});
 			expect(document.querySelector('[aria-label="Alice, you, playing"]')).not.toBeNull();
-			expect(document.querySelector('[aria-label="Ember, bot, thinking"]')).not.toBeNull();
-			expect(document.body.textContent).toContain(`Considering ${opportunity}…`);
+			if (opportunity === 'clue') {
+				expect(document.querySelector('[aria-label="Ember, bot, thinking"]')).not.toBeNull();
+				expect(document.body.textContent).toContain('Considering clue…');
+			} else {
+				expect(document.querySelector('[aria-label="Ember, bot"]')).not.toBeNull();
+				expect(document.querySelector('.hanabi-avatar-orbit')).toBeNull();
+				expect(document.body.textContent).not.toContain('Considering result…');
+			}
 			expect(tileRender).toHaveBeenCalledTimes(2);
 		},
 	);
-	it('shows the final result without marking either player as active', () => {
+	it('keeps final result reflection invisible without marking either player as active', () => {
 		render();
 		publish({
 			...gameData,
@@ -116,8 +122,9 @@ describe('HanabiLivePlayerWorkspace', () => {
 			finishedReason: HanabiFinishedReason.OutOfTurns,
 			bots: { ...gameData.bots!, turn: { ...gameData.bots!.turn!, opportunity: 'result' } },
 		});
-		expect(document.querySelector('[aria-label="Ember, bot, thinking"]')).not.toBeNull();
-		expect(document.body.textContent).toContain('Considering result…');
+		expect(document.querySelector('[aria-label="Ember, bot"]')).not.toBeNull();
+		expect(document.querySelector('.hanabi-avatar-orbit')).toBeNull();
+		expect(document.body.textContent).not.toContain('Considering result…');
 		expect(document.body.textContent).not.toContain('Playing');
 	});
 });

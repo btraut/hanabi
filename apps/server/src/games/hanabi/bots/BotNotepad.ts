@@ -190,6 +190,17 @@ export function botNotepadsMatchHistory(
 						(committed[0].type !== 'arrangement' || committed[0].actorId !== ownerId))
 				)
 					return false;
+			} else if (item.opportunity === 'result') {
+				const ownEvents = committed.filter((event) => event.actorId === ownerId);
+				if (
+					(stages[item.observedAt.sequence] !== HanabiStage.Playing && committed.length !== 0) ||
+					ownEvents.length > 1 ||
+					ownEvents.some(
+						(event) =>
+							event.type !== 'arrangement' || stages[event.sequence - 1] !== HanabiStage.Playing,
+					)
+				)
+					return false;
 			} else if (
 				(item.opportunity === 'clue' && currentPlayers[item.observedAt.sequence] === ownerId) ||
 				(stages[item.observedAt.sequence] !== HanabiStage.Playing && committed.length !== 0) ||

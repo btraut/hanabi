@@ -84,6 +84,10 @@ describe('HanabiDesktopStatus', () => {
 		expect(getHanabiDesktopStatusData(gameData, 'alice').turnLabel).toBe('Ben · Thinking…');
 		gameData.bots!.turn!.status = 'error';
 		expect(getHanabiDesktopStatusData(gameData, 'alice').turnLabel).toBe('Ben · Paused');
+		gameData.bots!.turn!.opportunity = 'result';
+		expect(getHanabiDesktopStatusData(gameData, 'alice').turnLabel).toBe("Ben's turn");
+		gameData.bots!.turn!.status = 'thinking';
+		expect(getHanabiDesktopStatusData(gameData, 'alice').turnLabel).toBe("Ben's turn");
 		gameData.bots!.turn = null;
 		expect(getHanabiDesktopStatusData(gameData, 'alice').turnLabel).toBe("Ben's turn");
 	});

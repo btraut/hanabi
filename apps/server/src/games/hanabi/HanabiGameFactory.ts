@@ -501,8 +501,10 @@ function validateV2Round(round: BotRound, data: HanabiGameData): void {
 			hydrationError('botRound pending clues must reference actual clues for an eligible bot.');
 		}
 	}
-	if (round.pendingResult) {
-		const pending = round.pendingResult;
+	for (const pending of [
+		...(round.pendingResult ? [round.pendingResult] : []),
+		...(round.pendingResults ?? []),
+	]) {
 		const source = history.events.find((event) => event.eventId === pending.eventId);
 		if (
 			!round.policy.reflectionAfterAction ||

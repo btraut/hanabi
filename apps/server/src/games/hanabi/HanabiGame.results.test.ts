@@ -23,7 +23,7 @@ class FakeSocketManager {
 	readonly onMessage = new PubSub<{ userId: string | undefined; message: HanabiMessage }>();
 	readonly onAuthenticate = new PubSub<{ userId: string }>();
 	readonly onDisconnect = new PubSub<{ userId: string }>();
-	send() {}
+	send = vi.fn<(_userId: string | readonly string[], message: HanabiMessage) => void>();
 }
 
 const games: HanabiGame[] = [];
@@ -60,7 +60,7 @@ function decision(
 		outputTokens: 5,
 	};
 }
-function createHarness(serialized?: HanabiGameSerialized) {
+function createHarness(serialized?: HanabiGameSerialized, maxConcurrent = 3) {
 	const sockets = new FakeSocketManager();
 	const saveDelegate: SaveGameDelegate = {
 		saveGame: vi.fn().mockResolvedValue(undefined),
@@ -73,7 +73,7 @@ function createHarness(serialized?: HanabiGameSerialized) {
 		2,
 		false,
 		undefined,
-		new BotRuntime({ chooseAction }, policy),
+		new BotRuntime({ chooseAction }, policy, { maxConcurrent }),
 	);
 	const game = serialized
 		? factory.hydrate(
@@ -103,7 +103,14 @@ function send<Type extends HanabiMessage['type']>(
 }
 
 /** Use a real deterministic deal, then rebuild its initial checkpoints for a bot-first turn. */
-function seeded(options: { dragging?: boolean; finalTurn?: boolean; secondBot?: boolean } = {}) {
+function seeded(
+	options: {
+		dragging?: boolean;
+		finalTurn?: boolean;
+		secondBot?: boolean;
+		maxConcurrent?: number;
+	} = {},
+) {
 	const initial = createHarness();
 	send(initial, 'AddPlayerMessage', { name: 'Host' });
 	send(initial, 'AddBotMessage', undefined);
@@ -152,7 +159,7 @@ function seeded(options: { dragging?: boolean; finalTurn?: boolean; secondBot?: 
 		saved.updated,
 	);
 	dealt.game.cleanUp();
-	return { ...createHarness(saved), botId, secondBotId };
+	return { ...createHarness(saved, options.maxConcurrent), botId, secondBotId };
 }
 function reverseLayout(request: BotDecisionRequest): HanabiHandLayout {
 	return {
@@ -242,7 +249,7 @@ describe('bot result reflections', () => {
 			if (type === 'play')
 				expect(history.events[0]).toMatchObject({ valid: scenario === 'successful play' });
 			expect(after.data.lives).toBe(before.data.lives - (scenario === 'failed play' ? 1 : 0));
-			expect(after.botRound?.pendingResult).toBeUndefined();
+			expect(after.botRound?.pendingResults ?? []).toEqual([]);
 			expect(after.data.currentPlayerId).toBe('host');
 			expect(after.transcript?.moves).toHaveLength(1);
 			expect(harness.chooseAction).toHaveBeenCalledTimes(2);
@@ -254,6 +261,98 @@ describe('bot result reflections', () => {
 			});
 		},
 	);
+
+	it('lets a human play while the same reflection finishes and rearranges the bot hand', async () => {
+		const harness = seeded();
+		firstAction(harness, 'discard');
+		const pending = deferred();
+		harness.chooseAction.mockReturnValue(pending.promise);
+		harness.game.startBackgroundWork();
+		await vi.waitFor(() => expect(harness.chooseAction).toHaveBeenCalledTimes(2));
+		const request = harness.chooseAction.mock.calls[1][0];
+		const tileId = snapshot(harness.game).data.playerTiles.host[0];
+		send(harness, 'DiscardTileMessage', { id: tileId });
+		expect(snapshot(harness.game).transcript?.moves).toHaveLength(2);
+		expect(snapshot(harness.game).data.currentPlayerId).toBe(harness.botId);
+		expect(request.signal.aborted).toBe(false);
+		expect(
+			harness.sockets.send.mock.calls
+				.filter(([, message]) => message.type === 'RefreshGameDataMessage')
+				.at(-1)?.[1],
+		).toMatchObject({ data: { bots: { turn: null } } });
+		await settle();
+		expect(harness.chooseAction).toHaveBeenCalledTimes(2);
+		const layout = reverseLayout(request);
+		// Keep the bot's next turn pending so the completed result can be inspected.
+		harness.chooseAction.mockReturnValue(new Promise(() => {}));
+		pending.resolve(decision(request, layout));
+		await finishedResult(harness);
+		const after = snapshot(harness.game);
+		expect(
+			getHanabiHandLayout(after.data.playerTiles[harness.botId], after.data.tilePositions),
+		).toEqual(layout);
+		expect(after.botRound?.notepads?.[harness.botId].entries[1]).toMatchObject({
+			observedAt: { turnIndex: 1 },
+			recordedAt: { turnIndex: 2 },
+		});
+		expect(harness.chooseAction).toHaveBeenCalledTimes(3);
+		expect(() => createHarness(after)).not.toThrow();
+	});
+
+	it('lets the next bot act and queue its own reflection while the first is pending', async () => {
+		const harness = seeded({ secondBot: true });
+		firstAction(harness, 'discard');
+		const pending = deferred();
+		harness.chooseAction.mockImplementation((request) => {
+			if (request.opportunity === 'result' && request.observation.playerId === harness.botId)
+				return pending.promise;
+			return Promise.resolve({
+				...decision(request),
+				actionId:
+					request.opportunity === 'turn'
+						? request.legalActions.find(({ action }) => action.type === 'discard')!.id
+						: null,
+			});
+		});
+		harness.game.startBackgroundWork();
+		await vi.waitFor(() => expect(snapshot(harness.game).data.currentPlayerId).toBe('host'));
+		const request = harness.chooseAction.mock.calls.find(([r]) => r.opportunity === 'result')![0];
+		expect(request.signal.aborted).toBe(false);
+		const during = snapshot(harness.game);
+		expect(during.transcript?.moves).toHaveLength(2);
+		expect(during.botRound?.pendingResults).toHaveLength(2);
+		expect(() => createHarness(during)).not.toThrow();
+		pending.resolve(decision(request, reverseLayout(request)));
+		await vi.waitFor(() => expect(snapshot(harness.game).botRound?.pendingResults).toEqual([]));
+		const after = snapshot(harness.game);
+		expect(after.botRound?.notepads?.[harness.botId].entries).toHaveLength(2);
+		expect(after.botRound?.notepads?.[harness.secondBotId].entries).toHaveLength(2);
+		expect(after.transcript?.handMovements).toHaveLength(1);
+		expect(() => createHarness(after)).not.toThrow();
+	});
+
+	it('automatically resumes the next bot when reflection releases the only request slot', async () => {
+		const harness = seeded({ secondBot: true, maxConcurrent: 1 });
+		firstAction(harness, 'discard');
+		const pending = deferred();
+		harness.chooseAction.mockImplementation((request) => {
+			if (request.opportunity === 'result') return pending.promise;
+			return Promise.resolve({
+				...decision(request),
+				actionId: request.legalActions.find(
+					({ action }) => action.type === 'clue' && action.to === 'host',
+				)!.id,
+			});
+		});
+		harness.game.startBackgroundWork();
+		await vi.waitFor(() => expect(snapshot(harness.game).botRound?.failure).toBe('busy'));
+		const request = harness.chooseAction.mock.calls[1][0];
+		pending.resolve(decision(request));
+		await vi.waitFor(() => expect(snapshot(harness.game).data.currentPlayerId).toBe('host'));
+		expect(snapshot(harness.game).transcript?.moves).toHaveLength(2);
+		expect(snapshot(harness.game).botRound?.failure).toBeUndefined();
+		expect(harness.chooseAction).toHaveBeenCalledTimes(3);
+	});
 
 	it('accepts private reservation notes with dragging disabled', async () => {
 		const harness = seeded({ dragging: false });
@@ -301,7 +400,9 @@ describe('bot result reflections', () => {
 		);
 		harness.game.startBackgroundWork();
 		await vi.waitFor(() => expect(harness.chooseAction).toHaveBeenCalledTimes(2));
-		await vi.waitFor(() => expect(snapshot(harness.game).botRound?.pendingResult).toBeUndefined());
+		await vi.waitFor(() =>
+			expect(snapshot(harness.game).botRound?.pendingResults ?? []).toEqual([]),
+		);
 		const after = snapshot(harness.game);
 		expect(after.botRound?.notepads?.[harness.botId].entries).toHaveLength(1);
 		expect(after.transcript?.handMovements).toEqual([]);
@@ -320,28 +421,96 @@ describe('bot result reflections', () => {
 		expect(() => createHarness(after)).not.toThrow();
 	});
 
-	it('resumes a persisted pending reflection once and hydrates its completed ledger', async () => {
+	it.each([false, true])(
+		'resumes a persisted pending reflection once (legacy: %s)',
+		async (legacy) => {
+			const harness = seeded();
+			firstAction(harness, 'discard');
+			const pending = deferred();
+			harness.chooseAction.mockReturnValue(pending.promise);
+			harness.game.startBackgroundWork();
+			await vi.waitFor(() => expect(harness.chooseAction).toHaveBeenCalledTimes(2));
+			const saved = snapshot(harness.game);
+			expect(saved.botRound?.pendingResults?.[0]?.playerId).toBe(harness.botId);
+			if (legacy) {
+				saved.botRound!.pendingResult = saved.botRound!.pendingResults![0];
+				delete saved.botRound!.pendingResults;
+			}
+			harness.game.cleanUp();
+			const resumed = { ...createHarness(saved), botId: harness.botId };
+			resumed.game.startBackgroundWork();
+			await finishedResult(resumed);
+			expect(resumed.chooseAction).toHaveBeenCalledOnce();
+			expect(resumed.chooseAction.mock.calls[0][0].opportunity).toBe('result');
+			const completed = createHarness(snapshot(resumed.game));
+			completed.game.startBackgroundWork();
+			await settle();
+			expect(completed.chooseAction).not.toHaveBeenCalled();
+			expect(snapshot(completed.game).botRound?.notepads).toEqual(
+				snapshot(resumed.game).botRound?.notepads,
+			);
+		},
+	);
+
+	it('resumes background work after stopping without accepting the cancelled result', async () => {
 		const harness = seeded();
 		firstAction(harness, 'discard');
 		const pending = deferred();
 		harness.chooseAction.mockReturnValue(pending.promise);
 		harness.game.startBackgroundWork();
 		await vi.waitFor(() => expect(harness.chooseAction).toHaveBeenCalledTimes(2));
-		const saved = snapshot(harness.game);
-		expect(saved.botRound?.pendingResult?.playerId).toBe(harness.botId);
-		harness.game.cleanUp();
-		const resumed = { ...createHarness(saved), botId: harness.botId };
-		resumed.game.startBackgroundWork();
-		await finishedResult(resumed);
-		expect(resumed.chooseAction).toHaveBeenCalledOnce();
-		expect(resumed.chooseAction.mock.calls[0][0].opportunity).toBe('result');
-		const completed = createHarness(snapshot(resumed.game));
-		completed.game.startBackgroundWork();
-		await settle();
-		expect(completed.chooseAction).not.toHaveBeenCalled();
-		expect(snapshot(completed.game).botRound?.notepads).toEqual(
-			snapshot(resumed.game).botRound?.notepads,
+		const request = harness.chooseAction.mock.calls[1][0];
+		harness.game.stopBackgroundWork();
+		expect(request.signal.aborted).toBe(true);
+		harness.chooseAction.mockImplementation((r) => Promise.resolve(decision(r)));
+		harness.game.startBackgroundWork();
+		pending.resolve({ ...decision(request), notes: 'Cancelled review' });
+		await finishedResult(harness);
+		const after = snapshot(harness.game);
+		expect(harness.chooseAction).toHaveBeenCalledTimes(3);
+		expect(after.botRound?.notepads?.[harness.botId].entries[1].notes).toBeNull();
+		expect(after.botRound?.attempts).toBe(3);
+		expect(after.botRound?.tokens).toBeGreaterThanOrEqual(45);
+		expect(() => createHarness(after)).not.toThrow();
+	});
+
+	it('keeps review notes without moving tiles if another player ends the game', async () => {
+		const initial = seeded();
+		const saved = snapshot(initial.game);
+		saved.data.discardedTiles = [...saved.data.discardedTiles, ...saved.data.remainingTiles];
+		saved.data.remainingTiles = [];
+		saved.data.remainingTurns = 2;
+		saved.botRound!.history = createBotHistory(saved.data, 2);
+		saved.transcript = createGameTranscript(
+			{ gameId: saved.id, gameCode: saved.code },
+			saved.data,
+			saved.updated,
 		);
+		initial.game.cleanUp();
+		const harness = {
+			...createHarness(saved),
+			botId: initial.botId,
+			secondBotId: initial.secondBotId,
+		};
+		firstAction(harness, 'discard');
+		const pending = deferred();
+		harness.chooseAction.mockReturnValue(pending.promise);
+		harness.game.startBackgroundWork();
+		await vi.waitFor(() => expect(harness.chooseAction).toHaveBeenCalledTimes(2));
+		const request = harness.chooseAction.mock.calls[1][0];
+		send(harness, 'DiscardTileMessage', { id: snapshot(harness.game).data.playerTiles.host[0] });
+		expect(snapshot(harness.game).data.stage).toBe(HanabiStage.Finished);
+		pending.resolve({
+			...decision(request, reverseLayout(request)),
+			notes: 'Remember the revealed card.',
+		});
+		await finishedResult(harness);
+		const after = snapshot(harness.game);
+		expect(after.transcript?.handMovements).toEqual([]);
+		expect(after.botRound?.notepads?.[harness.botId].entries[1].notes).toBe(
+			'Remember the revealed card.',
+		);
+		expect(() => createHarness(after)).not.toThrow();
 	});
 
 	it('ignores a late reflection after reset', async () => {
@@ -391,7 +560,7 @@ describe('bot result reflections', () => {
 			[harness.botId, 'result'],
 			[harness.secondBotId, 'turn'],
 		]);
-		expect(snapshot(harness.game).botRound?.pendingResult).toBeUndefined();
+		expect(snapshot(harness.game).botRound?.pendingResults ?? []).toEqual([]);
 		expect(snapshot(harness.game).transcript?.moves).toHaveLength(2);
 	});
 });

@@ -144,7 +144,9 @@ arrangement and turn action. Arrangement consumes no turn. Setting touched cards
 not an automatic move: the bot may keep them in place, move them below, or reorder its discard queue.
 After a play or discard, the bot receives the revealed result and its updated hand, including any
 replacement card without that card's face. It can briefly interpret the result, update its notepad,
-and optionally rearrange; its action ID is null. This follow-up also runs when dragging is disabled,
+and optionally rearrange; its action ID is null. This review runs in the background without a status
+pill, allowing the next human or bot to take their turn while it finishes. A bot completes its own
+pending review before responding to another clue or taking its next turn. This follow-up also runs when dragging is disabled,
 with no arrangement, and after an action ends the game, with notes only. Protected cards remain
 conceptually reserved when dragging is disabled. Humans retain ordinary off-turn dragging.
 

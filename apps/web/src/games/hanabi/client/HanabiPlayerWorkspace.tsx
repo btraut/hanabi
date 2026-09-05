@@ -62,22 +62,17 @@ export function HanabiDesktopPlayerWorkspaces({
 					key={playerId}
 					player={gameData.players[playerId]}
 					thinking={
-						((!finished && gameData.stage === HanabiStage.Playing) ||
-							(gameData.stage === HanabiStage.Finished &&
-								gameData.bots?.turn?.opportunity === 'result')) &&
+						!finished &&
+						gameData.stage === HanabiStage.Playing &&
+						gameData.bots?.turn?.opportunity !== 'result' &&
 						(gameData.currentPlayerId === playerId ||
-							gameData.bots?.turn?.opportunity === 'clue' ||
-							gameData.bots?.turn?.opportunity === 'result') &&
+							gameData.bots?.turn?.opportunity === 'clue') &&
 						gameData.players[playerId].kind === 'bot' &&
 						gameData.bots?.turn?.playerId === playerId &&
 						gameData.bots.turn.status === 'thinking'
 					}
 					thinkingLabel={
-						gameData.bots?.turn?.opportunity === 'result'
-							? 'Considering result…'
-							: gameData.bots?.turn?.opportunity === 'clue'
-								? 'Considering clue…'
-								: 'Thinking…'
+						gameData.bots?.turn?.opportunity === 'clue' ? 'Considering clue…' : 'Thinking…'
 					}
 				>
 					{renderTileSurface(playerId)}
