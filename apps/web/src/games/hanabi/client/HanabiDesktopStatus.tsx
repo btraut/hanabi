@@ -41,10 +41,10 @@ export function getHanabiDesktopStatusData(
 		turnLabel = `${currentPlayer?.name || 'Another player'}'s turn`;
 		if (currentPlayer?.kind === 'bot') {
 			const botTurn = gameData.bots?.turn;
-			if (botTurn?.playerId === currentPlayer.id) {
+			if (botTurn?.playerId === currentPlayer.id && botTurn.opportunity !== 'result') {
 				turnLabel =
 					botTurn.status === 'thinking'
-						? `${currentPlayer.name} · ${botTurn.opportunity === 'result' ? 'Considering result…' : botTurn.opportunity === 'clue' ? 'Considering clue…' : 'Thinking…'}`
+						? `${currentPlayer.name} · ${botTurn.opportunity === 'clue' ? 'Considering clue…' : 'Thinking…'}`
 						: `${currentPlayer.name} · Paused`;
 			}
 		} else if (currentPlayer && !currentPlayer.connected) {

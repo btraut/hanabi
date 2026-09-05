@@ -181,7 +181,7 @@ describe('HanabiPlayerWorkspace', () => {
 	});
 
 	it.each(['clue', 'result'] as const)(
-		'shows an off-turn %s response only on the bot while the human remains Playing',
+		'keeps human actions available during an off-turn %s response',
 		(opportunity) => {
 			const gameData = generateHanabiGameData({
 				currentPlayerId: 'alice',
@@ -203,11 +203,17 @@ describe('HanabiPlayerWorkspace', () => {
 					}),
 				);
 			const markup = render();
-			expect(markup.match(/class="hanabi-avatar-orbit"/g)).toHaveLength(1);
-			expect(markup).toContain('aria-label="Ben, bot, thinking"');
+			if (opportunity === 'clue') {
+				expect(markup.match(/class="hanabi-avatar-orbit"/g)).toHaveLength(1);
+				expect(markup).toContain('aria-label="Ben, bot, thinking"');
+				expect(markup).toContain('Considering clue…');
+			} else {
+				expect(markup).not.toContain('hanabi-avatar-orbit');
+				expect(markup).toContain('aria-label="Ben, bot"');
+				expect(markup).not.toContain('Considering result…');
+			}
 			expect(markup).toContain('aria-label="Alice, you, playing"');
 			expect(markup.match(/>Playing</g)).toHaveLength(1);
-			expect(markup).toContain(`Considering ${opportunity}…`);
 			const botSection = markup.slice(markup.indexOf('<section aria-label="Ben'));
 			expect(botSection).not.toContain('border-hanabi-coral');
 			expect(

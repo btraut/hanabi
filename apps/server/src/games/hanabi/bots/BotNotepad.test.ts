@@ -378,4 +378,67 @@ describe('result notepad provenance', () => {
 		notepads.bot.entries[0].recordedAt = getBotNotepadCheckpoint(next);
 		expect(botNotepadsMatchHistory(notepads, next, ['bot'])).toBe(false);
 	});
+
+	it('allows another player to act and arrange while a result is in flight', () => {
+		const { game, history, notepads } = resultFixture();
+		const before = structuredClone(game);
+		game.currentPlayerId = 'bot';
+		let next = appendBotHistory(
+			history,
+			{
+				id: 'human-clue',
+				type: HanabiGameActionType.GiveNumberClue,
+				playerId: 'human',
+				recipientId: 'bot',
+				number: 1,
+				tiles: [game.tiles.b],
+			},
+			game,
+			before,
+		);
+		let positions = game.tilePositions;
+		game.tilePositions = { ...positions, c: { x: 80, y: 250, z: 0 } };
+		next = appendBotArrangement(next, 'human', positions, game);
+		notepads.bot.entries[0].recordedAt = getBotNotepadCheckpoint(next);
+		expect(botNotepadsMatchHistory(notepads, next, ['bot'])).toBe(true);
+
+		positions = game.tilePositions;
+		game.tilePositions = { ...positions, b: { x: 50, y: 250, z: 0 } };
+		next = appendBotArrangement(next, 'bot', positions, game);
+		notepads.bot.entries[0].recordedAt = getBotNotepadCheckpoint(next);
+		expect(botNotepadsMatchHistory(notepads, next, ['bot'])).toBe(true);
+
+		positions = game.tilePositions;
+		game.tilePositions = { ...positions, b: { x: 60, y: 250, z: 0 } };
+		next = appendBotArrangement(next, 'bot', positions, game);
+		notepads.bot.entries[0].recordedAt = getBotNotepadCheckpoint(next);
+		expect(botNotepadsMatchHistory(notepads, next, ['bot'])).toBe(false);
+	});
+
+	it('allows notes when another player ends the game during a result request', () => {
+		const { game, history, notepads } = resultFixture();
+		const before = structuredClone(game);
+		game.playerTiles = { ...game.playerTiles, human: [] };
+		game.stage = HanabiStage.Finished;
+		const next = appendBotHistory(
+			history,
+			{
+				id: 'terminal-play',
+				type: HanabiGameActionType.Play,
+				playerId: 'human',
+				tile: game.tiles.c,
+				valid: false,
+				remainingLives: 0,
+			},
+			game,
+			before,
+		);
+		notepads.bot.entries[0].recordedAt = getBotNotepadCheckpoint(next);
+		expect(botNotepadsMatchHistory(notepads, next, ['bot'])).toBe(true);
+		const positions = game.tilePositions;
+		game.tilePositions = { ...positions, b: { x: 50, y: 250, z: 0 } };
+		const arranged = appendBotArrangement(next, 'bot', positions, game);
+		notepads.bot.entries[0].recordedAt = getBotNotepadCheckpoint(arranged);
+		expect(botNotepadsMatchHistory(notepads, arranged, ['bot'])).toBe(false);
+	});
 });

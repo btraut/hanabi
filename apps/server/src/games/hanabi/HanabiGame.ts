@@ -104,6 +104,10 @@ export default class HanabiGame extends Game {
 	private _transcript: GameTranscriptV1 | null = null;
 	private _botRound: BotRound | null = null;
 	private readonly _botCoordinator?: BotTurnCoordinator;
+	private readonly _resultCoordinator?: BotTurnCoordinator;
+	private _resultTurn: BotTurn | null = null;
+	private _resultAccounting = { attempts: 0, tokens: 0 };
+	private _backgroundStarted = false;
 
 	constructor(
 		creatorIdOrData: string | HanabiGameSerialized,
@@ -142,6 +146,12 @@ export default class HanabiGame extends Game {
 			delete this._gameData.reviewTranscript;
 			delete this._gameData.bots;
 			this._botRound = creatorIdOrData.botRound ? structuredClone(creatorIdOrData.botRound) : null;
+			if (this._botRound?.pendingResult) {
+				this._botRound.pendingResults = [this._botRound.pendingResult];
+				delete this._botRound.pendingResult;
+				this._botRound.status = 'ready';
+				delete this._botRound.failure;
+			}
 			if (this._botRound?.failure === 'round_budget') {
 				this._botRound.status = 'ready';
 				delete this._botRound.failure;
@@ -182,6 +192,20 @@ export default class HanabiGame extends Game {
 				apply: (playerId, action, decision) => this._applyBotDecision(playerId, action, decision),
 				applyClueResponse: (playerId, decision, sourceIds) =>
 					this._applyBotDecision(playerId, null, decision, sourceIds),
+			});
+			this._resultCoordinator = new BotTurnCoordinator(_botRuntime, {
+				gameId: this.id,
+				getTurn: () => this._resultTurn,
+				persist: async () => {
+					this._update();
+					await this.flushSaves();
+				},
+				notify: () => {
+					this._accountForResult();
+					this._update();
+				},
+				onFailure: () => this._finishResult(),
+				apply: () => 'Result reflections cannot take a turn.',
 				applyResultResponse: (playerId, decision, sourceId) =>
 					this._applyBotDecision(playerId, null, decision, [], sourceId),
 			});
@@ -189,11 +213,18 @@ export default class HanabiGame extends Game {
 	}
 
 	public override startBackgroundWork(): void {
+		this._backgroundStarted = true;
+		this._startNextResult();
+		this._resultCoordinator?.start();
 		this._botCoordinator?.start();
 	}
 
 	public override stopBackgroundWork(): void {
+		this._backgroundStarted = false;
 		this._botCoordinator?.stop();
+		this._resultCoordinator?.stop();
+		this._accountForResult();
+		this._resultTurn = null;
 	}
 
 	public cleanUp(): void {
@@ -323,7 +354,8 @@ export default class HanabiGame extends Game {
 				this._gameData.players[userId].kind !== 'bot',
 			turn:
 				this._botCoordinator?.status() ??
-				(this._gameData.stage === HanabiStage.Playing &&
+				(!this._botCoordinator &&
+				this._gameData.stage === HanabiStage.Playing &&
 				currentPlayer &&
 				currentPlayer.kind === 'bot'
 					? {
@@ -610,50 +642,87 @@ export default class HanabiGame extends Game {
 		this._update();
 	}
 
-	private _currentBotTurn(): BotTurn | null {
+	/** Each reflection keeps its observation while other players continue taking turns. */
+	private _startNextResult(): void {
 		const round = this._botRound;
-		const result = round?.version === 2 ? round.pendingResult : undefined;
-		const pending = round?.version === 2 ? round.pendingClues?.[0] : undefined;
-		const playerId = result?.playerId ?? pending?.playerId ?? this._gameData.currentPlayerId;
+		const pending = round?.pendingResults?.[0];
+		if (!this._backgroundStarted || this._resultTurn || !round || !pending) return;
+		this._resultTurn = {
+			playerId: pending.playerId,
+			gameData: structuredClone(this._gameData),
+			round: { ...structuredClone(round), status: 'ready', attempts: 0, tokens: 0 },
+			opportunity: 'result',
+			sourceActionEventId: pending.eventId,
+		};
+		this._resultAccounting = { attempts: 0, tokens: 0 };
+		this._resultCoordinator?.changed();
+	}
+
+	private _accountForResult(): void {
+		const work = this._resultTurn?.round;
+		if (!work || !this._botRound) return;
+		this._botRound.attempts += work.attempts - this._resultAccounting.attempts;
+		this._botRound.tokens += work.tokens - this._resultAccounting.tokens;
+		this._resultAccounting = { attempts: work.attempts, tokens: work.tokens };
+	}
+
+	private _finishResult(layoutChanged = false): void {
+		const previousTurn = this._currentBotTurn();
+		this._accountForResult();
+		if (this._botRound) {
+			this._botRound.pendingResults = this._botRound.pendingResults?.filter(
+				(pending) => pending.eventId !== this._resultTurn?.sourceActionEventId,
+			);
+		}
+		this._resultTurn = null;
+		this._resultCoordinator?.changed();
+		const nextTurn = this._currentBotTurn();
+		const opportunityChanged =
+			previousTurn?.playerId !== nextTurn?.playerId ||
+			previousTurn?.opportunity !== nextTurn?.opportunity;
+		const capacityFreed = this._botRound?.failure === 'busy';
+		if (layoutChanged || opportunityChanged || capacityFreed)
+			this._invalidateBotTurn(opportunityChanged || capacityFreed);
+		queueMicrotask(() => this._startNextResult());
+	}
+
+	private _currentBotTurn(gameData: HanabiGameData = this._gameData): BotTurn | null {
+		const round = this._botRound;
+		const reflecting = (id: string) => round?.pendingResults?.some((p) => p.playerId === id);
+		const pending =
+			round?.version === 2 ? round.pendingClues?.find((p) => !reflecting(p.playerId)) : undefined;
+		const playerId = pending?.playerId ?? gameData.currentPlayerId;
 		if (
-			(this._gameData.stage !== HanabiStage.Playing &&
-				!(result && this._gameData.stage === HanabiStage.Finished)) ||
+			gameData.stage !== HanabiStage.Playing ||
 			!playerId ||
-			this._gameData.players[playerId]?.kind !== 'bot' ||
-			!round
+			gameData.players[playerId]?.kind !== 'bot' ||
+			!round ||
+			reflecting(playerId)
 		)
 			return null;
 		return {
 			playerId,
-			gameData: this._gameData,
+			gameData,
 			round,
 			...(round.version === 2
 				? {
-						opportunity: result
-							? ('result' as const)
-							: playerId === this._gameData.currentPlayerId
-								? ('turn' as const)
-								: ('clue' as const),
-						sourceClueEventIds: result ? [] : (pending?.eventIds ?? []),
-						...(result ? { sourceActionEventId: result.eventId } : {}),
+						opportunity:
+							playerId === gameData.currentPlayerId ? ('turn' as const) : ('clue' as const),
+						sourceClueEventIds: pending?.eventIds ?? [],
 					}
 				: {}),
 		};
 	}
 
-	/** Result reflection is best effort; failed clue responses cannot block another bot's turn. */
+	/** Failed clue responses cannot block another bot's turn. */
 	private _discardFailedOptionalResponse(): boolean {
 		const round = this._botRound;
 		if (!round || round.version !== 2 || !['error', 'exhausted'].includes(round.status))
 			return false;
-		if (round.pendingResult) {
-			Logger.warn(
-				`Skipped failed bot result reflection game=${this.id} player=${round.pendingResult.playerId} code=${round.failure ?? 'transient'}`,
-			);
-			delete round.pendingResult;
-			return true;
-		}
-		const pending = round.pendingClues?.[0];
+
+		const pending = round.pendingClues?.find(
+			(p) => p.playerId === this._currentBotTurn()?.playerId,
+		);
 		const currentPlayerId = this._gameData.currentPlayerId;
 		if (
 			!pending ||
@@ -665,19 +734,13 @@ export default class HanabiGame extends Game {
 		Logger.warn(
 			`Skipped failed optional bot clue response game=${this.id} player=${pending.playerId} code=${round.failure ?? 'transient'}`,
 		);
-		round.pendingClues = round.pendingClues!.slice(1);
+		round.pendingClues = round.pendingClues!.filter((entry) => entry !== pending);
 		return true;
 	}
 
 	private _botOpportunityKey(gameData: HanabiGameData = this._gameData): string {
-		const result = this._botRound?.pendingResult;
-		const pending = this._botRound?.pendingClues?.[0];
-		const playerId = result?.playerId ?? pending?.playerId ?? gameData.currentPlayerId;
-		return JSON.stringify([
-			playerId,
-			result ? 'result' : playerId === gameData.currentPlayerId ? 'turn' : 'clue',
-			result?.eventId ?? pending?.eventIds ?? [],
-		]);
+		const turn = this._currentBotTurn(gameData);
+		return JSON.stringify([turn?.playerId, turn?.opportunity, turn?.sourceClueEventIds ?? []]);
 	}
 
 	private _invalidateBotTurn(advance: boolean): void {
@@ -738,7 +801,9 @@ export default class HanabiGame extends Game {
 			return action ? this._applyPlayerAction(playerId, action) : 'Invalid bot opportunity.';
 		const hand = this._gameData.playerTiles[playerId] ?? [];
 		const opportunity = action ? 'turn' : sourceActionEventId ? 'result' : 'clue';
-		const current = this._currentBotTurn();
+		const current = opportunity === 'result' ? this._resultTurn : this._currentBotTurn();
+		if (opportunity === 'result' && decision && this._gameData.stage === HanabiStage.Finished)
+			decision = { ...decision, arrangement: null };
 		if (
 			this._gameData.players[playerId]?.kind !== 'bot' ||
 			current?.playerId !== playerId ||
@@ -770,15 +835,15 @@ export default class HanabiGame extends Game {
 		const beforePositions = this._gameData.tilePositions;
 		const beforeTranscript = this._transcript;
 		const beforeHistory = round.history;
-		const observedAt = getBotNotepadCheckpoint(beforeHistory);
+		const observedAt = getBotNotepadCheckpoint(
+			opportunity === 'result' ? current.round.history : beforeHistory,
+		);
 		const beforePendingClues = round.pendingClues;
-		const beforePendingResult = round.pendingResult;
 		const sources = current.sourceClueEventIds ?? [];
 		// All checks finish before mutation; these synchronous handlers cannot interleave.
 		// Stage the arrangement without notifications or invalidating its own request.
 		if (positions) this._commitArrangement(playerId, positions, sources.at(-1));
-		if (opportunity === 'result') delete round.pendingResult;
-		else
+		if (opportunity !== 'result')
 			round.pendingClues = round.pendingClues?.filter((pending) => pending.playerId !== playerId);
 		const error = action ? this._applyPlayerAction(playerId, action) : null;
 		if (error) {
@@ -786,7 +851,6 @@ export default class HanabiGame extends Game {
 			this._transcript = beforeTranscript;
 			round.history = beforeHistory;
 			round.pendingClues = beforePendingClues;
-			round.pendingResult = beforePendingResult;
 			return error;
 		}
 		const decisionId = randomUUID();
@@ -815,7 +879,8 @@ export default class HanabiGame extends Game {
 		this._appendActions(createBotDecisionChat(playerId, decisionId, decision.explanation));
 		if (!action) {
 			if (this._transcript !== beforeTranscript) this._recordTranscriptSnapshot();
-			this._invalidateBotTurn(true);
+			if (opportunity === 'result') this._finishResult(this._transcript !== beforeTranscript);
+			else this._invalidateBotTurn(true);
 		}
 		this._broadcastGameData();
 		this._update();
@@ -898,7 +963,11 @@ export default class HanabiGame extends Game {
 			return;
 		const event = round.history.events.at(-1);
 		if (event?.type !== 'play' && event?.type !== 'discard') return;
-		round.pendingResult = { playerId: action.playerId, eventId: event.eventId };
+		round.pendingResults = [
+			...(round.pendingResults ?? []),
+			{ playerId: action.playerId, eventId: event.eventId },
+		];
+		queueMicrotask(() => this._startNextResult());
 	}
 
 	private _debugPlayerId(): string {
@@ -1847,6 +1916,8 @@ export default class HanabiGame extends Game {
 
 		// Generate a new game.
 		this._botCoordinator?.changed();
+		this._resultCoordinator?.changed();
+		this._resultTurn = null;
 		this._botRound = null;
 		this._gameData = generateHanabiGameData({
 			creatorId: this.creatorId,

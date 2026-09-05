@@ -166,6 +166,20 @@ describe('HanabiGameFactory private notepads', () => {
 		);
 	});
 
+	it('validates every queued result against its bot action history', () => {
+		for (const pending of [
+			{ playerId: 'bot:one', eventId: 'missing' },
+			{ playerId: 'bot:two', eventId: 'event-1' },
+			{ playerId: 'human', eventId: 'event-1' },
+		]) {
+			const value = fixture();
+			value.botRound!.pendingResults = [pending];
+			expect(() => hydrate(value)).toThrow(
+				'pending result must reference an unprocessed play or discard',
+			);
+		}
+	});
+
 	it('retains ordinary envelope size limits alongside a valid notepad', () => {
 		const value = fixture();
 		expect(() =>

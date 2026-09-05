@@ -10,11 +10,10 @@ export default function HanabiLivePlayerWorkspace(props: HanabiPlayerWorkspacePr
 	const finished = gameData.finishedReason !== null || gameData.stage === HanabiStage.Finished;
 	const turn = gameData.bots?.turn;
 	const thinking =
-		((!finished && gameData.stage === HanabiStage.Playing) ||
-			(gameData.stage === HanabiStage.Finished && turn?.opportunity === 'result')) &&
-		(gameData.currentPlayerId === player.id ||
-			turn?.opportunity === 'clue' ||
-			turn?.opportunity === 'result') &&
+		!finished &&
+		gameData.stage === HanabiStage.Playing &&
+		turn?.opportunity !== 'result' &&
+		(gameData.currentPlayerId === player.id || turn?.opportunity === 'clue') &&
 		player.kind === 'bot' &&
 		turn?.playerId === player.id &&
 		turn.status === 'thinking';
@@ -26,13 +25,7 @@ export default function HanabiLivePlayerWorkspace(props: HanabiPlayerWorkspacePr
 			finished={finished}
 			player={player}
 			thinking={thinking}
-			thinkingLabel={
-				turn?.opportunity === 'result'
-					? 'Considering result…'
-					: turn?.opportunity === 'clue'
-						? 'Considering clue…'
-						: 'Thinking…'
-			}
+			thinkingLabel={turn?.opportunity === 'clue' ? 'Considering clue…' : 'Thinking…'}
 		/>
 	);
 }

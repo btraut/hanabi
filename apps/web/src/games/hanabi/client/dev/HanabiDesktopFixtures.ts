@@ -486,7 +486,7 @@ export function getHanabiDesktopFixtures(): Record<HanabiDesktopFixtureName, Han
 		'bot-result': {
 			code: 'BOTRESULT',
 			description:
-				'A bot considers its completed action while the next player keeps their turn controls.',
+				'A bot silently considers its completed action while the next player keeps their turn controls.',
 			gameData: {
 				...standard,
 				currentPlayerId: 'player-1',

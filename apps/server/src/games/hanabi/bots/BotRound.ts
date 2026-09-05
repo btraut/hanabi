@@ -29,6 +29,7 @@ export interface BotRound {
 	lastAttemptAt: number;
 	requiredTokens?: number;
 	pendingResult?: { playerId: string; eventId: string };
+	pendingResults?: Array<{ playerId: string; eventId: string }>;
 	pendingClues?: Array<{ playerId: string; eventIds: string[] }>;
 	notepads?: Record<string, BotNotepad>;
 }
@@ -54,20 +55,36 @@ export function isBotRound(value: unknown): value is BotRound {
 	if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
 	const round = value as Partial<BotRound>;
 	const policy = round.policy;
+	const isPendingResult = (pending: unknown): pending is NonNullable<BotRound['pendingResult']> => {
+		if (!pending || typeof pending !== 'object' || Array.isArray(pending)) return false;
+		const result = pending as Partial<NonNullable<BotRound['pendingResult']>>;
+		return (
+			typeof result.playerId === 'string' &&
+			result.playerId.length > 0 &&
+			typeof result.eventId === 'string' &&
+			result.eventId.length > 0
+		);
+	};
 	return (
 		(round.version === 1 || round.version === 2) &&
 		typeof round.roundId === 'string' &&
 		isBotPolicy(policy) &&
 		isBotHistory(round.history) &&
+		(round.pendingResult === undefined || round.pendingResults === undefined) &&
 		(round.pendingResult === undefined ||
 			(round.version === 2 &&
 				policy.reflectionAfterAction === true &&
-				round.pendingResult !== null &&
-				typeof round.pendingResult === 'object' &&
-				typeof round.pendingResult.playerId === 'string' &&
-				round.pendingResult.playerId.length > 0 &&
-				typeof round.pendingResult.eventId === 'string' &&
-				round.pendingResult.eventId.length > 0)) &&
+				isPendingResult(round.pendingResult))) &&
+		(round.pendingResults === undefined ||
+			(round.version === 2 &&
+				policy.reflectionAfterAction === true &&
+				Array.isArray(round.pendingResults) &&
+				round.pendingResults.length <= 5 &&
+				round.pendingResults.every(isPendingResult) &&
+				new Set(round.pendingResults.map((pending) => pending.playerId)).size ===
+					round.pendingResults.length &&
+				new Set(round.pendingResults.map((pending) => pending.eventId)).size ===
+					round.pendingResults.length)) &&
 		(round.notepads === undefined ||
 			(policy.notepadVersion === 1 && isBotNotepads(round.notepads))) &&
 		(round.version === 2
