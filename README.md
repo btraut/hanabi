@@ -2,6 +2,11 @@
 
 An online multiplayer Hanabi game.
 
+The Activity feed combines moves and chat in chronological order, with compact game events and
+distinct chat bubbles. Clues name the hinted color or number and the number of affected tiles.
+The feed scrolls within the available window height and follows new activity while pinned to the
+bottom; scrolling up preserves your reading position. On phones, Activity opens in a drawer.
+
 ## Development Environment
 
 This project uses:

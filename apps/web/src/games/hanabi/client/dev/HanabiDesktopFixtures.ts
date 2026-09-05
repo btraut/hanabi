@@ -349,13 +349,75 @@ export function getHanabiDesktopFixtures(): Record<HanabiDesktopFixtureName, Han
 			description: 'Gameplay and chat actions ready for the desktop activity rail.',
 			gameData: {
 				...standard,
-				actions: [
-					...standard.actions,
-					...standard.actions.map((action): HanabiGameAction => ({
-						...action,
-						id: `${action.id}-repeat`,
-					})),
-				],
+				players: {
+					...standard.players,
+					'player-2': { ...standard.players['player-2'], name: 'BB-8' },
+				},
+				actions: (
+					[
+						{
+							id: 'feed-five',
+							playerId: 'player-2',
+							recipientId: 'player-1',
+							number: 5,
+							tiles: standard.playerTiles['player-1']
+								.map((id) => standard.tiles[id])
+								.filter((tile) => tile.number === 5),
+							type: HanabiGameActionType.GiveNumberClue,
+						},
+						{
+							id: 'feed-save',
+							playerId: 'player-2',
+							message: 'The 5 is for later. Keep it out of the discard queue.',
+							type: HanabiGameActionType.Chat,
+						},
+						{
+							id: 'feed-discard',
+							playerId: 'player-1',
+							tile: { id: 'feed-green-four', color: 'green', number: 4 },
+							type: HanabiGameActionType.Discard,
+						},
+						{
+							id: 'feed-thanks',
+							playerId: 'player-1',
+							message: "Got it. I'll keep the 5.",
+							type: HanabiGameActionType.Chat,
+						},
+						{
+							id: 'feed-play',
+							playerId: 'player-2',
+							tile: { id: 'feed-red-three', color: 'red', number: 3 },
+							valid: true,
+							remainingLives: 2,
+							type: HanabiGameActionType.Play,
+						},
+						{
+							id: 'feed-progress',
+							playerId: 'player-2',
+							message: 'Red is up to 3. We still have two lives.',
+							type: HanabiGameActionType.Chat,
+						},
+						{
+							id: 'feed-red',
+							playerId: 'player-2',
+							recipientId: 'player-1',
+							color: 'red',
+							tiles: standard.playerTiles['player-1']
+								.map((id) => standard.tiles[id])
+								.filter((tile) => tile.color === 'red'),
+							type: HanabiGameActionType.GiveColorClue,
+						},
+						{
+							id: 'feed-explain',
+							playerId: 'player-2',
+							message: 'That red clue marks your saved card.',
+							type: HanabiGameActionType.Chat,
+						},
+					] satisfies HanabiGameAction[]
+				).map((action, index) => ({
+					...action,
+					createdAt: new Date(Date.now() - (8 - index) * 60_000).toISOString(),
+				})),
 			},
 			name: 'activity',
 			userId: 'player-1',

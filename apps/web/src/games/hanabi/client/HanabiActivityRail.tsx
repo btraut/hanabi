@@ -1,7 +1,4 @@
-import {
-	selectChatTranscript,
-	selectGameplayHistory,
-} from '~/games/hanabi/client/HanabiActionSelectors';
+import { selectChatTranscript } from '~/games/hanabi/client/HanabiActionSelectors';
 import HanabiChatInput from '~/games/hanabi/client/HanabiChatInput';
 import { useHanabiHighlightContext } from '~/games/hanabi/client/HanabiHighlightContext';
 import { getHanabiActionHighlight } from '~/games/hanabi/client/useActionHighlighter';
@@ -14,10 +11,8 @@ import X from '~/games/hanabi/client/icons/X';
 import { HanabiGameAction, HanabiGameActionType, HanabiGameData } from '@hanabi/shared';
 import classNames from 'classnames';
 import FocusLock from 'react-focus-lock';
-import { KeyboardEvent, ReactNode, useCallback, useEffect, useId, useRef, useState } from 'react';
+import { ReactNode, useCallback, useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-
-type ActivityTab = 'chat' | 'history';
 
 interface Props {
 	composer?: ReactNode;
@@ -28,14 +23,18 @@ interface Props {
 
 export function countIncomingUnreadChat(
 	actions: readonly HanabiGameAction[],
-	previousActionCount: number,
+	previousActionId: string | null,
 	userId: string,
 	chatIsOpen: boolean,
 ): number {
-	if (chatIsOpen || previousActionCount >= actions.length) return 0;
+	if (chatIsOpen) return 0;
 
 	return actions
-		.slice(previousActionCount)
+		.slice(
+			previousActionId === null
+				? 0
+				: actions.findIndex((action) => action.id === previousActionId) + 1,
+		)
 		.filter((action) => action.type === HanabiGameActionType.Chat && action.playerId !== userId)
 		.length;
 }
@@ -47,71 +46,69 @@ export default function HanabiActivityRail({
 	userId,
 }: Props): JSX.Element {
 	const { highlightAction, highlightedAction } = useHanabiHighlightContext();
-	const [activeTab, setActiveTab] = useState<ActivityTab>('history');
 	const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
 	const [unreadChat, setUnreadChat] = useState(
 		() =>
 			selectChatTranscript(gameData.actions).filter((action) => action.playerId !== userId).length,
 	);
-	const [chatIsNearBottom, setChatIsNearBottom] = useState(true);
-	const [hasNewMessagesBelow, setHasNewMessagesBelow] = useState(false);
+	const [feedIsNearBottom, setFeedIsNearBottom] = useState(true);
+	const [hasNewActivityBelow, setHasNewActivityBelow] = useState(false);
 	const usesActivityDrawer = useUsesActivityDrawer();
-	const previousActionCount = useRef(gameData.actions.length);
-	const previousChatCount = useRef(selectChatTranscript(gameData.actions).length);
-	const historyTabRef = useRef<HTMLButtonElement>(null);
-	const chatTabRef = useRef<HTMLButtonElement>(null);
+	const previousActionId = useRef(gameData.actions.at(-1)?.id ?? null);
 	const mobileTriggerRef = useRef<HTMLButtonElement>(null);
 	const mobileCloseRef = useRef<HTMLButtonElement>(null);
-	const chatScrollerRef = useRef<HTMLDivElement>(null);
-	const tabId = useId();
-	const history = selectGameplayHistory(gameData.actions);
-	const chat = selectChatTranscript(gameData.actions);
+	const feedScrollerRef = useRef<HTMLDivElement>(null);
+	const feedContentRef = useRef<HTMLDivElement>(null);
+	const headingId = useId();
 	const userCanChat = Boolean(gameData.players[userId]);
 
-	const scrollChatToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
-		const scroller = chatScrollerRef.current;
+	const scrollFeedToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
+		const scroller = feedScrollerRef.current;
 		if (!scroller) return;
-		scroller.scrollTo({ behavior, top: scroller.scrollHeight });
-		setChatIsNearBottom(true);
-		setHasNewMessagesBelow(false);
+		scroller.scrollTo({ behavior, top: scroller.scrollHeight - scroller.clientHeight });
+		setFeedIsNearBottom(true);
+		setHasNewActivityBelow(false);
 	}, []);
 
 	useEffect(() => {
-		const chatIsOpen = activeTab === 'chat' && (!usesActivityDrawer || mobileSheetOpen);
+		const chatIsOpen = !usesActivityDrawer || mobileSheetOpen;
 		const incoming = countIncomingUnreadChat(
 			gameData.actions,
-			previousActionCount.current,
+			previousActionId.current,
 			userId,
 			chatIsOpen,
 		);
-		previousActionCount.current = gameData.actions.length;
+		const latestActionId = gameData.actions.at(-1)?.id ?? null;
+		const receivedNewActivity =
+			latestActionId !== null && latestActionId !== previousActionId.current;
+		previousActionId.current = latestActionId;
 
 		if (chatIsOpen) {
 			setUnreadChat(0);
+			if (receivedNewActivity && !feedIsNearBottom) setHasNewActivityBelow(true);
 		} else if (incoming) {
 			setUnreadChat((count) => count + incoming);
 		}
-	}, [activeTab, gameData.actions, mobileSheetOpen, userId, usesActivityDrawer]);
+	}, [gameData.actions, feedIsNearBottom, mobileSheetOpen, userId, usesActivityDrawer]);
 
 	useEffect(() => {
-		const receivedNewChat = chat.length > previousChatCount.current;
-		previousChatCount.current = chat.length;
-		if (!receivedNewChat || activeTab !== 'chat' || (usesActivityDrawer && !mobileSheetOpen))
-			return;
+		const scroller = feedScrollerRef.current;
+		const messages = feedContentRef.current;
+		if (!scroller || !messages || (usesActivityDrawer && !mobileSheetOpen)) return;
 
-		if (chatIsNearBottom) {
-			requestAnimationFrame(() => scrollChatToBottom());
-		} else {
-			setHasNewMessagesBelow(true);
-		}
-	}, [
-		activeTab,
-		chat.length,
-		chatIsNearBottom,
-		mobileSheetOpen,
-		scrollChatToBottom,
-		usesActivityDrawer,
-	]);
+		scrollFeedToBottom('instant');
+		let hadOverflow = scroller.scrollHeight > scroller.clientHeight;
+		const observer = new ResizeObserver(() => {
+			const hasOverflow = scroller.scrollHeight > scroller.clientHeight;
+			// Establish the end snap when a short conversation first becomes scrollable.
+			// Subsequent growth stays pinned through CSS re-snapping, without scroll tracking.
+			if (!hadOverflow && hasOverflow) scrollFeedToBottom('instant');
+			hadOverflow = hasOverflow;
+		});
+		observer.observe(messages);
+		observer.observe(scroller);
+		return () => observer.disconnect();
+	}, [mobileSheetOpen, scrollFeedToBottom, usesActivityDrawer]);
 
 	useEffect(() => {
 		if (!mobileSheetOpen) return;
@@ -139,57 +136,26 @@ export default function HanabiActivityRail({
 		if (!usesActivityDrawer) setMobileSheetOpen(false);
 	}, [usesActivityDrawer]);
 
-	const activateTab = (tab: ActivityTab): void => {
-		setActiveTab(tab);
-		if (tab === 'chat') {
-			setUnreadChat(0);
-			requestAnimationFrame(() => scrollChatToBottom('auto'));
-		}
-	};
-
-	const handleTabKeyDown = (event: KeyboardEvent<HTMLButtonElement>): void => {
-		if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
-		event.preventDefault();
-		const nextTab = event.key === 'ArrowRight' || event.key === 'End' ? 'chat' : 'history';
-		activateTab(nextTab);
-		(nextTab === 'chat' ? chatTabRef : historyTabRef).current?.focus();
-	};
-
-	const handleChatScroll = (): void => {
-		const scroller = chatScrollerRef.current;
+	const handleFeedScroll = (): void => {
+		const scroller = feedScrollerRef.current;
 		if (!scroller) return;
 		const nearBottom = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 56;
-		setChatIsNearBottom(nearBottom);
-		if (nearBottom) setHasNewMessagesBelow(false);
+		setFeedIsNearBottom(nearBottom);
+		if (nearBottom) setHasNewActivityBelow(false);
 	};
 
-	const renderActivityAction = (
-		action: HanabiGameAction,
-		variant: 'chat' | 'history',
-		timeLabel?: string,
-	): ReactNode =>
-		renderAction ? (
-			renderAction(action)
-		) : variant === 'chat' && action.type === HanabiGameActionType.Chat ? (
-			<HanabiChatMessage action={action} gameData={gameData} userId={userId} />
-		) : (
-			<HanabiDesktopActivityAction
-				action={action}
-				compact={false}
-				gameData={gameData}
-				timeLabel={timeLabel}
-				userId={userId}
-			/>
-		);
-
-	const activityPanel = (mobile: boolean): JSX.Element => {
-		const tabs: ActivityTab[] = mobile ? ['chat', 'history'] : ['history', 'chat'];
-		return (
-			<section
-				className={classNames('hanabi-panel hanabi-activity-panel', {
-					'hanabi-mobile-sheet-panel': mobile,
-				})}
-			>
+	const activityPanel = (mobile: boolean): JSX.Element => (
+		<section
+			aria-labelledby={headingId}
+			className={classNames('hanabi-panel hanabi-activity-panel', {
+				'hanabi-mobile-sheet-panel': mobile,
+			})}
+		>
+			<header className="hanabi-feed-header">
+				<div>
+					<h2 id={headingId}>Activity</h2>
+					<p>Moves &amp; messages</p>
+				</div>
 				{mobile && (
 					<button
 						aria-label="Close activity"
@@ -201,70 +167,43 @@ export default function HanabiActivityRail({
 						<X color="#eeeae2" size={18} />
 					</button>
 				)}
-				<div
-					aria-label="Activity views"
-					className={classNames('hanabi-activity-tabs border-b border-hanabi-border', {
-						'hanabi-mobile-activity-tabs': mobile,
-					})}
-					role="tablist"
-				>
-					{tabs.map((tab) => {
-						const selected = activeTab === tab;
-						const unread = tab === 'chat' ? unreadChat : 0;
-						return (
-							<button
-								aria-controls={`${tabId}-${mobile ? 'mobile-' : ''}${tab}-panel`}
-								aria-selected={selected}
-								className={classNames(
-									'hanabi-activity-tab hanabi-focus-ring relative flex items-center justify-center gap-2 font-semibold capitalize',
-									selected ? 'text-hanabi-coral' : 'text-hanabi-text-muted hover:text-hanabi-text',
-								)}
-								id={`${tabId}-${mobile ? 'mobile-' : ''}${tab}-tab`}
-								key={tab}
-								onClick={() => activateTab(tab)}
-								onKeyDown={handleTabKeyDown}
-								ref={tab === 'chat' ? chatTabRef : historyTabRef}
-								role="tab"
-								tabIndex={selected ? 0 : -1}
-								type="button"
-							>
-								{tab}
-								{selected && <span aria-hidden="true" className="hanabi-activity-tab-indicator" />}
-								{unread > 0 && (
-									<span
-										aria-label={`${unread} unread chat ${unread === 1 ? 'message' : 'messages'}`}
-										className="hanabi-unread-pulse min-w-6 rounded-full bg-hanabi-text-muted/35 px-1.5 py-0.5 text-center text-[11px] leading-5 text-hanabi-text"
-									>
-										{unread}
-									</span>
-								)}
-							</button>
-						);
-					})}
-				</div>
-
-				<div
-					aria-labelledby={`${tabId}-${mobile ? 'mobile-' : ''}history-tab`}
-					className="hanabi-activity-transcript"
-					hidden={activeTab !== 'history'}
-					id={`${tabId}-${mobile ? 'mobile-' : ''}history-panel`}
-					role="tabpanel"
-					tabIndex={0}
-				>
-					{history.length ? (
-						history.map((action, index) => {
+			</header>
+			<div
+				aria-label="Moves and messages"
+				className="hanabi-feed-transcript"
+				onScroll={handleFeedScroll}
+				ref={feedScrollerRef}
+				role="region"
+				tabIndex={0}
+			>
+				<div className="hanabi-feed-content" ref={feedContentRef}>
+					{gameData.actions.length ? (
+						gameData.actions.map((action) => {
+							if (action.type === HanabiGameActionType.Chat) {
+								return (
+									<div className="hanabi-feed-chat" key={action.id}>
+										{renderAction ? (
+											renderAction(action)
+										) : (
+											<HanabiChatMessage action={action} gameData={gameData} userId={userId} />
+										)}
+									</div>
+								);
+							}
 							const actionHighlight = getHanabiActionHighlight(action);
 							const thisActionHighlighted = highlightedAction === action.id;
-							const content = renderActivityAction(
-								action,
-								'history',
-								formatRelativeTime(action.createdAt, index),
+							const content = renderAction ? (
+								renderAction(action)
+							) : (
+								<HanabiDesktopActivityAction
+									action={action}
+									gameData={gameData}
+									timeLabel={action.createdAt ? formatChatTime(action.createdAt) : undefined}
+									userId={userId}
+								/>
 							);
 							return (
-								<div
-									className="border-b border-hanabi-border/70 text-sm text-hanabi-text last:border-b-0"
-									key={action.id}
-								>
+								<div className="hanabi-feed-event" key={action.id}>
 									{actionHighlight ? (
 										<button
 											aria-pressed={thisActionHighlighted}
@@ -288,55 +227,31 @@ export default function HanabiActivityRail({
 							);
 						})
 					) : (
-						<p className="p-5 text-sm text-hanabi-text-muted">Moves will appear here</p>
-					)}
-				</div>
-
-				<div
-					aria-labelledby={`${tabId}-${mobile ? 'mobile-' : ''}chat-tab`}
-					className="hanabi-chat-tab-panel"
-					hidden={activeTab !== 'chat'}
-					id={`${tabId}-${mobile ? 'mobile-' : ''}chat-panel`}
-					role="tabpanel"
-				>
-					<div
-						className="hanabi-chat-transcript"
-						onScroll={handleChatScroll}
-						ref={chatScrollerRef}
-						tabIndex={0}
-					>
-						{chat.length ? (
-							chat.map((action) => (
-								<div className="hanabi-chat-message-wrap" key={action.id}>
-									{renderActivityAction(action, 'chat')}
-								</div>
-							))
-						) : (
-							<div className="hanabi-chat-empty">
-								<ChatBubble size={28} />
-								<p>No messages yet</p>
-								<span>Break the suspicious silence.</span>
-							</div>
-						)}
-						{hasNewMessagesBelow && (
-							<button
-								className="hanabi-new-message-button"
-								onClick={() => scrollChatToBottom()}
-								type="button"
-							>
-								New messages
-							</button>
-						)}
-					</div>
-					{userCanChat && (
-						<div className="hanabi-chat-composer">
-							{composer === undefined ? <HanabiChatInput variant="desktop" /> : composer}
+						<div className="hanabi-chat-empty">
+							<ChatBubble size={28} />
+							<p>The table is quiet</p>
+							<span>Moves and messages will appear here.</span>
 						</div>
 					)}
 				</div>
-			</section>
-		);
-	};
+				{hasNewActivityBelow && (
+					<button
+						className="hanabi-new-message-button"
+						onClick={() => scrollFeedToBottom()}
+						type="button"
+					>
+						New activity ↓
+					</button>
+				)}
+				<div aria-hidden="true" className="hanabi-feed-end" key="feed-end" />
+			</div>
+			{userCanChat && (
+				<div className="hanabi-chat-composer">
+					{composer === undefined ? <HanabiChatInput variant="desktop" /> : composer}
+				</div>
+			)}
+		</section>
+	);
 
 	if (usesActivityDrawer) {
 		return createPortal(
@@ -345,9 +260,11 @@ export default function HanabiActivityRail({
 					aria-hidden={mobileSheetOpen}
 					aria-expanded={mobileSheetOpen}
 					aria-haspopup="dialog"
+					aria-label={
+						unreadChat ? `Open activity, ${unreadChat} unread chat messages` : 'Open activity'
+					}
 					className="hanabi-mobile-chat-trigger hanabi-focus-ring"
 					onClick={() => {
-						activateTab('chat');
 						setMobileSheetOpen(true);
 					}}
 					ref={mobileTriggerRef}
@@ -355,7 +272,7 @@ export default function HanabiActivityRail({
 					type="button"
 				>
 					<ChatBubble size={22} />
-					<span className="hanabi-mobile-chat-trigger-label">Chat</span>
+					<span className="hanabi-mobile-chat-trigger-label">Activity</span>
 					{unreadChat > 0 && <span className="hanabi-mobile-chat-badge">{unreadChat}</span>}
 				</button>
 				<button
@@ -382,10 +299,7 @@ export default function HanabiActivityRail({
 	}
 
 	return (
-		<aside
-			aria-label="Game activity"
-			className="hanabi-activity-rail sticky top-4 flex h-[calc(100dvh-118px)] min-h-[500px] flex-col"
-		>
+		<aside aria-label="Game activity" className="hanabi-activity-rail">
 			{activityPanel(false)}
 		</aside>
 	);
@@ -410,14 +324,16 @@ function HanabiChatMessage({
 				{(player?.name ?? 'P').charAt(0).toUpperCase()}
 			</span>
 			<div className="min-w-0">
-				<p className="hanabi-chat-author" style={{ color: accent }}>
-					{name}
-				</p>
+				<div className="hanabi-chat-meta">
+					<p className="hanabi-chat-author" style={{ color: accent }}>
+						{name}
+					</p>
+					{action.createdAt && (
+						<time className="hanabi-chat-time">{formatChatTime(action.createdAt)}</time>
+					)}
+				</div>
 				<p className="hanabi-chat-bubble">{action.message}</p>
 			</div>
-			{action.createdAt && (
-				<time className="hanabi-chat-time">{formatChatTime(action.createdAt)}</time>
-			)}
 		</div>
 	);
 }
@@ -435,13 +351,11 @@ const ACTION_ACCENTS: Record<string, string> = {
 
 function HanabiDesktopActivityAction({
 	action,
-	compact,
 	gameData,
 	timeLabel,
 	userId,
 }: {
 	action: HanabiGameAction;
-	compact: boolean;
 	gameData: HanabiGameData;
 	timeLabel?: string;
 	userId: string;
@@ -458,13 +372,13 @@ function HanabiDesktopActivityAction({
 		: HANABI_PLAYER_ACCENTS[0];
 	let actionAccent = playerAccent;
 	let summary: ReactNode = 'Game updated';
-	let detail: string | null = null;
+	let detail: ReactNode = null;
 
 	if (action.type === HanabiGameActionType.Play) {
 		actionAccent = ACTION_ACCENTS[action.tile.color] ?? playerAccent;
 		summary = (
 			<>
-				Played{' '}
+				played{' '}
 				<span style={{ color: actionAccent }}>
 					{capitalize(action.tile.color)} {action.tile.number}
 				</span>
@@ -475,7 +389,7 @@ function HanabiDesktopActivityAction({
 		actionAccent = ACTION_ACCENTS[action.tile.color] ?? playerAccent;
 		summary = (
 			<>
-				Discarded{' '}
+				discarded{' '}
 				<span style={{ color: actionAccent }}>
 					{capitalize(action.tile.color)} {action.tile.number}
 				</span>
@@ -486,15 +400,26 @@ function HanabiDesktopActivityAction({
 		action.type === HanabiGameActionType.GiveNumberClue
 	) {
 		const recipient = gameData.players[action.recipientId];
-		summary = `Gave a clue to ${recipient?.name ?? 'another player'}`;
-		actionAccent =
+		summary = `clued ${recipient?.name ?? 'another player'}`;
+		const clueLabel =
 			action.type === HanabiGameActionType.GiveColorClue
-				? (ACTION_ACCENTS[action.color ?? ''] ?? playerAccent)
-				: ACTION_ACCENTS.yellow;
-		detail =
+				? `${capitalize(action.color ?? 'color')} clue`
+				: `Number ${action.number} clue`;
+		const clueColor =
 			action.type === HanabiGameActionType.GiveColorClue
-				? `${capitalize(action.color ?? 'color')}: ${action.tiles.length}`
-				: `Number: ${action.number}`;
+				? ACTION_ACCENTS[action.color ?? '']
+				: undefined;
+		detail = (
+			<>
+				<span className="font-medium text-hanabi-text" style={{ color: clueColor }}>
+					{clueLabel}
+				</span>
+				<span className="text-hanabi-text-muted">
+					{' · '}
+					{action.tiles.length} {action.tiles.length === 1 ? 'tile' : 'tiles'}
+				</span>
+			</>
+		);
 	} else if (action.type === HanabiGameActionType.GameStarted) {
 		summary = `The game began with ${player?.name ?? 'a player'} first`;
 	} else if (action.type === HanabiGameActionType.GameFinished) {
@@ -506,60 +431,20 @@ function HanabiDesktopActivityAction({
 	} else if (action.type === HanabiGameActionType.Chat) {
 		summary = action.message;
 	}
-	const ringAccent =
-		action.type === HanabiGameActionType.Discard && action.tile.color === 'blue'
-			? playerAccent
-			: actionAccent;
-
 	return (
-		<div
-			className={classNames(
-				'flex min-w-0',
-				compact ? 'items-center gap-5' : 'gap-[17px] py-[17px] pl-[31px] pr-8',
-			)}
-		>
-			<span
-				aria-hidden="true"
-				className={classNames(
-					'shrink-0 rounded-full border-2 shadow-[inset_0_0_0_3px_rgb(10_30_51_/_95%)]',
-					compact ? '-mt-1 size-9 bg-current/55' : 'mt-0.5 size-9',
-				)}
-				style={{ borderColor: ringAccent, color: ringAccent }}
-			/>
-			<div className="min-w-0 flex-1">
-				{compact ? (
-					<p className="text-[17px] leading-6 text-hanabi-text">
-						{action.type === HanabiGameActionType.GameStarted ? (
-							summary
-						) : (
-							<>
-								<span className="font-medium text-hanabi-text">{player?.name ?? 'Game'}</span>{' '}
-								{lowerFirst(summary)}
-							</>
-						)}
-					</p>
-				) : (
-					<>
-						<p
-							className="truncate text-[18px] font-medium leading-[22px]"
-							style={{ color: playerAccent }}
-						>
-							{player?.name ?? 'Game'}
-						</p>
-						<p className="text-[17px] leading-[22px] text-hanabi-text">{summary}</p>
-					</>
-				)}
-				{detail && (
-					<p className="text-[17px] font-medium leading-[22px]" style={{ color: actionAccent }}>
-						{detail}
-					</p>
-				)}
+		<div className="hanabi-feed-event-content">
+			<div className="min-w-0 flex-1 break-words">
+				<p className="hanabi-feed-event-summary">
+					{'playerId' in action && (
+						<>
+							<span className="font-medium text-hanabi-text">{player?.name ?? 'Player'}</span>{' '}
+						</>
+					)}
+					{summary}
+				</p>
+				{detail && <p className="hanabi-feed-event-detail">{detail}</p>}
 			</div>
-			{timeLabel && (
-				<span className="shrink-0 pt-1 text-[14px] tabular-nums text-hanabi-text-muted">
-					{timeLabel}
-				</span>
-			)}
+			{timeLabel && <span className="hanabi-chat-time">{timeLabel}</span>}
 		</div>
 	);
 }
@@ -582,22 +467,6 @@ function useUsesActivityDrawer(): boolean {
 
 function capitalize(value: string): string {
 	return value.charAt(0).toUpperCase() + value.slice(1);
-}
-
-function lowerFirst(value: ReactNode): ReactNode {
-	return typeof value === 'string' ? value.charAt(0).toLowerCase() + value.slice(1) : value;
-}
-
-function formatRelativeTime(
-	createdAt: string | undefined,
-	_fallbackIndex: number,
-): string | undefined {
-	if (!createdAt) return undefined;
-	const elapsedMinutes = Math.max(
-		1,
-		Math.round((Date.now() - new Date(createdAt).getTime()) / 60_000),
-	);
-	return `${elapsedMinutes}m ago`;
 }
 
 function formatChatTime(createdAt: string): string {

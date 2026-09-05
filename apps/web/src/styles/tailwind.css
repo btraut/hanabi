@@ -717,6 +717,16 @@ body {
 	filter: drop-shadow(0 2px 0 rgb(86 22 28 / 82%)) drop-shadow(0 5px 6px rgb(0 0 0 / 38%));
 }
 
+/* Header (70), board padding (20), status (86), row gap (20), bottom gutter (20). */
+.hanabi-activity-rail {
+	position: sticky;
+	top: 16px;
+	display: flex;
+	height: max(0px, calc(100dvh - 216px));
+	min-height: 0;
+	flex-direction: column;
+}
+
 .hanabi-activity-panel {
 	display: flex;
 	min-height: 0;
@@ -726,30 +736,30 @@ body {
 	border-radius: 8px;
 }
 
-.hanabi-activity-tabs {
-	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
+.hanabi-feed-header {
+	display: flex;
+	min-height: 76px;
 	flex: none;
-	padding-inline: 26px;
+	align-items: center;
+	justify-content: space-between;
+	padding: 14px 20px;
+	border-bottom: 1px solid var(--color-hanabi-border);
 }
 
-.hanabi-activity-tab {
-	height: 69px;
-	font-size: 21px;
+.hanabi-feed-header h2 {
+	color: var(--color-hanabi-text);
+	font-size: 23px;
+	font-weight: 600;
+	line-height: 1.1;
 }
 
-.hanabi-activity-tab-indicator {
-	position: absolute;
-	right: 12px;
-	bottom: 0;
-	left: 12px;
-	height: 3px;
-	border-radius: 999px 999px 0 0;
-	background: var(--color-hanabi-coral);
+.hanabi-feed-header p {
+	margin-top: 4px;
+	color: var(--color-hanabi-text-muted);
+	font-size: 14px;
 }
 
-.hanabi-activity-transcript,
-.hanabi-chat-transcript {
+.hanabi-feed-transcript {
 	min-height: 0;
 	flex: 1;
 	overflow-y: auto;
@@ -766,6 +776,10 @@ body {
 		box-shadow 150ms ease;
 }
 
+.hanabi-history-action.hanabi-tile-emphasis-number {
+	--hanabi-emphasis-rgb: 238 233 223;
+}
+
 .hanabi-history-action:hover {
 	background: rgb(255 255 255 / 3%);
 }
@@ -780,37 +794,80 @@ body {
 	box-shadow: inset 3px 0 0 rgb(var(--hanabi-emphasis-rgb));
 }
 
-.hanabi-chat-tab-panel {
-	display: flex;
-	min-height: 0;
-	flex: 1;
-	flex-direction: column;
-}
-
-.hanabi-activity-panel [hidden] {
-	display: none;
-}
-
-.hanabi-chat-transcript {
+.hanabi-feed-transcript {
+	--chat-bottom-space: 24px;
 	position: relative;
-	padding: 20px 18px 24px;
+	display: flex;
+	flex-direction: column;
+	padding: 20px 18px var(--chat-bottom-space);
+	scroll-padding-bottom: var(--chat-bottom-space);
+	scroll-snap-type: y proximity;
 }
 
-.hanabi-chat-message-wrap + .hanabi-chat-message-wrap {
-	margin-top: 20px;
+/* A stable end target keeps chat pinned through content growth until the user scrolls away.
+   https://www.w3.org/TR/css-scroll-snap-1/#re-snap */
+.hanabi-feed-transcript > * {
+	flex: none;
+}
+
+.hanabi-feed-end {
+	height: 1px;
+	margin-top: auto;
+	scroll-snap-align: end;
+}
+
+.hanabi-feed-chat {
+	margin-block: 14px;
+}
+
+.hanabi-feed-chat:first-child {
+	margin-top: 0;
+}
+
+.hanabi-feed-chat:last-child {
+	margin-bottom: 0;
+}
+
+.hanabi-feed-event {
+	margin-left: 38px;
+	border-left: 1px solid rgb(103 126 156 / 38%);
+}
+
+.hanabi-feed-event + .hanabi-feed-event {
+	margin-top: 4px;
+}
+
+.hanabi-feed-event-content {
+	display: flex;
+	min-width: 0;
+	align-items: baseline;
+	gap: 10px;
+	padding: 8px 0 8px 10px;
+}
+
+.hanabi-feed-event-summary {
+	color: var(--color-hanabi-text-muted);
+	font-size: 15px;
+	line-height: 20px;
+}
+
+.hanabi-feed-event-detail {
+	margin-top: 3px;
+	font-size: 15px;
+	line-height: 20px;
 }
 
 .hanabi-chat-message {
 	display: grid;
-	grid-template-columns: 42px minmax(0, 1fr) auto;
+	grid-template-columns: 28px minmax(0, 1fr);
 	align-items: start;
-	gap: 4px 12px;
+	gap: 10px;
 }
 
 .hanabi-chat-avatar {
 	display: grid;
-	width: 42px;
-	height: 42px;
+	width: 28px;
+	height: 28px;
 	grid-row: 1 / span 2;
 	place-items: center;
 	border: 1px solid rgb(255 255 255 / 24%);
@@ -819,14 +876,21 @@ body {
 		inset 0 1px 0 rgb(255 255 255 / 20%),
 		0 6px 16px rgb(0 0 0 / 24%);
 	color: var(--color-hanabi-text);
-	font-size: 17px;
+	font-size: 13px;
 	font-weight: 600;
 }
 
+.hanabi-chat-meta {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 12px;
+	margin-bottom: 6px;
+}
+
 .hanabi-chat-author {
-	margin-bottom: 5px;
-	font-size: 17px;
-	font-weight: 650;
+	font-size: 16px;
+	font-weight: 600;
 	line-height: 1.15;
 }
 
@@ -848,9 +912,7 @@ body {
 }
 
 .hanabi-chat-time {
-	grid-column: 3;
-	grid-row: 1 / span 2;
-	padding-top: 1px;
+	flex: none;
 	color: var(--color-hanabi-text-muted);
 	font-size: 12px;
 	font-variant-numeric: tabular-nums;
@@ -1076,7 +1138,7 @@ body {
 
 	.hanabi-activity-rail {
 		position: static;
-		height: clamp(520px, calc(100dvh - 96px), 700px);
+		height: min(700px, calc(100dvh - 32px));
 		min-height: 0;
 	}
 }
@@ -1412,37 +1474,24 @@ body {
 		color: var(--color-hanabi-text);
 	}
 
-	.hanabi-mobile-activity-tabs {
-		height: 88px;
-		grid-template-columns: repeat(2, max-content);
-		justify-content: start;
-		gap: 30px;
-		padding: 18px 78px 0 24px;
+	.hanabi-mobile-sheet .hanabi-feed-header {
+		min-height: 86px;
+		padding: 18px 78px 14px 22px;
 	}
 
-	.hanabi-mobile-activity-tabs .hanabi-activity-tab {
-		height: 69px;
-		justify-content: flex-start;
-	}
-
-	.hanabi-mobile-activity-tabs .hanabi-activity-tab-indicator {
-		right: 0;
-		left: 0;
-		width: auto;
-	}
-
-	.hanabi-mobile-sheet .hanabi-chat-transcript {
-		padding: 20px 16px 26px;
+	.hanabi-mobile-sheet .hanabi-feed-transcript {
+		--chat-bottom-space: 26px;
+		padding: 20px 16px var(--chat-bottom-space);
 	}
 
 	.hanabi-mobile-sheet .hanabi-chat-message {
-		grid-template-columns: 42px minmax(0, 1fr) auto;
-		gap: 4px 11px;
+		grid-template-columns: 28px minmax(0, 1fr);
+		gap: 10px;
 	}
 
 	.hanabi-mobile-sheet .hanabi-chat-avatar {
-		width: 42px;
-		height: 42px;
+		width: 28px;
+		height: 28px;
 	}
 
 	.hanabi-mobile-sheet .hanabi-chat-bubble {

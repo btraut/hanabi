@@ -213,20 +213,6 @@ describe('Hanabi desktop visual foundation', () => {
 		);
 	});
 
-	it('keeps mobile activity tabs together with equal typography', () => {
-		const styles = readFileSync(new URL('../../../styles/tailwind.css', import.meta.url), 'utf8');
-
-		const mobileTabsRule = styles.match(/\.hanabi-mobile-activity-tabs\s*\{[^}]*\}/s)?.[0];
-		expect(mobileTabsRule).toContain('grid-template-columns: repeat(2, max-content)');
-		expect(mobileTabsRule).toContain('justify-content: start');
-
-		const mobileTabRule = styles.match(
-			/\.hanabi-mobile-activity-tabs \.hanabi-activity-tab\s*\{[^}]*\}/s,
-		)?.[0];
-		expect(mobileTabRule).not.toContain('font-size:');
-		expect(styles).not.toContain('.hanabi-mobile-activity-tabs .hanabi-activity-tab:first-child');
-	});
-
 	it('does not advertise nonexistent drag behavior on the mobile activity sheet', () => {
 		const styles = readFileSync(new URL('../../../styles/tailwind.css', import.meta.url), 'utf8');
 		const activityRail = readFileSync(new URL('./HanabiActivityRail.tsx', import.meta.url), 'utf8');
