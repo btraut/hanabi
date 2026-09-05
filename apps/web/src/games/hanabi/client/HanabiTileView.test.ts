@@ -50,6 +50,8 @@ describe('HanabiTileView artwork', () => {
 		expect(markup).toContain('tile-back-firework-v5.png');
 		expect(markup).toContain('hanabi-tile-emphasis');
 		expect(markup).toContain('hanabi-tile-emphasis-action');
+		expect(markup).toContain('hanabi-tile-emphasis-mark');
+		expect(markup).toContain('--hanabi-tile-note-fold-size:15px');
 		expect(markup).toContain('hanabi-tile-shell');
 		expect(markup).toContain('hanabi-tile-surface');
 		expect(markup).toContain('hanabi-tile-surface-clipped');

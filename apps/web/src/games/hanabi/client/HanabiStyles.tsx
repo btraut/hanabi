@@ -8,24 +8,8 @@ export default function HanabiStyles(): JSX.Element {
 }
 
 @keyframes hanabi-clue-mark-breathe {
-	0%, 100% {
-		box-shadow:
-			inset 0 0 0 1px rgb(255 250 239 / 96%),
-			0 0 0 1px rgb(3 14 27 / 96%),
-			0 0 12px rgb(var(--hanabi-emphasis-rgb) / 68%),
-			0 0 24px rgb(var(--hanabi-emphasis-rgb) / 22%);
-	}
-	50% {
-		box-shadow:
-			inset 0 0 0 1px rgb(255 250 239 / 100%),
-			0 0 0 1px rgb(3 14 27 / 100%),
-			0 0 18px rgb(var(--hanabi-emphasis-rgb) / 92%),
-			0 0 34px rgb(var(--hanabi-emphasis-rgb) / 42%);
-	}
-}
-
-.hanabi-tile-shell {
-	--hanabi-tile-note-fold-size: 15px;
+	0%, 100% { filter: drop-shadow(0 0 5px rgb(var(--hanabi-emphasis-rgb) / 60%)); }
+	50% { filter: drop-shadow(0 0 8px rgb(var(--hanabi-emphasis-rgb) / 85%)); }
 }
 
 .hanabi-tile-surface-clipped {
@@ -76,27 +60,19 @@ export default function HanabiStyles(): JSX.Element {
 .hanabi-tile-emphasis-rainbow { --hanabi-emphasis-rgb: 237 149 136; }
 .hanabi-tile-emphasis-action { --hanabi-emphasis-rgb: 218 113 99; }
 
-.hanabi-tile-emphasis::after,
-.hanabi-player-tile-emphasis::after {
-	content: '';
+.hanabi-tile-emphasis-mark {
+	position: absolute;
+	inset: 0;
+	z-index: 26;
+	width: 100%;
+	height: 100%;
+	overflow: visible;
 	pointer-events: none;
+	color: rgb(var(--hanabi-emphasis-rgb));
+	filter: drop-shadow(0 0 5px rgb(var(--hanabi-emphasis-rgb) / 60%));
 	animation:
 		hanabi-clue-mark-arrive 520ms cubic-bezier(0.2, 0.8, 0.2, 1) both,
 		hanabi-clue-mark-breathe 1800ms ease-in-out 520ms 2 both;
-}
-
-.hanabi-tile-emphasis::after,
-.hanabi-player-tile-emphasis::after {
-	position: absolute;
-	inset: -3px;
-	z-index: 20;
-	border: 3px solid rgb(var(--hanabi-emphasis-rgb));
-	border-radius: 11px;
-	box-shadow:
-		inset 0 0 0 1px rgb(255 250 239 / 96%),
-		0 0 0 1px rgb(3 14 27 / 96%),
-		0 0 12px rgb(var(--hanabi-emphasis-rgb) / 68%),
-		0 0 24px rgb(var(--hanabi-emphasis-rgb) / 22%);
 }
 @keyframes bg-blue-to-red {
   0% { background-color: #1e3a8a; }
@@ -115,8 +91,7 @@ export default function HanabiStyles(): JSX.Element {
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.hanabi-tile-emphasis::after,
-	.hanabi-player-tile-emphasis::after {
+	.hanabi-tile-emphasis-mark {
 		animation: none;
 	}
 }

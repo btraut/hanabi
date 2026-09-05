@@ -32,7 +32,6 @@ vi.mock('./HanabiBoardPresentation', () => ({
 vi.mock('./HanabiMoveTileController', () => ({
 	default: ({ children }: { children: ReactNode }) => children,
 }));
-vi.mock('./HanabiBotTurnStatus', () => ({ default: () => null }));
 vi.mock('./HanabiHeader', () => ({ default: () => <header>Live game header</header> }));
 vi.mock('./HanabiLobby', () => ({
 	default: () => <section data-testid="lobby">Current lobby</section>,
@@ -100,6 +99,29 @@ describe('HanabiGameView review integration', () => {
 	function button(label: string): HTMLButtonElement | undefined {
 		return [...document.querySelectorAll('button')].find((item) => item.textContent === label);
 	}
+
+	it.each(['error', 'exhausted', 'disabled'] as const)(
+		'keeps the board free of a pause box and retry control when bot status is %s',
+		(status) => {
+			liveGame.stage = HanabiStage.Playing;
+			liveGame.finishedReason = null;
+			liveGame.currentPlayerId = 'bot';
+			liveGame.players = {
+				...liveGame.players,
+				bot: { id: 'bot', name: 'Bot', kind: 'bot', connected: true },
+			};
+			liveGame.bots = {
+				available: true,
+				canManage: false,
+				turn: { playerId: 'bot', status, canRetry: true, message: 'Legacy bot failure' },
+			};
+			render();
+			expect(document.querySelector('[data-testid="live-board"]')).not.toBeNull();
+			expect(document.body.textContent).not.toContain('Legacy bot failure');
+			expect(document.body.textContent).not.toContain('is paused');
+			expect(button('Retry')).toBeUndefined();
+		},
+	);
 
 	function click(label: string): void {
 		const element = button(label);

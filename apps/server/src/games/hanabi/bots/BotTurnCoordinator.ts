@@ -106,7 +106,10 @@ export class BotTurnCoordinator {
 			playerId,
 			...(turn.opportunity ? { opportunity: turn.opportunity } : {}),
 			status: round.failure === 'unavailable' ? 'disabled' : round.status,
-			message: BOT_FAILURE_MESSAGES[round.failure ?? 'transient'],
+			message:
+				round.failure === 'round_budget'
+					? undefined
+					: BOT_FAILURE_MESSAGES[round.failure ?? 'transient'],
 			canRetry:
 				round.failure !== 'unavailable' &&
 				round.failure !== 'input_too_large' &&

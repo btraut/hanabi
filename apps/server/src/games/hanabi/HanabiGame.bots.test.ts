@@ -424,7 +424,7 @@ describe('server bot game integration', () => {
 		);
 	});
 
-	it('restores a game paused by the retired round limit and continues on seated-human retry', async () => {
+	it('automatically continues a saved game paused by the retired round limit', async () => {
 		const original = createHarness();
 		startOnBot(original);
 		const saved = snapshot(original.game);
@@ -437,12 +437,9 @@ describe('server bot game integration', () => {
 		});
 		original.game.cleanUp();
 		const restored = createHarness({ serialized: saved });
+		expect(snapshot(restored.game).botRound).toMatchObject({ status: 'ready' });
+		expect(snapshot(restored.game).botRound?.failure).toBeUndefined();
 		restored.game.startBackgroundWork();
-		await settle();
-		expect(refresh(restored).bots?.turn).toMatchObject({ status: 'exhausted', canRetry: true });
-		expect(restored.chooseAction).not.toHaveBeenCalled();
-		send(restored, 'host', 'RetryBotTurnMessage', undefined);
-		expect(response(restored, 'RetryBotTurnResponseMessage').error).toBeFalsy();
 		await vi.waitFor(() => expect(snapshot(restored.game).data.currentPlayerId).toBe('host'));
 		expect(restored.chooseAction).toHaveBeenCalledOnce();
 		expect(snapshot(restored.game).botRound).toMatchObject({ attempts: 201, tokens: 2_000_013 });
