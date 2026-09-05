@@ -17,8 +17,7 @@ import { HANABI_DRAG_TYPES } from '~/games/hanabi/client/HanabiDragTypes';
 import { useLatestActionEffect } from '~/games/hanabi/client/useLatestActions';
 import useTileActionMenuHandlers from '~/games/hanabi/client/useTileActionMenuHandlers';
 import useTileNotesHandlers from '~/games/hanabi/client/useTileNotesHandlers';
-import { HanabiGameAction } from '@hanabi/shared';
-import useValueChanged from '~/utils/client/useValueChanged';
+import { HanabiGameAction, HanabiGameActionType } from '@hanabi/shared';
 import { useCallback, useEffect, useState } from 'react';
 import { useDragLayer } from 'react-dnd';
 
@@ -76,15 +75,13 @@ export default function HanabiBoard({
 	}, [handleActionsTooltipOnClose, hideNotesForTile]);
 
 	// Show the game over popup when the game ends for any reason.
-	const [showGameOverPopup, setShowGameOverPopup] = useState(
-		!!gameData.finishedReason && !initiallyDismissGameOver,
+	const resultId =
+		gameData.actions.filter((action) => action.type === HanabiGameActionType.GameFinished).at(-1)
+			?.id ?? gameData.seed;
+	const [dismissedRound, setDismissedRound] = useState<string | null>(
+		initiallyDismissGameOver ? resultId : null,
 	);
-	const gameFinishedReasonChanged = useValueChanged(gameData.finishedReason);
-	useEffect(() => {
-		if (gameFinishedReasonChanged) {
-			setShowGameOverPopup(gameData.finishedReason !== null);
-		}
-	}, [gameFinishedReasonChanged, gameData.finishedReason]);
+	const showGameOverPopup = gameData.finishedReason !== null && dismissedRound !== resultId;
 
 	// When a new action happens, clear the note.
 	useLatestActionEffect(
@@ -111,7 +108,15 @@ export default function HanabiBoard({
 			<HanabiActionEffects />
 			<HanabiDesktopBoard
 				activity={<HanabiLiveActivityRail />}
-				status={<HanabiLiveDesktopStatus gameData={gameData} userId={userId} />}
+				status={
+					<HanabiLiveDesktopStatus
+						gameData={gameData}
+						userId={userId}
+						onShowResult={
+							gameData.finishedReason !== null ? () => setDismissedRound(null) : undefined
+						}
+					/>
+				}
 				gameData={gameData}
 				playerWorkspaces={
 					<HanabiDesktopPlayerWorkspaces
@@ -177,7 +182,7 @@ export default function HanabiBoard({
 				<HanabiGameOverPopup
 					onReview={onReview}
 					onClose={() => {
-						setShowGameOverPopup(false);
+						setDismissedRound(resultId);
 					}}
 				/>
 			)}

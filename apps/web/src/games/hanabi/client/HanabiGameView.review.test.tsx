@@ -133,22 +133,19 @@ describe('HanabiGameView review integration', () => {
 		return document.querySelector('[data-review-cursor]')?.getAttribute('data-review-cursor');
 	}
 
-	it.each(['Review game', 'Review from results'])(
-		'opens an independent review through %s',
-		(entry) => {
-			render();
-			expect(document.querySelector('[data-testid="live-board"]')).not.toBeNull();
-			click(entry);
-			expect(cursor()).toBe('0');
-			expect(document.querySelector('[data-testid="live-board"]')).toBeNull();
-			expect(document.body.textContent).toContain('Game review');
-			expect(document.querySelector('.hanabi-review-caption')?.textContent).toBe('Initial deal');
-		},
-	);
+	it('opens an independent review through the results popup', () => {
+		render();
+		expect(document.querySelector('[data-testid="live-board"]')).not.toBeNull();
+		click('Review from results');
+		expect(cursor()).toBe('0');
+		expect(document.querySelector('[data-testid="live-board"]')).toBeNull();
+		expect(document.body.textContent).toContain('Game review');
+		expect(document.querySelector('.hanabi-review-caption')?.textContent).toBe('Initial deal');
+	});
 
 	it('keeps the captured round and cursor when the live lobby resets, then reopens the old review', () => {
 		render();
-		click('Review game');
+		click('Review from results');
 		click('Next');
 		click('Next');
 		const caption = document.querySelector('.hanabi-review-caption')?.textContent;
@@ -179,7 +176,8 @@ describe('HanabiGameView review integration', () => {
 		expect(document.querySelector('.hanabi-review-caption')?.textContent).toBe(caption);
 	});
 
-	it('returns to the same finished board with its results popup initially dismissed', () => {
+	it('returns to the same finished board with a redacted seed and its results popup dismissed', () => {
+		liveGame = { ...liveGame, seed: '' };
 		render();
 		expect(
 			document.querySelector('[data-testid="live-board"]')?.getAttribute('data-dismiss-results'),
@@ -194,7 +192,8 @@ describe('HanabiGameView review integration', () => {
 			expect.objectContaining({ initiallyDismissGameOver: true }),
 		);
 		expect(button('Review previous game')).toBeUndefined();
-		expect(button('Review game')).toBeDefined();
+		expect(button('Review game')).toBeUndefined();
+		expect(button('Review from results')).toBeDefined();
 	});
 
 	it.each(['missing', 'partial'] as const)('does not offer review for a %s transcript', (kind) => {
@@ -209,6 +208,6 @@ describe('HanabiGameView review integration', () => {
 		expect(button('Review game')).toBeUndefined();
 		expect(button('Review from results')).toBeUndefined();
 		expect(mocks.board).toHaveBeenLastCalledWith(expect.objectContaining({ onReview: undefined }));
-		expect(document.body.textContent).toContain('Review unavailable');
+		expect(document.body.textContent).not.toContain('Review unavailable');
 	});
 });
