@@ -1,3 +1,4 @@
+import { isDeepStrictEqual } from 'node:util';
 import {
 	HANABI_CLUE_COLORS,
 	HANABI_GAME_TITLE,
@@ -13,13 +14,24 @@ import {
 	HanabiGameActionType,
 	HanabiStage,
 	getHanabiRuleSetColors,
+	doesHanabiTileMatchClue,
+	getHanabiScore,
 	normalizeLegacyHanabiTilePositions,
+	type HanabiGameData,
+	type HanabiTile,
+	type Position,
 } from '@hanabi/shared';
 import HanabiGame, { HanabiGameSerialized } from './HanabiGame.js';
 import GameFactory from '../server/GameFactory.js';
 import { SaveGameDelegate } from '../server/GameStore.js';
 import ServerSocketManager from '../../utils/SocketManager.js';
 import { GameTranscriptRecorder, NOOP_GAME_TRANSCRIPT_RECORDER } from './GameTranscriptRecorder.js';
+import { BotRuntime } from './bots/BotRuntime.js';
+import { isBotRound, type BotRound } from './bots/BotRound.js';
+import type { BotCardReference, BotHistoryPublicState } from './bots/BotHistory.js';
+import { getBotRules } from './bots/BotRules.js';
+import { botNotepadsMatchHistory, isBotNotepads } from './bots/BotNotepad.js';
+import { BOT_DEBUG_CHAT_PREFIX, MAX_BOT_DEBUG_CHAT_LENGTH } from './bots/BotDecisionChat.js';
 
 const TILE_NUMBERS = [1, 2, 3, 4, 5] as const;
 const STAGES = Object.values(HanabiStage);
@@ -98,7 +110,7 @@ function validateTile(value: unknown, path: string): void {
 	requireOneOf(tile.number, TILE_NUMBERS, `${path}.number`);
 }
 
-function validateAction(value: unknown, path: string): void {
+function validateAction(value: unknown, path: string, botPlayerIds: ReadonlySet<string>): void {
 	const action = requireRecord(value, path);
 	requireString(action.id, `${path}.id`);
 	const type = requireOneOf(action.type, ACTION_TYPES, `${path}.type`);
@@ -142,12 +154,14 @@ function validateAction(value: unknown, path: string): void {
 			requireOneOf(action.finishedReason, FINISHED_REASONS, `${path}.finishedReason`);
 			break;
 		case HanabiGameActionType.Chat: {
-			requireString(action.playerId, `${path}.playerId`);
+			const playerId = requireString(action.playerId, `${path}.playerId`);
 			const message = requireString(action.message, `${path}.message`);
-			if (!message.trim() || message.length > HANABI_MAX_CHAT_LENGTH) {
-				hydrationError(
-					`${path}.message must contain between 1 and ${HANABI_MAX_CHAT_LENGTH} characters.`,
-				);
+			const maxLength =
+				botPlayerIds.has(playerId) && message.startsWith(BOT_DEBUG_CHAT_PREFIX)
+					? MAX_BOT_DEBUG_CHAT_LENGTH
+					: HANABI_MAX_CHAT_LENGTH;
+			if (!message.trim() || message.length > maxLength) {
+				hydrationError(`${path}.message must contain between 1 and ${maxLength} characters.`);
 			}
 			break;
 		}
@@ -169,6 +183,7 @@ function validateGameData(value: unknown): void {
 
 	const players = requireRecord(data.players, 'data.players');
 	const playerIds = Object.keys(players);
+	const botPlayerIds = new Set<string>();
 	if (playerIds.length > HANABI_MAX_PLAYERS) {
 		hydrationError(`data.players must contain at most ${HANABI_MAX_PLAYERS} players.`);
 	}
@@ -178,6 +193,11 @@ function validateGameData(value: unknown): void {
 			hydrationError(`data.players.${id}.id must match its map key.`);
 		}
 		requireBoolean(player.connected, `data.players.${id}.connected`);
+		if (player.kind !== undefined)
+			requireOneOf(player.kind, ['human', 'bot'], `data.players.${id}.kind`);
+		if ((player.kind === 'bot') !== id.startsWith('bot:'))
+			hydrationError('Bot player ids must match their player kind.');
+		if (player.kind === 'bot') botPlayerIds.add(id);
 		const name = requireString(player.name, `data.players.${id}.name`);
 		if (!name.trim() || name.length > 40) {
 			hydrationError(`data.players.${id}.name must contain between 1 and 40 characters.`);
@@ -295,14 +315,193 @@ function validateGameData(value: unknown): void {
 
 	const actions = requireArray(data.actions, 'data.actions');
 	const retainedActions = actions.slice(-HANABI_MAX_ACTIONS);
-	retainedActions.forEach((action, index) => validateAction(action, `data.actions[${index}]`));
+	retainedActions.forEach((action, index) =>
+		validateAction(action, `data.actions[${index}]`, botPlayerIds),
+	);
 	data.actions = retainedActions;
 }
 
-function parsePersistedGame(value: string): HanabiGameSerialized {
-	if (Buffer.byteLength(value, 'utf8') > MAX_LEGACY_PERSISTED_GAME_BYTES) {
-		hydrationError(`persisted data exceeds ${MAX_LEGACY_PERSISTED_GAME_BYTES} bytes.`);
+/** Validated private histories and notepads may grow beyond ordinary game-envelope limits. */
+function withoutBotRecords(game: Record<string, unknown>, round: BotRound | null) {
+	return round?.version === 2
+		? {
+				...game,
+				botRound: {
+					...round,
+					history: undefined,
+					...(round.policy.notepadVersion === 1 && isBotNotepads(round.notepads)
+						? { notepads: undefined }
+						: {}),
+				},
+			}
+		: game;
+}
+
+function validateBotNotepads(round: BotRound, data: HanabiGameData): void {
+	if (round.notepads === undefined) return;
+	const botIds = Object.values(data.players)
+		.filter((player) => player.kind === 'bot')
+		.map(({ id }) => id);
+	if (
+		round.policy.notepadVersion !== 1 ||
+		round.version !== 2 ||
+		!isBotNotepads(round.notepads) ||
+		!botNotepadsMatchHistory(round.notepads, round.history, botIds)
+	) {
+		hydrationError(
+			'botRound notepads must belong to eligible bots and reference their actual decision history.',
+		);
 	}
+}
+
+function validateV2Round(round: BotRound, data: HanabiGameData): void {
+	if (round.version !== 2 || round.history.version !== 2) return;
+	const history = round.history;
+	if (!isDeepStrictEqual(round.policy.rules, getBotRules(data))) {
+		hydrationError('botRound rules must match the current game mode and options.');
+	}
+	const sameIds = (a: readonly string[], b: readonly string[]) =>
+		a.length === b.length && new Set(a).size === a.length && a.every((id) => b.includes(id));
+	if (
+		!sameIds(
+			history.initialHands.map(({ playerId }) => playerId),
+			data.turnOrder,
+		)
+	) {
+		hydrationError('botRound history must contain every current player.');
+	}
+	const checkFace = (tileId: string, face: Pick<HanabiTile, 'color' | 'number'>) => {
+		const actual = data.tiles[tileId];
+		if (!actual || face.color !== actual.color || face.number !== actual.number) {
+			hydrationError('botRound history contains a card inconsistent with the saved deck.');
+		}
+	};
+	const checkPublicTiles = (state: BotHistoryPublicState) => {
+		for (const tile of [...state.playedTiles, ...state.discardedTiles]) checkFace(tile.id, tile);
+	};
+	const references = new Map<string, BotCardReference[]>();
+	for (const hand of history.initialHands) {
+		references.set(hand.playerId, hand.cards);
+		for (const card of hand.cards) checkFace(card.tileId, card.face);
+	}
+	let publicState = structuredClone(history.initialState);
+	checkPublicTiles(publicState);
+	for (const event of history.events) {
+		if (event.type === 'arrangement') {
+			if (
+				history.layoutHistoryComplete &&
+				!isDeepStrictEqual(
+					event.before,
+					references.get(event.actorId)?.map(({ tileId, position }) => ({ tileId, position })),
+				)
+			) {
+				hydrationError('botRound arrangement does not follow the recorded hand layout.');
+			}
+			references.set(event.actorId, event.after);
+			continue;
+		}
+		if (event.type === 'clue') {
+			if (!isDeepStrictEqual(event.beforeState, publicState)) {
+				hydrationError('botRound clue context does not match the preceding public state.');
+			}
+			const matching = event.hand
+				.filter(({ tileId }) =>
+					doesHanabiTileMatchClue(
+						data.tiles[tileId],
+						data.ruleSet,
+						event.clue.type === 'color'
+							? { color: event.clue.value }
+							: { number: event.clue.value },
+					),
+				)
+				.map(({ tileId }) => tileId);
+			if (!sameIds(matching, event.touchedTileIds)) {
+				hydrationError('botRound clue evidence does not match the recorded cards.');
+			}
+			if (
+				history.layoutHistoryComplete &&
+				!isDeepStrictEqual(
+					event.hand,
+					references.get(event.recipientId)?.map(({ tileId, position }) => ({ tileId, position })),
+				)
+			) {
+				hydrationError('botRound clue does not match the recorded recipient layout.');
+			}
+		} else {
+			checkFace(event.tile.id, event.tile);
+			for (const card of event.drawnTiles) checkFace(card.tileId, card.face);
+			references.set(event.actorId, event.handAfter);
+			if (event.type === 'play' && event.valid) publicState.playedTiles.push(event.tile);
+			else publicState.discardedTiles.push(event.tile);
+		}
+		publicState = { ...publicState, ...event.postTurn };
+	}
+	const finalPublicState: BotHistoryPublicState = {
+		currentPlayerId: data.currentPlayerId,
+		clues: data.clues,
+		lives: data.lives,
+		remainingTurns: data.remainingTurns,
+		deckCount: data.remainingTiles.length,
+		score: getHanabiScore(data),
+		stage: data.stage,
+		finishedReason: data.finishedReason,
+		playedTiles: data.playedTiles.map((id) => ({
+			id,
+			color: data.tiles[id].color,
+			number: data.tiles[id].number,
+		})),
+		discardedTiles: data.discardedTiles.map((id) => ({
+			id,
+			color: data.tiles[id].color,
+			number: data.tiles[id].number,
+		})),
+	};
+	if (!isDeepStrictEqual(publicState, finalPublicState)) {
+		hydrationError('botRound history does not match the current board or turn resources.');
+	}
+	for (const playerId of data.turnOrder) {
+		const hand = references.get(playerId)!;
+		if (
+			!isDeepStrictEqual(
+				hand.map(({ tileId }) => tileId),
+				data.playerTiles[playerId],
+			)
+		) {
+			hydrationError('botRound history does not match the current player hands.');
+		}
+		if (history.layoutHistoryComplete) {
+			const recordedPositions: Record<string, Position> = {};
+			for (const card of hand) if (card.position) recordedPositions[card.tileId] = card.position;
+			const currentPositions = Object.fromEntries(
+				hand.flatMap(({ tileId }) =>
+					data.tilePositions[tileId] ? [[tileId, data.tilePositions[tileId]]] : [],
+				),
+			);
+			if (
+				!isDeepStrictEqual(normalizeLegacyHanabiTilePositions(recordedPositions), currentPositions)
+			) {
+				hydrationError('botRound history does not match the current card layout.');
+			}
+		}
+	}
+	const clueEvents = new Map(
+		history.events.filter((event) => event.type === 'clue').map((event) => [event.eventId, event]),
+	);
+	for (const pending of round.pendingClues ?? []) {
+		if (
+			data.players[pending.playerId]?.kind !== 'bot' ||
+			!round.policy.arrangementAfterClue ||
+			!data.allowDragging ||
+			pending.eventIds.some((id) => clueEvents.get(id)?.recipientId !== pending.playerId)
+		) {
+			hydrationError('botRound pending clues must reference actual clues for an eligible bot.');
+		}
+	}
+	// Work queued before another actor finishes the game is no longer an eligible opportunity.
+	if (data.stage === HanabiStage.Finished) round.pendingClues = [];
+}
+
+function parsePersistedGame(value: string): HanabiGameSerialized {
 	let parsed: unknown;
 	try {
 		parsed = JSON.parse(value);
@@ -310,6 +509,19 @@ function parsePersistedGame(value: string): HanabiGameSerialized {
 		hydrationError('persisted data is not valid JSON.');
 	}
 	const game = requireRecord(parsed, 'game');
+	let round: BotRound | null = null;
+	if (game.botRound !== undefined && game.botRound !== null) {
+		if (!isBotRound(game.botRound))
+			hydrationError('botRound must contain valid state for the current round.');
+		round = game.botRound;
+	}
+	const rawEnvelopeBytes =
+		round?.version === 2
+			? Buffer.byteLength(JSON.stringify(withoutBotRecords(game, round)), 'utf8')
+			: Buffer.byteLength(value, 'utf8');
+	if (rawEnvelopeBytes > MAX_LEGACY_PERSISTED_GAME_BYTES) {
+		hydrationError(`persisted data exceeds ${MAX_LEGACY_PERSISTED_GAME_BYTES} bytes.`);
+	}
 	requireString(game.id, 'id');
 	requireString(game.code, 'code');
 	requireString(game.creatorId, 'creatorId');
@@ -320,7 +532,26 @@ function parsePersistedGame(value: string): HanabiGameSerialized {
 		}
 	}
 	validateGameData(game.data);
-	if (Buffer.byteLength(JSON.stringify(game), 'utf8') > MAX_PERSISTED_GAME_BYTES) {
+	const data = game.data as HanabiGameSerialized['data'];
+	delete data.bots;
+	if (round) {
+		if (round.roundId !== data.seed || data.stage === HanabiStage.Setup) {
+			hydrationError('botRound must contain valid state for the current round.');
+		}
+		validateV2Round(round, data);
+		validateBotNotepads(round, data);
+	}
+	if (
+		data.stage !== HanabiStage.Setup &&
+		Object.values(data.players).some((player) => player.kind === 'bot') &&
+		!game.botRound
+	) {
+		hydrationError('Started bot games must preserve their bot round.');
+	}
+	if (
+		Buffer.byteLength(JSON.stringify(withoutBotRecords(game, round)), 'utf8') >
+		MAX_PERSISTED_GAME_BYTES
+	) {
 		hydrationError(`normalized persisted data exceeds ${MAX_PERSISTED_GAME_BYTES} bytes.`);
 	}
 	return game as unknown as HanabiGameSerialized;
@@ -331,6 +562,7 @@ export default class HanabiGameFactory extends GameFactory {
 		private readonly _minimumPlayers = HANABI_MIN_PLAYERS,
 		private readonly _debugPlayerControls = false,
 		private readonly _transcriptRecorder: GameTranscriptRecorder = NOOP_GAME_TRANSCRIPT_RECORDER,
+		private readonly _botRuntime?: BotRuntime,
 	) {
 		super();
 	}
@@ -351,6 +583,7 @@ export default class HanabiGameFactory extends GameFactory {
 			this._minimumPlayers,
 			this._debugPlayerControls,
 			this._transcriptRecorder,
+			this._botRuntime,
 		);
 	}
 
@@ -366,6 +599,7 @@ export default class HanabiGameFactory extends GameFactory {
 			this._minimumPlayers,
 			this._debugPlayerControls,
 			this._transcriptRecorder,
+			this._botRuntime,
 		);
 	}
 }

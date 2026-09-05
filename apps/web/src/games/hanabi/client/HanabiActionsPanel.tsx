@@ -3,14 +3,14 @@ import { useUserId } from '~/components/SocketContext';
 import HanabiActions from '~/games/hanabi/client/HanabiActions';
 import HanabiActionsFilter from '~/games/hanabi/client/HanabiActionsFilter';
 import HanabiChatInput from '~/games/hanabi/client/HanabiChatInput';
-import { useGameData } from '~/games/hanabi/client/HanabiGameContext';
-import { useLatestActionEffect } from '~/games/hanabi/client/useLatestActions';
+import { useActivityData } from '~/games/hanabi/client/HanabiGameContext';
+import { useActionListEffect } from '~/games/hanabi/client/useLatestActions';
 import { ActionsFilterOption, HanabiGameAction } from '@hanabi/shared';
 import classNames from 'classnames';
 import { useCallback, useRef, useState } from 'react';
 
 export default function HanabiActionsPanel(): JSX.Element {
-	const gameData = useGameData();
+	const gameData = useActivityData();
 	const userId = useUserId();
 	const userIsPlayer = !!(userId && gameData.players[userId]);
 
@@ -21,7 +21,8 @@ export default function HanabiActionsPanel(): JSX.Element {
 	const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
 	// When a new action happens, scroll the actions container to the top.
-	useLatestActionEffect(
+	useActionListEffect(
+		gameData.actions,
 		useCallback((latestAction: HanabiGameAction | null) => {
 			if (latestAction) {
 				scrollContainerRef.current?.scrollTo(0, 0);
@@ -53,7 +54,7 @@ export default function HanabiActionsPanel(): JSX.Element {
 		setShowBottomGradient(!scrolledToBottom);
 	}, []);
 
-	useLatestActionEffect(() => {
+	useActionListEffect(gameData.actions, () => {
 		checkGradient();
 	});
 

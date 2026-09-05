@@ -1,6 +1,7 @@
 import {
 	generateHanabiGameData,
 	getHanabiRuleSetColors,
+	HANABI_DEFAULT_TILE_POSITIONS,
 	HanabiFinishedReason,
 	HanabiGameAction,
 	HanabiGameActionType,
@@ -23,6 +24,8 @@ export type HanabiDesktopFixtureName =
 	| 'activity'
 	| 'spectator'
 	| 'disconnected'
+	| 'bot-thinking'
+	| 'bot-clue'
 	| 'finished';
 
 export interface HanabiDesktopFixture {
@@ -38,31 +41,31 @@ type TargetHandTile = readonly [HanabiTileColor, HanabiTileNumber, Position];
 
 const TARGET_HANDS: readonly (readonly TargetHandTile[])[] = [
 	[
-		['blue', 1, { x: 72, y: 10, z: 0 }],
-		['green', 2, { x: 142, y: 10, z: 0 }],
-		['yellow', 3, { x: 212, y: 10, z: 0 }],
-		['white', 4, { x: 282, y: 10, z: 0 }],
+		['blue', 1, HANABI_DEFAULT_TILE_POSITIONS[0]],
+		['green', 2, HANABI_DEFAULT_TILE_POSITIONS[1]],
+		['yellow', 3, HANABI_DEFAULT_TILE_POSITIONS[2]],
+		['white', 4, HANABI_DEFAULT_TILE_POSITIONS[3]],
 		['red', 5, { x: 122, y: 79, z: 1 }],
 		['blue', 2, { x: 202, y: 79, z: 2 }],
 	],
 	[
-		['red', 2, { x: 68, y: 10, z: 0 }],
-		['blue', 4, { x: 142, y: 10, z: 0 }],
-		['green', 1, { x: 212, y: 10, z: 0 }],
-		['yellow', 5, { x: 282, y: 10, z: 0 }],
+		['red', 2, HANABI_DEFAULT_TILE_POSITIONS[0]],
+		['blue', 4, HANABI_DEFAULT_TILE_POSITIONS[1]],
+		['green', 1, HANABI_DEFAULT_TILE_POSITIONS[2]],
+		['yellow', 5, HANABI_DEFAULT_TILE_POSITIONS[3]],
 		['white', 3, { x: 161, y: 94, z: 1 }],
 	],
 	[
-		['yellow', 1, { x: 74, y: 10, z: 0 }],
-		['white', 1, { x: 154, y: 10, z: 0 }],
+		['yellow', 1, HANABI_DEFAULT_TILE_POSITIONS[0]],
+		['white', 1, HANABI_DEFAULT_TILE_POSITIONS[1]],
 		['blue', 3, { x: 89, y: 97, z: 1 }],
 		['green', 2, { x: 180, y: 97, z: 2 }],
 		['red', 5, { x: 267, y: 97, z: 3 }],
 	],
 	[
-		['green', 5, { x: 65, y: 10, z: 0 }],
-		['red', 1, { x: 142, y: 10, z: 0 }],
-		['yellow', 2, { x: 217, y: 10, z: 0 }],
+		['green', 5, HANABI_DEFAULT_TILE_POSITIONS[0]],
+		['red', 1, HANABI_DEFAULT_TILE_POSITIONS[1]],
+		['yellow', 2, HANABI_DEFAULT_TILE_POSITIONS[2]],
 		['white', 4, { x: 121, y: 97, z: 1 }],
 		['blue', 1, { x: 235, y: 97, z: 2 }],
 	],
@@ -135,14 +138,14 @@ function makeFixtureData({
 			);
 			playerTiles[playerId].push(tileId);
 			if (targetTile) {
-				tilePositions[tileId] = targetTile[2];
+				tilePositions[tileId] = { ...targetTile[2] };
 			} else {
 				const freeformStart = playerIndex % 2 === 0 ? 2 : 3;
 				const freeform = tileIndex >= freeformStart;
 				tilePositions[tileId] = {
 					x: freeform
 						? 50 + (tileIndex - freeformStart) * 86 + playerIndex * 5
-						: 55 + tileIndex * 76,
+						: HANABI_DEFAULT_TILE_POSITIONS[tileIndex].x,
 					y: freeform ? 82 + ((tileIndex + playerIndex) % 2) * 6 : 10,
 					z: freeform ? tileIndex : 0,
 				};
@@ -434,6 +437,49 @@ export function getHanabiDesktopFixtures(): Record<HanabiDesktopFixtureName, Han
 			description: 'The active player is disconnected.',
 			gameData: { ...standard, players: disconnectedPlayers },
 			name: 'disconnected',
+			userId: 'player-1',
+		},
+		'bot-thinking': {
+			code: 'BOTGLOW',
+			description: 'A thinking bot with an animated avatar indicator.',
+			gameData: {
+				...standard,
+				currentPlayerId: 'player-2',
+				players: {
+					...standard.players,
+					'player-2': { ...standard.players['player-2'], name: 'Bot 1', kind: 'bot' },
+				},
+				bots: {
+					available: true,
+					canManage: false,
+					turn: { playerId: 'player-2', status: 'thinking', canRetry: false },
+				},
+			},
+			name: 'bot-thinking',
+			userId: 'player-1',
+		},
+		'bot-clue': {
+			code: 'BOTCLUE',
+			description: 'A bot considers a clue while the human keeps their normal turn controls.',
+			gameData: {
+				...standard,
+				currentPlayerId: 'player-1',
+				players: {
+					...standard.players,
+					'player-2': { ...standard.players['player-2'], name: 'Bot 1', kind: 'bot' },
+				},
+				bots: {
+					available: true,
+					canManage: false,
+					turn: {
+						playerId: 'player-2',
+						status: 'thinking',
+						canRetry: false,
+						opportunity: 'clue',
+					},
+				},
+			},
+			name: 'bot-clue',
 			userId: 'player-1',
 		},
 		finished: {

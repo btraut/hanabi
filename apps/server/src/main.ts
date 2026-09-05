@@ -10,6 +10,9 @@ import LocalFileGameStore from './games/server/LocalFileGameStore.js';
 import RedisGameStore from './games/server/RedisGameStore.js';
 import { createHanabiRuntime } from './runtime.js';
 import Logger from './utils/Logger.js';
+import { BotRuntime } from './games/hanabi/bots/BotRuntime.js';
+import { OpenAiBot } from './games/hanabi/bots/OpenAiBot.js';
+import { createBotPolicy } from './games/hanabi/bots/BotPolicy.js';
 import RedisClient from './utils/RedisClient.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -48,6 +51,27 @@ async function main(): Promise<void> {
 		gameTranscriptRecorder,
 		adminPassword: env.ADMIN_PASSWORD,
 		transcriptSummaryReader,
+		botRuntime:
+			env.HANABI_BOTS_ENABLED && env.OPENAI_API_KEY
+				? new BotRuntime(
+						new OpenAiBot({
+							apiKey: env.OPENAI_API_KEY,
+							timeoutMs: env.HANABI_BOT_TIMEOUT_MS,
+							maxOutputTokens: env.HANABI_BOT_MAX_OUTPUT_TOKENS,
+						}),
+						createBotPolicy(env.HANABI_BOT_MODEL, undefined, env.HANABI_BOT_REASONING_EFFORT),
+						{
+							timeoutMs: env.HANABI_BOT_TIMEOUT_MS,
+							maxOutputTokens: env.HANABI_BOT_MAX_OUTPUT_TOKENS,
+							maxConcurrent: env.HANABI_BOT_MAX_CONCURRENT,
+							roundMaxAttempts: env.HANABI_BOT_ROUND_MAX_ATTEMPTS,
+							roundMaxTokens: env.HANABI_BOT_ROUND_MAX_TOKENS,
+							globalWindowMs: env.HANABI_BOT_GLOBAL_WINDOW_MS,
+							globalMaxAttempts: env.HANABI_BOT_GLOBAL_MAX_ATTEMPTS,
+							globalMaxTokens: env.HANABI_BOT_GLOBAL_MAX_TOKENS,
+						},
+					)
+				: undefined,
 	});
 	await runtime.start(Number(env.PORT));
 

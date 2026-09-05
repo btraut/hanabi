@@ -68,4 +68,41 @@ describe('HanabiDesktopStatus', () => {
 
 		expect(getHanabiDesktopStatusData(gameData, 'alice').turnLabel).toBe('Game finished');
 	});
+
+	it('shows a bot thinking or paused without marking it disconnected', () => {
+		const gameData = generateHanabiGameData({
+			currentPlayerId: 'ben',
+			players: { ...players, ben: { ...players.ben, connected: false, kind: 'bot' } },
+			stage: HanabiStage.Playing,
+			turnOrder: ['alice', 'ben'],
+			bots: {
+				available: true,
+				canManage: false,
+				turn: { playerId: 'ben', status: 'thinking', canRetry: false },
+			},
+		});
+		expect(getHanabiDesktopStatusData(gameData, 'alice').turnLabel).toBe('Ben · Thinking…');
+		gameData.bots!.turn!.status = 'error';
+		expect(getHanabiDesktopStatusData(gameData, 'alice').turnLabel).toBe('Ben · Paused');
+		gameData.bots!.turn = null;
+		expect(getHanabiDesktopStatusData(gameData, 'alice').turnLabel).toBe("Ben's turn");
+	});
+
+	it('keeps the actual human turn label while a bot considers a clue or pauses', () => {
+		const gameData = generateHanabiGameData({
+			currentPlayerId: 'alice',
+			players: { ...players, ben: { ...players.ben, connected: false, kind: 'bot' } },
+			stage: HanabiStage.Playing,
+			turnOrder: ['alice', 'ben'],
+			bots: {
+				available: true,
+				canManage: false,
+				turn: { playerId: 'ben', status: 'thinking', canRetry: false, opportunity: 'clue' },
+			},
+		});
+		expect(getHanabiDesktopStatusData(gameData, 'alice').turnLabel).toBe('Your turn');
+		expect(getHanabiDesktopStatusData(gameData, 'spectator').turnLabel).toBe("Alice's turn");
+		gameData.bots!.turn!.status = 'error';
+		expect(getHanabiDesktopStatusData(gameData, 'alice').turnLabel).toBe('Your turn');
+	});
 });

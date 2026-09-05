@@ -1,4 +1,4 @@
-import { HanabiGameActionType } from '@hanabi/shared';
+import { HanabiGameActionType, HanabiStage } from '@hanabi/shared';
 
 type TransitionAction = {
 	readonly id: string;
@@ -8,6 +8,7 @@ type TransitionAction = {
 
 type TransitionState = {
 	readonly actions: readonly TransitionAction[];
+	readonly stage?: HanabiStage;
 };
 
 type TileViewTransition = {
@@ -33,19 +34,33 @@ export function getNewTileActionId(
 	previousActions: readonly TransitionAction[],
 	nextActions: readonly TransitionAction[],
 ): string | null {
-	if (nextActions.length <= previousActions.length) {
+	const previousLastAction = previousActions.at(-1);
+	if (!previousLastAction) {
 		return null;
 	}
 
-	for (let index = 0; index < previousActions.length; index += 1) {
-		if (previousActions[index].id !== nextActions[index].id) {
+	const lastSeenIndex = nextActions.findIndex((action) => action.id === previousLastAction.id);
+	if (lastSeenIndex < 0) {
+		return null;
+	}
+
+	// Bounded histories may drop their oldest actions as new ones arrive. The
+	// retained suffix must still match before any appended action can animate.
+	const overlapLength = Math.min(previousActions.length, lastSeenIndex + 1);
+	for (let index = 0; index < overlapLength; index += 1) {
+		if (
+			previousActions[previousActions.length - overlapLength + index].id !==
+			nextActions[lastSeenIndex + 1 - overlapLength + index].id
+		) {
 			return null;
 		}
 	}
 
-	const tileActions = nextActions
-		.slice(previousActions.length)
-		.filter((action) => TILE_ACTION_TYPES.has(action.type));
+	const appendedActions = nextActions.slice(lastSeenIndex + 1);
+	if (appendedActions.some((action) => action.type === HanabiGameActionType.GameStarted)) {
+		return null;
+	}
+	const tileActions = appendedActions.filter((action) => TILE_ACTION_TYPES.has(action.type));
 
 	// A reconnect can append several missed turns in one refresh. There is no
 	// intermediate DOM for those actions, so an immediate update is clearer
@@ -82,12 +97,17 @@ export class HanabiActionTransitionCoordinator<State extends TransitionState> {
 
 		const previousState = this.currentState;
 		this.currentState = nextState;
+		const crossesRoundBoundary =
+			nextState.stage === HanabiStage.Setup ||
+			previousState?.stage === HanabiStage.Setup ||
+			(previousState?.stage === HanabiStage.Finished && nextState.stage === HanabiStage.Playing);
 
-		// Status and position refreshes can follow an action before capture finishes.
+		// Position and note refreshes can follow an action before capture finishes.
 		// Preserve the source DOM until the callback, and keep the latest snapshot.
 		if (
 			this.activeTransition &&
 			previousState &&
+			!crossesRoundBoundary &&
 			previousState.actions.length === nextState.actions.length &&
 			previousState.actions.every((action, index) => action.id === nextState.actions[index].id)
 		) {
@@ -101,7 +121,9 @@ export class HanabiActionTransitionCoordinator<State extends TransitionState> {
 		const updateGeneration = this.generation;
 
 		const transitioningTileId =
-			previousState === null ? null : getNewTileActionId(previousState.actions, nextState.actions);
+			previousState === null || crossesRoundBoundary
+				? null
+				: getNewTileActionId(previousState.actions, nextState.actions);
 		const shouldAnimate =
 			transitioningTileId !== null &&
 			this.options.startTransition !== undefined &&

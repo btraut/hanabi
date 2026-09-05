@@ -130,7 +130,16 @@ export default class Game {
 	}
 
 	public stopSaving(): void {
+		this.stopBackgroundWork();
 		this._acceptingSaves = false;
+	}
+
+	public startBackgroundWork(): void {
+		// Subclasses may resume background work after registration and runtime readiness.
+	}
+
+	public stopBackgroundWork(): void {
+		// Subclasses must prevent further background mutations before the final save is flushed.
 	}
 
 	// This game is being deleted and it should clean up all subscriptions and

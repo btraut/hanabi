@@ -83,6 +83,30 @@ describe('HanabiPlayerWorkspace', () => {
 		expect(markup).not.toContain('border-hanabi-coral');
 	});
 
+	it('identifies a server bot without offline or dimmed treatment', () => {
+		const gameData = generateHanabiGameData({
+			currentPlayerId: 'ben',
+			players: {
+				alice: players.alice,
+				ben: { ...players.ben, connected: false, kind: 'bot' },
+			},
+			stage: HanabiStage.Playing,
+			turnOrder: ['alice', 'ben'],
+		});
+		const markup = renderToStaticMarkup(
+			createElement(HanabiDesktopPlayerWorkspaces, {
+				gameData,
+				renderTileSurface: () => createElement('div'),
+				userId: 'alice',
+			}),
+		);
+		expect(markup).toContain('aria-label="Ben, bot, playing"');
+		expect(markup).not.toContain('>Bot</span>');
+		expect(markup).not.toContain('Offline');
+		expect(markup).not.toContain('opacity-60');
+		expect(markup).not.toContain('opacity-70');
+	});
+
 	it('keeps the zones visually unlabeled', () => {
 		const gameData = generateHanabiGameData({
 			players,
@@ -99,6 +123,42 @@ describe('HanabiPlayerWorkspace', () => {
 
 		expect(markup).not.toContain('Auto');
 		expect(markup).not.toContain('Freeform');
+	});
+
+	it('shows the orbit only for the current thinking bot and clears it on pause, turn change, or finish', () => {
+		const gameData = generateHanabiGameData({
+			currentPlayerId: 'ben',
+			players: { alice: players.alice, ben: { ...players.ben, kind: 'bot' } },
+			stage: HanabiStage.Playing,
+			turnOrder: ['alice', 'ben'],
+			bots: {
+				available: true,
+				canManage: false,
+				turn: { playerId: 'ben', status: 'thinking', canRetry: false },
+			},
+		});
+		const render = () =>
+			renderToStaticMarkup(
+				createElement(HanabiDesktopPlayerWorkspaces, {
+					gameData,
+					renderTileSurface: () => createElement('div'),
+					userId: 'alice',
+				}),
+			);
+		expect(render().match(/class="hanabi-avatar-orbit"/g)).toHaveLength(1);
+		expect(render()).toContain('aria-label="Ben, bot, thinking"');
+		expect(render()).toContain('Thinking…');
+		gameData.bots!.turn!.status = 'error';
+		expect(render()).not.toContain('hanabi-avatar-orbit');
+		gameData.bots!.turn!.status = 'thinking';
+		gameData.currentPlayerId = 'alice';
+		expect(render()).not.toContain('hanabi-avatar-orbit');
+		gameData.currentPlayerId = 'ben';
+		gameData.finishedReason = HanabiFinishedReason.OutOfTurns;
+		expect(render()).not.toContain('hanabi-avatar-orbit');
+		gameData.finishedReason = null;
+		gameData.players = { ...gameData.players, ben: players.ben };
+		expect(render()).not.toContain('hanabi-avatar-orbit');
 	});
 
 	it('uses one workspace height for every player', () => {
@@ -118,6 +178,50 @@ describe('HanabiPlayerWorkspace', () => {
 		expect(markup.match(/h-\[186px\]/g)).toHaveLength(3);
 		expect(markup).not.toContain('h-[154px]');
 		expect(markup).not.toContain('h-[174px]');
+	});
+
+	it('shows an off-turn clue response only on the bot while the human remains Playing', () => {
+		const gameData = generateHanabiGameData({
+			currentPlayerId: 'alice',
+			players: { alice: players.alice, ben: { ...players.ben, kind: 'bot' } },
+			stage: HanabiStage.Playing,
+			turnOrder: ['alice', 'ben'],
+			bots: {
+				available: true,
+				canManage: false,
+				turn: { playerId: 'ben', status: 'thinking', canRetry: false, opportunity: 'clue' },
+			},
+		});
+		const render = () =>
+			renderToStaticMarkup(
+				createElement(HanabiDesktopPlayerWorkspaces, {
+					gameData,
+					renderTileSurface: () => createElement('div'),
+					userId: 'alice',
+				}),
+			);
+		const markup = render();
+		expect(markup.match(/class="hanabi-avatar-orbit"/g)).toHaveLength(1);
+		expect(markup).toContain('aria-label="Ben, bot, thinking"');
+		expect(markup).toContain('aria-label="Alice, you, playing"');
+		expect(markup.match(/>Playing</g)).toHaveLength(1);
+		expect(markup).toContain('Considering clue…');
+		const botSection = markup.slice(markup.indexOf('<section aria-label="Ben'));
+		expect(botSection).not.toContain('border-hanabi-coral');
+		expect(
+			getHanabiPlayerTilePermissions({
+				gameData,
+				isTransitioning: false,
+				playerId: 'alice',
+				userId: 'alice',
+			}),
+		).toMatchObject({ canAct: true, ownTiles: true });
+		gameData.bots!.turn!.status = 'error';
+		expect(render()).not.toContain('hanabi-avatar-orbit');
+		expect(render()).toContain('>Playing<');
+		gameData.bots!.turn!.status = 'thinking';
+		gameData.finishedReason = HanabiFinishedReason.OutOfTurns;
+		expect(render()).not.toContain('hanabi-avatar-orbit');
 	});
 
 	it('preserves concealment, action, and drag permissions', () => {

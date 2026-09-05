@@ -1,11 +1,11 @@
-import { useGameData } from '~/games/hanabi/client/HanabiGameContext';
+import { useBoardData } from '~/games/hanabi/client/HanabiGameContext';
 import HanabiLife from '~/games/hanabi/client/HanabiLife';
 import { HANABI_MAX_LIVES } from '@hanabi/shared';
 import mapXTimes from '~/utils/mapXTimes';
 import classNames from 'classnames';
 
 export default function HanabiLives(): JSX.Element {
-	const gameData = useGameData();
+	const gameData = useBoardData();
 
 	const remainingLives = gameData.lives;
 

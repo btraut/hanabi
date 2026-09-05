@@ -1,5 +1,5 @@
 import { useUserId } from '~/components/SocketContext';
-import { useGameData, useGameMessenger } from '~/games/hanabi/client/HanabiGameContext';
+import { useBoardData, useGameMessenger } from '~/games/hanabi/client/HanabiGameContext';
 import {
 	HanabiMoveTileContext,
 	HanabiMoveTileContextProvider,
@@ -12,7 +12,7 @@ interface Props {
 }
 
 export default function HanabiMoveTileController({ children }: Props): JSX.Element {
-	const gameData = useGameData();
+	const gameData = useBoardData();
 	const gameMessenger = useGameMessenger();
 	const userId = useUserId();
 

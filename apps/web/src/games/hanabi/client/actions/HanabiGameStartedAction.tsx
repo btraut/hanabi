@@ -1,4 +1,4 @@
-import { useGameData } from '~/games/hanabi/client/HanabiGameContext';
+import { useBoardData } from '~/games/hanabi/client/HanabiGameContext';
 import { HanabiGameActionGameStarted } from '@hanabi/shared';
 
 interface Props {
@@ -6,7 +6,7 @@ interface Props {
 }
 
 export default function HanabiGameStartedAction({ action }: Props): JSX.Element {
-	const gameData = useGameData();
+	const gameData = useBoardData();
 
 	const player = gameData.players[action.startingPlayerId];
 

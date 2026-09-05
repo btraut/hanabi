@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 
+import { HanabiGameStore } from './HanabiGameStore';
 import { SocketContextProvider } from '~/components/SocketContext';
 import HanabiGameMessenger from './HanabiGameMessenger';
 import { HanabiGameContextProvider } from './HanabiGameContext';
@@ -61,9 +62,8 @@ describe('HanabiDebugPanel discard rule', () => {
 							value: {
 								code: 'test',
 								create: vi.fn(),
-								gameData,
+								store: new HanabiGameStore(gameData),
 								gameMessenger,
-								transitioningTileId: null,
 								watch: vi.fn(),
 							},
 						},

@@ -1,30 +1,25 @@
-import { HanabiGameData, HanabiPlayer } from '@hanabi/shared';
-import { HanabiTileHighlightTone } from '~/games/hanabi/client/HanabiHighlightContext';
+import { HanabiGameData, HanabiPlayer, HanabiStage } from '@hanabi/shared';
 import HanabiPlayerAvatar from '~/games/hanabi/client/HanabiPlayerAvatar';
 import classNames from 'classnames';
-import { ReactNode } from 'react';
+import { ComponentType, ReactNode } from 'react';
 
-interface WorkspaceProps {
+export interface HanabiPlayerWorkspaceProps {
 	active: boolean;
 	children: ReactNode;
-	clueLabel?: string;
-	clueTone?: HanabiTileHighlightTone;
 	finished: boolean;
 	isLocal: boolean;
 	player: HanabiPlayer;
 	review?: boolean;
 	reviewPerspective?: boolean;
+	thinking?: boolean;
+	thinkingLabel?: string;
 }
 
 interface WorkspacesProps {
-	clueHighlight?: {
-		label: string;
-		recipientId: string;
-		tone: HanabiTileHighlightTone;
-	};
 	gameData: HanabiGameData;
 	renderTileSurface: (playerId: string) => ReactNode;
 	userId: string;
+	workspaceComponent?: ComponentType<HanabiPlayerWorkspaceProps>;
 }
 
 export function getHanabiPlayerDisplayOrder(
@@ -49,10 +44,10 @@ export function getHanabiPlayerAccent(
 }
 
 export function HanabiDesktopPlayerWorkspaces({
-	clueHighlight,
 	gameData,
 	renderTileSurface,
 	userId,
+	workspaceComponent: Workspace = HanabiPlayerWorkspace,
 }: WorkspacesProps): JSX.Element {
 	const finished = gameData.finishedReason !== null;
 	const displayOrder = getHanabiPlayerDisplayOrder(gameData.turnOrder, userId);
@@ -60,17 +55,27 @@ export function HanabiDesktopPlayerWorkspaces({
 	return (
 		<div aria-label="Player workspaces" className="hanabi-player-workspaces grid gap-1.5">
 			{displayOrder.map((playerId) => (
-				<HanabiPlayerWorkspace
+				<Workspace
 					active={!finished && gameData.currentPlayerId === playerId}
-					clueLabel={clueHighlight?.recipientId === playerId ? clueHighlight.label : undefined}
-					clueTone={clueHighlight?.recipientId === playerId ? clueHighlight.tone : undefined}
 					finished={finished}
 					isLocal={userId === playerId}
 					key={playerId}
 					player={gameData.players[playerId]}
+					thinking={
+						!finished &&
+						gameData.stage === HanabiStage.Playing &&
+						(gameData.currentPlayerId === playerId ||
+							gameData.bots?.turn?.opportunity === 'clue') &&
+						gameData.players[playerId].kind === 'bot' &&
+						gameData.bots?.turn?.playerId === playerId &&
+						gameData.bots.turn.status === 'thinking'
+					}
+					thinkingLabel={
+						gameData.bots?.turn?.opportunity === 'clue' ? 'Considering clue…' : 'Thinking…'
+					}
 				>
 					{renderTileSurface(playerId)}
-				</HanabiPlayerWorkspace>
+				</Workspace>
 			))}
 		</div>
 	);
@@ -79,24 +84,24 @@ export function HanabiDesktopPlayerWorkspaces({
 export default function HanabiPlayerWorkspace({
 	active,
 	children,
-	clueLabel,
-	clueTone = 'number',
 	finished,
 	isLocal,
 	player,
 	review = false,
 	reviewPerspective = false,
-}: WorkspaceProps): JSX.Element {
+	thinking = false,
+	thinkingLabel = 'Thinking…',
+}: HanabiPlayerWorkspaceProps): JSX.Element {
 	return (
 		<section
-			aria-label={`${player.name}${isLocal ? ', you' : ''}${reviewPerspective ? ', viewing as' : ''}${active ? (review ? ', to act' : ', playing') : ''}`}
+			aria-label={`${player.name}${player.kind === 'bot' ? ', bot' : ''}${isLocal ? ', you' : ''}${reviewPerspective ? ', viewing as' : ''}${thinking ? ', thinking' : active ? (review ? ', to act' : ', playing') : ''}`}
 			className={classNames(
 				'hanabi-player-workspace grid h-[186px] w-full min-w-0 grid-cols-[80px_minmax(0,1fr)] overflow-hidden rounded-md border bg-hanabi-surface shadow-[0_10px_24px_rgb(0_0_0_/_16%)]',
 				{
 					'border-hanabi-border': !active,
 					'border-hanabi-coral shadow-[0_0_0_1px_rgb(255_114_95_/_22%),0_14px_34px_rgb(0_0_0_/_26%)]':
 						active,
-					'opacity-70': !player.connected && !review,
+					'opacity-70': player.kind !== 'bot' && !player.connected && !review,
 				},
 			)}
 		>
@@ -108,7 +113,7 @@ export default function HanabiPlayerWorkspace({
 						: 'border-hanabi-border bg-hanabi-table/35',
 				)}
 			>
-				<HanabiPlayerAvatar player={player} showName={false} size="sm" />
+				<HanabiPlayerAvatar player={player} showName={false} size="sm" thinking={thinking} />
 				<p
 					className="hanabi-player-name w-full truncate text-[17px] font-medium leading-6 text-hanabi-text"
 					title={player.name}
@@ -117,22 +122,21 @@ export default function HanabiPlayerWorkspace({
 				</p>
 				<div className="flex flex-wrap items-center justify-center gap-1.5">
 					{reviewPerspective && <span className="text-sm text-hanabi-text-muted">Viewing as</span>}
-					{active && !finished && (
-						<span className="rounded-md border border-hanabi-coral-soft/45 bg-hanabi-coral px-2 py-0.5 text-[12px] font-medium leading-5 text-white shadow-[0_2px_7px_rgb(0_0_0_/_22%)]">
-							{review ? 'To act' : 'Playing'}
+					{(active || thinking) && !finished && (
+						<span
+							className={classNames(
+								'rounded-md border px-2 py-0.5 text-[12px] font-medium leading-5 text-white shadow-[0_2px_7px_rgb(0_0_0_/_22%)]',
+								active
+									? 'border-hanabi-coral-soft/45 bg-hanabi-coral'
+									: 'border-white/30 bg-white/10',
+							)}
+						>
+							{thinking ? thinkingLabel : review ? 'To act' : 'Playing'}
 						</span>
 					)}
-					{!player.connected && !review && (
+					{player.kind !== 'bot' && !player.connected && !review && (
 						<span className="text-[12px] font-medium leading-5 text-hanabi-text-muted">
 							Offline
-						</span>
-					)}
-					{clueLabel && (
-						<span
-							aria-live="polite"
-							className={`hanabi-clue-pill hanabi-clue-pill-${clueTone} rounded-md border px-2 py-1 text-xs font-semibold leading-4`}
-						>
-							{clueLabel} clue
 						</span>
 					)}
 				</div>

@@ -1,4 +1,4 @@
-import { useGameData } from '~/games/hanabi/client/HanabiGameContext';
+import { useBoardData } from '~/games/hanabi/client/HanabiGameContext';
 import HanabiTileView, { TileViewSize } from '~/games/hanabi/client/HanabiTileView';
 import {
 	HanabiGameActionDiscard,
@@ -17,7 +17,7 @@ interface Props {
 const ENGLISH_NUMBERS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six'];
 
 export default function HanabiTileActionBody({ action }: Props): JSX.Element | null {
-	const gameData = useGameData();
+	const gameData = useBoardData();
 
 	const player = gameData.players[action.playerId];
 

@@ -25,6 +25,7 @@ export default class GameManager {
 	private _socketManagerOnMessageSubscriptionId: number | null = null;
 
 	private _gameStore: GameStore;
+	private _backgroundStarted = false;
 	private _pendingRemovals = new Set<Promise<void>>();
 	private _removalErrors: unknown[] = [];
 	private _watchRateLimits = new Map<string, WatchRateLimit>();
@@ -46,6 +47,7 @@ export default class GameManager {
 	}
 
 	public async close(): Promise<void> {
+		this._backgroundStarted = false;
 		this.cleanUp();
 		const games = Object.values(this._games);
 		games.forEach((game) => game.stopSaving());
@@ -86,6 +88,11 @@ export default class GameManager {
 
 	public addGameFactory(factory: GameFactory): void {
 		this._gameFactories[factory.title] = factory;
+	}
+
+	public startBackgroundWork(): void {
+		this._backgroundStarted = true;
+		for (const game of Object.values(this._games)) game.startBackgroundWork();
 	}
 
 	public removeGameFactory(title: string): void {
@@ -185,6 +192,7 @@ export default class GameManager {
 			return;
 		}
 		this._games[game.id] = game;
+		if (this._backgroundStarted) game.startBackgroundWork();
 
 		// Add the watcher.
 		if (watch) {

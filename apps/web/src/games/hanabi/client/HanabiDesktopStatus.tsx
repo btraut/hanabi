@@ -32,7 +32,17 @@ export function getHanabiDesktopStatusData(
 	} else if (gameData.currentPlayerId) {
 		const currentPlayer = gameData.players[gameData.currentPlayerId];
 		turnLabel = `${currentPlayer?.name || 'Another player'}'s turn`;
-		if (currentPlayer && !currentPlayer.connected) turnLabel += ' · disconnected';
+		if (currentPlayer?.kind === 'bot') {
+			const botTurn = gameData.bots?.turn;
+			if (botTurn?.playerId === currentPlayer.id) {
+				turnLabel =
+					botTurn.status === 'thinking'
+						? `${currentPlayer.name} · ${botTurn.opportunity === 'clue' ? 'Considering clue…' : 'Thinking…'}`
+						: `${currentPlayer.name} · Paused`;
+			}
+		} else if (currentPlayer && !currentPlayer.connected) {
+			turnLabel += ' · disconnected';
+		}
 	}
 
 	if (gameData.remainingTurns !== null && gameData.stage === HanabiStage.Playing) {
@@ -67,7 +77,11 @@ export default function HanabiDesktopStatus({
 					aria-hidden="true"
 					className="size-9 shrink-0 rounded-full border-[3px] border-white shadow-[0_0_16px_rgb(255_255_255_/_18%)]"
 				/>
-				<p className="hanabi-turn-label truncate text-[36px] font-medium tracking-[-0.025em] text-white">
+				<p
+					aria-live="polite"
+					className="hanabi-turn-label truncate text-[36px] font-medium tracking-[-0.025em] text-white"
+					title={turnLabel ?? status.turnLabel}
+				>
 					{turnLabel ?? status.turnLabel}
 				</p>
 			</section>

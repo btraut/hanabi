@@ -1,6 +1,6 @@
 import Portal from '~/components/Portal';
 import Tooltip from '~/components/Tooltip';
-import { useGameData } from '~/games/hanabi/client/HanabiGameContext';
+import { useBoardData } from '~/games/hanabi/client/HanabiGameContext';
 import {
 	HanabiClueColor,
 	HanabiTile,
@@ -40,7 +40,7 @@ export default function HanabiTileActionsTooltip({
 	onAction,
 	onClose,
 }: Props): JSX.Element {
-	const gameData = useGameData();
+	const gameData = useBoardData();
 
 	const tile = gameData.tiles[tileId];
 	const isBlackTile = tile.color === 'black';

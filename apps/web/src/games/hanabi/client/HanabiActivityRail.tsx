@@ -14,9 +14,11 @@ import FocusLock from 'react-focus-lock';
 import { ReactNode, useCallback, useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+type ActivityGameData = Pick<HanabiGameData, 'actions' | 'players' | 'turnOrder'>;
+
 interface Props {
 	composer?: ReactNode;
-	gameData: HanabiGameData;
+	gameData: ActivityGameData;
 	renderAction?: (action: HanabiGameAction) => ReactNode;
 	userId: string;
 }
@@ -311,7 +313,7 @@ function HanabiChatMessage({
 	userId,
 }: {
 	action: Extract<HanabiGameAction, { type: HanabiGameActionType.Chat }>;
-	gameData: HanabiGameData;
+	gameData: ActivityGameData;
 	userId: string;
 }): JSX.Element {
 	const player = gameData.players[action.playerId];
@@ -356,7 +358,7 @@ function HanabiDesktopActivityAction({
 	userId,
 }: {
 	action: HanabiGameAction;
-	gameData: HanabiGameData;
+	gameData: ActivityGameData;
 	timeLabel?: string;
 	userId: string;
 }): JSX.Element {

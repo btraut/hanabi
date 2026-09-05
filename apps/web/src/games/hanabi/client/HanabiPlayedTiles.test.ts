@@ -1,3 +1,4 @@
+import { HanabiGameStore } from './HanabiGameStore';
 import {
 	HanabiGameContext,
 	HanabiGameContextProvider,
@@ -11,6 +12,11 @@ import { generateHanabiGameData, HanabiStage } from '@hanabi/shared';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
+
+vi.mock('~/games/hanabi/client/HanabiGameContext', async (importOriginal) => ({
+	...(await importOriginal<typeof import('./HanabiGameContext')>()),
+	useTransitioningTileId: () => 'played-1',
+}));
 
 describe('HanabiPlayedTiles', () => {
 	it('keeps a placeholder beneath an inert played tile without hand-only decoration', () => {
@@ -26,8 +32,7 @@ describe('HanabiPlayedTiles', () => {
 			create: vi.fn(),
 			watch: vi.fn(),
 			gameMessenger: null,
-			gameData,
-			transitioningTileId: playedTile.id,
+			store: new HanabiGameStore(gameData),
 			code: 'test',
 		};
 		const highlightContext: HanabiHighlightContext = {

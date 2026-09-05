@@ -170,6 +170,20 @@ export function isHanabiRainbowRuleSet(ruleSet: HanabiRuleSet): boolean {
 	return ruleSet === 'rainbow' || ruleSet === 'rainbow-black-powder';
 }
 
+export function getHanabiClueColors(ruleSet: HanabiRuleSet): readonly HanabiClueColor[] {
+	return ruleSet === '6-color' ? HANABI_CLUE_COLORS : STANDARD_COLORS;
+}
+
+export function doesHanabiTileMatchClue(
+	tile: HanabiTile,
+	ruleSet: HanabiRuleSet,
+	clue: { color?: HanabiClueColor; number?: HanabiTileNumber },
+): boolean {
+	return clue.color !== undefined
+		? tile.color === clue.color || (isHanabiRainbowRuleSet(ruleSet) && tile.color === 'rainbow')
+		: clue.number !== undefined && tile.number === clue.number;
+}
+
 export function isHanabiClueColor(color: HanabiTileColor): color is HanabiClueColor {
 	return (HANABI_CLUE_COLORS as readonly HanabiTileColor[]).includes(color);
 }
@@ -206,6 +220,21 @@ export interface HanabiPlayer {
 	id: string;
 	connected: boolean;
 	name: string;
+	kind?: 'human' | 'bot';
+}
+
+export interface HanabiBotTurnStatus {
+	playerId: string;
+	opportunity?: 'turn' | 'clue';
+	status: 'thinking' | 'error' | 'disabled' | 'exhausted';
+	message?: string;
+	canRetry: boolean;
+}
+
+export interface HanabiBotStatus {
+	available: boolean;
+	canManage: boolean;
+	turn: HanabiBotTurnStatus | null;
 }
 
 export enum HanabiGameActionType {
@@ -292,6 +321,8 @@ export interface HanabiGameData {
 	creatorId: string;
 	// Available only in finished, fully recorded recipient snapshots.
 	reviewTranscript?: GameTranscriptV1;
+	// Recipient-specific bot availability; private execution state is stored server-side.
+	bots?: HanabiBotStatus;
 
 	// What seed was used for the random number generator? This seed should
 	// dictate all the same tile types/order at the beginning of the game.
@@ -372,6 +403,11 @@ export function generatePlayer(data: Partial<HanabiPlayer> = {}): HanabiPlayer {
 	};
 }
 
+export function getHanabiTileCopyCount(color: HanabiTileColor, number: HanabiTileNumber): number {
+	const sequence = getHanabiFireworkSequence(color);
+	return number === sequence[0] ? 3 : number === sequence[sequence.length - 1] ? 1 : 2;
+}
+
 export function generateRandomDeck(
 	ruleSet: HanabiRuleSet,
 	seed: string,
@@ -380,11 +416,11 @@ export function generateRandomDeck(
 	const tileIds: string[] = [];
 
 	const colors = getHanabiRuleSetColors(ruleSet);
-	const standardNumbers: HanabiTileNumber[] = [1, 1, 1, 2, 2, 3, 3, 4, 4, 5];
-	const blackPowderNumbers: HanabiTileNumber[] = [5, 5, 5, 4, 4, 3, 3, 2, 2, 1];
 
 	for (const color of colors) {
-		const numbers = color === 'black' ? blackPowderNumbers : standardNumbers;
+		const numbers = getHanabiFireworkSequence(color).flatMap((number) =>
+			Array.from({ length: getHanabiTileCopyCount(color, number) }, () => number),
+		);
 		for (const number of numbers) {
 			const id = crypto.randomUUID();
 			tiles[id] = { id, color, number };

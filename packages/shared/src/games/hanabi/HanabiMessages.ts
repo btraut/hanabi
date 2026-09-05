@@ -17,6 +17,16 @@ export type RefreshGameDataMessage = SocketMessage<'RefreshGameDataMessage', Han
 
 // Player Management
 export type AddPlayerMessage = SocketMessage<'AddPlayerMessage', { name: string }>;
+export type AddBotMessage = SocketMessage<'AddBotMessage', void>;
+export type AddBotResponseMessage = SocketMessage<
+	'AddBotResponseMessage',
+	{ error?: string; playerId?: string }
+>;
+export type RetryBotTurnMessage = SocketMessage<'RetryBotTurnMessage', void>;
+export type RetryBotTurnResponseMessage = SocketMessage<
+	'RetryBotTurnResponseMessage',
+	{ error?: string }
+>;
 export type AddPlayerResponseMessage = SocketMessage<
 	'AddPlayerResponseMessage',
 	{ error?: string }
@@ -108,6 +118,10 @@ export type HanabiMessage =
 	| GetGameDataMessage
 	| RefreshGameDataMessage
 	| AddPlayerMessage
+	| AddBotMessage
+	| AddBotResponseMessage
+	| RetryBotTurnMessage
+	| RetryBotTurnResponseMessage
 	| AddPlayerResponseMessage
 	| RemovePlayerMessage
 	| RemovePlayerResponseMessage

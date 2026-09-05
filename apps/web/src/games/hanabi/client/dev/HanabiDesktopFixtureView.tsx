@@ -8,6 +8,7 @@ import {
 	HanabiGameContext,
 	HanabiGameContextProvider,
 } from '~/games/hanabi/client/HanabiGameContext';
+import { HanabiGameStore } from '~/games/hanabi/client/HanabiGameStore';
 import HanabiGameMessenger from '~/games/hanabi/client/HanabiGameMessenger';
 import { HanabiHighlightContextProvider } from '~/games/hanabi/client/HanabiHighlightContext';
 import { HanabiDesktopPlayerWorkspaces } from '~/games/hanabi/client/HanabiPlayerWorkspace';
@@ -50,11 +51,10 @@ export default function HanabiDesktopFixtureView(): JSX.Element {
 				? {
 						code: fixture.code,
 						create: () => Promise.resolve(fixture.code),
-						gameData: fixture.gameData,
+						store: new HanabiGameStore(fixture.gameData),
 						gameMessenger: {
 							reset: () => Promise.resolve(),
 						} as HanabiGameMessenger,
-						transitioningTileId: null,
 						watch: () => Promise.resolve(),
 					}
 				: null,

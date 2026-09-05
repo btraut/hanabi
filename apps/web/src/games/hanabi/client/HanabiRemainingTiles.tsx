@@ -1,4 +1,4 @@
-import { useGameData } from '~/games/hanabi/client/HanabiGameContext';
+import { useBoardData } from '~/games/hanabi/client/HanabiGameContext';
 import HanabiTileView, { TileViewSize } from '~/games/hanabi/client/HanabiTileView';
 import { HANABI_TILE_SIZE_SMALL } from '@hanabi/shared';
 import mapXTimes from '~/utils/mapXTimes';
@@ -8,7 +8,7 @@ const TILE_OFFSET = 4;
 const MAX_STACKED_TILES = 5;
 
 export default function HanabiRemainingTiles(): JSX.Element {
-	const gameData = useGameData();
+	const gameData = useBoardData();
 
 	const remainingTiles = gameData.remainingTiles.length;
 	const visibleRemainingTiles = Math.min(remainingTiles, MAX_STACKED_TILES);

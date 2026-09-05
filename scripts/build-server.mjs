@@ -1,4 +1,5 @@
 import { build } from 'esbuild';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -15,6 +16,14 @@ await build({
 	format: 'esm',
 	target: 'node24',
 	sourcemap: true,
+	define: {
+		__HANABI_BOT_CONVENTIONS__: JSON.stringify(
+			readFileSync(
+				path.join(workspaceRoot, 'apps/server/src/games/hanabi/bots/conventions.md'),
+				'utf8',
+			),
+		),
+	},
 	banner: {
 		js: 'import { createRequire as __createRequire } from "node:module"; const require = __createRequire(import.meta.url);',
 	},

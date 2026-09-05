@@ -1,4 +1,4 @@
-import { useGameData, useTransitioningTileId } from '~/games/hanabi/client/HanabiGameContext';
+import { useBoardData, useTransitioningTileId } from '~/games/hanabi/client/HanabiGameContext';
 import { getTileViewTransitionName } from '~/games/hanabi/client/HanabiActionTransition';
 import HanabiTileView, { TileViewSize } from '~/games/hanabi/client/HanabiTileView';
 import {
@@ -10,7 +10,7 @@ import {
 import classNames from 'classnames';
 
 export default function HanabiPlayedTiles(): JSX.Element {
-	const gameData = useGameData();
+	const gameData = useBoardData();
 	const transitioningTileId = useTransitioningTileId();
 
 	const colors = getHanabiRuleSetColors(gameData.ruleSet);

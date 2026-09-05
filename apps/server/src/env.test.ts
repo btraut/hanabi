@@ -2,6 +2,46 @@ import { describe, expect, it } from 'vitest';
 import { parseEnv } from './env.js';
 
 describe('parseEnv', () => {
+	it('keeps human games available when bots are disabled or their key is absent', () => {
+		expect(parseEnv({ NODE_ENV: 'test' })).toMatchObject({
+			HANABI_BOTS_ENABLED: false,
+			OPENAI_API_KEY: '',
+			HANABI_BOT_MODEL: 'gpt-6-astra',
+			HANABI_BOT_REASONING_EFFORT: 'high',
+			HANABI_BOT_TIMEOUT_MS: 120_000,
+			HANABI_BOT_MAX_OUTPUT_TOKENS: 16_384,
+			HANABI_BOT_MAX_CONCURRENT: 3,
+		});
+		expect(parseEnv({ HANABI_BOTS_ENABLED: 'true' }).OPENAI_API_KEY).toBe('');
+	});
+
+	it('accepts explicit bot settings and rejects unbounded or malformed limits', () => {
+		expect(
+			parseEnv({
+				HANABI_BOTS_ENABLED: 'true',
+				HANABI_BOT_MODEL: 'custom-model',
+				HANABI_BOT_REASONING_EFFORT: 'medium',
+				HANABI_BOT_ROUND_MAX_ATTEMPTS: '50',
+				HANABI_BOT_GLOBAL_MAX_TOKENS: '100000',
+			}),
+		).toMatchObject({
+			HANABI_BOTS_ENABLED: true,
+			HANABI_BOT_MODEL: 'custom-model',
+			HANABI_BOT_REASONING_EFFORT: 'medium',
+			HANABI_BOT_ROUND_MAX_ATTEMPTS: 50,
+			HANABI_BOT_GLOBAL_MAX_TOKENS: 100000,
+		});
+		for (const value of ['0', '-1', 'Infinity', 'NaN', '1.5', '', '100000000000']) {
+			expect(() => parseEnv({ HANABI_BOT_TIMEOUT_MS: value })).toThrow('HANABI_BOT_TIMEOUT_MS');
+		}
+		expect(() => parseEnv({ HANABI_BOTS_ENABLED: 'yes' })).toThrow('HANABI_BOTS_ENABLED');
+		expect(() => parseEnv({ HANABI_BOT_MODEL: ' ' })).toThrow('HANABI_BOT_MODEL');
+		expect(() => parseEnv({ HANABI_BOT_REASONING_EFFORT: 'X-High' })).toThrow(
+			'HANABI_BOT_REASONING_EFFORT',
+		);
+		expect(() => parseEnv({ HANABI_BOT_REASONING_EFFORT: 'none' })).toThrow('at least low');
+	});
+
 	it('uses a local file store by default outside production', () => {
 		expect(parseEnv({ NODE_ENV: 'development' })).toMatchObject({
 			ADMIN_PASSWORD: 'tenfour',
