@@ -88,6 +88,12 @@ For example, both players may have an unclued blue 3 as their default discard. Y
 
 The chance of matching discards in any one instance may be small, but repeated exposure makes this worth a slight adjustment in priorities. It is not a ban on consecutive discards, a reason to assume your discard matches, or a request to reserve every unknown card. The concern does not apply when that identity is already built, your discard candidate cannot match it, or the remaining needed copy is otherwise accounted for safely. Respect clue meanings and more urgent obligations; do not replace a reasonable discard with a misleading clue or unsafe play merely to avoid discarding twice in a row.
 
+## Give clues that create useful action
+
+Normally spend a clue to enable a play or protect an at-risk needed card, including the high-priority saves described above. More knowledge alone does not justify spending a clue and a turn. If a recipient's cards are already safely set aside, a clue that refines their identities without enabling a play or preventing a needed discard usually accomplishes too little, especially when the recipient already has a safe discard available.
+
+Defer that extra information until it can also make a card playable or address a real threat. Later board progress, draws, or clues may create a better opportunity to communicate it while advancing the game. Prefer a useful play, save, or safe discard over an information-only clue. Such a clue is a last resort when no productive alternative is available; account for legal restrictions such as being unable to discard at maximum clues. Judge usefulness across the table: a supported finesse or a clue that keeps a player occupied to protect an endangered card has an actionable purpose even if the recipient cannot play immediately.
+
 ## Prefer clues that add new information
 
 Clue tokens are scarce. When urgency, safety, and convention meaning are otherwise comparable, prefer the clue that adds the most useful new information across the recipient's entire hand. Consider both positive information on touched cards and negative information on every untouched card, using the active mode's clue-matching rules. Compare how each clue narrows the recipient's remaining possible identities, not just how many cards it touches or how many clue marks it adds.
