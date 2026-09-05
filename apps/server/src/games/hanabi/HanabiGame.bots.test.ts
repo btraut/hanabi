@@ -391,7 +391,7 @@ describe('server bot game integration', () => {
 		expect(snapshot(restored.game).botRound).toMatchObject({ attempts: 3, tokens: 1012 });
 	});
 
-	it('preserves a failed round policy across deployment and accepts a seated-human retry', async () => {
+	it('automatically recovers a failed round across deployment with its saved policy', async () => {
 		const original = createHarness();
 		startOnBot(original);
 		const saved = snapshot(original.game);
@@ -406,12 +406,6 @@ describe('server bot game integration', () => {
 		const newPolicy = createBotPolicy('new-model', 'New deployment coaching', 'high');
 		const restored = createHarness({ serialized: saved, policy: newPolicy });
 		restored.game.startBackgroundWork();
-		await settle();
-		expect(restored.chooseAction).not.toHaveBeenCalled();
-		expect(refresh(restored).bots?.turn).toMatchObject({ status: 'error', canRetry: true });
-		send(restored, 'spectator', 'RetryBotTurnMessage', undefined);
-		expect(response(restored, 'RetryBotTurnResponseMessage', 'spectator').error).toMatch(/players/);
-		send(restored, 'host', 'RetryBotTurnMessage', undefined);
 		await vi.waitFor(() => expect(restored.chooseAction).toHaveBeenCalledTimes(1));
 		expect(restored.chooseAction.mock.calls[0][0].policy).toEqual(saved.botRound!.policy);
 		await vi.waitFor(() => expect(snapshot(restored.game).data.currentPlayerId).toBe('host'));
@@ -425,7 +419,7 @@ describe('server bot game integration', () => {
 	});
 
 	it.each(['round_budget', 'global_budget'] as const)(
-		'automatically continues a saved game paused by %s',
+		'automatically continues a saved game stopped by %s',
 		async (failure) => {
 			const original = createHarness();
 			startOnBot(original);

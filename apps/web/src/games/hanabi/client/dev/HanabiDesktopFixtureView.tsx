@@ -1,5 +1,6 @@
 import { HanabiGameActionChat, HanabiGameActionType } from '@hanabi/shared';
 import HanabiDesktopBoard from '~/games/hanabi/client/HanabiDesktopBoard';
+import HanabiBotError from '~/games/hanabi/client/HanabiBotError';
 import HanabiActivityRail from '~/games/hanabi/client/HanabiActivityRail';
 import { HANABI_BRAND_MARK_PATH } from '~/games/hanabi/client/HanabiArtwork';
 import PaperPlane from '~/games/hanabi/client/icons/PaperPlane';
@@ -107,6 +108,7 @@ export default function HanabiDesktopFixtureView(): JSX.Element {
 						</div>
 					</header>
 					<div className="hanabi-game-board-shell pt-5">
+						<HanabiBotError />
 						<HanabiDesktopBoard
 							activity={
 								<HanabiActivityRail

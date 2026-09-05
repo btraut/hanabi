@@ -164,14 +164,15 @@ Saved policies without `reflectionAfterAction` retain their original decision op
 Old saves without layout history are marked incomplete rather than
 assigned invented events.
 
-A failed request pauses that bot decision opportunity and shows **Retry** when another attempt is
-allowed. Seated humans can retry; the bot never makes an arbitrary fallback move. A failed optional
-clue response is skipped if it would block a different bot's normal turn, leaving the cards unchanged. The default
-deadline is 120 seconds with at most one automatic retry for transient API failures. Each response
-allows up to 16,384 output tokens, including internal reasoning and the final decision. Turn and clue opportunities share these limits. The server
-allows three concurrent requests; other turn and clue requests wait for capacity automatically.
-There are no cumulative request or token budgets, either per game or across the server. Saved games
-stopped by a retired budget resume automatically. The environment examples list configurable request limits.
+A failed request reports an error and retries automatically, with delays increasing from two seconds
+up to thirty seconds between unsuccessful request cycles. Players never need to retry a bot turn.
+The bot only applies validated model decisions; failures do not produce arbitrary fallback moves.
+A failed optional clue response is skipped if it would block another bot's turn. The default deadline
+is 120 seconds per request cycle, including one immediate retry for transient API failures. Every new
+cycle gets a fresh deadline. Responses allow up to 16,384 output tokens, including reasoning. Turn
+and clue requests wait for shared capacity automatically; the server allows three concurrent requests.
+Saved failed decisions resume automatically after a restart with their original policy and history.
+There are no cumulative request or token budgets. Environment examples list configurable limits.
 
 Result reflections use low reasoning effort, at most 2,048 output tokens, and a five-second deadline per attempt.
 They receive one attempt and are skipped on failure or timeout so the next turn can continue.
@@ -179,13 +180,12 @@ The revealed action remains in the complete history for interpretation on a late
 requests share the concurrency limit; they never replay the completed action.
 
 V2 requests include the complete history and enabled private notepad within a 512,000-byte combined
-input limit. Oversized requests pause inference without truncating saved events or notes, or blocking
-human movement.
+input limit. Oversized requests report an error without sending input or truncating saved events or notes.
+Human movement and other permitted game controls remain available during bot errors.
 
-Round usage counters and recovery state use existing active-game persistence. There is no per-round
-attempt or token cap. Games saved at the retired round limit can continue using **Retry**. Global limits reset with
-the process. A crash can lose the latest unflushed save, so persistence does not guarantee
-exactly-once API billing. Disabled or unconfigured bots do not prevent human-only games.
+Round usage counters and recovery state use existing active-game persistence. A crash can lose the
+latest unflushed save, so persistence does not guarantee exactly-once API billing. Disabled or
+unconfigured bots do not prevent human-only games.
 
 #### Game archive
 

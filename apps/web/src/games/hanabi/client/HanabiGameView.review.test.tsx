@@ -101,7 +101,7 @@ describe('HanabiGameView review integration', () => {
 	}
 
 	it.each(['error', 'exhausted', 'disabled'] as const)(
-		'keeps the board free of a pause box and retry control when bot status is %s',
+		'shows a nonblocking error with no retry control when bot status is %s',
 		(status) => {
 			liveGame.stage = HanabiStage.Playing;
 			liveGame.finishedReason = null;
@@ -113,15 +113,48 @@ describe('HanabiGameView review integration', () => {
 			liveGame.bots = {
 				available: true,
 				canManage: false,
-				turn: { playerId: 'bot', status, canRetry: true, message: 'Legacy bot failure' },
+				turn: {
+					playerId: 'bot',
+					status,
+					canRetry: false,
+					message: 'Could not respond. Retrying automatically.',
+				},
 			};
 			render();
 			expect(document.querySelector('[data-testid="live-board"]')).not.toBeNull();
-			expect(document.body.textContent).not.toContain('Legacy bot failure');
-			expect(document.body.textContent).not.toContain('is paused');
+			expect(document.querySelector('[role="status"]')?.textContent).toBe(
+				'Bot: Could not respond. Retrying automatically.',
+			);
+			expect(document.querySelector('[role="dialog"]')).toBeNull();
 			expect(button('Retry')).toBeUndefined();
+			const board = document.querySelector('[data-testid="live-board"]');
+			liveGame.bots.turn!.status = 'thinking';
+			render();
+			expect(document.querySelector('[role="status"]')).toBeNull();
+			expect(document.querySelector('[data-testid="live-board"]')).toBe(board);
 		},
 	);
+
+	it('supplies an error fallback and hides it after the game finishes or for result reflections', () => {
+		liveGame.stage = HanabiStage.Playing;
+		liveGame.finishedReason = null;
+		liveGame.bots = {
+			available: true,
+			canManage: false,
+			turn: { playerId: 'bot', status: 'error', canRetry: false },
+		};
+		render();
+		expect(document.querySelector('[role="status"]')?.textContent).toBe(
+			'Bot: Could not respond. Retrying automatically.',
+		);
+		liveGame.bots.turn!.opportunity = 'result';
+		render();
+		expect(document.querySelector('[role="status"]')).toBeNull();
+		liveGame.bots.turn!.opportunity = 'turn';
+		liveGame.stage = HanabiStage.Finished;
+		render();
+		expect(document.querySelector('[role="status"]')).toBeNull();
+	});
 
 	function click(label: string): void {
 		const element = button(label);

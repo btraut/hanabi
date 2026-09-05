@@ -2,6 +2,7 @@ import BreakpointController from '~/components/BreakpointController';
 import HanabiBoardPresentation from './HanabiBoardPresentation';
 import HanabiMoveTileController from './HanabiMoveTileController';
 import HanabiBoard from '~/games/hanabi/client/HanabiBoard';
+import HanabiBotError from '~/games/hanabi/client/HanabiBotError';
 import HanabiDebugPanel from '~/games/hanabi/client/HanabiDebugPanel';
 import { useGameSelector } from '~/games/hanabi/client/HanabiGameContext';
 import HanabiHeader from '~/games/hanabi/client/HanabiHeader';
@@ -90,6 +91,7 @@ export default function HanabiGameView(): JSX.Element | null {
 								<HanabiGameSurface>
 									<HanabiHeader variant="game" />
 									<div className="hanabi-game-board-shell pt-5">
+										<HanabiBotError />
 										<HanabiBoard
 											onReview={openReview}
 											initiallyDismissGameOver={reviewTranscript?.roundId === roundId}

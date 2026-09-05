@@ -25,6 +25,7 @@ describe('Hanabi desktop fixtures', () => {
 			'spectator',
 			'disconnected',
 			'bot-thinking',
+			'bot-error',
 			'bot-clue',
 			'bot-result',
 			'finished',
@@ -78,6 +79,31 @@ describe('Hanabi desktop fixtures', () => {
 		);
 
 		expect(markup.match(/hanabi-tile-note-marker/g)).toHaveLength(2);
+	});
+
+	it('renders the bot error above the board without a recovery control', () => {
+		const markup = renderToStaticMarkup(
+			createElement(
+				MemoryRouter,
+				{ initialEntries: ['/dev/desktop/bot-error'] },
+				createElement(
+					Routes,
+					null,
+					createElement(Route, {
+						element: createElement(HanabiDesktopFixtureView),
+						path: '/dev/desktop/:fixture',
+					}),
+				),
+			),
+		);
+
+		expect(markup).toContain('role="status"');
+		expect(markup).toContain('Bot 1: The bot request timed out. Retrying automatically.');
+		expect(markup.indexOf('role="status"')).toBeLessThan(
+			markup.indexOf('aria-label="Current turn"'),
+		);
+		expect(markup).not.toContain('>Retry</button>');
+		expect(markup).not.toContain('hanabi-avatar-orbit');
 	});
 
 	it('models the maximum width and height constraints', () => {

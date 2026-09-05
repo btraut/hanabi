@@ -125,7 +125,7 @@ describe('HanabiPlayerWorkspace', () => {
 		expect(markup).not.toContain('Freeform');
 	});
 
-	it('shows the orbit only for the current thinking bot and clears it on pause, turn change, or finish', () => {
+	it('shows the orbit during requests and resumes it after an automatic retry', () => {
 		const gameData = generateHanabiGameData({
 			currentPlayerId: 'ben',
 			players: { alice: players.alice, ben: { ...players.ben, kind: 'bot' } },
@@ -151,6 +151,7 @@ describe('HanabiPlayerWorkspace', () => {
 		gameData.bots!.turn!.status = 'error';
 		expect(render()).not.toContain('hanabi-avatar-orbit');
 		gameData.bots!.turn!.status = 'thinking';
+		expect(render().match(/class="hanabi-avatar-orbit"/g)).toHaveLength(1);
 		gameData.currentPlayerId = 'alice';
 		expect(render()).not.toContain('hanabi-avatar-orbit');
 		gameData.currentPlayerId = 'ben';
@@ -227,6 +228,14 @@ describe('HanabiPlayerWorkspace', () => {
 			gameData.bots!.turn!.status = 'error';
 			expect(render()).not.toContain('hanabi-avatar-orbit');
 			expect(render()).toContain('>Playing<');
+			expect(
+				getHanabiPlayerTilePermissions({
+					gameData,
+					isTransitioning: false,
+					playerId: 'alice',
+					userId: 'alice',
+				}).canAct,
+			).toBe(true);
 			gameData.bots!.turn!.status = 'thinking';
 			gameData.finishedReason = HanabiFinishedReason.OutOfTurns;
 			expect(render()).not.toContain('hanabi-avatar-orbit');

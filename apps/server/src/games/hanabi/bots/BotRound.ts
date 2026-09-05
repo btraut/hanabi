@@ -38,18 +38,18 @@ export const BOT_FAILURE_MESSAGES: Record<
 	Exclude<BotFailureCode, 'round_budget' | 'global_budget'>,
 	string
 > = {
-	timeout: 'The bot took too long. Try its turn again.',
+	timeout: 'The bot request timed out. Retrying automatically.',
 	unavailable:
-		'The bot service is unavailable. The server operator may need to check its configuration.',
-	rate_limit: 'The bot service is busy. Wait a moment, then try again.',
-	transient: 'The bot could not reach its service. Try again.',
-	refused: 'The bot did not choose an action. You can retry its turn.',
-	incomplete: 'The bot did not finish choosing an action. You can retry its turn.',
-	invalid_action: 'The bot returned an invalid action. No move was made; try again.',
-	busy: 'Other bots are thinking. Wait a moment, then try again.',
-	save_failed: 'The game could not be saved. Try the bot turn again when storage is available.',
+		'The bot service is unavailable. Retrying automatically; the server configuration may need attention.',
+	rate_limit: 'The bot service is busy. Retrying automatically.',
+	transient: 'The bot could not reach its service. Retrying automatically.',
+	refused: 'The bot did not choose an action. Retrying automatically.',
+	incomplete: 'The bot did not finish choosing an action. Retrying automatically.',
+	invalid_action: 'The bot returned an invalid action. No move was made. Retrying automatically.',
+	busy: 'Other bots are thinking. Retrying automatically.',
+	save_failed: 'The game could not be saved. Retrying automatically when storage is available.',
 	input_too_large:
-		'This round has too much history or notepad content for a bot request. The complete record is saved; start a new round to continue with bots.',
+		'The bot request exceeds the input limit. The complete record is saved; server attention is required.',
 };
 
 export function isBotRound(value: unknown): value is BotRound {
