@@ -851,6 +851,19 @@ body {
 	line-height: 20px;
 }
 
+.hanabi-feed-clue-label {
+	display: inline-block;
+	margin-left: 4px;
+	padding: 1px 6px;
+	border-radius: 4px;
+	background: rgb(255 255 255 / 6%);
+	color: var(--color-hanabi-text);
+	font-size: 18px;
+	font-weight: 700;
+	line-height: 22px;
+	white-space: nowrap;
+}
+
 .hanabi-chat-message {
 	display: grid;
 	grid-template-columns: 28px minmax(0, 1fr);

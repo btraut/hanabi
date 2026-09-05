@@ -401,24 +401,19 @@ function HanabiDesktopActivityAction({
 		action.type === HanabiGameActionType.GiveNumberClue
 	) {
 		const recipient = gameData.players[action.recipientId];
-		const clueLabel =
+		const clueValue =
 			action.type === HanabiGameActionType.GiveColorClue
-				? `${capitalize(action.color ?? 'color')} clue`
-				: `Number ${action.number} clue`;
+				? capitalize(action.color ?? 'color')
+				: action.number;
 		const clueColor =
 			action.type === HanabiGameActionType.GiveColorClue
 				? ACTION_ACCENTS[action.color ?? '']
 				: undefined;
 		summary = (
 			<>
-				clued {recipient?.name ?? 'another player'}
-				{' · '}
-				<span className="font-medium text-hanabi-text" style={{ color: clueColor }}>
-					{clueLabel}
-				</span>
-				<span className="text-hanabi-text-muted">
-					{' · '}
-					{action.tiles.length} {action.tiles.length === 1 ? 'tile' : 'tiles'}
+				clued {recipient?.name ?? 'another player'}{' '}
+				<span className="hanabi-feed-clue-label" style={{ color: clueColor }}>
+					{clueValue} clue
 				</span>
 			</>
 		);
