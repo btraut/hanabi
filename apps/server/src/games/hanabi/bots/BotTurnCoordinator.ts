@@ -72,7 +72,12 @@ export class BotTurnCoordinator {
 				this.hooks.notify();
 			}
 		}
-		if (this.hooks.getTurn()?.round.failure === 'global_budget') this.checkAvailabilityLater();
+		const round = this.hooks.getTurn()?.round;
+		if (round && ['round_budget', 'global_budget', 'busy'].includes(round.failure ?? '')) {
+			round.status = 'ready';
+			delete round.failure;
+			this.hooks.notify();
+		}
 		this.schedule();
 	}
 
@@ -107,14 +112,10 @@ export class BotTurnCoordinator {
 			...(turn.opportunity ? { opportunity: turn.opportunity } : {}),
 			status: round.failure === 'unavailable' ? 'disabled' : round.status,
 			message:
-				round.failure === 'round_budget'
+				round.failure === 'round_budget' || round.failure === 'global_budget'
 					? undefined
 					: BOT_FAILURE_MESSAGES[round.failure ?? 'transient'],
-			canRetry:
-				round.failure !== 'unavailable' &&
-				round.failure !== 'input_too_large' &&
-				(round.failure !== 'global_budget' ||
-					this.runtime.availability(round.requiredTokens ?? 0) !== 'global_budget'),
+			canRetry: round.failure !== 'unavailable' && round.failure !== 'input_too_large',
 		};
 	}
 
@@ -142,6 +143,7 @@ export class BotTurnCoordinator {
 				!this.started ||
 				this.running ||
 				!turn ||
+				this.availabilityTimer !== null ||
 				!['ready', 'thinking'].includes(turn.round.status)
 			)
 				return;
@@ -178,23 +180,7 @@ export class BotTurnCoordinator {
 		round.failure = code;
 		this.hooks.onFailure?.();
 		this.hooks.notify();
-		if (round.failure === 'global_budget') this.checkAvailabilityLater();
 		Logger.warn(`Bot decision failed game=${this.hooks.gameId} code=${code}`);
-	}
-
-	private checkAvailabilityLater(): void {
-		if (this.availabilityTimer) clearTimeout(this.availabilityTimer);
-		this.availabilityTimer = setTimeout(
-			() => {
-				this.availabilityTimer = null;
-				const turn = this.hooks.getTurn();
-				if (!this.started || turn?.round.failure !== 'global_budget') return;
-				if (this.status()?.canRetry) this.hooks.notify();
-				else this.checkAvailabilityLater();
-			},
-			Math.min(5_000, this.runtime.nextAvailabilityCheckMs()),
-		);
-		this.availabilityTimer.unref();
 	}
 
 	private async run(
@@ -247,12 +233,11 @@ export class BotTurnCoordinator {
 			this.fail(round, 'input_too_large');
 			return;
 		}
-		const reservedTokens =
+		const estimatedTokens =
 			inputBytes +
 			Buffer.byteLength(JSON.stringify(legalActions.map(({ id }) => id)), 'utf8') +
 			(isResult ? this.runtime.limits.resultMaxOutputTokens : this.runtime.limits.maxOutputTokens) +
 			1_024;
-		round.requiredTokens = reservedTokens;
 		const timeout = setTimeout(
 			() => controller.abort(),
 			isResult ? this.runtime.limits.resultTimeoutMs : this.runtime.limits.timeoutMs,
@@ -265,13 +250,25 @@ export class BotTurnCoordinator {
 					this.fail(round, 'timeout');
 					return;
 				}
-				const reservation = this.runtime.reserve(reservedTokens);
-				if (typeof reservation === 'string') {
-					this.fail(round, reservation);
+				const reservation = this.runtime.reserve();
+				if (reservation === 'busy') {
+					if (isResult) {
+						this.fail(round, 'busy');
+						return;
+					}
+					// Wait for shared capacity without requiring a player's manual retry.
+					round.status = 'ready';
+					delete round.failure;
+					this.availabilityTimer = setTimeout(() => {
+						this.availabilityTimer = null;
+						this.schedule();
+					}, 1_000);
+					this.availabilityTimer.unref();
+					this.hooks.notify();
 					return;
 				}
 				round.attempts += 1;
-				round.tokens += reservedTokens;
+				round.tokens += estimatedTokens;
 				round.lastAttemptAt = Date.now();
 				round.status = 'thinking';
 				delete round.failure;
@@ -315,7 +312,7 @@ export class BotTurnCoordinator {
 						const total = result.inputTokens + result.outputTokens;
 						if (Number.isSafeInteger(total) && total >= 0) {
 							usedTokens = total;
-							round.tokens += total - reservedTokens;
+							round.tokens += total - estimatedTokens;
 						}
 					}
 					const selected = legalActions.find(({ id }) => id === result.actionId);
@@ -361,7 +358,7 @@ export class BotTurnCoordinator {
 					this.fail(round, code);
 					return;
 				} finally {
-					reservation.release(usedTokens);
+					reservation.release();
 				}
 			}
 		} finally {

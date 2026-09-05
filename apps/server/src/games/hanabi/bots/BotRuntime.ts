@@ -7,9 +7,6 @@ export interface BotLimits {
 	resultTimeoutMs: number;
 	resultMaxOutputTokens: number;
 	maxConcurrent: number;
-	globalWindowMs: number;
-	globalMaxAttempts: number;
-	globalMaxTokens: number;
 }
 
 export const DEFAULT_BOT_LIMITS: BotLimits = {
@@ -18,16 +15,12 @@ export const DEFAULT_BOT_LIMITS: BotLimits = {
 	resultTimeoutMs: 5_000,
 	resultMaxOutputTokens: 2_048,
 	maxConcurrent: 3,
-	globalWindowMs: 3_600_000,
-	globalMaxAttempts: 500,
-	globalMaxTokens: 5_000_000,
 };
 
 /** One runtime is shared by every game in the server process. */
 export class BotRuntime {
 	readonly limits: BotLimits;
 	private active = 0;
-	private reservations: Array<{ createdAt: number; tokens: number }> = [];
 
 	constructor(
 		readonly provider: BotDecisionProvider,
@@ -37,41 +30,15 @@ export class BotRuntime {
 		this.limits = { ...DEFAULT_BOT_LIMITS, ...limits };
 	}
 
-	availability(tokens: number): 'busy' | 'global_budget' | null {
-		const now = Date.now();
-		this.reservations = this.reservations.filter(
-			({ createdAt }) => now - createdAt < this.limits.globalWindowMs,
-		);
+	reserve(): 'busy' | { release: () => void } {
 		if (this.active >= this.limits.maxConcurrent) return 'busy';
-		if (
-			this.reservations.length >= this.limits.globalMaxAttempts ||
-			this.reservations.reduce((total, entry) => total + entry.tokens, 0) + tokens >
-				this.limits.globalMaxTokens
-		)
-			return 'global_budget';
-		return null;
-	}
-
-	nextAvailabilityCheckMs(): number {
-		return Math.max(
-			1,
-			(this.reservations[0]?.createdAt ?? Date.now()) + this.limits.globalWindowMs - Date.now(),
-		);
-	}
-
-	reserve(tokens: number): 'busy' | 'global_budget' | { release: (usedTokens?: number) => void } {
-		const blocked = this.availability(tokens);
-		if (blocked) return blocked;
 		this.active += 1;
-		const reservation = { createdAt: Date.now(), tokens };
-		this.reservations.push(reservation);
 		let released = false;
 		return {
-			release: (usedTokens) => {
+			release: () => {
 				if (released) return;
 				released = true;
 				this.active -= 1;
-				if (usedTokens !== undefined) reservation.tokens = usedTokens;
 			},
 		};
 	}
