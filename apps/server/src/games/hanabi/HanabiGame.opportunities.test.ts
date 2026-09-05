@@ -276,7 +276,7 @@ describe('bot turn and clue decision opportunities', () => {
 		send(harness, 'host', 'StartGameMessage', undefined);
 		expect(snapshot(harness.game).botRound).toMatchObject({
 			version: 2,
-			policy: { contractVersion: 2, reasoningEffort: 'high' },
+			policy: { contractVersion: 2, reasoningEffort: 'medium' },
 			history: { version: 2 },
 			pendingClues: [],
 		});

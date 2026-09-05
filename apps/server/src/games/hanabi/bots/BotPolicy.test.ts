@@ -13,7 +13,7 @@ describe('bot policies', () => {
 	it('loads editable conventions alongside the fixed player contract', () => {
 		const policy = createBotPolicy();
 		expect(policy.model).toBe(DEFAULT_BOT_MODEL);
-		expect(policy.reasoningEffort).toBe('high');
+		expect(policy.reasoningEffort).toBe('medium');
 		expect(policy.instructions).toContain('Your own card faces and the undealt deck are unknown');
 		expect(policy.instructions).toContain('# Hanabi bot conventions');
 		expect(isBotPolicy(policy)).toBe(true);

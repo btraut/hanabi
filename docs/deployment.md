@@ -59,7 +59,7 @@ public snapshots, transcripts, other bots' requests, and operational logs; accep
 also appear in public debug chat. Existing v2 rounds without the flag keep
 their original three-field response contract; start a new round to enable the notepad.
 
-`HANABI_BOT_MODEL=gpt-6-astra` and `HANABI_BOT_REASONING_EFFORT=high` are the defaults. The server
+`HANABI_BOT_MODEL=gpt-5.6-sol` and `HANABI_BOT_REASONING_EFFORT=medium` are the defaults. The server
 environment example controls deadline, concurrency, and budgets. Off-turn clue requests consume
 the same inference budget as turn requests. A failed optional clue response is skipped with a
 sanitized warning if it would block another bot's own turn; cards stay unchanged. Other failures

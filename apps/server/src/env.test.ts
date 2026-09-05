@@ -6,8 +6,8 @@ describe('parseEnv', () => {
 		expect(parseEnv({ NODE_ENV: 'test' })).toMatchObject({
 			HANABI_BOTS_ENABLED: false,
 			OPENAI_API_KEY: '',
-			HANABI_BOT_MODEL: 'gpt-6-astra',
-			HANABI_BOT_REASONING_EFFORT: 'high',
+			HANABI_BOT_MODEL: 'gpt-5.6-sol',
+			HANABI_BOT_REASONING_EFFORT: 'medium',
 			HANABI_BOT_TIMEOUT_MS: 120_000,
 			HANABI_BOT_MAX_OUTPUT_TOKENS: 16_384,
 			HANABI_BOT_MAX_CONCURRENT: 3,
@@ -37,7 +37,9 @@ describe('parseEnv', () => {
 		expect(() => parseEnv({ HANABI_BOT_REASONING_EFFORT: 'X-High' })).toThrow(
 			'HANABI_BOT_REASONING_EFFORT',
 		);
-		expect(() => parseEnv({ HANABI_BOT_REASONING_EFFORT: 'none' })).toThrow('at least low');
+		expect(() =>
+			parseEnv({ HANABI_BOT_MODEL: 'gpt-6-astra', HANABI_BOT_REASONING_EFFORT: 'none' }),
+		).toThrow('at least low');
 	});
 
 	it('ignores retired global and per-round budget settings', () => {

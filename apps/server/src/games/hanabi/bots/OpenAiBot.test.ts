@@ -69,7 +69,7 @@ describe('OpenAiBot', () => {
 			instructions: input.policy.instructions,
 			input: JSON.stringify(input.observation),
 			store: false,
-			reasoning: { effort: 'high' },
+			reasoning: { effort: 'medium' },
 			max_output_tokens: 16_384,
 			text: {
 				format: {
