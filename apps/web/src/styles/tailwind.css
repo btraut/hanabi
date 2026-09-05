@@ -869,6 +869,71 @@ body {
 	white-space: nowrap;
 }
 
+.hanabi-action-toasts {
+	position: fixed;
+	z-index: 110;
+	top: calc(12px + env(safe-area-inset-top, 0px));
+	left: 50%;
+	width: min(400px, calc(100% - 24px));
+	transform: translateX(-50%);
+	pointer-events: none;
+}
+
+.hanabi-action-toast {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 14px 12px 14px 18px;
+	border: 1px solid rgb(255 255 255 / 16%);
+	border-radius: 10px;
+	background: #000;
+	box-shadow: 0 8px 32px rgb(0 0 0 / 45%);
+	pointer-events: auto;
+	animation: hanabi-action-toast-slide ease both;
+}
+
+.hanabi-action-toast .hanabi-feed-event-content {
+	flex: 1;
+	padding: 0;
+}
+
+.hanabi-action-toast-dismiss {
+	display: grid;
+	width: 44px;
+	height: 44px;
+	flex-shrink: 0;
+	place-items: center;
+	border-radius: 6px;
+	color: var(--color-hanabi-text-muted);
+	font-size: 26px;
+	cursor: pointer;
+}
+
+.hanabi-action-toast-dismiss:hover,
+.hanabi-action-toast-dismiss:focus-visible {
+	background: rgb(255 255 255 / 10%);
+	color: var(--color-hanabi-text);
+}
+
+@keyframes hanabi-action-toast-slide {
+	0%,
+	100% {
+		transform: translateY(calc(-100% - 24px - env(safe-area-inset-top, 0px)));
+		opacity: 0;
+	}
+	6%,
+	94% {
+		transform: translateY(0);
+		opacity: 1;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.hanabi-action-toast {
+		animation: none;
+	}
+}
+
 .hanabi-chat-message {
 	display: grid;
 	grid-template-columns: 28px minmax(0, 1fr);

@@ -1,6 +1,7 @@
-import { HanabiGameActionChat, HanabiGameActionType } from '@hanabi/shared';
+import { HanabiGameAction, HanabiGameActionType } from '@hanabi/shared';
 import HanabiDesktopBoard from '~/games/hanabi/client/HanabiDesktopBoard';
 import HanabiBotError from '~/games/hanabi/client/HanabiBotError';
+import HanabiActionToasts from '~/games/hanabi/client/HanabiActionToasts';
 import HanabiActivityRail from '~/games/hanabi/client/HanabiActivityRail';
 import { HANABI_BRAND_MARK_PATH } from '~/games/hanabi/client/HanabiArtwork';
 import PaperPlane from '~/games/hanabi/client/icons/PaperPlane';
@@ -34,11 +35,17 @@ export default function HanabiDesktopFixtureView(): JSX.Element {
 	const { fixture: fixtureName } = useParams();
 	const fixtures = useMemo(() => getHanabiDesktopFixtures(), []);
 	const fixture = fixtures[fixtureName as HanabiDesktopFixtureName];
-	const [incomingMessages, setIncomingMessages] = useState<HanabiGameActionChat[]>([]);
-	const [highlightedAction, highlightAction] = useState<string | null>(null);
-	const selectedAction = fixture?.gameData.actions.find(
-		(action) => action.id === highlightedAction,
+	const [incomingActions, setIncomingActions] = useState<HanabiGameAction[]>([]);
+	const gameData = useMemo(
+		() =>
+			fixture && {
+				...fixture.gameData,
+				actions: [...fixture.gameData.actions, ...incomingActions],
+			},
+		[fixture, incomingActions],
 	);
+	const [highlightedAction, highlightAction] = useState<string | null>(null);
+	const selectedAction = gameData?.actions.find((action) => action.id === highlightedAction);
 	const selectedHighlight = selectedAction ? getHanabiActionHighlight(selectedAction) : null;
 	const highlightContext = useMemo(
 		() => ({
@@ -67,7 +74,16 @@ export default function HanabiDesktopFixtureView(): JSX.Element {
 		[fixture],
 	);
 
-	if (!fixture || !fixtureGameContext) return <Error404Page />;
+	if (!fixture || !fixtureGameContext || !gameData) return <Error404Page />;
+
+	const simulateAction = (type: HanabiGameActionType): void => {
+		const action = fixture.gameData.actions.find((candidate) => candidate.type === type);
+		if (!action) return;
+		setIncomingActions((actions) => [
+			...actions,
+			{ ...action, id: `incoming-${actions.length}`, createdAt: new Date().toISOString() },
+		]);
+	};
 
 	return (
 		<HanabiGameContextProvider value={fixtureGameContext}>
@@ -109,6 +125,32 @@ export default function HanabiDesktopFixtureView(): JSX.Element {
 					</header>
 					<div className="hanabi-game-board-shell pt-5">
 						<HanabiBotError />
+						{fixture.name === 'action-toasts' && (
+							<>
+								<HanabiActionToasts gameData={gameData} userId={fixture.userId} />
+								<div
+									aria-label="Simulate game actions"
+									className="mb-4 flex flex-wrap justify-center gap-2"
+								>
+									{(
+										[
+											['clue', HanabiGameActionType.GiveColorClue],
+											['play', HanabiGameActionType.Play],
+											['discard', HanabiGameActionType.Discard],
+										] as const
+									).map(([label, type]) => (
+										<button
+											className="hanabi-focus-ring rounded border border-hanabi-border bg-hanabi-table-deep px-3 py-2 text-sm text-hanabi-text"
+											key={type}
+											onClick={() => simulateAction(type)}
+											type="button"
+										>
+											Simulate {label}
+										</button>
+									))}
+								</div>
+							</>
+						)}
 						<HanabiDesktopBoard
 							activity={
 								<HanabiActivityRail
@@ -123,7 +165,7 @@ export default function HanabiDesktopFixtureView(): JSX.Element {
 												aria-label="Simulate incoming chat message"
 												className="hanabi-chat-send"
 												onClick={() =>
-													setIncomingMessages((messages) => [
+													setIncomingActions((messages) => [
 														...messages,
 														{
 															id: `incoming-${messages.length}`,
@@ -143,10 +185,7 @@ export default function HanabiDesktopFixtureView(): JSX.Element {
 											</button>
 										</div>
 									}
-									gameData={{
-										...fixture.gameData,
-										actions: [...fixture.gameData.actions, ...incomingMessages],
-									}}
+									gameData={gameData}
 									userId={fixture.userId}
 								/>
 							}

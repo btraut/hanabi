@@ -22,6 +22,7 @@ describe('Hanabi desktop fixtures', () => {
 			'six-color',
 			'workspace',
 			'activity',
+			'action-toasts',
 			'spectator',
 			'disconnected',
 			'bot-thinking',

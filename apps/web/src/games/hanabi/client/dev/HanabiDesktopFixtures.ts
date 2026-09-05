@@ -22,6 +22,7 @@ export type HanabiDesktopFixtureName =
 	| 'six-color'
 	| 'workspace'
 	| 'activity'
+	| 'action-toasts'
 	| 'spectator'
 	| 'disconnected'
 	| 'bot-thinking'
@@ -438,6 +439,14 @@ export function getHanabiDesktopFixtures(): Record<HanabiDesktopFixtureName, Han
 				})),
 			},
 			name: 'activity',
+			userId: 'player-1',
+		},
+		'action-toasts': {
+			code: 'TOAST',
+			description:
+				'Interactive incoming clues, plays, and discards with action toast notifications.',
+			gameData: standard,
+			name: 'action-toasts',
 			userId: 'player-1',
 		},
 		spectator: {

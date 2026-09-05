@@ -37,6 +37,7 @@ vi.mock('./HanabiLobby', () => ({
 	default: () => <section data-testid="lobby">Current lobby</section>,
 }));
 vi.mock('./HanabiDebugPanel', () => ({ default: () => null }));
+vi.mock('./HanabiActionToasts', () => ({ HanabiLiveActionToasts: () => null }));
 vi.mock('~/components/BreakpointController', () => ({
 	default: ({ children }: { children: ReactNode }) => children,
 }));
