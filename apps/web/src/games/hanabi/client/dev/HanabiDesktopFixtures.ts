@@ -25,6 +25,7 @@ export type HanabiDesktopFixtureName =
 	| 'spectator'
 	| 'disconnected'
 	| 'bot-thinking'
+	| 'bot-error'
 	| 'bot-clue'
 	| 'bot-result'
 	| 'finished';
@@ -318,6 +319,19 @@ export function getHanabiDesktopFixtures(): Record<HanabiDesktopFixtureName, Han
 	});
 	const disconnectedPlayers = { ...standard.players };
 	disconnectedPlayers['player-2'] = { ...disconnectedPlayers['player-2'], connected: false };
+	const botThinking: HanabiGameData = {
+		...standard,
+		currentPlayerId: 'player-2',
+		players: {
+			...standard.players,
+			'player-2': { ...standard.players['player-2'], name: 'Bot 1', kind: 'bot' },
+		},
+		bots: {
+			available: true,
+			canManage: false,
+			turn: { playerId: 'player-2', status: 'thinking', canRetry: false },
+		},
+	};
 
 	return {
 		standard: {
@@ -443,20 +457,25 @@ export function getHanabiDesktopFixtures(): Record<HanabiDesktopFixtureName, Han
 		'bot-thinking': {
 			code: 'BOTGLOW',
 			description: 'A thinking bot with an animated avatar indicator.',
+			gameData: botThinking,
+			name: 'bot-thinking',
+			userId: 'player-1',
+		},
+		'bot-error': {
+			code: 'BOTERROR',
+			description: 'A bot request failure with a nonblocking error and automatic retry.',
 			gameData: {
-				...standard,
-				currentPlayerId: 'player-2',
-				players: {
-					...standard.players,
-					'player-2': { ...standard.players['player-2'], name: 'Bot 1', kind: 'bot' },
-				},
+				...botThinking,
 				bots: {
-					available: true,
-					canManage: false,
-					turn: { playerId: 'player-2', status: 'thinking', canRetry: false },
+					...botThinking.bots!,
+					turn: {
+						...botThinking.bots!.turn!,
+						status: 'error',
+						message: 'The bot request timed out. Retrying automatically.',
+					},
 				},
 			},
-			name: 'bot-thinking',
+			name: 'bot-error',
 			userId: 'player-1',
 		},
 		'bot-clue': {

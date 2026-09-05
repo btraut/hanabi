@@ -34,7 +34,7 @@ interface BotTurnHooks {
 	) => string | null;
 }
 
-// Keep complete history; pause instead of silently dropping old evidence.
+// Preserve complete history and report oversized input without dropping evidence.
 export const MAX_BOT_INPUT_BYTES = 512_000;
 
 function withAbort<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
@@ -49,12 +49,14 @@ function withAbort<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
 /** Coordinates one game; only the observation crosses the provider boundary. */
 export class BotTurnCoordinator {
 	private started = false;
-	private hasStarted = false;
 	private running = false;
 	private scheduled = false;
 	private epoch = 0;
 	private controller: AbortController | null = null;
 	private availabilityTimer: ReturnType<typeof setTimeout> | null = null;
+	private recoveryTimer: ReturnType<typeof setTimeout> | null = null;
+	private recoveryTurn: BotTurn | null = null;
+	private failures = 0;
 
 	constructor(
 		private readonly runtime: BotRuntime,
@@ -62,18 +64,10 @@ export class BotTurnCoordinator {
 	) {}
 
 	start(): void {
+		if (this.started) return;
 		this.started = true;
-		if (!this.hasStarted) {
-			this.hasStarted = true;
-			const turn = this.hooks.getTurn();
-			if (turn?.round.status === 'error' && turn.round.failure === 'unavailable') {
-				// A fresh runtime may have repaired its configuration; require a deliberate retry.
-				delete turn.round.failure;
-				this.hooks.notify();
-			}
-		}
 		const round = this.hooks.getTurn()?.round;
-		if (round && ['round_budget', 'global_budget', 'busy'].includes(round.failure ?? '')) {
+		if (round && ['error', 'exhausted'].includes(round.status)) {
 			round.status = 'ready';
 			delete round.failure;
 			this.hooks.notify();
@@ -87,11 +81,18 @@ export class BotTurnCoordinator {
 		this.controller?.abort();
 		if (this.availabilityTimer) clearTimeout(this.availabilityTimer);
 		this.availabilityTimer = null;
+		this.clearRecovery();
 	}
 
 	changed(): void {
 		this.epoch += 1;
 		this.controller?.abort();
+		if (this.availabilityTimer) clearTimeout(this.availabilityTimer);
+		this.availabilityTimer = null;
+		const turn = this.hooks.getTurn();
+		if (!this.sameOpportunity(this.recoveryTurn, turn) || turn?.round.status !== 'error') {
+			this.clearRecovery();
+		}
 		this.schedule();
 	}
 
@@ -115,22 +116,55 @@ export class BotTurnCoordinator {
 				round.failure === 'round_budget' || round.failure === 'global_budget'
 					? undefined
 					: BOT_FAILURE_MESSAGES[round.failure ?? 'transient'],
-			canRetry: round.failure !== 'unavailable' && round.failure !== 'input_too_large',
+			canRetry: false,
 		};
 	}
 
-	retry(): string | null {
-		const turn = this.hooks.getTurn();
-		if (!turn || !this.started || this.running || !this.status()?.canRetry) {
-			return 'There is no failed bot turn to retry.';
-		}
-		if (Date.now() - turn.round.lastAttemptAt < 2_000)
-			return 'Wait a moment before retrying the bot.';
-		turn.round.status = 'ready';
-		delete turn.round.failure;
-		this.hooks.notify();
-		this.schedule();
-		return null;
+	// Retain the message handler for older clients; recovery is owned by the server.
+	retry(): string {
+		return 'Bot recovery is automatic.';
+	}
+
+	private sameOpportunity(left: BotTurn | null, right: BotTurn | null): boolean {
+		return (
+			!!left &&
+			!!right &&
+			left.round === right.round &&
+			left.playerId === right.playerId &&
+			left.opportunity === right.opportunity &&
+			JSON.stringify(left.sourceClueEventIds ?? []) ===
+				JSON.stringify(right.sourceClueEventIds ?? [])
+		);
+	}
+
+	private clearRecovery(): void {
+		if (this.recoveryTimer) clearTimeout(this.recoveryTimer);
+		this.recoveryTimer = null;
+		this.recoveryTurn = null;
+		this.failures = 0;
+	}
+
+	private recover(turn: BotTurn): void {
+		this.recoveryTurn = turn;
+		const delayMs = Math.min(2_000 * 2 ** Math.min(this.failures, 4), 30_000);
+		this.failures += 1;
+		this.recoveryTimer = setTimeout(() => {
+			this.recoveryTimer = null;
+			this.recoveryTurn = null;
+			const current = this.hooks.getTurn();
+			if (
+				this.started &&
+				this.sameOpportunity(turn, current) &&
+				current &&
+				['error', 'exhausted'].includes(current.round.status)
+			) {
+				current.round.status = 'ready';
+				delete current.round.failure;
+				this.hooks.notify();
+			}
+			this.schedule();
+		}, delayMs);
+		this.recoveryTimer.unref();
 	}
 
 	private schedule(): void {
@@ -144,9 +178,13 @@ export class BotTurnCoordinator {
 				this.running ||
 				!turn ||
 				this.availabilityTimer !== null ||
-				!['ready', 'thinking'].includes(turn.round.status)
+				this.recoveryTimer !== null
 			)
 				return;
+			if (!['ready', 'thinking'].includes(turn.round.status)) {
+				if (turn.opportunity !== 'result') this.recover(turn);
+				return;
+			}
 			this.running = true;
 			const epoch = this.epoch;
 			const revision = turn.round.revision;
@@ -176,11 +214,14 @@ export class BotTurnCoordinator {
 	}
 
 	private fail(round: BotRound, code: BotFailureCode): void {
+		const opportunity = this.hooks.getTurn()?.opportunity ?? 'turn';
 		round.status = 'error';
 		round.failure = code;
 		this.hooks.onFailure?.();
 		this.hooks.notify();
-		Logger.warn(`Bot decision failed game=${this.hooks.gameId} code=${code}`);
+		Logger.warn(
+			`Bot decision failed game=${this.hooks.gameId} opportunity=${opportunity} code=${code}`,
+		);
 	}
 
 	private async run(
@@ -335,6 +376,7 @@ export class BotTurnCoordinator {
 						this.fail(round, 'invalid_action');
 						return;
 					}
+					this.failures = 0;
 					Logger.info(
 						`Bot decision game=${this.hooks.gameId} model=${round.policy.model} policy=${round.policy.hash} latencyMs=${Date.now() - startedAt} tokens=${usedTokens ?? 'unknown'}`,
 					);

@@ -617,7 +617,7 @@ describe('bot turn and clue decision opportunities', () => {
 		expect(decisionChats(harness)).toEqual([]);
 	});
 
-	it('keeps a failed clue response paused through unrelated moves and turns, then accepts a fresh clue opportunity', async () => {
+	it('keeps failed clue context during backoff and refreshes it on a new clue', async () => {
 		const harness = seeded({ humanCount: 4 });
 		harness.chooseAction.mockImplementationOnce((request) =>
 			Promise.resolve({

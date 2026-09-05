@@ -60,11 +60,11 @@ also appear in public debug chat. Existing v2 rounds without the flag keep
 their original three-field response contract; start a new round to enable the notepad.
 
 `HANABI_BOT_MODEL=gpt-5.6-sol` and `HANABI_BOT_REASONING_EFFORT=medium` are the defaults. The server
-environment example controls deadline, concurrency, and budgets. Off-turn clue requests consume
-the same inference budget as turn requests. A failed optional clue response is skipped with a
-sanitized warning if it would block another bot's own turn; cards stay unchanged. Other failures
-remain paused for retry. The rolling global budget is per process and resets
-on restart; round reservations and pending decision opportunities use active-game persistence.
+environment example controls deadline and concurrency. Failed decisions report errors and recover
+automatically with exponential backoff from two to thirty seconds. New request cycles receive a fresh
+deadline, and restored failures retry using their saved policy. A failed optional clue response is
+skipped if it would block another bot's own turn; cards stay unchanged. There are no cumulative
+request or token budgets. Recovery never requires a player-operated retry control.
 
 Every accepted v2 turn or clue response posts one chat message from the bot after its arrangement
 and action are applied, prefixed with `Debug: `. Unchanged clue responses also post their explanation.

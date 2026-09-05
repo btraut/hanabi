@@ -212,7 +212,7 @@ describe('BotTurnCoordinator', () => {
 		for (let index = 0; index < 4; index += 1) h.coordinator.start();
 		await flush();
 		expect(provider.chooseAction).toHaveBeenCalledTimes(1);
-		expect(h.coordinator.retry()).toContain('no failed bot turn');
+		expect(h.coordinator.retry()).toBe('Bot recovery is automatic.');
 		pending.resolve({ actionId: 'action-0' });
 		await flush();
 		expect(h.apply).toHaveBeenCalledTimes(1);
@@ -299,14 +299,131 @@ describe('BotTurnCoordinator', () => {
 		await vi.advanceTimersByTimeAsync(1_000);
 		await flush();
 		expect(h.original.round).toMatchObject({ status: 'error', failure: 'timeout', attempts: 1 });
-		expect(h.coordinator.status()).toMatchObject({ status: 'error', canRetry: true });
+		expect(h.coordinator.status()).toMatchObject({ status: 'error', canRetry: false });
 		expect(provider.chooseAction).toHaveBeenCalledTimes(1);
 		pending.resolve({ actionId: 'action-0' });
 		await flush();
 		expect(h.apply).not.toHaveBeenCalled();
 	});
 
-	it('allows only one automatic transient retry, reserving and saving both attempts', async () => {
+	it('automatically retries a timed-out turn with a fresh deadline and ignores its late response', async () => {
+		const stale = deferred<BotDecision>();
+		const provider = {
+			chooseAction: vi
+				.fn<BotDecisionProvider['chooseAction']>()
+				.mockReturnValueOnce(stale.promise)
+				.mockResolvedValue({ actionId: 'action-0' }),
+		};
+		const h = tracked({ provider });
+		h.coordinator.start();
+		await flush();
+		await vi.advanceTimersByTimeAsync(1_000);
+		expect(h.coordinator.status()).toMatchObject({ status: 'error', canRetry: false });
+		await vi.advanceTimersByTimeAsync(2_000);
+		expect(provider.chooseAction).toHaveBeenCalledTimes(2);
+		expect(provider.chooseAction.mock.calls[1][0].signal.aborted).toBe(false);
+		expect(h.apply).toHaveBeenCalledOnce();
+		stale.resolve({ actionId: 'action-1' });
+		await flush();
+		expect(h.apply).toHaveBeenCalledOnce();
+	});
+
+	it('backs off repeated failures without requiring a player retry or monopolizing capacity', async () => {
+		const provider = {
+			chooseAction: vi
+				.fn<BotDecisionProvider['chooseAction']>()
+				.mockRejectedValue(new BotDecisionError('incomplete')),
+		};
+		const h = tracked({ provider, limits: { maxConcurrent: 1 } });
+		h.coordinator.start();
+		await flush();
+		for (const delay of [2_000, 4_000, 8_000, 16_000, 30_000, 30_000]) {
+			const before = provider.chooseAction.mock.calls.length;
+			h.coordinator.start();
+			const reservation = h.runtime.reserve();
+			expect(reservation).not.toBe('busy');
+			if (reservation !== 'busy') reservation.release();
+			await vi.advanceTimersByTimeAsync(delay - 1);
+			expect(provider.chooseAction).toHaveBeenCalledTimes(before);
+			await vi.advanceTimersByTimeAsync(1);
+			expect(provider.chooseAction).toHaveBeenCalledTimes(before + 1);
+		}
+		expect(h.persist).toHaveBeenCalledTimes(7);
+	});
+
+	it('cancels automatic recovery on stop and recovers immediately on restart', async () => {
+		const provider = {
+			chooseAction: vi
+				.fn<BotDecisionProvider['chooseAction']>()
+				.mockRejectedValueOnce(new BotDecisionError('refused'))
+				.mockResolvedValue({ actionId: 'action-0' }),
+		};
+		const h = tracked({ provider });
+		h.coordinator.start();
+		await flush();
+		h.coordinator.stop();
+		await vi.advanceTimersByTimeAsync(60_000);
+		expect(provider.chooseAction).toHaveBeenCalledOnce();
+		h.coordinator.start();
+		await flush();
+		expect(h.apply).toHaveBeenCalledOnce();
+	});
+
+	it('replaces a failed round immediately and cancels its pending recovery', async () => {
+		const provider = {
+			chooseAction: vi
+				.fn<BotDecisionProvider['chooseAction']>()
+				.mockRejectedValueOnce(new BotDecisionError('refused'))
+				.mockResolvedValue({ actionId: 'action-0' }),
+		};
+		const h = tracked({ provider });
+		h.coordinator.start();
+		await flush();
+		h.setTurn(botTurn({ roundId: 'new-round' }, 'replacement'));
+		h.coordinator.changed();
+		await flush();
+		expect(h.apply).toHaveBeenCalledExactlyOnceWith('bot', { type: 'play', tileId: 'replacement' });
+		await vi.advanceTimersByTimeAsync(60_000);
+		expect(provider.chooseAction).toHaveBeenCalledTimes(2);
+	});
+
+	it('automatically recovers an already-failed replacement opportunity', async () => {
+		const h = tracked();
+		h.coordinator.start();
+		await flush();
+		h.setTurn(botTurn({ roundId: 'replacement', status: 'error', failure: 'timeout' }, 'new-own'));
+		h.coordinator.changed();
+		await flush();
+		await vi.advanceTimersByTimeAsync(2_000);
+		expect(h.chooseAction).toHaveBeenCalledTimes(2);
+		expect(h.apply).toHaveBeenLastCalledWith('bot', { type: 'play', tileId: 'new-own' });
+	});
+
+	it('retains automatic recovery through unrelated hand movement', async () => {
+		const provider = {
+			chooseAction: vi
+				.fn<BotDecisionProvider['chooseAction']>()
+				.mockRejectedValueOnce(new BotDecisionError('incomplete'))
+				.mockResolvedValue({ actionId: 'action-0' }),
+		};
+		const h = tracked({ provider });
+		h.coordinator.start();
+		await flush();
+		await vi.advanceTimersByTimeAsync(1_000);
+		h.original.gameData.tilePositions = { own: { x: 120, y: 40, z: 1 } };
+		h.original.round.revision += 1;
+		h.coordinator.changed();
+		await vi.advanceTimersByTimeAsync(1_000);
+		expect(provider.chooseAction).toHaveBeenCalledTimes(2);
+		expect(provider.chooseAction.mock.calls[1][0].observation.players[0].hand[0].position).toEqual({
+			x: 120,
+			y: 40,
+			z: 1,
+		});
+		expect(h.apply).toHaveBeenCalledOnce();
+	});
+
+	it('retries transient failures immediately once, then automatically backs off', async () => {
 		const provider = {
 			chooseAction: vi
 				.fn<BotDecisionProvider['chooseAction']>()
@@ -318,9 +435,8 @@ describe('BotTurnCoordinator', () => {
 		expect(provider.chooseAction).toHaveBeenCalledTimes(2);
 		expect(h.persist).toHaveBeenCalledTimes(2);
 		expect(h.original.round).toMatchObject({ attempts: 2, status: 'error', failure: 'transient' });
-		expect(h.coordinator.retry()).toContain('Wait a moment');
+		expect(h.coordinator.retry()).toBe('Bot recovery is automatic.');
 		await vi.advanceTimersByTimeAsync(2_000);
-		expect(h.coordinator.retry()).toBeNull();
 		expect(h.coordinator.retry()).not.toBeNull();
 		await flush();
 		expect(provider.chooseAction).toHaveBeenCalledTimes(4);
@@ -378,30 +494,28 @@ describe('BotTurnCoordinator', () => {
 			status: 'error',
 			failure: 'transient',
 		});
-		expect(h.coordinator.status()).toMatchObject({ canRetry: true });
+		expect(h.coordinator.status()).toMatchObject({ canRetry: false });
 	});
 
-	it('shows unavailable credentials/configuration as disabled with no ineffective retry', async () => {
+	it('reports unavailable configuration and retries after backoff', async () => {
 		const provider = {
 			chooseAction: vi
 				.fn<BotDecisionProvider['chooseAction']>()
-				.mockRejectedValue(new BotDecisionError('unavailable')),
+				.mockRejectedValueOnce(new BotDecisionError('unavailable'))
+				.mockResolvedValue({ actionId: 'action-0' }),
 		};
 		const h = tracked({ provider });
 		h.coordinator.start();
 		await flush();
-		expect(provider.chooseAction).toHaveBeenCalledTimes(1);
 		expect(h.coordinator.status()).toMatchObject({ status: 'disabled', canRetry: false });
-		expect(h.coordinator.retry()).not.toBeNull();
-		h.coordinator.stop();
-		h.coordinator.start();
-		await flush();
-		expect(h.coordinator.status()).toMatchObject({ status: 'disabled', canRetry: false });
-		expect(provider.chooseAction).toHaveBeenCalledTimes(1);
+		expect(h.coordinator.retry()).toBe('Bot recovery is automatic.');
+		await vi.advanceTimersByTimeAsync(2_000);
+		expect(provider.chooseAction).toHaveBeenCalledTimes(2);
+		expect(h.apply).toHaveBeenCalledOnce();
 	});
 
 	it.each(['refused', 'incomplete', 'invalid_action'] as const)(
-		'does not automatically retry %s',
+		'automatically retries a %s error after backoff',
 		async (code) => {
 			const provider = {
 				chooseAction: vi
@@ -413,6 +527,8 @@ describe('BotTurnCoordinator', () => {
 			await flush();
 			expect(provider.chooseAction).toHaveBeenCalledTimes(1);
 			expect(h.original.round).toMatchObject({ status: 'error', failure: code });
+			await vi.advanceTimersByTimeAsync(2_000);
+			expect(provider.chooseAction).toHaveBeenCalledTimes(2);
 		},
 	);
 
@@ -496,7 +612,7 @@ describe('BotTurnCoordinator', () => {
 		expect(h.apply).toHaveBeenCalledWith('bot', expect.objectContaining({ tileId: 'replacement' }));
 	});
 
-	it('automatically resumes a restored global-budget pause with usage intact', async () => {
+	it('automatically resumes a restored global-budget failure with usage intact', async () => {
 		const saved = botTurn({
 			status: 'error',
 			failure: 'global_budget',
@@ -525,21 +641,26 @@ describe('BotTurnCoordinator', () => {
 		expect(saved.round.tokens).toBe(10_105);
 	});
 
-	it('leaves a restored error waiting for a deliberate retry', async () => {
+	it('automatically resumes a restored error with its usage intact', async () => {
 		const saved = JSON.parse(
-			JSON.stringify(botTurn({ status: 'error', failure: 'timeout', attempts: 5, tokens: 10_000 })),
+			JSON.stringify(
+				botTurn({
+					status: 'error',
+					failure: 'timeout',
+					attempts: 5,
+					tokens: 10_000,
+				}),
+			),
 		) as BotTurn;
 		const h = tracked({ turn: saved });
 		h.coordinator.start();
 		await flush();
-		expect(h.chooseAction).not.toHaveBeenCalled();
-		expect(h.coordinator.status()).toMatchObject({ status: 'error', canRetry: true });
-		expect(h.coordinator.retry()).toBeNull();
-		await flush();
-		expect(h.chooseAction).toHaveBeenCalledTimes(1);
+		expect(h.chooseAction).toHaveBeenCalledOnce();
+		expect(h.apply).toHaveBeenCalledOnce();
+		expect(saved.round).toMatchObject({ attempts: 6, tokens: 10_105 });
 	});
 
-	it('allows a deliberate retry after restoring unavailable configuration without replacing policy or usage totals', async () => {
+	it('automatically restores unavailable configuration without replacing saved policy or usage totals', async () => {
 		const saved = JSON.parse(
 			JSON.stringify(
 				botTurn({
@@ -564,21 +685,13 @@ describe('BotTurnCoordinator', () => {
 		h.coordinator.start();
 		h.coordinator.start();
 		await flush();
-		expect(chooseAction).not.toHaveBeenCalled();
-		expect(h.persist).not.toHaveBeenCalled();
-		expect(h.notify).toHaveBeenCalledTimes(1);
-		expect(saved.round).toEqual(expected);
-		expect(h.coordinator.status()).toMatchObject({ status: 'error', canRetry: true });
-
-		expect(h.coordinator.retry()).toBeNull();
-		await flush();
 		expect(chooseAction).toHaveBeenCalledTimes(1);
 		expect(chooseAction.mock.calls[0][0].policy).toEqual(expected.policy);
 		expect(saved.round.attempts).toBe(6);
 		expect(saved.round.tokens).toBe(10_105);
 	});
 
-	it('restores retry eligibility for unavailable turns despite extensive round usage', async () => {
+	it('automatically recovers unavailable turns despite extensive round usage', async () => {
 		const saved = botTurn({
 			status: 'error',
 			failure: 'unavailable',
@@ -588,16 +701,13 @@ describe('BotTurnCoordinator', () => {
 		const h = tracked({ turn: saved });
 		h.coordinator.start();
 		await flush();
-		expect(h.coordinator.status()).toMatchObject({ status: 'error', canRetry: true });
-		expect(h.chooseAction).not.toHaveBeenCalled();
-		expect(h.coordinator.retry()).toBeNull();
 		await flush();
 		expect(h.chooseAction).toHaveBeenCalledTimes(1);
 		expect(saved.round.attempts).toBe(10_001);
 		expect(saved.round.tokens).toBe(100_000_105);
 	});
 
-	it('automatically resumes a restored round paused by the removed round allowance', async () => {
+	it('automatically resumes a restored round stopped by the removed round allowance', async () => {
 		const saved = JSON.parse(
 			JSON.stringify(
 				botTurn({
@@ -621,19 +731,16 @@ describe('BotTurnCoordinator', () => {
 	it.each([
 		{ attempts: 10_000, tokens: 0 },
 		{ attempts: 0, tokens: 100_000_000 },
-	])('offers retry for a failed turn regardless of round usage: %j', async (used) => {
+	])('automatically recovers a failed turn regardless of round usage: %j', async (used) => {
 		const h = tracked({
 			turn: botTurn({ status: 'error', failure: 'timeout', ...used }),
 		});
 		h.coordinator.start();
 		await flush();
-		expect(h.coordinator.status()).toMatchObject({ canRetry: true });
-		expect(h.chooseAction).not.toHaveBeenCalled();
-		expect(h.coordinator.retry()).toBeNull();
 		await flush();
 		expect(h.chooseAction).toHaveBeenCalledTimes(1);
 	});
-	it('pauses oversized v2 history without spending budget or dropping evidence', async () => {
+	it('reports oversized v2 history without spending tokens or dropping evidence', async () => {
 		const turn = botTurn();
 		turn.gameData.tilePositions = { own: { x: 10, y: 10, z: 1 }, other: { x: 10, y: 10, z: 1 } };
 		turn.round.version = 2;

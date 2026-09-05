@@ -69,7 +69,7 @@ describe('HanabiDesktopStatus', () => {
 		expect(getHanabiDesktopStatusData(gameData, 'alice').turnLabel).toBe('Game over');
 	});
 
-	it('shows a bot thinking or paused without marking it disconnected', () => {
+	it('shows bot activity and preserves its turn label after an error', () => {
 		const gameData = generateHanabiGameData({
 			currentPlayerId: 'ben',
 			players: { ...players, ben: { ...players.ben, connected: false, kind: 'bot' } },
@@ -83,7 +83,13 @@ describe('HanabiDesktopStatus', () => {
 		});
 		expect(getHanabiDesktopStatusData(gameData, 'alice').turnLabel).toBe('Ben · Thinking…');
 		gameData.bots!.turn!.status = 'error';
-		expect(getHanabiDesktopStatusData(gameData, 'alice').turnLabel).toBe('Ben · Paused');
+		expect(getHanabiDesktopStatusData(gameData, 'alice').turnLabel).toBe("Ben's turn");
+		gameData.bots!.turn!.status = 'disabled';
+		expect(getHanabiDesktopStatusData(gameData, 'alice').turnLabel).toBe("Ben's turn");
+		gameData.bots!.turn!.status = 'exhausted';
+		expect(getHanabiDesktopStatusData(gameData, 'alice').turnLabel).toBe("Ben's turn");
+		gameData.bots!.turn!.status = 'thinking';
+		expect(getHanabiDesktopStatusData(gameData, 'alice').turnLabel).toBe('Ben · Thinking…');
 		gameData.bots!.turn!.opportunity = 'result';
 		expect(getHanabiDesktopStatusData(gameData, 'alice').turnLabel).toBe("Ben's turn");
 		gameData.bots!.turn!.status = 'thinking';
@@ -93,7 +99,7 @@ describe('HanabiDesktopStatus', () => {
 	});
 
 	it.each(['clue', 'result'] as const)(
-		'keeps the actual human turn label while a bot considers a %s or pauses',
+		'keeps the actual human turn label while a bot considers a %s or encounters an error',
 		(opportunity) => {
 			const gameData = generateHanabiGameData({
 				currentPlayerId: 'alice',
