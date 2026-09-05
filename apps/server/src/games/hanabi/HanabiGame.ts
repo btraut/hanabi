@@ -142,6 +142,10 @@ export default class HanabiGame extends Game {
 			delete this._gameData.reviewTranscript;
 			delete this._gameData.bots;
 			this._botRound = creatorIdOrData.botRound ? structuredClone(creatorIdOrData.botRound) : null;
+			if (this._botRound?.failure === 'round_budget') {
+				this._botRound.status = 'ready';
+				delete this._botRound.failure;
+			}
 			if (this._gameData.stage !== HanabiStage.Setup) {
 				const identity = { gameId: this.id, gameCode: this.code };
 				this._transcript = transcriptMatchesRound(

@@ -678,7 +678,7 @@ describe('BotTurnCoordinator', () => {
 		await flush();
 		expect(h.chooseAction).not.toHaveBeenCalled();
 		expect(h.coordinator.status()).toMatchObject({ status: 'exhausted', canRetry: true });
-		expect(h.coordinator.status()?.message).toContain('removed');
+		expect(h.coordinator.status()?.message).toBeUndefined();
 		expect(h.coordinator.retry()).toBeNull();
 		await flush();
 		expect(h.chooseAction).toHaveBeenCalledTimes(1);
