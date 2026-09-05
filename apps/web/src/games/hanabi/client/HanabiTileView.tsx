@@ -7,6 +7,7 @@ import {
 	tileColorClasses,
 } from '@hanabi/shared';
 import { HanabiTileHighlightTone } from '~/games/hanabi/client/HanabiHighlightContext';
+import HanabiTileEmphasis, { HANABI_TILE_NOTE_FOLD_SIZE } from './HanabiTileEmphasis';
 import classNames from 'classnames';
 import { CSSProperties, useId } from 'react';
 
@@ -24,7 +25,7 @@ interface Props {
 	size?: TileViewSize;
 	dimensions?: { height: number; width: number };
 
-	// Optionally show dashed highlight lines around the edges.
+	// Optionally emphasize the card edge in the clue color.
 	highlight?: boolean;
 	highlightTone?: HanabiTileHighlightTone;
 
@@ -114,6 +115,7 @@ export default function HanabiTileView({
 			style={
 				{
 					...tileDimensions,
+					'--hanabi-tile-note-fold-size': `${HANABI_TILE_NOTE_FOLD_SIZE}px`,
 					'--hanabi-tile-back-art': hasConcealedBack ? `url(${HANABI_TILE_BACK_PATH})` : undefined,
 					'--hanabi-tile-face-art': hasVisibleFace
 						? `url(${getHanabiTileFacePath(color)})`
@@ -158,6 +160,12 @@ export default function HanabiTileView({
 				)}
 			</div>
 			{notesIndicator && hasConcealedBack && <HanabiTileNoteCorner />}
+			{highlight && (
+				<HanabiTileEmphasis
+					dimensions={tileDimensions}
+					folded={notesIndicator && hasConcealedBack}
+				/>
+			)}
 		</div>
 	);
 }

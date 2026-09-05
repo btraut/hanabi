@@ -14,6 +14,7 @@ import { HanabiHighlightContextProvider } from '~/games/hanabi/client/HanabiHigh
 import { HanabiDesktopPlayerWorkspaces } from '~/games/hanabi/client/HanabiPlayerWorkspace';
 import { hasHanabiTileNotes } from '~/games/hanabi/client/HanabiPlayerTiles';
 import HanabiTileView from '~/games/hanabi/client/HanabiTileView';
+import { getHanabiActionHighlight } from '~/games/hanabi/client/useActionHighlighter';
 import {
 	HANABI_DESKTOP_SURFACE_HEIGHT,
 	HANABI_DESKTOP_TILE_SIZE,
@@ -34,6 +35,10 @@ export default function HanabiDesktopFixtureView(): JSX.Element {
 	const fixture = fixtures[fixtureName as HanabiDesktopFixtureName];
 	const [incomingMessages, setIncomingMessages] = useState<HanabiGameActionChat[]>([]);
 	const [highlightedAction, highlightAction] = useState<string | null>(null);
+	const selectedAction = fixture?.gameData.actions.find(
+		(action) => action.id === highlightedAction,
+	);
+	const selectedHighlight = selectedAction ? getHanabiActionHighlight(selectedAction) : null;
 	const highlightContext = useMemo(
 		() => ({
 			highlightAction,
@@ -177,6 +182,8 @@ export default function HanabiDesktopFixtureView(): JSX.Element {
 															<HanabiTileView
 																color={fixture.userId === playerId ? undefined : tile.color}
 																dimensions={HANABI_DESKTOP_TILE_SIZE}
+																highlight={selectedHighlight?.tileIds.includes(tileId)}
+																highlightTone={selectedHighlight?.tone}
 																notesIndicator={
 																	fixture.userId === playerId &&
 																	hasHanabiTileNotes(fixture.gameData.tileNotes[tileId])

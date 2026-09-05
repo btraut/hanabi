@@ -259,19 +259,21 @@ describe('Hanabi desktop visual foundation', () => {
 		expect(markup).not.toContain('aria-hidden');
 	});
 
-	it('uses a persistent clue seal with a reduced-motion fallback', () => {
+	it('uses a single glowing clue outline with a reduced-motion fallback', () => {
 		const markup = renderToStaticMarkup(createElement(HanabiStyles));
 
 		expect(markup).toContain('.hanabi-tile-emphasis-red');
 		expect(markup).toContain('.hanabi-tile-emphasis-number');
 		expect(markup).toContain('@keyframes hanabi-clue-mark-arrive');
 		expect(markup).toContain('@keyframes hanabi-clue-mark-breathe');
-		expect(markup).toContain('.hanabi-player-tile-emphasis::after');
+		expect(markup).toContain('.hanabi-tile-emphasis-mark');
+		expect(markup).not.toContain('.hanabi-player-tile-emphasis::after');
 		expect(markup).not.toContain('.hanabi-player-tile-emphasis::before');
 		expect(markup).toContain('hanabi-clue-mark-arrive 520ms');
 		expect(markup).toContain('hanabi-clue-mark-breathe 1800ms ease-in-out 520ms 2 both');
 		expect(markup).not.toContain('hanabi-clue-mark-breathe 1800ms ease-in-out 520ms infinite');
-		expect(markup).toContain('border: 3px solid rgb(var(--hanabi-emphasis-rgb))');
+		expect(markup).toContain('filter: drop-shadow(');
+		expect(markup).not.toContain('box-shadow:');
 		expect(markup).not.toContain('2300ms');
 		expect(markup).toContain('prefers-reduced-motion: reduce');
 		expect(markup).toContain('animation: none');
@@ -281,8 +283,6 @@ describe('Hanabi desktop visual foundation', () => {
 		const markup = renderToStaticMarkup(createElement(HanabiStyles));
 		const styles = readFileSync(new URL('../../../styles/tailwind.css', import.meta.url), 'utf8');
 
-		const shellRule = markup.match(/\.hanabi-tile-shell\s*\{[^}]*\}/s)?.[0];
-		expect(shellRule).toContain('--hanabi-tile-note-fold-size: 15px');
 		const clippedSurfaceRule = markup.match(/\.hanabi-tile-surface-clipped\s*\{[^}]*\}/s)?.[0];
 		expect(clippedSurfaceRule).toContain('clip-path: polygon(');
 		expect(clippedSurfaceRule).toContain('100% calc(100% - var(--hanabi-tile-note-fold-size))');

@@ -11,6 +11,7 @@ import HanabiInteractiveTileView from '~/games/hanabi/client/HanabiInteractiveTi
 import { useHanabiMoveTileContext } from '~/games/hanabi/client/HanabiMoveTileContext';
 import { getTileViewTransitionName } from '~/games/hanabi/client/HanabiActionTransition';
 import HanabiPlayerTilesDragLayer from '~/games/hanabi/client/HanabiPlayerTilesDragLayer';
+import HanabiTileEmphasis from './HanabiTileEmphasis';
 import { HanabiDragTypes, getHanabiPositionForDrag } from '~/games/hanabi/client/HanabiDragTypes';
 import { getHanabiTileNotesDescription } from '~/games/hanabi/client/HanabiTileNotesTooltip';
 import useJustTookAction from '~/games/hanabi/client/useJustTookAction';
@@ -168,6 +169,12 @@ export default function HanabiPlayerTiles({
 					const highlighted = !isTransitioning && highlightedTiles.has(tileId);
 					const visualDimensions = getHanabiDesktopTileVisualDimensions(permissions.hidden);
 					const tileHasNotes = hasHanabiTileNotes(gameData.tileNotes[tileId]);
+					const notesIndicator =
+						!isTransitioning &&
+						gameStillPlaying &&
+						permissions.ownTiles &&
+						gameData.showNotes &&
+						tileHasNotes;
 					const ownerLabel = permissions.ownTiles
 						? `Your tile ${index + 1}`
 						: `${gameData.players[id].name}'s tile ${index + 1}`;
@@ -206,13 +213,7 @@ export default function HanabiPlayerTiles({
 									onLongPress={isTransitioning ? undefined : onTileLongPress}
 									draggable={permissions.draggable}
 									dimensions={variant === 'desktop' ? visualDimensions : undefined}
-									notesIndicator={
-										!isTransitioning &&
-										gameStillPlaying &&
-										permissions.ownTiles &&
-										gameData.showNotes &&
-										tileHasNotes
-									}
+									notesIndicator={notesIndicator}
 									highlight={variant === 'legacy' && highlighted}
 									highlightTone={highlightedTone ?? 'action'}
 									dragHighlight={highlighted}
@@ -236,7 +237,9 @@ export default function HanabiPlayerTiles({
 											height: visualDimensions.height,
 											width: visualDimensions.width,
 										}}
-									/>
+									>
+										<HanabiTileEmphasis dimensions={visualDimensions} folded={notesIndicator} />
+									</span>
 								)}
 						</div>
 					);

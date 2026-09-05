@@ -1561,6 +1561,11 @@ body {
 	box-shadow: 0 2px 5px rgb(0 0 0 / 20%);
 }
 
+.hanabi-tile-shell:has(> .hanabi-tile-surface-clipped) {
+	box-shadow: none;
+	filter: drop-shadow(0 2px 3px rgb(0 0 0 / 20%));
+}
+
 .hanabi-tile-face {
 	--hanabi-card-frame: #e8dcc2;
 	--hanabi-card-hairline: rgb(39 34 27 / 34%);
