@@ -7,6 +7,11 @@ distinct chat bubbles. Clues name the hinted color or number and the number of a
 The feed scrolls within the available window height and follows new activity while pinned to the
 bottom; scrolling up preserves your reading position. On phones, Activity opens in a drawer.
 
+New clues, plays, and discards also appear in a black toast at the top of the screen on phones
+and desktop, using the Activity feed's player names, action text, and colors. Toasts appear one
+at a time, dismiss after four seconds, and have a close button. Existing history is not replayed
+when joining a game. Reduced-motion preferences disable the slide animation.
+
 ## Development Environment
 
 This project uses:

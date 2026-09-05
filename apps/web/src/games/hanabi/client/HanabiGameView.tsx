@@ -3,6 +3,7 @@ import HanabiBoardPresentation from './HanabiBoardPresentation';
 import HanabiMoveTileController from './HanabiMoveTileController';
 import HanabiBoard from '~/games/hanabi/client/HanabiBoard';
 import HanabiBotError from '~/games/hanabi/client/HanabiBotError';
+import { HanabiLiveActionToasts } from './HanabiActionToasts';
 import HanabiDebugPanel from '~/games/hanabi/client/HanabiDebugPanel';
 import { useGameSelector } from '~/games/hanabi/client/HanabiGameContext';
 import HanabiHeader from '~/games/hanabi/client/HanabiHeader';
@@ -75,6 +76,7 @@ export default function HanabiGameView(): JSX.Element | null {
 
 	return (
 		<>
+			<HanabiLiveActionToasts />
 			{reviewTranscript && roundId !== reviewTranscript.roundId && (
 				<div className="mx-auto max-w-[1660px] px-5 py-3">
 					<button className="hanabi-review-entry" type="button" onClick={() => setReviewOpen(true)}>
