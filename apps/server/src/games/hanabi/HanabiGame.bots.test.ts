@@ -424,13 +424,14 @@ describe('server bot game integration', () => {
 		);
 	});
 
-	it('restores exhausted quota without making another request or advertising an ineffective retry', async () => {
+	it('restores a game paused by the retired round limit and continues on seated-human retry', async () => {
 		const original = createHarness();
 		startOnBot(original);
 		const saved = snapshot(original.game);
 		Object.assign(saved.botRound!, {
 			attempts: 200,
-			tokens: 100,
+			tokens: 2_000_000,
+			lastAttemptAt: Date.now() - 3_000,
 			status: 'exhausted',
 			failure: 'round_budget',
 		});
@@ -438,11 +439,13 @@ describe('server bot game integration', () => {
 		const restored = createHarness({ serialized: saved });
 		restored.game.startBackgroundWork();
 		await settle();
-		expect(refresh(restored).bots?.turn).toMatchObject({ status: 'exhausted', canRetry: false });
-		send(restored, 'host', 'RetryBotTurnMessage', undefined);
-		expect(response(restored, 'RetryBotTurnResponseMessage').error).toBeTruthy();
+		expect(refresh(restored).bots?.turn).toMatchObject({ status: 'exhausted', canRetry: true });
 		expect(restored.chooseAction).not.toHaveBeenCalled();
-		expect(snapshot(restored.game).botRound?.attempts).toBe(200);
+		send(restored, 'host', 'RetryBotTurnMessage', undefined);
+		expect(response(restored, 'RetryBotTurnResponseMessage').error).toBeFalsy();
+		await vi.waitFor(() => expect(snapshot(restored.game).data.currentPlayerId).toBe('host'));
+		expect(restored.chooseAction).toHaveBeenCalledOnce();
+		expect(snapshot(restored.game).botRound).toMatchObject({ attempts: 201, tokens: 2_000_013 });
 	});
 
 	it('rejects a corrupted saved policy and a started bot game with no private round state', () => {

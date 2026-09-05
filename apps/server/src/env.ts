@@ -38,8 +38,6 @@ export interface RuntimeEnv {
 	HANABI_BOT_TIMEOUT_MS: number;
 	HANABI_BOT_MAX_OUTPUT_TOKENS: number;
 	HANABI_BOT_MAX_CONCURRENT: number;
-	HANABI_BOT_ROUND_MAX_ATTEMPTS: number;
-	HANABI_BOT_ROUND_MAX_TOKENS: number;
 	HANABI_BOT_GLOBAL_WINDOW_MS: number;
 	HANABI_BOT_GLOBAL_MAX_ATTEMPTS: number;
 	HANABI_BOT_GLOBAL_MAX_TOKENS: number;
@@ -164,20 +162,6 @@ export function parseEnv(source: NodeJS.ProcessEnv): RuntimeEnv {
 			16_384,
 		),
 		HANABI_BOT_MAX_CONCURRENT: boundedInteger(source, 'HANABI_BOT_MAX_CONCURRENT', 3, 1, 20),
-		HANABI_BOT_ROUND_MAX_ATTEMPTS: boundedInteger(
-			source,
-			'HANABI_BOT_ROUND_MAX_ATTEMPTS',
-			200,
-			1,
-			10_000,
-		),
-		HANABI_BOT_ROUND_MAX_TOKENS: boundedInteger(
-			source,
-			'HANABI_BOT_ROUND_MAX_TOKENS',
-			2_000_000,
-			1,
-			100_000_000,
-		),
 		HANABI_BOT_GLOBAL_WINDOW_MS: boundedInteger(
 			source,
 			'HANABI_BOT_GLOBAL_WINDOW_MS',

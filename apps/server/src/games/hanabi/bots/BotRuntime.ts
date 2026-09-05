@@ -7,8 +7,6 @@ export interface BotLimits {
 	resultTimeoutMs: number;
 	resultMaxOutputTokens: number;
 	maxConcurrent: number;
-	roundMaxAttempts: number;
-	roundMaxTokens: number;
 	globalWindowMs: number;
 	globalMaxAttempts: number;
 	globalMaxTokens: number;
@@ -20,8 +18,6 @@ export const DEFAULT_BOT_LIMITS: BotLimits = {
 	resultTimeoutMs: 5_000,
 	resultMaxOutputTokens: 2_048,
 	maxConcurrent: 3,
-	roundMaxAttempts: 200,
-	roundMaxTokens: 2_000_000,
 	globalWindowMs: 3_600_000,
 	globalMaxAttempts: 500,
 	globalMaxTokens: 5_000_000,

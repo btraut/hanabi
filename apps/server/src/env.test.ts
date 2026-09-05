@@ -21,14 +21,12 @@ describe('parseEnv', () => {
 				HANABI_BOTS_ENABLED: 'true',
 				HANABI_BOT_MODEL: 'custom-model',
 				HANABI_BOT_REASONING_EFFORT: 'medium',
-				HANABI_BOT_ROUND_MAX_ATTEMPTS: '50',
 				HANABI_BOT_GLOBAL_MAX_TOKENS: '100000',
 			}),
 		).toMatchObject({
 			HANABI_BOTS_ENABLED: true,
 			HANABI_BOT_MODEL: 'custom-model',
 			HANABI_BOT_REASONING_EFFORT: 'medium',
-			HANABI_BOT_ROUND_MAX_ATTEMPTS: 50,
 			HANABI_BOT_GLOBAL_MAX_TOKENS: 100000,
 		});
 		for (const value of ['0', '-1', 'Infinity', 'NaN', '1.5', '', '100000000000']) {
