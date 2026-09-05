@@ -60,6 +60,10 @@ This project uses:
 
 ### Development
 
+Codex workspace setup copies `.env` and `apps/server/.env` from the primary Git checkout before
+installing dependencies. Existing worktree files are preserved, and missing source files are skipped.
+Run `node scripts/setup-worktree.mjs` to copy these files into an existing worktree.
+
 Start both web and server in development mode:
 
 ```bash
