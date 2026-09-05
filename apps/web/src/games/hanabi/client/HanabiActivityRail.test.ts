@@ -95,7 +95,9 @@ describe('Hanabi history clue descriptions', () => {
 	};
 
 	it('shows the color clue without an affected-tile count', () => {
-		const text = renderActions([redClue]).replace(/<[^>]*>/g, '');
+		const text = renderActions([redClue])
+			.replace(/<span aria-hidden="true"[^>]*>[^<]*<\/span>/g, '')
+			.replace(/<[^>]*>/g, '');
 		expect(text).toContain('Alice clued You');
 		expect(text).toContain('Red clue');
 		expect(text).not.toContain('tile');

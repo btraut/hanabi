@@ -836,13 +836,25 @@ body {
 	min-width: 0;
 	align-items: baseline;
 	gap: 10px;
-	padding: 8px 10px;
+	padding: 8px 0 8px 10px;
 }
 
 .hanabi-feed-event-summary {
 	color: var(--color-hanabi-text-muted);
-	font-size: 15px;
-	line-height: 20px;
+	font-size: 17px;
+	line-height: 22px;
+}
+
+.hanabi-feed-event-people {
+	color: var(--color-hanabi-text);
+	font-size: 17px;
+	font-weight: 600;
+	line-height: 22px;
+}
+
+.hanabi-feed-event-arrow {
+	color: var(--color-hanabi-text-muted);
+	font-weight: 400;
 }
 
 .hanabi-feed-event-detail {
@@ -851,16 +863,9 @@ body {
 	line-height: 20px;
 }
 
-.hanabi-feed-clue-label {
-	display: inline-block;
-	margin-left: 4px;
-	padding: 1px 6px;
-	border-radius: 4px;
-	background: rgb(255 255 255 / 6%);
+.hanabi-feed-action-value {
 	color: var(--color-hanabi-text);
-	font-size: 18px;
-	font-weight: 700;
-	line-height: 22px;
+	font-weight: 600;
 	white-space: nowrap;
 }
 
