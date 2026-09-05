@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { constants, copyFileSync, mkdirSync } from 'node:fs';
+import { constants, copyFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -11,22 +11,18 @@ const worktrees = execFileSync('git', ['worktree', 'list', '--porcelain', '-z'],
 const primaryRoot = worktrees.split('\0')[0].replace(/^worktree /, '');
 
 if (primaryRoot === root) {
-	console.log('Primary checkout: keeping local environment files.');
+	console.log('Primary checkout: keeping local .env.');
 } else {
-	for (const file of ['.env', 'apps/server/.env']) {
-		const destination = resolve(root, file);
-		mkdirSync(dirname(destination), { recursive: true });
-		try {
-			copyFileSync(resolve(primaryRoot, file), destination, constants.COPYFILE_EXCL);
-			console.log(`Copied ${file} from the primary checkout.`);
-		} catch (error) {
-			if (error.code === 'EEXIST') {
-				console.log(`Keeping existing ${file}.`);
-			} else if (error.code === 'ENOENT') {
-				console.log(`Skipping ${file}: missing from the primary checkout.`);
-			} else {
-				throw error;
-			}
+	try {
+		copyFileSync(resolve(primaryRoot, '.env'), resolve(root, '.env'), constants.COPYFILE_EXCL);
+		console.log('Copied .env from the primary checkout.');
+	} catch (error) {
+		if (error.code === 'EEXIST') {
+			console.log('Keeping existing .env.');
+		} else if (error.code === 'ENOENT') {
+			console.log('Skipping .env: missing from the primary checkout.');
+		} else {
+			throw error;
 		}
 	}
 }
