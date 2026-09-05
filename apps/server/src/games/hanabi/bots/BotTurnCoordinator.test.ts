@@ -363,22 +363,22 @@ describe('BotTurnCoordinator', () => {
 		expect(h.apply).not.toHaveBeenCalled();
 	});
 
-	it('cannot spend another attempt on an automatic retry after exhausting the round limit', async () => {
+	it('allows the automatic transient retry after extensive round usage', async () => {
 		const provider = {
 			chooseAction: vi
 				.fn<BotDecisionProvider['chooseAction']>()
 				.mockRejectedValue(new BotDecisionError('transient')),
 		};
-		const h = tracked({ provider, limits: { roundMaxAttempts: 1 } });
+		const h = tracked({ provider, turn: botTurn({ attempts: 10_000, tokens: 100_000_000 }) });
 		h.coordinator.start();
 		await flush();
-		expect(provider.chooseAction).toHaveBeenCalledTimes(1);
+		expect(provider.chooseAction).toHaveBeenCalledTimes(2);
 		expect(h.original.round).toMatchObject({
-			attempts: 1,
-			status: 'exhausted',
-			failure: 'round_budget',
+			attempts: 10_002,
+			status: 'error',
+			failure: 'transient',
 		});
-		expect(h.coordinator.status()).toMatchObject({ canRetry: false });
+		expect(h.coordinator.status()).toMatchObject({ canRetry: true });
 	});
 
 	it('shows unavailable credentials/configuration as disabled with no ineffective retry', async () => {
@@ -437,19 +437,16 @@ describe('BotTurnCoordinator', () => {
 		expect(h.original.round).toMatchObject({ status: 'error', failure: 'invalid_action' });
 	});
 
-	it('refuses a request whose conservative reservation exceeds the remaining round budget', async () => {
-		const h = tracked({ limits: { roundMaxTokens: 1_000 } });
+	it('continues requesting bot moves after extensive round usage while retaining usage totals', async () => {
+		const h = tracked({ turn: botTurn({ attempts: 10_000, tokens: 100_000_000 }) });
 		h.coordinator.start();
 		await flush();
-		expect(h.chooseAction).not.toHaveBeenCalled();
-		expect(h.persist).not.toHaveBeenCalled();
+		expect(h.chooseAction).toHaveBeenCalledTimes(1);
+		expect(h.apply).toHaveBeenCalledTimes(1);
 		expect(h.original.round).toMatchObject({
-			attempts: 0,
-			tokens: 0,
-			status: 'exhausted',
-			failure: 'round_budget',
+			attempts: 10_001,
+			tokens: 100_000_105,
 		});
-		expect(h.coordinator.status()).toMatchObject({ status: 'exhausted', canRetry: false });
 	});
 
 	it('shares concurrency across games without consuming attempts for a blocked game', async () => {
@@ -567,19 +564,19 @@ describe('BotTurnCoordinator', () => {
 		expect(h.chooseAction).not.toHaveBeenCalled();
 	});
 
-	it('permits a request that exactly fits the remaining token allowance', async () => {
-		const h = tracked({ limits: { roundMaxTokens: 1_000 } });
+	it('permits a request that exactly fits the remaining global token allowance', async () => {
+		const h = tracked({ limits: { globalMaxTokens: 1_000 } });
 		h.coordinator.start();
 		await flush();
-		expect(h.original.round.status).toBe('exhausted');
-		h.runtime.limits.roundMaxTokens = h.original.round.requiredTokens!;
+		expect(h.original.round).toMatchObject({ status: 'error', failure: 'global_budget' });
+		h.runtime.limits.globalMaxTokens = h.original.round.requiredTokens!;
 		expect(h.coordinator.status()).toMatchObject({ canRetry: true });
 		expect(h.coordinator.retry()).toBeNull();
 		await flush();
 		expect(h.chooseAction).toHaveBeenCalledTimes(1);
 	});
 
-	it('resumes a persisted thinking turn with its consumed allowance intact', async () => {
+	it('resumes a persisted thinking turn with its usage totals intact', async () => {
 		const saved = JSON.parse(
 			JSON.stringify(botTurn({ status: 'thinking', attempts: 5, tokens: 10_000 })),
 		) as BotTurn;
@@ -606,7 +603,7 @@ describe('BotTurnCoordinator', () => {
 		expect(h.chooseAction).toHaveBeenCalledTimes(1);
 	});
 
-	it('allows a deliberate retry after restoring unavailable configuration without replacing policy or quota', async () => {
+	it('allows a deliberate retry after restoring unavailable configuration without replacing policy or usage totals', async () => {
 		const saved = JSON.parse(
 			JSON.stringify(
 				botTurn({
@@ -645,53 +642,65 @@ describe('BotTurnCoordinator', () => {
 		expect(saved.round.tokens).toBe(10_105);
 	});
 
-	it('does not restore retry eligibility when unavailable turns have exhausted their quota', async () => {
+	it('restores retry eligibility for unavailable turns despite extensive round usage', async () => {
 		const saved = botTurn({
 			status: 'error',
 			failure: 'unavailable',
-			attempts: 3,
-			tokens: 10_000,
+			attempts: 10_000,
+			tokens: 100_000_000,
 		});
-		const h = tracked({ turn: saved, limits: { roundMaxAttempts: 3 } });
+		const h = tracked({ turn: saved });
 		h.coordinator.start();
 		await flush();
-		expect(h.coordinator.status()).toMatchObject({ status: 'error', canRetry: false });
-		expect(h.coordinator.retry()).not.toBeNull();
+		expect(h.coordinator.status()).toMatchObject({ status: 'error', canRetry: true });
 		expect(h.chooseAction).not.toHaveBeenCalled();
-		expect(saved.round.attempts).toBe(3);
-		expect(saved.round.tokens).toBe(10_000);
-	});
-
-	it('leaves an exhausted restored round paused until the operator raises its allowance', async () => {
-		const saved = JSON.parse(
-			JSON.stringify(botTurn({ status: 'exhausted', failure: 'round_budget', attempts: 3 })),
-		) as BotTurn;
-		const h = tracked({ turn: saved, limits: { roundMaxAttempts: 3 } });
-		h.coordinator.start();
-		await flush();
-		expect(h.chooseAction).not.toHaveBeenCalled();
-		expect(h.coordinator.status()).toMatchObject({ status: 'exhausted', canRetry: false });
-		expect(h.coordinator.retry()).not.toBeNull();
-		h.runtime.limits.roundMaxAttempts = 4;
-		expect(h.coordinator.status()).toMatchObject({ status: 'exhausted', canRetry: true });
 		expect(h.coordinator.retry()).toBeNull();
 		await flush();
 		expect(h.chooseAction).toHaveBeenCalledTimes(1);
+		expect(saved.round.attempts).toBe(10_001);
+		expect(saved.round.tokens).toBe(100_000_105);
+	});
+
+	it('allows a deliberate retry of a restored round paused by the removed round allowance', async () => {
+		const saved = JSON.parse(
+			JSON.stringify(
+				botTurn({
+					status: 'exhausted',
+					failure: 'round_budget',
+					attempts: 10_000,
+					tokens: 100_000_000,
+				}),
+			),
+		) as BotTurn;
+		expect(isBotRound(saved.round)).toBe(true);
+		const h = tracked({ turn: saved });
+		h.coordinator.start();
+		await flush();
+		expect(h.chooseAction).not.toHaveBeenCalled();
+		expect(h.coordinator.status()).toMatchObject({ status: 'exhausted', canRetry: true });
+		expect(h.coordinator.status()?.message).toContain('removed');
+		expect(h.coordinator.retry()).toBeNull();
+		await flush();
+		expect(h.chooseAction).toHaveBeenCalledTimes(1);
+		expect(h.apply).toHaveBeenCalledTimes(1);
+		expect(saved.round.attempts).toBe(10_001);
+		expect(saved.round.tokens).toBe(100_000_105);
 	});
 
 	it.each([
-		{ attempts: 3, tokens: 0 },
-		{ attempts: 0, tokens: 10_000 },
-	])('does not offer retry for a failed turn with exhausted allowance: %j', async (used) => {
+		{ attempts: 10_000, tokens: 0 },
+		{ attempts: 0, tokens: 100_000_000 },
+	])('offers retry for a failed turn regardless of round usage: %j', async (used) => {
 		const h = tracked({
 			turn: botTurn({ status: 'error', failure: 'timeout', ...used }),
-			limits: { roundMaxAttempts: 3, roundMaxTokens: 10_000 },
 		});
 		h.coordinator.start();
 		await flush();
-		expect(h.coordinator.status()).toMatchObject({ canRetry: false });
-		expect(h.coordinator.retry()).not.toBeNull();
+		expect(h.coordinator.status()).toMatchObject({ canRetry: true });
 		expect(h.chooseAction).not.toHaveBeenCalled();
+		expect(h.coordinator.retry()).toBeNull();
+		await flush();
+		expect(h.chooseAction).toHaveBeenCalledTimes(1);
 	});
 	it('pauses oversized v2 history without spending budget or dropping evidence', async () => {
 		const turn = botTurn();

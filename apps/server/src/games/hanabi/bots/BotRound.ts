@@ -12,7 +12,7 @@ export type BotFailureCode =
 	| 'invalid_action'
 	| 'busy'
 	| 'global_budget'
-	| 'round_budget'
+	| 'round_budget' // Legacy saved games can retry after removal of the per-round limit.
 	| 'save_failed'
 	| 'input_too_large';
 
@@ -45,8 +45,7 @@ export const BOT_FAILURE_MESSAGES: Record<BotFailureCode, string> = {
 	busy: 'Other bots are thinking. Wait a moment, then try again.',
 	global_budget:
 		'The server bot allowance is used up. Wait for its limit window to renew or ask the server operator.',
-	round_budget:
-		'This round has reached its bot allowance. Ask the server operator to raise it, or reset the game to start a new round.',
+	round_budget: 'The per-round bot limit has been removed. Retry to continue this game.',
 	save_failed: 'The game could not be saved. Try the bot turn again when storage is available.',
 	input_too_large:
 		'This round has too much history or notepad content for a bot request. The complete record is saved; start a new round to continue with bots.',

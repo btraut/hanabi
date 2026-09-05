@@ -110,7 +110,6 @@ export class BotTurnCoordinator {
 			canRetry:
 				round.failure !== 'unavailable' &&
 				round.failure !== 'input_too_large' &&
-				this.roundHasAllowance(round) &&
 				(round.failure !== 'global_budget' ||
 					this.runtime.availability(round.requiredTokens ?? 0) !== 'global_budget'),
 		};
@@ -128,14 +127,6 @@ export class BotTurnCoordinator {
 		this.hooks.notify();
 		this.schedule();
 		return null;
-	}
-
-	private roundHasAllowance(round: BotRound): boolean {
-		return (
-			round.attempts < this.runtime.limits.roundMaxAttempts &&
-			round.tokens < this.runtime.limits.roundMaxTokens &&
-			round.tokens + (round.requiredTokens ?? 0) <= this.runtime.limits.roundMaxTokens
-		);
 	}
 
 	private schedule(): void {
@@ -180,7 +171,7 @@ export class BotTurnCoordinator {
 	}
 
 	private fail(round: BotRound, code: BotFailureCode): void {
-		round.status = code === 'round_budget' ? 'exhausted' : 'error';
+		round.status = 'error';
 		round.failure = code;
 		this.hooks.onFailure?.();
 		this.hooks.notify();
@@ -269,10 +260,6 @@ export class BotTurnCoordinator {
 				if (!this.isCurrent(turn, epoch, revision)) return;
 				if (controller.signal.aborted) {
 					this.fail(round, 'timeout');
-					return;
-				}
-				if (!this.roundHasAllowance(round)) {
-					this.fail(round, 'round_budget');
 					return;
 				}
 				const reservation = this.runtime.reserve(reservedTokens);

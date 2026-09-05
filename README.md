@@ -167,21 +167,21 @@ allowed. Seated humans can retry; the bot never makes an arbitrary fallback move
 clue response is skipped if it would block a different bot's normal turn, leaving the cards unchanged. The default
 deadline is 120 seconds with at most one automatic retry for transient API failures. Each response
 allows up to 16,384 output tokens, including internal reasoning and the final decision. Turn and clue opportunities share these limits. The server
-allows three concurrent requests, 200 attempts / 2 million reserved tokens per round, and
-500 attempts / 5 million reserved tokens per rolling hour across the process. The environment
+allows three concurrent requests and 500 attempts / 5 million reserved tokens per rolling hour across the process. The environment
 examples list all configurable limits. Reservations conservatively estimate request size and
 settle against reported usage; these are operational limits, not a dollar billing cap.
 
 Result reflections use low reasoning effort, at most 2,048 output tokens, and a five-second deadline per attempt.
 They receive one attempt and are skipped on failure or timeout so the next turn can continue.
 The revealed action remains in the complete history for interpretation on a later turn. These
-requests share the round and global allowances; they never replay the completed action.
+requests share the global allowance; they never replay the completed action.
 
 V2 requests include the complete history and enabled private notepad within a 512,000-byte combined
 input limit. Oversized requests pause inference without truncating saved events or notes, or blocking
 human movement.
 
-Round budgets and recovery state use existing active-game persistence. Global limits reset with
+Round usage counters and recovery state use existing active-game persistence. There is no per-round
+attempt or token cap. Games saved at the retired round limit can continue using **Retry**. Global limits reset with
 the process. A crash can lose the latest unflushed save, so persistence does not guarantee
 exactly-once API billing. Disabled or unconfigured bots do not prevent human-only games.
 
