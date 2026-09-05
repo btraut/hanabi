@@ -152,7 +152,10 @@ export default class HanabiGame extends Game {
 				this._botRound.status = 'ready';
 				delete this._botRound.failure;
 			}
-			if (this._botRound?.failure === 'round_budget') {
+			if (
+				this._botRound &&
+				['round_budget', 'global_budget'].includes(this._botRound.failure ?? '')
+			) {
 				this._botRound.status = 'ready';
 				delete this._botRound.failure;
 			}

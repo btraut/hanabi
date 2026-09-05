@@ -424,26 +424,29 @@ describe('server bot game integration', () => {
 		);
 	});
 
-	it('automatically continues a saved game paused by the retired round limit', async () => {
-		const original = createHarness();
-		startOnBot(original);
-		const saved = snapshot(original.game);
-		Object.assign(saved.botRound!, {
-			attempts: 200,
-			tokens: 2_000_000,
-			lastAttemptAt: Date.now() - 3_000,
-			status: 'exhausted',
-			failure: 'round_budget',
-		});
-		original.game.cleanUp();
-		const restored = createHarness({ serialized: saved });
-		expect(snapshot(restored.game).botRound).toMatchObject({ status: 'ready' });
-		expect(snapshot(restored.game).botRound?.failure).toBeUndefined();
-		restored.game.startBackgroundWork();
-		await vi.waitFor(() => expect(snapshot(restored.game).data.currentPlayerId).toBe('host'));
-		expect(restored.chooseAction).toHaveBeenCalledOnce();
-		expect(snapshot(restored.game).botRound).toMatchObject({ attempts: 201, tokens: 2_000_013 });
-	});
+	it.each(['round_budget', 'global_budget'] as const)(
+		'automatically continues a saved game paused by %s',
+		async (failure) => {
+			const original = createHarness();
+			startOnBot(original);
+			const saved = snapshot(original.game);
+			Object.assign(saved.botRound!, {
+				attempts: 200,
+				tokens: 2_000_000,
+				lastAttemptAt: Date.now() - 3_000,
+				status: 'exhausted',
+				failure,
+			});
+			original.game.cleanUp();
+			const restored = createHarness({ serialized: saved });
+			expect(snapshot(restored.game).botRound).toMatchObject({ status: 'ready' });
+			expect(snapshot(restored.game).botRound?.failure).toBeUndefined();
+			restored.game.startBackgroundWork();
+			await vi.waitFor(() => expect(snapshot(restored.game).data.currentPlayerId).toBe('host'));
+			expect(restored.chooseAction).toHaveBeenCalledOnce();
+			expect(snapshot(restored.game).botRound).toMatchObject({ attempts: 201, tokens: 2_000_013 });
+		},
+	);
 
 	it('rejects a corrupted saved policy and a started bot game with no private round state', () => {
 		const original = createHarness();

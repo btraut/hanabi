@@ -21,13 +21,13 @@ describe('parseEnv', () => {
 				HANABI_BOTS_ENABLED: 'true',
 				HANABI_BOT_MODEL: 'custom-model',
 				HANABI_BOT_REASONING_EFFORT: 'medium',
-				HANABI_BOT_GLOBAL_MAX_TOKENS: '100000',
+				HANABI_BOT_MAX_CONCURRENT: '4',
 			}),
 		).toMatchObject({
 			HANABI_BOTS_ENABLED: true,
 			HANABI_BOT_MODEL: 'custom-model',
 			HANABI_BOT_REASONING_EFFORT: 'medium',
-			HANABI_BOT_GLOBAL_MAX_TOKENS: 100000,
+			HANABI_BOT_MAX_CONCURRENT: 4,
 		});
 		for (const value of ['0', '-1', 'Infinity', 'NaN', '1.5', '', '100000000000']) {
 			expect(() => parseEnv({ HANABI_BOT_TIMEOUT_MS: value })).toThrow('HANABI_BOT_TIMEOUT_MS');
@@ -38,6 +38,17 @@ describe('parseEnv', () => {
 			'HANABI_BOT_REASONING_EFFORT',
 		);
 		expect(() => parseEnv({ HANABI_BOT_REASONING_EFFORT: 'none' })).toThrow('at least low');
+	});
+
+	it('ignores retired global and per-round budget settings', () => {
+		const configured = parseEnv({
+			HANABI_BOT_GLOBAL_MAX_ATTEMPTS: '1',
+			HANABI_BOT_GLOBAL_MAX_TOKENS: '1',
+			HANABI_BOT_GLOBAL_WINDOW_MS: '3600000',
+			HANABI_BOT_ROUND_MAX_ATTEMPTS: '1',
+			HANABI_BOT_ROUND_MAX_TOKENS: '1',
+		});
+		expect(Object.keys(configured).filter((key) => /BOT_(GLOBAL|ROUND)_/.test(key))).toEqual([]);
 	});
 
 	it('uses a local file store by default outside production', () => {

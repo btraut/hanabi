@@ -11,7 +11,7 @@ export type BotFailureCode =
 	| 'incomplete'
 	| 'invalid_action'
 	| 'busy'
-	| 'global_budget'
+	| 'global_budget' // Accepted only when loading legacy snapshots; cleared during restoration.
 	| 'round_budget' // Accepted only when loading legacy snapshots; cleared during restoration.
 	| 'save_failed'
 	| 'input_too_large';
@@ -34,7 +34,10 @@ export interface BotRound {
 	notepads?: Record<string, BotNotepad>;
 }
 
-export const BOT_FAILURE_MESSAGES: Record<Exclude<BotFailureCode, 'round_budget'>, string> = {
+export const BOT_FAILURE_MESSAGES: Record<
+	Exclude<BotFailureCode, 'round_budget' | 'global_budget'>,
+	string
+> = {
 	timeout: 'The bot took too long. Try its turn again.',
 	unavailable:
 		'The bot service is unavailable. The server operator may need to check its configuration.',
@@ -44,8 +47,6 @@ export const BOT_FAILURE_MESSAGES: Record<Exclude<BotFailureCode, 'round_budget'
 	incomplete: 'The bot did not finish choosing an action. You can retry its turn.',
 	invalid_action: 'The bot returned an invalid action. No move was made; try again.',
 	busy: 'Other bots are thinking. Wait a moment, then try again.',
-	global_budget:
-		'The server bot allowance is used up. Wait for its limit window to renew or ask the server operator.',
 	save_failed: 'The game could not be saved. Try the bot turn again when storage is available.',
 	input_too_large:
 		'This round has too much history or notepad content for a bot request. The complete record is saved; start a new round to continue with bots.',
@@ -112,6 +113,7 @@ export function isBotRound(value: unknown): value is BotRound {
 			(Number.isSafeInteger(round.requiredTokens) && round.requiredTokens >= 0)) &&
 		(round.failure === undefined ||
 			round.failure === 'round_budget' ||
+			round.failure === 'global_budget' ||
 			Object.hasOwn(BOT_FAILURE_MESSAGES, round.failure))
 	);
 }

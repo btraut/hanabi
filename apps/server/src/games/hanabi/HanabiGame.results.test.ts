@@ -345,10 +345,13 @@ describe('bot result reflections', () => {
 			});
 		});
 		harness.game.startBackgroundWork();
-		await vi.waitFor(() => expect(snapshot(harness.game).botRound?.failure).toBe('busy'));
+		await vi.waitFor(() => expect(harness.chooseAction).toHaveBeenCalledTimes(2));
+		expect(snapshot(harness.game).botRound?.failure).toBeUndefined();
 		const request = harness.chooseAction.mock.calls[1][0];
 		pending.resolve(decision(request));
-		await vi.waitFor(() => expect(snapshot(harness.game).data.currentPlayerId).toBe('host'));
+		await vi.waitFor(() => expect(snapshot(harness.game).data.currentPlayerId).toBe('host'), {
+			timeout: 2_000,
+		});
 		expect(snapshot(harness.game).transcript?.moves).toHaveLength(2);
 		expect(snapshot(harness.game).botRound?.failure).toBeUndefined();
 		expect(harness.chooseAction).toHaveBeenCalledTimes(3);

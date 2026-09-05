@@ -280,7 +280,7 @@ describe('BotTurnCoordinator', () => {
 		h.coordinator.stop();
 		await flush();
 		expect(provider.chooseAction.mock.calls[0][0].signal.aborted).toBe(true);
-		expect(typeof h.runtime.reserve(1)).toBe('object');
+		expect(typeof h.runtime.reserve()).toBe('object');
 		const notifications = h.notify.mock.calls.length;
 		pending.resolve({ actionId: 'action-0' });
 		await flush();
@@ -466,114 +466,50 @@ describe('BotTurnCoordinator', () => {
 		await flush();
 		second.coordinator.start();
 		await flush();
-		expect(second.original.round).toMatchObject({ attempts: 0, status: 'error', failure: 'busy' });
+		expect(second.original.round).toMatchObject({ attempts: 0, status: 'ready' });
+		expect(second.coordinator.status()).toMatchObject({ status: 'thinking', canRetry: false });
 		expect(provider.chooseAction).toHaveBeenCalledTimes(1);
 		pending.resolve({ actionId: 'action-0' });
 		await flush();
-		expect(second.coordinator.retry()).toBeNull();
+		await vi.advanceTimersByTimeAsync(1_000);
 		await flush();
 		expect(provider.chooseAction).toHaveBeenCalledTimes(2);
 		expect(second.apply).toHaveBeenCalledTimes(1);
 	});
 
-	it('refreshes Retry after the global allowance renews without making an automatic paid call', async () => {
-		const h = tracked({ limits: { globalMaxAttempts: 1, globalWindowMs: 1_000 } });
-		const reservation = h.runtime.reserve(1);
-		if (typeof reservation === 'string') throw new Error('Expected an initial reservation.');
-		reservation.release(1);
+	it('cancels capacity waits when stopped and uses the latest turn when restarted', async () => {
+		const h = tracked({ limits: { maxConcurrent: 1 } });
+		const occupied = h.runtime.reserve();
+		if (occupied === 'busy') throw new Error('Expected a request slot.');
 		h.coordinator.start();
 		await flush();
 		expect(h.chooseAction).not.toHaveBeenCalled();
-		expect(h.original.round).toMatchObject({
-			status: 'error',
-			failure: 'global_budget',
-			attempts: 0,
-		});
-		expect(h.coordinator.status()).toMatchObject({ canRetry: false });
-		const notifications = h.notify.mock.calls.length;
-		await vi.advanceTimersByTimeAsync(1_000);
-		await flush();
-		expect(h.notify.mock.calls.length).toBeGreaterThan(notifications);
-		expect(h.coordinator.status()).toMatchObject({ canRetry: true });
+		h.coordinator.stop();
+		occupied.release();
+		await vi.advanceTimersByTimeAsync(2_000);
 		expect(h.chooseAction).not.toHaveBeenCalled();
-		expect(h.coordinator.retry()).toBeNull();
-		await flush();
-		expect(h.chooseAction).toHaveBeenCalledTimes(1);
-	});
-
-	it('notifies once within five seconds of a token refund without unchanged updates or paid calls', async () => {
-		const h = tracked({ limits: { globalMaxTokens: 50_000, globalWindowMs: 3_600_000 } });
-		const reservation = h.runtime.reserve(50_000);
-		if (typeof reservation === 'string') throw new Error('Expected an initial reservation.');
+		const replacement = botTurn({}, 'replacement');
+		h.setTurn(replacement);
 		h.coordinator.start();
 		await flush();
-		expect(h.coordinator.status()).toMatchObject({ status: 'error', canRetry: false });
-		const notifications = h.notify.mock.calls.length;
-
-		await vi.advanceTimersByTimeAsync(15_000);
-		expect(h.notify).toHaveBeenCalledTimes(notifications);
-		expect(h.persist).not.toHaveBeenCalled();
-		expect(h.original.round.attempts).toBe(0);
-		expect(h.chooseAction).not.toHaveBeenCalled();
-
-		reservation.release(100);
-		await vi.advanceTimersByTimeAsync(4_999);
-		expect(h.notify).toHaveBeenCalledTimes(notifications);
-		await vi.advanceTimersByTimeAsync(1);
-		expect(h.notify).toHaveBeenCalledTimes(notifications + 1);
-		expect(h.coordinator.status()).toMatchObject({ status: 'error', canRetry: true });
-		await vi.advanceTimersByTimeAsync(10_000);
-		expect(h.notify).toHaveBeenCalledTimes(notifications + 1);
-		expect(h.persist).not.toHaveBeenCalled();
-		expect(h.chooseAction).not.toHaveBeenCalled();
-
-		expect(h.coordinator.retry()).toBeNull();
-		await flush();
-		expect(h.chooseAction).toHaveBeenCalledTimes(1);
+		expect(h.chooseAction).toHaveBeenCalledOnce();
+		expect(h.apply).toHaveBeenCalledWith('bot', expect.objectContaining({ tileId: 'replacement' }));
 	});
 
-	it('checks restored global-budget errors for refunded allowance without automatic inference', async () => {
+	it('automatically resumes a restored global-budget pause with usage intact', async () => {
 		const saved = botTurn({
 			status: 'error',
 			failure: 'global_budget',
-			requiredTokens: 10_000,
-			attempts: 2,
-			tokens: 1_000,
+			attempts: 600,
+			tokens: 6_000_000,
 		});
-		const h = tracked({
-			turn: saved,
-			limits: { globalMaxTokens: 50_000, globalWindowMs: 3_600_000 },
-		});
-		const reservation = h.runtime.reserve(50_000);
-		if (typeof reservation === 'string') throw new Error('Expected an initial reservation.');
+		expect(isBotRound(saved.round)).toBe(true);
+		const h = tracked({ turn: saved });
 		h.coordinator.start();
 		await flush();
-		expect(h.coordinator.status()).toMatchObject({ status: 'error', canRetry: false });
-		await vi.advanceTimersByTimeAsync(5_000);
-		expect(h.notify).not.toHaveBeenCalled();
-
-		reservation.release(100);
-		await vi.advanceTimersByTimeAsync(5_000);
-		expect(h.notify).toHaveBeenCalledTimes(1);
-		expect(h.coordinator.status()).toMatchObject({ status: 'error', canRetry: true });
-		expect(saved.round).toMatchObject({ status: 'error', attempts: 2, tokens: 1_000 });
-		expect(h.persist).not.toHaveBeenCalled();
-		expect(h.chooseAction).not.toHaveBeenCalled();
-		await vi.advanceTimersByTimeAsync(10_000);
-		expect(h.notify).toHaveBeenCalledTimes(1);
-		expect(h.chooseAction).not.toHaveBeenCalled();
-	});
-
-	it('permits a request that exactly fits the remaining global token allowance', async () => {
-		const h = tracked({ limits: { globalMaxTokens: 1_000 } });
-		h.coordinator.start();
-		await flush();
-		expect(h.original.round).toMatchObject({ status: 'error', failure: 'global_budget' });
-		h.runtime.limits.globalMaxTokens = h.original.round.requiredTokens!;
-		expect(h.coordinator.status()).toMatchObject({ canRetry: true });
-		expect(h.coordinator.retry()).toBeNull();
-		await flush();
-		expect(h.chooseAction).toHaveBeenCalledTimes(1);
+		expect(h.chooseAction).toHaveBeenCalledOnce();
+		expect(h.apply).toHaveBeenCalledOnce();
+		expect(saved.round).toMatchObject({ attempts: 601, tokens: 6_000_105 });
 	});
 
 	it('resumes a persisted thinking turn with its usage totals intact', async () => {
@@ -661,7 +597,7 @@ describe('BotTurnCoordinator', () => {
 		expect(saved.round.tokens).toBe(100_000_105);
 	});
 
-	it('allows a deliberate retry of a restored round paused by the removed round allowance', async () => {
+	it('automatically resumes a restored round paused by the removed round allowance', async () => {
 		const saved = JSON.parse(
 			JSON.stringify(
 				botTurn({
@@ -675,11 +611,6 @@ describe('BotTurnCoordinator', () => {
 		expect(isBotRound(saved.round)).toBe(true);
 		const h = tracked({ turn: saved });
 		h.coordinator.start();
-		await flush();
-		expect(h.chooseAction).not.toHaveBeenCalled();
-		expect(h.coordinator.status()).toMatchObject({ status: 'exhausted', canRetry: true });
-		expect(h.coordinator.status()?.message).toBeUndefined();
-		expect(h.coordinator.retry()).toBeNull();
 		await flush();
 		expect(h.chooseAction).toHaveBeenCalledTimes(1);
 		expect(h.apply).toHaveBeenCalledTimes(1);

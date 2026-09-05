@@ -64,9 +64,6 @@ async function main(): Promise<void> {
 							timeoutMs: env.HANABI_BOT_TIMEOUT_MS,
 							maxOutputTokens: env.HANABI_BOT_MAX_OUTPUT_TOKENS,
 							maxConcurrent: env.HANABI_BOT_MAX_CONCURRENT,
-							globalWindowMs: env.HANABI_BOT_GLOBAL_WINDOW_MS,
-							globalMaxAttempts: env.HANABI_BOT_GLOBAL_MAX_ATTEMPTS,
-							globalMaxTokens: env.HANABI_BOT_GLOBAL_MAX_TOKENS,
 						},
 					)
 				: undefined,
