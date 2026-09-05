@@ -374,13 +374,14 @@ function HanabiDesktopActivityAction({
 	let actionAccent = playerAccent;
 	let summary: ReactNode = 'Game updated';
 	let detail: ReactNode = null;
+	let recipientName: string | null = null;
 
 	if (action.type === HanabiGameActionType.Play) {
 		actionAccent = ACTION_ACCENTS[action.tile.color] ?? playerAccent;
 		summary = (
 			<>
 				played{' '}
-				<span style={{ color: actionAccent }}>
+				<span className="hanabi-feed-action-value" style={{ color: actionAccent }}>
 					{capitalize(action.tile.color)} {action.tile.number}
 				</span>
 			</>
@@ -391,7 +392,7 @@ function HanabiDesktopActivityAction({
 		summary = (
 			<>
 				discarded{' '}
-				<span style={{ color: actionAccent }}>
+				<span className="hanabi-feed-action-value" style={{ color: actionAccent }}>
 					{capitalize(action.tile.color)} {action.tile.number}
 				</span>
 			</>
@@ -401,6 +402,7 @@ function HanabiDesktopActivityAction({
 		action.type === HanabiGameActionType.GiveNumberClue
 	) {
 		const recipient = gameData.players[action.recipientId];
+		recipientName = recipient?.name ?? 'another player';
 		const clueValue =
 			action.type === HanabiGameActionType.GiveColorClue
 				? capitalize(action.color ?? 'color')
@@ -411,10 +413,10 @@ function HanabiDesktopActivityAction({
 				: undefined;
 		summary = (
 			<>
-				clued {recipient?.name ?? 'another player'}{' '}
-				<span className="hanabi-feed-clue-label" style={{ color: clueColor }}>
-					{clueValue} clue
-				</span>
+				<span className="hanabi-feed-action-value" style={{ color: clueColor }}>
+					{clueValue}
+				</span>{' '}
+				clue
 			</>
 		);
 	} else if (action.type === HanabiGameActionType.GameStarted) {
@@ -431,14 +433,22 @@ function HanabiDesktopActivityAction({
 	return (
 		<div className="hanabi-feed-event-content">
 			<div className="min-w-0 flex-1 break-words">
-				<p className="hanabi-feed-event-summary">
-					{'playerId' in action && (
-						<>
-							<span className="font-medium text-hanabi-text">{player?.name ?? 'Player'}</span>{' '}
-						</>
-					)}
-					{summary}
-				</p>
+				{'playerId' in action && (
+					<p className="hanabi-feed-event-people">
+						{player?.name ?? 'Player'}
+						{recipientName && (
+							<>
+								<span className="sr-only"> clued </span>
+								<span aria-hidden="true" className="hanabi-feed-event-arrow">
+									{' '}
+									→{' '}
+								</span>
+								{recipientName}
+							</>
+						)}
+					</p>
+				)}
+				<p className="hanabi-feed-event-summary">{summary}</p>
 				{detail && <p className="hanabi-feed-event-detail">{detail}</p>}
 			</div>
 			{timeLabel && <span className="hanabi-chat-time">{timeLabel}</span>}
