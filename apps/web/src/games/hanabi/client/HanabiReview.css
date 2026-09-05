@@ -42,9 +42,6 @@
 .hanabi-review input {
 	accent-color: var(--color-hanabi-coral);
 }
-.hanabi-review select {
-	max-width: 190px;
-}
 
 .hanabi-review button,
 .hanabi-review select,
@@ -56,6 +53,12 @@
 	color: var(--color-hanabi-text);
 	padding: 8px 16px;
 	cursor: pointer;
+}
+
+.hanabi-review select {
+	max-width: 190px;
+	appearance: none;
+	padding-right: 40px;
 }
 
 .hanabi-review-header button:hover:not(:disabled),
@@ -73,9 +76,11 @@
 	outline-offset: 3px;
 }
 .hanabi-review-header > button {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
 	border-color: transparent;
 	background: transparent;
-	padding-left: 0;
 }
 
 .hanabi-review .hanabi-review-card {
