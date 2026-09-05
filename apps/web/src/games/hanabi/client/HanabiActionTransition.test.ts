@@ -12,7 +12,7 @@ type TestAction = {
 	tile?: { id: string };
 };
 
-type TestState = { actions: readonly TestAction[] };
+type TestState = { actions: readonly TestAction[]; botStatus?: string };
 
 function action(id: string, type: HanabiGameActionType, tileId?: string): TestAction {
 	return { id, type, tile: tileId ? { id: tileId } : undefined };
@@ -172,6 +172,46 @@ describe('HanabiActionTransitionCoordinator', () => {
 		expect(harness.applied.at(-1)).toEqual({ state: discarded, tileId: null });
 	});
 
+	it.each([HanabiGameActionType.Play, HanabiGameActionType.Discard])(
+		'preserves a pending %s animation through bot status refreshes',
+		(type) => {
+			const harness = setup();
+			const initial = state(action('started', HanabiGameActionType.GameStarted));
+			const played = state(...initial.actions, action('played', type, 'tile-1'));
+			const thinking = { ...played, botStatus: 'thinking' };
+			harness.coordinator.update(initial);
+			harness.coordinator.update(played);
+			harness.coordinator.update(thinking);
+
+			expect(harness.transitions[0].skipTransition).not.toHaveBeenCalled();
+			expect(harness.applied).toEqual([{ state: initial, tileId: null }]);
+			harness.transitions[0].update();
+			expect(harness.applied.at(-1)).toEqual({ state: thinking, tileId: 'tile-1' });
+			expect(harness.transitions).toHaveLength(1);
+		},
+	);
+
+	it('applies status refreshes during the slide without removing its tile identity', async () => {
+		const harness = setup();
+		const initial = state(action('started', HanabiGameActionType.GameStarted));
+		const played = state(...initial.actions, action('played', HanabiGameActionType.Play, 'tile-1'));
+		harness.coordinator.update(initial);
+		harness.coordinator.update(played);
+		harness.transitions[0].update();
+
+		const thinking = { ...played, botStatus: 'thinking' };
+		harness.coordinator.update(thinking);
+		expect(harness.transitions[0].skipTransition).not.toHaveBeenCalled();
+		expect(harness.applied.at(-1)).toEqual({ state: thinking, tileId: 'tile-1' });
+		harness.transitions[0].finished.resolve();
+		await harness.transitions[0].finished.promise;
+		await Promise.resolve();
+		expect(harness.cleared).toBe(1);
+		harness.coordinator.update({ ...thinking, botStatus: 'ready' });
+		expect(harness.applied.at(-1)?.tileId).toBeNull();
+		expect(harness.transitions).toHaveLength(1);
+	});
+
 	it('never lets a delayed callback overwrite a newer refresh', () => {
 		const harness = setup();
 		const initial = state(action('started', HanabiGameActionType.GameStarted));
@@ -186,6 +226,48 @@ describe('HanabiActionTransitionCoordinator', () => {
 		expect(harness.transitions[0].skipTransition).toHaveBeenCalledOnce();
 		expect(harness.applied.at(-1)).toEqual({ state: chatted, tileId: null });
 		expect(harness.applied).not.toContainEqual({ state: played, tileId: 'tile-1' });
+	});
+
+	it.each([
+		{ label: 'reset', replacement: state() },
+		{
+			label: 'replaced history',
+			replacement: state(action('another-game', HanabiGameActionType.GameStarted)),
+		},
+	])('cancels a pending slide on $label', ({ replacement }) => {
+		const harness = setup();
+		const initial = state(action('started', HanabiGameActionType.GameStarted));
+		const played = state(...initial.actions, action('played', HanabiGameActionType.Play, 'tile-1'));
+		harness.coordinator.update(initial);
+		harness.coordinator.update(played);
+		harness.coordinator.update({ ...played, botStatus: 'thinking' });
+		harness.coordinator.update(replacement);
+		harness.transitions[0].update();
+		expect(harness.transitions[0].skipTransition).toHaveBeenCalledOnce();
+		expect(harness.applied.at(-1)).toEqual({ state: replacement, tileId: null });
+	});
+
+	it('keeps a newer tile transition when the canceled one finishes', async () => {
+		const harness = setup();
+		const initial = state(action('started', HanabiGameActionType.GameStarted));
+		const played = state(...initial.actions, action('played', HanabiGameActionType.Play, 'tile-1'));
+		const discarded = state(
+			...played.actions,
+			action('discarded', HanabiGameActionType.Discard, 'tile-2'),
+		);
+		harness.coordinator.update(initial);
+		harness.coordinator.update(played);
+		harness.transitions[0].update();
+		harness.coordinator.update(discarded);
+		harness.transitions[0].finished.resolve();
+		await harness.transitions[0].finished.promise;
+		await Promise.resolve();
+		expect(harness.cleared).toBe(0);
+		const thinking = { ...discarded, botStatus: 'thinking' };
+		harness.coordinator.update(thinking);
+		harness.transitions[1].update();
+		expect(harness.applied.at(-1)).toEqual({ state: thinking, tileId: 'tile-2' });
+		expect(harness.transitions[1].skipTransition).not.toHaveBeenCalled();
 	});
 
 	it('observes transition rejections and skips active work during cleanup', async () => {

@@ -64,7 +64,10 @@ export function getTileViewTransitionName(tileId: string): string {
 export class HanabiActionTransitionCoordinator<State extends TransitionState> {
 	private readonly options: CoordinatorOptions<State>;
 	private currentState: State | null = null;
-	private activeTransition: TileViewTransition | null = null;
+	private activeTransition: {
+		transition: TileViewTransition;
+		update: { state: State; tileId: string; applied: boolean };
+	} | null = null;
 	private generation = 0;
 	private disposed = false;
 
@@ -79,6 +82,21 @@ export class HanabiActionTransitionCoordinator<State extends TransitionState> {
 
 		const previousState = this.currentState;
 		this.currentState = nextState;
+
+		// Status and position refreshes can follow an action before capture finishes.
+		// Preserve the source DOM until the callback, and keep the latest snapshot.
+		if (
+			this.activeTransition &&
+			previousState &&
+			previousState.actions.length === nextState.actions.length &&
+			previousState.actions.every((action, index) => action.id === nextState.actions[index].id)
+		) {
+			const { update } = this.activeTransition;
+			update.state = nextState;
+			if (update.applied) this.options.applyState(nextState, update.tileId);
+			return;
+		}
+
 		this.generation += 1;
 		const updateGeneration = this.generation;
 
@@ -98,15 +116,17 @@ export class HanabiActionTransitionCoordinator<State extends TransitionState> {
 		this.cancelActiveTransition();
 		this.options.markTransitioningTile(transitioningTileId);
 
+		const update = { state: nextState, tileId: transitioningTileId, applied: false };
 		try {
 			const transition = this.options.startTransition!(() => {
 				if (this.disposed || updateGeneration !== this.generation) {
 					return;
 				}
 
-				this.options.applyState(nextState, transitioningTileId);
+				update.applied = true;
+				this.options.applyState(update.state, update.tileId);
 			});
-			this.activeTransition = transition;
+			this.activeTransition = { transition, update };
 
 			// ready rejects when skipTransition interrupts capture. Observing it
 			// prevents an otherwise harmless cancelation from becoming an
@@ -115,7 +135,7 @@ export class HanabiActionTransitionCoordinator<State extends TransitionState> {
 			void transition.finished
 				.catch(() => undefined)
 				.finally(() => {
-					if (!this.disposed && this.activeTransition === transition) {
+					if (!this.disposed && this.activeTransition?.transition === transition) {
 						this.activeTransition = null;
 						this.options.clearTransitioningTile();
 					}
@@ -132,7 +152,7 @@ export class HanabiActionTransitionCoordinator<State extends TransitionState> {
 	}
 
 	private cancelActiveTransition(): void {
-		this.activeTransition?.skipTransition();
+		this.activeTransition?.transition.skipTransition();
 		this.activeTransition = null;
 	}
 }
