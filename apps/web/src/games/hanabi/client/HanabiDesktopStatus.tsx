@@ -37,7 +37,7 @@ export function getHanabiDesktopStatusData(
 			if (botTurn?.playerId === currentPlayer.id) {
 				turnLabel =
 					botTurn.status === 'thinking'
-						? `${currentPlayer.name} · ${botTurn.opportunity === 'clue' ? 'Considering clue…' : 'Thinking…'}`
+						? `${currentPlayer.name} · ${botTurn.opportunity === 'result' ? 'Considering result…' : botTurn.opportunity === 'clue' ? 'Considering clue…' : 'Thinking…'}`
 						: `${currentPlayer.name} · Paused`;
 			}
 		} else if (currentPlayer && !currentPlayer.connected) {

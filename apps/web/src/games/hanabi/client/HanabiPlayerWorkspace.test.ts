@@ -180,49 +180,52 @@ describe('HanabiPlayerWorkspace', () => {
 		expect(markup).not.toContain('h-[174px]');
 	});
 
-	it('shows an off-turn clue response only on the bot while the human remains Playing', () => {
-		const gameData = generateHanabiGameData({
-			currentPlayerId: 'alice',
-			players: { alice: players.alice, ben: { ...players.ben, kind: 'bot' } },
-			stage: HanabiStage.Playing,
-			turnOrder: ['alice', 'ben'],
-			bots: {
-				available: true,
-				canManage: false,
-				turn: { playerId: 'ben', status: 'thinking', canRetry: false, opportunity: 'clue' },
-			},
-		});
-		const render = () =>
-			renderToStaticMarkup(
-				createElement(HanabiDesktopPlayerWorkspaces, {
+	it.each(['clue', 'result'] as const)(
+		'shows an off-turn %s response only on the bot while the human remains Playing',
+		(opportunity) => {
+			const gameData = generateHanabiGameData({
+				currentPlayerId: 'alice',
+				players: { alice: players.alice, ben: { ...players.ben, kind: 'bot' } },
+				stage: HanabiStage.Playing,
+				turnOrder: ['alice', 'ben'],
+				bots: {
+					available: true,
+					canManage: false,
+					turn: { playerId: 'ben', status: 'thinking', canRetry: false, opportunity },
+				},
+			});
+			const render = () =>
+				renderToStaticMarkup(
+					createElement(HanabiDesktopPlayerWorkspaces, {
+						gameData,
+						renderTileSurface: () => createElement('div'),
+						userId: 'alice',
+					}),
+				);
+			const markup = render();
+			expect(markup.match(/class="hanabi-avatar-orbit"/g)).toHaveLength(1);
+			expect(markup).toContain('aria-label="Ben, bot, thinking"');
+			expect(markup).toContain('aria-label="Alice, you, playing"');
+			expect(markup.match(/>Playing</g)).toHaveLength(1);
+			expect(markup).toContain(`Considering ${opportunity}…`);
+			const botSection = markup.slice(markup.indexOf('<section aria-label="Ben'));
+			expect(botSection).not.toContain('border-hanabi-coral');
+			expect(
+				getHanabiPlayerTilePermissions({
 					gameData,
-					renderTileSurface: () => createElement('div'),
+					isTransitioning: false,
+					playerId: 'alice',
 					userId: 'alice',
 				}),
-			);
-		const markup = render();
-		expect(markup.match(/class="hanabi-avatar-orbit"/g)).toHaveLength(1);
-		expect(markup).toContain('aria-label="Ben, bot, thinking"');
-		expect(markup).toContain('aria-label="Alice, you, playing"');
-		expect(markup.match(/>Playing</g)).toHaveLength(1);
-		expect(markup).toContain('Considering clue…');
-		const botSection = markup.slice(markup.indexOf('<section aria-label="Ben'));
-		expect(botSection).not.toContain('border-hanabi-coral');
-		expect(
-			getHanabiPlayerTilePermissions({
-				gameData,
-				isTransitioning: false,
-				playerId: 'alice',
-				userId: 'alice',
-			}),
-		).toMatchObject({ canAct: true, ownTiles: true });
-		gameData.bots!.turn!.status = 'error';
-		expect(render()).not.toContain('hanabi-avatar-orbit');
-		expect(render()).toContain('>Playing<');
-		gameData.bots!.turn!.status = 'thinking';
-		gameData.finishedReason = HanabiFinishedReason.OutOfTurns;
-		expect(render()).not.toContain('hanabi-avatar-orbit');
-	});
+			).toMatchObject({ canAct: true, ownTiles: true });
+			gameData.bots!.turn!.status = 'error';
+			expect(render()).not.toContain('hanabi-avatar-orbit');
+			expect(render()).toContain('>Playing<');
+			gameData.bots!.turn!.status = 'thinking';
+			gameData.finishedReason = HanabiFinishedReason.OutOfTurns;
+			expect(render()).not.toContain('hanabi-avatar-orbit');
+		},
+	);
 
 	it('preserves concealment, action, and drag permissions', () => {
 		const playing = generateHanabiGameData({

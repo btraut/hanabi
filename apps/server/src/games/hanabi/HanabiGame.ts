@@ -169,7 +169,7 @@ export default class HanabiGame extends Game {
 					await this.flushSaves();
 				},
 				onFailure: () => {
-					if (this._discardFailedClueForOtherBot()) this._invalidateBotTurn(true);
+					if (this._discardFailedOptionalResponse()) this._invalidateBotTurn(true);
 				},
 				notify: () => {
 					this._broadcastGameData();
@@ -178,6 +178,8 @@ export default class HanabiGame extends Game {
 				apply: (playerId, action, decision) => this._applyBotDecision(playerId, action, decision),
 				applyClueResponse: (playerId, decision, sourceIds) =>
 					this._applyBotDecision(playerId, null, decision, sourceIds),
+				applyResultResponse: (playerId, decision, sourceId) =>
+					this._applyBotDecision(playerId, null, decision, [], sourceId),
 			});
 		}
 	}
@@ -410,8 +412,9 @@ export default class HanabiGame extends Game {
 				before,
 			);
 			this._queueBotClueOpportunity(action);
+			this._queueBotResultOpportunity(action);
 			const opportunityChanged = !before || previousOpportunity !== this._botOpportunityKey();
-			const skippedFailedClue = !opportunityChanged && this._discardFailedClueForOtherBot();
+			const skippedFailedClue = !opportunityChanged && this._discardFailedOptionalResponse();
 			this._invalidateBotTurn(opportunityChanged || skippedFailedClue);
 		}
 		if (!this._transcript) {
@@ -604,38 +607,52 @@ export default class HanabiGame extends Game {
 	}
 
 	private _currentBotTurn(): BotTurn | null {
-		const pending = this._botRound?.version === 2 ? this._botRound.pendingClues?.[0] : undefined;
-		const playerId = pending?.playerId ?? this._gameData.currentPlayerId;
+		const round = this._botRound;
+		const result = round?.version === 2 ? round.pendingResult : undefined;
+		const pending = round?.version === 2 ? round.pendingClues?.[0] : undefined;
+		const playerId = result?.playerId ?? pending?.playerId ?? this._gameData.currentPlayerId;
 		if (
-			this._gameData.stage !== HanabiStage.Playing ||
+			(this._gameData.stage !== HanabiStage.Playing &&
+				!(result && this._gameData.stage === HanabiStage.Finished)) ||
 			!playerId ||
 			this._gameData.players[playerId]?.kind !== 'bot' ||
-			!this._botRound
+			!round
 		)
 			return null;
 		return {
 			playerId,
 			gameData: this._gameData,
-			round: this._botRound,
-			...(this._botRound.version === 2
+			round,
+			...(round.version === 2
 				? {
-						opportunity:
-							playerId === this._gameData.currentPlayerId ? ('turn' as const) : ('clue' as const),
-						sourceClueEventIds: pending?.eventIds ?? [],
+						opportunity: result
+							? ('result' as const)
+							: playerId === this._gameData.currentPlayerId
+								? ('turn' as const)
+								: ('clue' as const),
+						sourceClueEventIds: result ? [] : (pending?.eventIds ?? []),
+						...(result ? { sourceActionEventId: result.eventId } : {}),
 					}
 				: {}),
 		};
 	}
 
-	/** A failed optional response must not prevent another bot from taking its turn. */
-	private _discardFailedClueForOtherBot(): boolean {
+	/** Result reflection is best effort; failed clue responses cannot block another bot's turn. */
+	private _discardFailedOptionalResponse(): boolean {
 		const round = this._botRound;
-		const pending = round?.version === 2 ? round.pendingClues?.[0] : undefined;
+		if (!round || round.version !== 2 || !['error', 'exhausted'].includes(round.status))
+			return false;
+		if (round.pendingResult) {
+			Logger.warn(
+				`Skipped failed bot result reflection game=${this.id} player=${round.pendingResult.playerId} code=${round.failure ?? 'transient'}`,
+			);
+			delete round.pendingResult;
+			return true;
+		}
+		const pending = round.pendingClues?.[0];
 		const currentPlayerId = this._gameData.currentPlayerId;
 		if (
-			!round ||
 			!pending ||
-			!['error', 'exhausted'].includes(round.status) ||
 			!currentPlayerId ||
 			pending.playerId === currentPlayerId ||
 			this._gameData.players[currentPlayerId]?.kind !== 'bot'
@@ -649,12 +666,13 @@ export default class HanabiGame extends Game {
 	}
 
 	private _botOpportunityKey(gameData: HanabiGameData = this._gameData): string {
+		const result = this._botRound?.pendingResult;
 		const pending = this._botRound?.pendingClues?.[0];
-		const playerId = pending?.playerId ?? gameData.currentPlayerId;
+		const playerId = result?.playerId ?? pending?.playerId ?? gameData.currentPlayerId;
 		return JSON.stringify([
 			playerId,
-			playerId === gameData.currentPlayerId ? 'turn' : 'clue',
-			pending?.eventIds ?? [],
+			result ? 'result' : playerId === gameData.currentPlayerId ? 'turn' : 'clue',
+			result?.eventId ?? pending?.eventIds ?? [],
 		]);
 	}
 
@@ -709,12 +727,13 @@ export default class HanabiGame extends Game {
 		action: DebugPlayerAction | null,
 		decision?: BotDecision,
 		sourceClueEventIds?: string[],
+		sourceActionEventId?: string,
 	): string | null {
 		const round = this._botRound;
 		if (!round || round.version === 1)
 			return action ? this._applyPlayerAction(playerId, action) : 'Invalid bot opportunity.';
 		const hand = this._gameData.playerTiles[playerId] ?? [];
-		const opportunity = action ? 'turn' : 'clue';
+		const opportunity = action ? 'turn' : sourceActionEventId ? 'result' : 'clue';
 		const current = this._currentBotTurn();
 		if (
 			this._gameData.players[playerId]?.kind !== 'bot' ||
@@ -723,7 +742,7 @@ export default class HanabiGame extends Game {
 			!isV2BotDecision(
 				decision,
 				hand,
-				this._gameData.allowDragging,
+				this._gameData.allowDragging && this._gameData.stage === HanabiStage.Playing,
 				opportunity,
 				round.policy.notepadVersion === 1,
 			) ||
@@ -734,7 +753,8 @@ export default class HanabiGame extends Game {
 						JSON.stringify(candidate.action) === JSON.stringify(action),
 				)) ||
 			(opportunity === 'clue' &&
-				JSON.stringify(current.sourceClueEventIds) !== JSON.stringify(sourceClueEventIds))
+				JSON.stringify(current.sourceClueEventIds) !== JSON.stringify(sourceClueEventIds)) ||
+			(opportunity === 'result' && current.sourceActionEventId !== sourceActionEventId)
 		)
 			return 'Invalid bot decision.';
 
@@ -748,17 +768,21 @@ export default class HanabiGame extends Game {
 		const beforeHistory = round.history;
 		const observedAt = getBotNotepadCheckpoint(beforeHistory);
 		const beforePendingClues = round.pendingClues;
+		const beforePendingResult = round.pendingResult;
 		const sources = current.sourceClueEventIds ?? [];
 		// All checks finish before mutation; these synchronous handlers cannot interleave.
 		// Stage the arrangement without notifications or invalidating its own request.
 		if (positions) this._commitArrangement(playerId, positions, sources.at(-1));
-		round.pendingClues = round.pendingClues?.filter((pending) => pending.playerId !== playerId);
+		if (opportunity === 'result') delete round.pendingResult;
+		else
+			round.pendingClues = round.pendingClues?.filter((pending) => pending.playerId !== playerId);
 		const error = action ? this._applyPlayerAction(playerId, action) : null;
 		if (error) {
 			this._gameData.tilePositions = beforePositions;
 			this._transcript = beforeTranscript;
 			round.history = beforeHistory;
 			round.pendingClues = beforePendingClues;
+			round.pendingResult = beforePendingResult;
 			return error;
 		}
 		const decisionId = randomUUID();
@@ -776,6 +800,7 @@ export default class HanabiGame extends Game {
 							observedAt,
 							recordedAt: getBotNotepadCheckpoint(round.history),
 							sourceClueEventIds: [...sources],
+							...(sourceActionEventId ? { sourceActionEventId } : {}),
 							explanation: decision.explanation,
 							notes: decision.notes ?? null,
 						},
@@ -854,6 +879,22 @@ export default class HanabiGame extends Game {
 				...(round.pendingClues ?? []),
 				{ playerId, eventIds: [sourceClueEventId] },
 			];
+	}
+
+	private _queueBotResultOpportunity(action: HanabiGameAction): void {
+		const round = this._botRound;
+		if (
+			!round ||
+			round.version !== 2 ||
+			round.history.version !== 2 ||
+			!round.policy.reflectionAfterAction ||
+			(action.type !== HanabiGameActionType.Play && action.type !== HanabiGameActionType.Discard) ||
+			this._gameData.players[action.playerId]?.kind !== 'bot'
+		)
+			return;
+		const event = round.history.events.at(-1);
+		if (event?.type !== 'play' && event?.type !== 'discard') return;
+		round.pendingResult = { playerId: action.playerId, eventId: event.eventId };
 	}
 
 	private _debugPlayerId(): string {

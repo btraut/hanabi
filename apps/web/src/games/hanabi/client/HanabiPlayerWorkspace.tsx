@@ -49,7 +49,7 @@ export function HanabiDesktopPlayerWorkspaces({
 	userId,
 	workspaceComponent: Workspace = HanabiPlayerWorkspace,
 }: WorkspacesProps): JSX.Element {
-	const finished = gameData.finishedReason !== null;
+	const finished = gameData.finishedReason !== null || gameData.stage === HanabiStage.Finished;
 	const displayOrder = getHanabiPlayerDisplayOrder(gameData.turnOrder, userId);
 
 	return (
@@ -62,16 +62,22 @@ export function HanabiDesktopPlayerWorkspaces({
 					key={playerId}
 					player={gameData.players[playerId]}
 					thinking={
-						!finished &&
-						gameData.stage === HanabiStage.Playing &&
+						((!finished && gameData.stage === HanabiStage.Playing) ||
+							(gameData.stage === HanabiStage.Finished &&
+								gameData.bots?.turn?.opportunity === 'result')) &&
 						(gameData.currentPlayerId === playerId ||
-							gameData.bots?.turn?.opportunity === 'clue') &&
+							gameData.bots?.turn?.opportunity === 'clue' ||
+							gameData.bots?.turn?.opportunity === 'result') &&
 						gameData.players[playerId].kind === 'bot' &&
 						gameData.bots?.turn?.playerId === playerId &&
 						gameData.bots.turn.status === 'thinking'
 					}
 					thinkingLabel={
-						gameData.bots?.turn?.opportunity === 'clue' ? 'Considering clue…' : 'Thinking…'
+						gameData.bots?.turn?.opportunity === 'result'
+							? 'Considering result…'
+							: gameData.bots?.turn?.opportunity === 'clue'
+								? 'Considering clue…'
+								: 'Thinking…'
 					}
 				>
 					{renderTileSurface(playerId)}
@@ -122,7 +128,7 @@ export default function HanabiPlayerWorkspace({
 				</p>
 				<div className="flex flex-wrap items-center justify-center gap-1.5">
 					{reviewPerspective && <span className="text-sm text-hanabi-text-muted">Viewing as</span>}
-					{(active || thinking) && !finished && (
+					{((active && !finished) || thinking) && (
 						<span
 							className={classNames(
 								'rounded-md border px-2 py-0.5 text-[12px] font-medium leading-5 text-white shadow-[0_2px_7px_rgb(0_0_0_/_22%)]',

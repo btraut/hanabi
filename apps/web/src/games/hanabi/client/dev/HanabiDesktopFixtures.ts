@@ -26,6 +26,7 @@ export type HanabiDesktopFixtureName =
 	| 'disconnected'
 	| 'bot-thinking'
 	| 'bot-clue'
+	| 'bot-result'
 	| 'finished';
 
 export interface HanabiDesktopFixture {
@@ -480,6 +481,31 @@ export function getHanabiDesktopFixtures(): Record<HanabiDesktopFixtureName, Han
 				},
 			},
 			name: 'bot-clue',
+			userId: 'player-1',
+		},
+		'bot-result': {
+			code: 'BOTRESULT',
+			description:
+				'A bot considers its completed action while the next player keeps their turn controls.',
+			gameData: {
+				...standard,
+				currentPlayerId: 'player-1',
+				players: {
+					...standard.players,
+					'player-2': { ...standard.players['player-2'], name: 'Bot 1', kind: 'bot' },
+				},
+				bots: {
+					available: true,
+					canManage: false,
+					turn: {
+						playerId: 'player-2',
+						status: 'thinking',
+						canRetry: false,
+						opportunity: 'result',
+					},
+				},
+			},
+			name: 'bot-result',
 			userId: 'player-1',
 		},
 		finished: {

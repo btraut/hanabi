@@ -136,24 +136,30 @@ its contents are revisable model beliefs, not factual clue evidence. The journal
 are excluded from other bots' requests, public game state, and transcripts. The decision explanation
 also appears in public debug chat.
 
-A bot has two decision opportunities: its own turn, and immediately after receiving a clue when
-dragging is enabled. On its turn, it returns one supplied action ID, a nullable full-hand arrangement,
+A bot makes decisions on its own turn, immediately after receiving a clue when dragging is enabled,
+and after its own play or discard. On its turn, it returns one supplied action ID, a nullable full-hand arrangement,
 and a brief explanation, with optional extra notes. An off-turn clue opportunity permits an optional
 arrangement, explanation, and notes; its action ID is null. If the clue makes it the next player, one request combines the
 arrangement and turn action. Arrangement consumes no turn. Setting touched cards aside is coaching,
 not an automatic move: the bot may keep them in place, move them below, or reorder its discard queue.
-Bots do not receive other off-turn opportunities. Humans retain ordinary off-turn dragging.
+After a play or discard, the bot receives the revealed result and its updated hand, including any
+replacement card without that card's face. It can briefly interpret the result, update its notepad,
+and optionally rearrange; its action ID is null. This follow-up also runs when dragging is disabled,
+with no arrangement, and after an action ends the game, with notes only. Protected cards remain
+conceptually reserved when dragging is disabled. Humans retain ordinary off-turn dragging.
 
 The server validates the entire decision before applying it, then posts its explanation as a chat
-message from the bot, prefixed with `Debug: `. Every accepted turn or clue response produces one
-message, including a clue response that keeps the layout unchanged. The complete explanation can
+message from the bot, prefixed with `Debug: `. Every accepted turn, clue response, or result reflection produces one
+message, including a response that keeps the layout unchanged. The complete explanation can
 contain up to 1,000 characters plus the prefix; ordinary player messages retain their 500-character
 limit. Debug messages are visible to every player and watcher and may reveal teammate cards their
 owners cannot see. They are persisted with chat, consume no turn, and are excluded from bot
 observations, factual history, and gameplay transcripts. Explanations are not written to the server
 console. Rejected or stale decisions produce no debug message.
 Existing v1 rounds keep their saved prompt and action-only contract. Existing v2 rounds without
-`notepadVersion` retain their three-field decision contract; new rounds enable the private notepad. Old saves without layout history are marked incomplete rather than
+`notepadVersion` retain their three-field decision contract; new rounds enable the private notepad.
+Saved policies without `reflectionAfterAction` retain their original decision opportunities.
+Old saves without layout history are marked incomplete rather than
 assigned invented events.
 
 A failed request pauses that bot decision opportunity and shows **Retry** when another attempt is
@@ -165,6 +171,11 @@ allows three concurrent requests, 200 attempts / 2 million reserved tokens per r
 500 attempts / 5 million reserved tokens per rolling hour across the process. The environment
 examples list all configurable limits. Reservations conservatively estimate request size and
 settle against reported usage; these are operational limits, not a dollar billing cap.
+
+Result reflections use low reasoning effort, at most 2,048 output tokens, and a five-second deadline per attempt.
+They receive one attempt and are skipped on failure or timeout so the next turn can continue.
+The revealed action remains in the complete history for interpretation on a later turn. These
+requests share the round and global allowances; they never replay the completed action.
 
 V2 requests include the complete history and enabled private notepad within a 512,000-byte combined
 input limit. Oversized requests pause inference without truncating saved events or notes, or blocking

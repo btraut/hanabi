@@ -27,6 +27,7 @@ function BotTurnStatusMessage({ gameData }: { gameData: BotStatusGameData }): JS
 	const [error, setError] = useState<string | null>(null);
 	const retryPending = useRef(false);
 	const turn = gameData.bots?.turn;
+	const isResult = turn?.opportunity === 'result';
 	const player = turn ? gameData.players[turn.playerId] : undefined;
 	const seatedHuman =
 		!!userId && !!gameData.players[userId] && gameData.players[userId].kind !== 'bot';
@@ -35,9 +36,10 @@ function BotTurnStatusMessage({ gameData }: { gameData: BotStatusGameData }): JS
 		!turn ||
 		turn.status === 'thinking' ||
 		player?.kind !== 'bot' ||
-		(gameData.currentPlayerId !== turn.playerId && turn.opportunity !== 'clue') ||
-		gameData.stage !== HanabiStage.Playing ||
-		gameData.finishedReason !== null
+		(gameData.currentPlayerId !== turn.playerId && turn.opportunity !== 'clue' && !isResult) ||
+		(gameData.stage !== HanabiStage.Playing &&
+			!(isResult && gameData.stage === HanabiStage.Finished)) ||
+		(gameData.finishedReason !== null && !isResult)
 	) {
 		return null;
 	}
@@ -46,8 +48,9 @@ function BotTurnStatusMessage({ gameData }: { gameData: BotStatusGameData }): JS
 	const message =
 		turn.message ??
 		{
-			error:
-				turn.opportunity === 'clue'
+			error: isResult
+				? 'The bot could not finish considering the result.'
+				: turn.opportunity === 'clue'
 					? 'The bot could not finish considering the clue. Play can continue.'
 					: 'The bot could not finish its turn.',
 			disabled: 'Bots are unavailable. Ask the server operator to enable them, or reset the game.',
@@ -71,7 +74,13 @@ function BotTurnStatusMessage({ gameData }: { gameData: BotStatusGameData }): JS
 
 	return (
 		<section
-			aria-label={turn.opportunity === 'clue' ? 'Bot clue response paused' : 'Bot turn paused'}
+			aria-label={
+				isResult
+					? 'Bot result response paused'
+					: turn.opportunity === 'clue'
+						? 'Bot clue response paused'
+						: 'Bot turn paused'
+			}
 			className="mx-auto mb-4 flex w-[calc(100%-32px)] max-w-[1660px] flex-wrap items-center justify-between gap-3 rounded-md border border-hanabi-coral/50 bg-hanabi-surface px-4 py-3 text-hanabi-text"
 		>
 			<div className="min-w-0 flex-1" role="status">

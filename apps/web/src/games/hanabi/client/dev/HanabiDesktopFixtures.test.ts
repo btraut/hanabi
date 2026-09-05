@@ -26,6 +26,7 @@ describe('Hanabi desktop fixtures', () => {
 			'disconnected',
 			'bot-thinking',
 			'bot-clue',
+			'bot-result',
 			'finished',
 		]);
 
@@ -128,15 +129,18 @@ describe('Hanabi desktop fixtures', () => {
 		expect(fixtures.finished.gameData.currentPlayerId).toBeNull();
 	});
 
-	it('keeps the human active while a bot considers a clue', () => {
-		const fixture = getHanabiDesktopFixtures()['bot-clue'];
-		expect(fixture.gameData.currentPlayerId).toBe(fixture.userId);
-		expect(fixture.gameData.players[fixture.userId].kind).not.toBe('bot');
-		expect(fixture.gameData.bots?.turn).toEqual({
-			playerId: 'player-2',
-			status: 'thinking',
-			canRetry: false,
-			opportunity: 'clue',
-		});
-	});
+	it.each(['clue', 'result'] as const)(
+		'keeps the human active while a bot considers a %s',
+		(opportunity) => {
+			const fixture = getHanabiDesktopFixtures()[`bot-${opportunity}`];
+			expect(fixture.gameData.currentPlayerId).toBe(fixture.userId);
+			expect(fixture.gameData.players[fixture.userId].kind).not.toBe('bot');
+			expect(fixture.gameData.bots?.turn).toEqual({
+				playerId: 'player-2',
+				status: 'thinking',
+				canRetry: false,
+				opportunity,
+			});
+		},
+	);
 });

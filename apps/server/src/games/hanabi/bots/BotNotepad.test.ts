@@ -209,3 +209,173 @@ describe('BotNotepad', () => {
 		}
 	});
 });
+
+describe('result notepad provenance', () => {
+	function resultFixture(stage = HanabiStage.Playing, discard = false) {
+		const game = generateHanabiGameData({
+			stage: HanabiStage.Playing,
+			turnOrder: ['bot', 'human'],
+			currentPlayerId: 'bot',
+			tiles: {
+				a: { id: 'a', color: 'red', number: 3 },
+				b: { id: 'b', color: 'blue', number: 1 },
+				c: { id: 'c', color: 'green', number: 2 },
+			},
+			playerTiles: { bot: ['a', 'b'], human: ['c'] },
+		});
+		const initial = createBotHistory(game, 2);
+		const before = structuredClone(game);
+		game.playerTiles = { ...game.playerTiles, bot: ['b'] };
+		game.currentPlayerId = 'human';
+		game.stage = stage;
+		const history = appendBotHistory(
+			initial,
+			discard
+				? {
+						id: 'action-1',
+						type: HanabiGameActionType.Discard,
+						playerId: 'bot',
+						tile: game.tiles.a,
+					}
+				: {
+						id: 'action-1',
+						type: HanabiGameActionType.Play,
+						playerId: 'bot',
+						tile: game.tiles.a,
+						valid: false,
+						remainingLives: game.lives,
+					},
+			game,
+			before,
+		);
+		const point = getBotNotepadCheckpoint(history);
+		const notepads: BotNotepads = {
+			bot: {
+				version: 1,
+				entries: [
+					{
+						decisionId: 'result-1',
+						opportunity: 'result',
+						sourceActionEventId: 'event-1',
+						sourceClueEventIds: [],
+						observedAt: point,
+						recordedAt: point,
+						explanation: 'The revealed card changes my reserve plan.',
+						notes: 'Protect card b.',
+					},
+				],
+			},
+		};
+		return { game, history, notepads };
+	}
+
+	it.each([false, true])(
+		'accepts result notes for own play or discard (%s), including the terminal action',
+		(discard) => {
+			for (const stage of [HanabiStage.Playing, HanabiStage.Finished]) {
+				const { history, notepads } = resultFixture(stage, discard);
+				expect(isBotNotepads(notepads)).toBe(true);
+				expect(botNotepadsMatchHistory(notepads, history, ['bot'])).toBe(true);
+			}
+		},
+	);
+
+	it('permits an own arrangement after a result only while playing', () => {
+		for (const stage of [HanabiStage.Playing, HanabiStage.Finished]) {
+			const { game, history, notepads } = resultFixture(stage);
+			const positions = game.tilePositions;
+			game.tilePositions = { ...positions, b: { x: 50, y: 250, z: 0 } };
+			const arranged = appendBotArrangement(history, 'bot', positions, game);
+			notepads.bot.entries[0].recordedAt = getBotNotepadCheckpoint(arranged);
+			expect(botNotepadsMatchHistory(notepads, arranged, ['bot'])).toBe(
+				stage === HanabiStage.Playing,
+			);
+		}
+	});
+
+	it('rejects missing, foreign, non-action, and future result sources', () => {
+		for (const change of [
+			(pads: BotNotepads) => {
+				delete pads.bot.entries[0].sourceActionEventId;
+			},
+			(pads: BotNotepads) => {
+				pads.bot.entries[0].sourceActionEventId = 'missing';
+			},
+			(pads: BotNotepads) => {
+				pads.bot.entries[0].observedAt = { eventId: 'initial', sequence: 0, turnIndex: 0 };
+			},
+			(pads: BotNotepads) => {
+				pads.bot.entries[0].sourceClueEventIds = ['event-1'];
+			},
+		]) {
+			const { history, notepads } = resultFixture();
+			change(notepads);
+			expect(botNotepadsMatchHistory(notepads, history, ['bot'])).toBe(false);
+		}
+		const { history, notepads } = resultFixture();
+		expect(botNotepadsMatchHistory({ human: notepads.bot }, history, ['human'])).toBe(false);
+		const clue = fixture();
+		const entry = clue.notepads['bot:one'].entries[0];
+		entry.opportunity = 'result';
+		entry.sourceActionEventId = 'event-1';
+		entry.observedAt = entry.recordedAt;
+		expect(botNotepadsMatchHistory(clue.notepads, clue.history, ['bot:one', 'bot:two'])).toBe(
+			false,
+		);
+	});
+
+	it('rejects repeated reflection on the same action even with a new decision ID', () => {
+		const { history, notepads } = resultFixture();
+		notepads.bot.entries.push({ ...notepads.bot.entries[0], decisionId: 'result-duplicate' });
+		expect(botNotepadsMatchHistory(notepads, history, ['bot'])).toBe(false);
+	});
+
+	it.each(['human', 'bot'])(
+		'allows a delayed result after a later %s action only for another seat',
+		(actorId) => {
+			const { game, history, notepads } = resultFixture();
+			const before = structuredClone(game);
+			const recipientId = actorId === 'human' ? 'bot' : 'human';
+			const tile = game.tiles[actorId === 'human' ? 'b' : 'c'];
+			game.currentPlayerId = recipientId;
+			const later = appendBotHistory(
+				history,
+				{
+					id: 'later-clue',
+					type: HanabiGameActionType.GiveNumberClue,
+					playerId: actorId,
+					recipientId,
+					number: tile.number,
+					tiles: [tile],
+				},
+				game,
+				before,
+			);
+			const checkpoint = getBotNotepadCheckpoint(later);
+			notepads.bot.entries[0].observedAt = checkpoint;
+			notepads.bot.entries[0].recordedAt = checkpoint;
+			expect(botNotepadsMatchHistory(notepads, later, ['bot'])).toBe(actorId === 'human');
+		},
+	);
+
+	it('rejects a further gameplay action committed by a result response', () => {
+		const { game, history, notepads } = resultFixture();
+		const before = structuredClone(game);
+		game.playerTiles = { ...game.playerTiles, bot: [] };
+		const next = appendBotHistory(
+			history,
+			{
+				id: 'action-2',
+				type: HanabiGameActionType.Play,
+				playerId: 'bot',
+				tile: game.tiles.b,
+				valid: true,
+				remainingLives: game.lives,
+			},
+			game,
+			before,
+		);
+		notepads.bot.entries[0].recordedAt = getBotNotepadCheckpoint(next);
+		expect(botNotepadsMatchHistory(notepads, next, ['bot'])).toBe(false);
+	});
+});

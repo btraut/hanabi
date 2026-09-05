@@ -28,6 +28,7 @@ export interface BotRound {
 	failure?: BotFailureCode;
 	lastAttemptAt: number;
 	requiredTokens?: number;
+	pendingResult?: { playerId: string; eventId: string };
 	pendingClues?: Array<{ playerId: string; eventIds: string[] }>;
 	notepads?: Record<string, BotNotepad>;
 }
@@ -60,6 +61,15 @@ export function isBotRound(value: unknown): value is BotRound {
 		typeof round.roundId === 'string' &&
 		isBotPolicy(policy) &&
 		isBotHistory(round.history) &&
+		(round.pendingResult === undefined ||
+			(round.version === 2 &&
+				policy.reflectionAfterAction === true &&
+				round.pendingResult !== null &&
+				typeof round.pendingResult === 'object' &&
+				typeof round.pendingResult.playerId === 'string' &&
+				round.pendingResult.playerId.length > 0 &&
+				typeof round.pendingResult.eventId === 'string' &&
+				round.pendingResult.eventId.length > 0)) &&
 		(round.notepads === undefined ||
 			(policy.notepadVersion === 1 && isBotNotepads(round.notepads))) &&
 		(round.version === 2

@@ -346,6 +346,10 @@ function validateBotNotepads(round: BotRound, data: HanabiGameData): void {
 		round.policy.notepadVersion !== 1 ||
 		round.version !== 2 ||
 		!isBotNotepads(round.notepads) ||
+		(!round.policy.reflectionAfterAction &&
+			Object.values(round.notepads).some((notepad) =>
+				notepad.entries.some((entry) => entry.opportunity === 'result'),
+			)) ||
 		!botNotepadsMatchHistory(round.notepads, round.history, botIds)
 	) {
 		hydrationError(
@@ -495,6 +499,29 @@ function validateV2Round(round: BotRound, data: HanabiGameData): void {
 			pending.eventIds.some((id) => clueEvents.get(id)?.recipientId !== pending.playerId)
 		) {
 			hydrationError('botRound pending clues must reference actual clues for an eligible bot.');
+		}
+	}
+	if (round.pendingResult) {
+		const pending = round.pendingResult;
+		const source = history.events.find((event) => event.eventId === pending.eventId);
+		if (
+			!round.policy.reflectionAfterAction ||
+			data.players[pending.playerId]?.kind !== 'bot' ||
+			(source?.type !== 'play' && source?.type !== 'discard') ||
+			source.actorId !== pending.playerId ||
+			history.events.some(
+				(event) =>
+					event.sequence > source.sequence &&
+					event.type !== 'arrangement' &&
+					event.actorId === pending.playerId,
+			) ||
+			round.notepads?.[pending.playerId]?.entries.some(
+				(entry) => entry.sourceActionEventId === pending.eventId,
+			)
+		) {
+			hydrationError(
+				'botRound pending result must reference an unprocessed play or discard by its bot.',
+			);
 		}
 	}
 	// Work queued before another actor finishes the game is no longer an eligible opportunity.

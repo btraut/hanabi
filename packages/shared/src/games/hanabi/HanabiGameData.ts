@@ -225,7 +225,7 @@ export interface HanabiPlayer {
 
 export interface HanabiBotTurnStatus {
 	playerId: string;
-	opportunity?: 'turn' | 'clue';
+	opportunity?: 'turn' | 'clue' | 'result';
 	status: 'thinking' | 'error' | 'disabled' | 'exhausted';
 	message?: string;
 	canRetry: boolean;

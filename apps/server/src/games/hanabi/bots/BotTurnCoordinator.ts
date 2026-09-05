@@ -10,8 +10,9 @@ export interface BotTurn {
 	playerId: string;
 	gameData: HanabiGameData;
 	round: BotRound;
-	opportunity?: 'turn' | 'clue';
+	opportunity?: 'turn' | 'clue' | 'result';
 	sourceClueEventIds?: string[];
+	sourceActionEventId?: string;
 }
 
 interface BotTurnHooks {
@@ -21,6 +22,11 @@ interface BotTurnHooks {
 	notify: () => void;
 	onFailure?: () => void;
 	apply: (playerId: string, action: DebugPlayerAction, decision?: BotDecision) => string | null;
+	applyResultResponse?: (
+		playerId: string,
+		decision: BotDecision,
+		sourceActionEventId: string,
+	) => string | null;
 	applyClueResponse?: (
 		playerId: string,
 		decision: BotDecision,
@@ -214,8 +220,26 @@ export class BotTurnCoordinator {
 			round.policy.notepadVersion === 1
 				? structuredClone(round.notepads?.[turn.playerId] ?? { version: 1, entries: [] })
 				: undefined;
-		const legalActions = observation.legalActions;
-		if (turn.opportunity !== 'clue' && !legalActions.length) {
+		const isTurn = !turn.opportunity || turn.opportunity === 'turn';
+		const isResult = turn.opportunity === 'result';
+		const legalActions = isTurn ? observation.legalActions : [];
+		if (!isTurn) observation.legalActions = [];
+		if (isResult) {
+			const source =
+				round.history.version === 2
+					? round.history.events.find((event) => event.eventId === turn.sourceActionEventId)
+					: undefined;
+			if (
+				!round.policy.reflectionAfterAction ||
+				!source ||
+				(source.type !== 'play' && source.type !== 'discard') ||
+				source.actorId !== turn.playerId
+			) {
+				this.fail(round, 'invalid_action');
+				return;
+			}
+		}
+		if (isTurn && !legalActions.length) {
 			this.fail(round, 'invalid_action');
 			return;
 		}
@@ -232,13 +256,16 @@ export class BotTurnCoordinator {
 		const reservedTokens =
 			inputBytes +
 			Buffer.byteLength(JSON.stringify(legalActions.map(({ id }) => id)), 'utf8') +
-			this.runtime.limits.maxOutputTokens +
+			(isResult ? this.runtime.limits.resultMaxOutputTokens : this.runtime.limits.maxOutputTokens) +
 			1_024;
 		round.requiredTokens = reservedTokens;
-		const timeout = setTimeout(() => controller.abort(), this.runtime.limits.timeoutMs);
+		const timeout = setTimeout(
+			() => controller.abort(),
+			isResult ? this.runtime.limits.resultTimeoutMs : this.runtime.limits.timeoutMs,
+		);
 		timeout.unref();
 		try {
-			for (let attempt = 0; attempt < 2; attempt += 1) {
+			for (let attempt = 0; attempt < (isResult ? 1 : 2); attempt += 1) {
 				if (!this.isCurrent(turn, epoch, revision)) return;
 				if (controller.signal.aborted) {
 					this.fail(round, 'timeout');
@@ -279,7 +306,14 @@ export class BotTurnCoordinator {
 							...(round.version === 2
 								? {
 										opportunity: turn.opportunity ?? 'turn',
-										sourceClueEventIds: [...(turn.sourceClueEventIds ?? [])],
+										sourceClueEventIds: isResult ? [] : [...(turn.sourceClueEventIds ?? [])],
+										...(isResult
+											? {
+													sourceActionEventId: turn.sourceActionEventId,
+													resultTimeoutMs: this.runtime.limits.resultTimeoutMs,
+													resultMaxOutputTokens: this.runtime.limits.resultMaxOutputTokens,
+												}
+											: {}),
 									}
 								: {}),
 							signal: controller.signal,
@@ -295,12 +329,15 @@ export class BotTurnCoordinator {
 						}
 					}
 					const selected = legalActions.find(({ id }) => id === result.actionId);
-					if (turn.opportunity !== 'clue' && !selected) {
+					if ((isTurn && !selected) || (!isTurn && result.actionId !== null)) {
 						this.fail(round, 'invalid_action');
 						return;
 					}
-					const error =
-						turn.opportunity === 'clue'
+					const error = isResult
+						? this.hooks.applyResultResponse
+							? this.hooks.applyResultResponse(turn.playerId, result, turn.sourceActionEventId!)
+							: 'Result responses are unavailable.'
+						: turn.opportunity === 'clue'
 							? this.hooks.applyClueResponse
 								? this.hooks.applyClueResponse(turn.playerId, result, turn.sourceClueEventIds ?? [])
 								: 'Clue responses are unavailable.'
@@ -325,6 +362,7 @@ export class BotTurnCoordinator {
 								? error.code
 								: 'transient';
 					if (
+						!isResult &&
 						attempt === 0 &&
 						!controller.signal.aborted &&
 						['transient', 'rate_limit'].includes(code)

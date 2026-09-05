@@ -145,22 +145,25 @@ describe('HanabiBotTurnStatus', () => {
 		expect(document.querySelector('button')?.disabled).toBe(false);
 	});
 
-	it('lets a seated human retry an off-turn clue response without blocking play', async () => {
-		gameData.currentPlayerId = 'alice';
-		gameData.bots!.turn!.opportunity = 'clue';
-		render();
-		expect(document.querySelector('section')?.getAttribute('aria-label')).toBe(
-			'Bot clue response paused',
-		);
-		expect(document.body.textContent).toContain('Ember is paused');
-		expect(document.body.textContent).toContain('considering the clue. Play can continue.');
-		await settleAction(() => document.querySelector('button')!.click());
-		expect(messenger.retryBotTurn).toHaveBeenCalledOnce();
-		expect(gameData.currentPlayerId).toBe('alice');
-		gameData.bots!.turn!.status = 'thinking';
-		render();
-		expect(document.querySelector('section')).toBeNull();
-	});
+	it.each(['clue', 'result'] as const)(
+		'lets a seated human retry an off-turn %s response without blocking play',
+		async (opportunity) => {
+			gameData.currentPlayerId = 'alice';
+			gameData.bots!.turn!.opportunity = opportunity;
+			render();
+			expect(document.querySelector('section')?.getAttribute('aria-label')).toBe(
+				`Bot ${opportunity} response paused`,
+			);
+			expect(document.body.textContent).toContain('Ember is paused');
+			expect(document.body.textContent).toContain(`considering the ${opportunity}.`);
+			await settleAction(() => document.querySelector('button')!.click());
+			expect(messenger.retryBotTurn).toHaveBeenCalledOnce();
+			expect(gameData.currentPlayerId).toBe('alice');
+			gameData.bots!.turn!.status = 'thinking';
+			render();
+			expect(document.querySelector('section')).toBeNull();
+		},
+	);
 
 	it.each(['opportunity', 'player', 'status'] as const)(
 		'resets a retry failure when the bot %s changes',

@@ -26,6 +26,20 @@ describe('BotRuntime', () => {
 	});
 	afterEach(() => vi.useRealTimers());
 
+	it('gives result follow-ups a separate short budget', () => {
+		const limits = runtime().limits;
+		expect(limits).toMatchObject({
+			timeoutMs: 120_000,
+			maxOutputTokens: 16_384,
+			resultTimeoutMs: 5_000,
+			resultMaxOutputTokens: 2_048,
+		});
+		expect(runtime({ resultTimeoutMs: 100, resultMaxOutputTokens: 512 }).limits).toMatchObject({
+			resultTimeoutMs: 100,
+			resultMaxOutputTokens: 512,
+		});
+	});
+
 	it('shares concurrency across callers and makes release idempotent', () => {
 		const shared = runtime();
 		const first = reserved(shared.reserve(10));
