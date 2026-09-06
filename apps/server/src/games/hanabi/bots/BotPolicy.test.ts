@@ -6,6 +6,7 @@ import {
 	createRoundBotPolicy,
 	DEFAULT_BOT_MODEL,
 	isBotPolicy,
+	migrateBotPolicy,
 } from './BotPolicy.js';
 import { getBotRules } from './BotRules.js';
 
@@ -13,7 +14,7 @@ describe('bot policies', () => {
 	it('loads editable conventions alongside the fixed player contract', () => {
 		const policy = createBotPolicy();
 		expect(policy.model).toBe(DEFAULT_BOT_MODEL);
-		expect(policy.reasoningEffort).toBe('medium');
+		expect(policy.reasoningEffort).toBe('high');
 		expect(policy.instructions).toContain('Your own card faces and the undealt deck are unknown');
 		expect(policy.instructions).toContain('# Hanabi bot conventions');
 		expect(isBotPolicy(policy)).toBe(true);
@@ -73,7 +74,6 @@ describe('round bot policies', () => {
 				model: 'gpt-6-astra',
 				reasoningEffort: 'high',
 				contractVersion: 2,
-				notepadVersion: 1,
 				arrangementAfterClue: true,
 				conventions: 'Custom team coaching.',
 				rules: getBotRules(game),
@@ -146,52 +146,55 @@ describe('round bot policies', () => {
 	});
 });
 
-describe('private notepad policy versions', () => {
-	it('snapshots notepad eligibility and separates working beliefs from game rules', () => {
-		const policy = createRoundBotPolicy(createBotPolicy(), generateHanabiGameData());
-		expect(policy.notepadVersion).toBe(1);
-		expect(policy.instructions).toContain('## Private notepad');
-		expect(policy.instructions).toContain('Every accepted explanation is saved automatically');
-		expect(policy.instructions).toContain('revisable beliefs and model claims');
-		expect(policy.instructions).toContain('stable card IDs and source event IDs');
-		expect(policy.instructions).toContain('complete notepad is supplied on every request');
-		expect(policy.instructions).toContain(
-			'observedAt, the event/turn checkpoint before that decision',
-		);
-		expect(policy.instructions).toContain(
-			'recordedAt, the checkpoint after its accepted layout and action',
-		);
-		expect(policy.instructions).toContain('Both checkpoints may be identical');
-		expect(policy.instructions).toContain('not the current board');
-		expect(isBotPolicy(JSON.parse(JSON.stringify(policy)))).toBe(true);
-		expect(isBotPolicy({ ...policy, notepadVersion: undefined })).toBe(false);
-		expect(isBotPolicy({ ...policy, notepadVersion: 2 })).toBe(false);
-		expect(isBotPolicy({ ...createBotPolicy(), notepadVersion: 1 })).toBe(false);
+describe('retired scratchpad policies', () => {
+	it('does not include scratchpad fields or instructions in new policies', () => {
+		for (const allowDragging of [true, false]) {
+			const policy = createRoundBotPolicy(
+				createBotPolicy(),
+				generateHanabiGameData({ allowDragging }),
+			);
+			expect(policy).not.toHaveProperty('notepadVersion');
+			expect(policy.instructions).not.toMatch(
+				/notepad|scratchpad|notes field|explanation and notes/i,
+			);
+			expect(migrateBotPolicy(policy)).toBe(policy);
+		}
 	});
 
-	it('retains the historical v2 policy identity when notepadVersion is absent', () => {
-		const saved = {
-			...createRoundBotPolicy(createBotPolicy(), generateHanabiGameData()),
-			instructions: 'Saved v2 instructions.',
+	it('validates legacy identity before removing scratchpad instructions and rehashing', () => {
+		const policy = createRoundBotPolicy(
+			createBotPolicy('model', 'Custom coaching.'),
+			generateHanabiGameData(),
+		);
+		const { hash: _hash, ...identity } = policy;
+		const legacy = {
+			...identity,
+			notepadVersion: 1,
+			instructions: policy.instructions.replace(
+				'\n\n## Coaching instructions',
+				'\n\n## Private notepad\n\nReturn a notes field alongside actionId, arrangement, and explanation.\n\n## Coaching instructions',
+			),
 		};
-		delete saved.notepadVersion;
-		delete saved.reflectionAfterAction;
-		const { hash: _hash, ...historicalIdentity } = saved;
-		saved.hash = createHash('sha256')
-			.update(
-				JSON.stringify(historicalIdentity, (_key, value: unknown) =>
-					value && typeof value === 'object' && !Array.isArray(value)
-						? Object.fromEntries(
-								Object.entries(value).sort(([a], [b]) => (a === b ? 0 : a < b ? -1 : 1)),
-							)
-						: value,
-				),
-			)
-			.digest('hex');
+		const saved = {
+			...legacy,
+			hash: createHash('sha256')
+				.update(
+					JSON.stringify(legacy, (_key, value: unknown) =>
+						value && typeof value === 'object' && !Array.isArray(value)
+							? Object.fromEntries(
+									Object.entries(value).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)),
+								)
+							: value,
+					),
+				)
+				.digest('hex'),
+		};
 		expect(isBotPolicy(saved)).toBe(true);
-		expect(isBotPolicy({ ...saved, reflectionAfterAction: undefined })).toBe(true);
-		expect(isBotPolicy({ ...saved, reflectionAfterAction: true })).toBe(false);
-		expect(isBotPolicy({ ...saved, notepadVersion: undefined })).toBe(true);
-		expect(isBotPolicy({ ...saved, notepadVersion: 1 })).toBe(false);
+		expect(isBotPolicy({ ...saved, instructions: 'Corrupt instructions' })).toBe(false);
+		const migrated = migrateBotPolicy(saved);
+		expect(migrated).toEqual(policy);
+		expect(migrated.hash).not.toBe(saved.hash);
+		expect(isBotPolicy(migrated)).toBe(true);
+		expect(saved).toHaveProperty('notepadVersion', 1);
 	});
 });

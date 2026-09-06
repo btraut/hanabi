@@ -27,10 +27,9 @@ import { SaveGameDelegate } from '../server/GameStore.js';
 import ServerSocketManager from '../../utils/SocketManager.js';
 import { GameTranscriptRecorder, NOOP_GAME_TRANSCRIPT_RECORDER } from './GameTranscriptRecorder.js';
 import { BotRuntime } from './bots/BotRuntime.js';
-import { isBotRound, type BotRound } from './bots/BotRound.js';
+import { isBotRound, removeBotScratchpad, type BotRound } from './bots/BotRound.js';
 import type { BotCardReference, BotHistoryPublicState } from './bots/BotHistory.js';
 import { getBotRules } from './bots/BotRules.js';
-import { botNotepadsMatchHistory, isBotNotepads } from './bots/BotNotepad.js';
 import { BOT_DEBUG_CHAT_PREFIX, MAX_BOT_DEBUG_CHAT_LENGTH } from './bots/BotDecisionChat.js';
 
 const TILE_NUMBERS = [1, 2, 3, 4, 5] as const;
@@ -321,7 +320,7 @@ function validateGameData(value: unknown): void {
 	data.actions = retainedActions;
 }
 
-/** Validated private histories and notepads may grow beyond ordinary game-envelope limits. */
+/** Validated private histories may grow beyond ordinary game-envelope limits. */
 function withoutBotRecords(game: Record<string, unknown>, round: BotRound | null) {
 	return round?.version === 2
 		? {
@@ -329,33 +328,9 @@ function withoutBotRecords(game: Record<string, unknown>, round: BotRound | null
 				botRound: {
 					...round,
 					history: undefined,
-					...(round.policy.notepadVersion === 1 && isBotNotepads(round.notepads)
-						? { notepads: undefined }
-						: {}),
 				},
 			}
 		: game;
-}
-
-function validateBotNotepads(round: BotRound, data: HanabiGameData): void {
-	if (round.notepads === undefined) return;
-	const botIds = Object.values(data.players)
-		.filter((player) => player.kind === 'bot')
-		.map(({ id }) => id);
-	if (
-		round.policy.notepadVersion !== 1 ||
-		round.version !== 2 ||
-		!isBotNotepads(round.notepads) ||
-		(!round.policy.reflectionAfterAction &&
-			Object.values(round.notepads).some((notepad) =>
-				notepad.entries.some((entry) => entry.opportunity === 'result'),
-			)) ||
-		!botNotepadsMatchHistory(round.notepads, round.history, botIds)
-	) {
-		hydrationError(
-			'botRound notepads must belong to eligible bots and reference their actual decision history.',
-		);
-	}
 }
 
 function validateV2Round(round: BotRound, data: HanabiGameData): void {
@@ -516,9 +491,6 @@ function validateV2Round(round: BotRound, data: HanabiGameData): void {
 					event.sequence > source.sequence &&
 					event.type !== 'arrangement' &&
 					event.actorId === pending.playerId,
-			) ||
-			round.notepads?.[pending.playerId]?.entries.some(
-				(entry) => entry.sourceActionEventId === pending.eventId,
 			)
 		) {
 			hydrationError(
@@ -542,7 +514,8 @@ function parsePersistedGame(value: string): HanabiGameSerialized {
 	if (game.botRound !== undefined && game.botRound !== null) {
 		if (!isBotRound(game.botRound))
 			hydrationError('botRound must contain valid state for the current round.');
-		round = game.botRound;
+		round = removeBotScratchpad(game.botRound);
+		game.botRound = round;
 	}
 	const rawEnvelopeBytes =
 		round?.version === 2
@@ -568,7 +541,6 @@ function parsePersistedGame(value: string): HanabiGameSerialized {
 			hydrationError('botRound must contain valid state for the current round.');
 		}
 		validateV2Round(round, data);
-		validateBotNotepads(round, data);
 	}
 	if (
 		data.stage !== HanabiStage.Setup &&

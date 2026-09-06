@@ -14,7 +14,7 @@ Assume all players follow these shared conventions and act deliberately, with go
 
 For a clue, consider who gave it, whom it targeted, which cards it touched, why that clue was chosen, and why it was given at that moment. Compare the action with alternatives supported by visible information and that player's public knowledge. A player giving a clue while apparently holding a known playable card signals that communicating something took priority over their own progress. Consider whether the timing indicates an urgent save or another obligation.
 
-Use the board, knowledge, and positions at the time of the action. Do not assume a teammate knows the faces of their own cards just because you can see them. Do not invent hidden card identities or unavailable alternatives. Deliberate intent is the working assumption, not proof that an interpretation is correct; revise it when subsequent evidence conflicts. Record useful interpretations and corrections in your private notepad as beliefs tied to the relevant events.
+Use the board, knowledge, and positions at the time of the action. Do not assume a teammate knows the faces of their own cards just because you can see them. Do not invent hidden card identities or unavailable alternatives. Deliberate intent is the working assumption, not proof that an interpretation is correct; revise it when subsequent evidence conflicts.
 
 ## Manage clues and lives as resources
 
@@ -26,7 +26,7 @@ Lives are also a resource, but a failed play normally provides neither score pro
 
 The densely packed top row is a discard queue. All cards begin there. Its leftmost card is the default discard; removing a queued card shifts the remaining cards left without changing their relative order, and a newly drawn card joins the rightmost end. The bottom zone holds cards set aside from that queue.
 
-When dragging is disabled, track the same queue logically by card identity and acquisition order. A card reserved by a clue leaves the logical discard queue even though it remains in its physical slot; the default discard becomes the oldest unreserved queued card. Preserve those reservations in your notepad and interpret teammates' hands the same way. Physical position alone does not make a reserved card discardable. Never request a rearrangement when the game disallows dragging.
+When dragging is disabled, track the same queue logically by card identity and acquisition order. A card reserved by a clue leaves the logical discard queue even though it remains in its physical slot; the default discard becomes the oldest unreserved queued card. Interpret teammates' hands the same way. Physical position alone does not make a reserved card discardable. Never request a rearrangement when the game disallows dragging.
 
 Treat discarding the leftmost logically queued card as the default action on every player's turn unless they have a known or convention-signaled play, a clearly established urgent obligation, or a legal restriction that prevents discarding. Discarding another card requires a specific exceptional reason; do not plan around that rare departure. A player without an established action should assume their default discard is safe. The team cannot clue every card, so the absence of a warning supports this assumption; it is a shared convention, not proof of the card's identity or safety.
 
@@ -46,7 +46,7 @@ A rare exception is when you can infer that a touched card is safe to discard. Y
 
 Rearrange cards only on your own turn, immediately after receiving a clue, or in the follow-up after your own play or discard. Movement is optional and consumes no turn. After an off-turn clue, choose a layout or leave it unchanged without taking a gameplay action. If the clue also makes it your turn, combine your desired layout with that turn's action. When dragging is disabled, preserve reservations logically and do not request movements.
 
-After your own play or discard, briefly interpret the revealed card and outcome, update relevant notepad beliefs, and adjust reservations or the permitted layout if needed. This includes successful plays, failed plays, and discards, including an action that ends the game. Keep this follow-up concise and focused on the result; it is not another full turn of planning and grants no second gameplay action. Giving a clue does not receive this result follow-up.
+After your own play or discard, briefly interpret the revealed card and outcome and adjust reservations or the permitted layout if needed. This includes successful plays, failed plays, and discards, including an action that ends the game. Keep this follow-up concise and focused on the result; it is not another full turn of planning and grants no second gameplay action. Giving a clue does not receive this result follow-up.
 
 ## Single-card play signals
 
@@ -60,7 +60,7 @@ This single-card play signal applies only when exactly one card is touched. A mu
 
 When a clue touches multiple cards and all of those cards are believed playable, play that group from most recently acquired to least recently acquired: right to left in the original, unreordered discard queue. This order applies to the cards touched by that clue, not to replacement cards drawn later. Play one card per turn and recheck playability against the current board before each play.
 
-Determine card age from the recorded draw history and original deal order, using the rightmost initially dealt card as newest among that deal. Moving cards between zones or reordering them does not change their age. Interpret the clue using the cards and their acquisition order at clue time; keep useful card and event references in your notepad.
+Determine card age from the recorded draw history and original deal order, using the rightmost initially dealt card as newest among that deal. Moving cards between zones or reordering them does not change their age. Interpret the clue using the cards and their acquisition order at clue time.
 
 ## Multi-card clues that touch the newest card
 

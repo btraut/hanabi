@@ -3,7 +3,6 @@ import { generateHanabiGameData, generatePlayer, HanabiStage } from '@hanabi/sha
 import { describe, expect, it, vi } from 'vitest';
 import { buildBotObservation } from './BotObservation.js';
 import { createBotPolicy, createRoundBotPolicy, isBotPolicy, type BotPolicy } from './BotPolicy.js';
-import { MAX_BOT_NOTE_LENGTH, type BotNotepad } from './BotNotepad.js';
 import { isV2BotDecision, OpenAiBot, type BotDecisionRequest } from './OpenAiBot.js';
 
 function request(signal = new AbortController().signal): BotDecisionRequest {
@@ -69,7 +68,7 @@ describe('OpenAiBot', () => {
 			instructions: input.policy.instructions,
 			input: JSON.stringify(input.observation),
 			store: false,
-			reasoning: { effort: 'medium' },
+			reasoning: { effort: 'high' },
 			max_output_tokens: 16_384,
 			text: {
 				format: {
@@ -231,7 +230,6 @@ describe('OpenAiBot v2 decisions', () => {
 			...fresh,
 			instructions: 'Saved v2 action, arrangement, and explanation instructions.',
 		};
-		delete saved.notepadVersion;
 		delete saved.reflectionAfterAction;
 		const { hash: _hash, ...identity } = saved;
 		saved.hash = createHash('sha256')
@@ -248,68 +246,11 @@ describe('OpenAiBot v2 decisions', () => {
 		return saved;
 	}
 
-	function notepad(text: string): BotNotepad {
-		return {
-			version: 1,
-			entries: [
-				{
-					decisionId: 'decision-1',
-					opportunity: 'turn',
-					observedAt: { eventId: 'initial', sequence: 0, turnIndex: 0 },
-					recordedAt: { eventId: 'turn-1', sequence: 1, turnIndex: 1 },
-					sourceClueEventIds: [],
-					explanation: 'An earlier accepted decision.',
-					notes: text,
-				},
-			],
-		};
-	}
-
-	it("sends the complete private notepad for this request without retaining another request's notes", async () => {
-		const input = v2Request();
-		const firstNotepad = notepad('A'.repeat(MAX_BOT_NOTE_LENGTH));
-		firstNotepad.entries.push({
-			...firstNotepad.entries[0],
-			decisionId: 'decision-2',
-			notes: 'Private correction B.',
-		});
-		const secondNotepad = notepad('Different bot and round.');
-		const reply = {
-			actionId: input.legalActions[0].id,
-			arrangement: null,
-			explanation: 'A concise decision.',
-			notes: 'Remember this conditional interpretation.',
-		};
-		const fetchMock = vi
-			.fn<typeof fetch>()
-			.mockImplementation(() => Promise.resolve(completedResponse(JSON.stringify(reply))));
-		const provider = new OpenAiBot({ apiKey: 'test-key', fetch: fetchMock });
-		await expect(provider.chooseAction({ ...input, notepad: firstNotepad })).resolves.toMatchObject(
-			{ notes: reply.notes },
-		);
-		await provider.chooseAction({ ...input, notepad: secondNotepad });
-		const sent = fetchMock.mock.calls.map(
-			([, options]) =>
-				JSON.parse(options?.body as string) as { input: string; text: { format: unknown } },
-		);
-		expect(JSON.parse(sent[0].input) as unknown).toMatchObject({ privateNotepad: firstNotepad });
-		expect(JSON.parse(sent[1].input) as unknown).toMatchObject({ privateNotepad: secondNotepad });
-		expect(sent[1].input).not.toContain('Private correction B.');
-		expect(sent[0].text.format).toMatchObject({
-			schema: {
-				properties: {
-					notes: { type: ['string', 'null'], minLength: 1, maxLength: MAX_BOT_NOTE_LENGTH },
-				},
-				required: ['actionId', 'arrangement', 'explanation', 'notes'],
-			},
-		});
-	});
-
 	it('preserves the exact three-field contract and input of saved v2 policies without a notepad', async () => {
 		const input = {
 			...request(),
 			policy: historicalV2Policy(),
-			notepad: notepad('Must not be sent.'),
+			notepad: { entries: [{ notes: 'Must not be sent.' }] },
 		};
 		expect(isBotPolicy(input.policy)).toBe(true);
 		const decision = {
@@ -349,7 +290,7 @@ describe('OpenAiBot v2 decisions', () => {
 	});
 
 	it('does not add private notes to legacy v1 requests even when a caller supplies them', async () => {
-		const input = { ...request(), notepad: notepad('Private legacy data.') };
+		const input = { ...request(), notepad: { entries: [{ notes: 'Private legacy data.' }] } };
 		const fetchMock = vi
 			.fn<typeof fetch>()
 			.mockResolvedValue(completedResponse(JSON.stringify({ actionId: input.legalActions[0].id })));
@@ -358,42 +299,6 @@ describe('OpenAiBot v2 decisions', () => {
 		const sent = JSON.parse(fetchMock.mock.calls[0][1]?.body as string) as { input: string };
 		expect(sent.input).toBe(JSON.stringify(input.observation));
 		expect(sent.input).not.toContain('Private legacy data.');
-	});
-
-	it.each([undefined, '', '  \n\t', 'x'.repeat(MAX_BOT_NOTE_LENGTH + 1), 42, {}])(
-		'rejects invalid or missing notes in enabled decisions %#',
-		async (notes) => {
-			const input = v2Request();
-			const response = {
-				actionId: input.legalActions[0].id,
-				arrangement: null,
-				explanation: 'Accepted shape except notes.',
-				notes,
-			};
-			const provider = new OpenAiBot({
-				apiKey: 'test-key',
-				fetch: vi.fn<typeof fetch>().mockResolvedValue(completedResponse(JSON.stringify(response))),
-			});
-			await expect(provider.chooseAction(input)).rejects.toMatchObject({ code: 'invalid_action' });
-		},
-	);
-
-	it('requires bounded notes at the domain boundary only for enabled policies', () => {
-		const base = { actionId: 'a0', arrangement: null, explanation: 'Decision summary.' };
-		expect(isV2BotDecision(base, ['a'], true)).toBe(true);
-		expect(isV2BotDecision({ ...base, notes: null }, ['a'], true)).toBe(false);
-		expect(isV2BotDecision(base, ['a'], true, 'turn', true)).toBe(false);
-		expect(isV2BotDecision({ ...base, notes: null }, ['a'], true, 'turn', true)).toBe(true);
-		expect(
-			isV2BotDecision(
-				{ ...base, notes: 'x'.repeat(MAX_BOT_NOTE_LENGTH) },
-				['a'],
-				true,
-				'turn',
-				true,
-			),
-		).toBe(true);
-		expect(isV2BotDecision({ ...base, notes: ' ' }, ['a'], true, 'turn', true)).toBe(false);
 	});
 
 	it.each([true, false])(
@@ -409,7 +314,6 @@ describe('OpenAiBot v2 decisions', () => {
 				actionId: null,
 				arrangement: allowDragging ? { orderedRow: ['a'], lowerArea: [] } : null,
 				explanation: 'The revealed card corrects my earlier interpretation.',
-				notes: 'Reserve card a after the failed play.',
 			};
 			const fetchMock = vi
 				.fn<typeof fetch>()
@@ -439,7 +343,7 @@ describe('OpenAiBot v2 decisions', () => {
 		},
 	);
 
-	it('accepts terminal result notes but forbids terminal arrangements and further gameplay', async () => {
+	it('accepts terminal result explanations but forbids terminal arrangements and further gameplay', async () => {
 		const input = v2Request();
 		input.opportunity = 'result';
 		input.sourceActionEventId = 'event-final';
@@ -449,7 +353,6 @@ describe('OpenAiBot v2 decisions', () => {
 			actionId: null,
 			arrangement: null,
 			explanation: 'The final play ended the round.',
-			notes: null,
 		};
 		const fetchMock = vi
 			.fn<typeof fetch>()
@@ -494,7 +397,7 @@ describe('OpenAiBot v2 decisions', () => {
 		const input = v2Request();
 		const decision = {
 			actionId: input.legalActions[0].id,
-			notes: null,
+
 			arrangement: { orderedRow: [], lowerArea: [{ tileId: 'a', x: 0.2, y: 0.4, stackOrder: 0 }] },
 			explanation: 'I am setting aside the clued card and choosing the supplied action.',
 		};
@@ -515,7 +418,7 @@ describe('OpenAiBot v2 decisions', () => {
 			name: 'hanabi_decision',
 			strict: true,
 			schema: {
-				required: ['actionId', 'arrangement', 'explanation', 'notes'],
+				required: ['actionId', 'arrangement', 'explanation'],
 				additionalProperties: false,
 			},
 		});
@@ -553,7 +456,6 @@ describe('OpenAiBot v2 decisions', () => {
 		});
 		expect(JSON.parse(sent.input) as unknown).toMatchObject({
 			decisionContext: { opportunity: 'turn', sourceClueEventIds: [] },
-			privateNotepad: { version: 1, entries: [] },
 		});
 	});
 
@@ -566,7 +468,7 @@ describe('OpenAiBot v2 decisions', () => {
 		};
 		const decision = {
 			actionId: null,
-			notes: null,
+
 			arrangement: { orderedRow: ['a'], lowerArea: [] },
 			explanation: 'I am keeping this card first in the discard queue.',
 		};
@@ -593,7 +495,7 @@ describe('OpenAiBot v2 decisions', () => {
 			completedResponse(
 				JSON.stringify({
 					actionId: input.legalActions[0].id,
-					notes: null,
+
 					arrangement: null,
 					explanation: 'I have no reason to move cards.',
 				}),
@@ -608,7 +510,7 @@ describe('OpenAiBot v2 decisions', () => {
 			completedResponse(
 				JSON.stringify({
 					actionId: input.legalActions[0].id,
-					notes: null,
+
 					arrangement: { orderedRow: ['a'], lowerArea: [] },
 					explanation: 'Move.',
 				}),
@@ -643,11 +545,13 @@ describe('OpenAiBot v2 decisions', () => {
 		{ actionId: null },
 		{ actionId: 'unlisted' },
 		{ extra: 'unsupported' },
+		{ notes: null },
+		{ notes: 'Do not accept scratchpad entries.' },
 	])('rejects invalid v2 fields %# without exposing model text', async (invalid) => {
 		const input = v2Request();
 		const body = {
 			actionId: input.legalActions[0].id,
-			notes: null,
+
 			arrangement: null,
 			explanation: 'A short summary.',
 			...invalid,
@@ -670,7 +574,7 @@ describe('OpenAiBot v2 decisions', () => {
 				completedResponse(
 					JSON.stringify({
 						actionId: input.legalActions[0].id,
-						notes: null,
+
 						arrangement: null,
 						explanation: 'Cannot act off-turn.',
 					}),

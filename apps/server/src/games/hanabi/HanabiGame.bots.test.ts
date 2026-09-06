@@ -56,7 +56,7 @@ function deferredDecision() {
 	let resolve!: (decision: BotDecision) => void;
 	const promise = new Promise<BotDecision>((complete) => {
 		resolve = (decision) =>
-			complete({ arrangement: null, explanation: 'Test decision.', notes: null, ...decision });
+			complete({ arrangement: null, explanation: 'Test decision.', ...decision });
 	});
 	return { promise, resolve };
 }
@@ -88,7 +88,6 @@ function createHarness(
 				actionId: action.id,
 				arrangement: null,
 				explanation: 'Give a helpful clue.',
-				notes: null,
 				inputTokens: 10,
 				outputTokens: 3,
 			});
@@ -288,7 +287,6 @@ describe('server bot game integration', () => {
 				actionId: clue.id,
 				arrangement: null,
 				explanation: 'Give a helpful clue.',
-				notes: null,
 				inputTokens: 10,
 				outputTokens: 3,
 			});

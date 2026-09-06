@@ -118,41 +118,39 @@ Edit [conventions.md](apps/server/src/games/hanabi/bots/conventions.md) to coach
 compose this Markdown with the active mode's rules and enabled options: five colors, six colors,
 Rainbow, Black Powder, or Rainbow plus Black Powder. Restart development or rebuild/redeploy
 production, then start a new round to adopt edits. Each round snapshots its prompt, rules, coaching,
-model, effort, and communication contract. The defaults are `gpt-5.6-sol` and `medium`; override them
+model, effort, and communication contract. The defaults are `gpt-5.6-sol` and `high`; override them
 with `HANABI_BOT_MODEL` and `HANABI_BOT_REASONING_EFFORT`.
 
-Every request contains the bot's permitted view: visible teammate cards, resources, fireworks,
-discards, every player's upper-row order and lower-area placements, and the complete recorded
-history of clues, plays, discards, draws, and committed arrangements. Stable card IDs carry positive
+Each bot seat has its own stored Responses API conversation for the round. The first request contains
+its instructions, conventions, rules, and complete recorded public history. Later requests use
+`previous_response_id` and send only new history events plus the current permitted view: visible
+teammate cards, resources, fireworks, discards, and every player's hand and layout. Stable card IDs carry positive
 and negative clue evidence, source events, and possible identities. Replacement draws start with
 fresh knowledge. Clue events preserve their original board and layout context. The bot's own faces,
-undealt cards, and shuffle seed are excluded. Requests have no tools or shared conversation.
+undealt cards, and shuffle seed are excluded. Requests have no tools; conversations are never shared between seats or rounds.
 
 Literal knowledge is separate from convention interpretation. A teammate's visible face does not
 become that teammate's clue knowledge. Own-card `observerPossibleIdentities` can additionally account
 for copies visible in other hands. Conventions such as a single-card clue usually suggesting a play
 remain conditional; missed clues never create hard identity exclusions.
 
-New rounds also give each bot a private notepad, persisted for that seat and round. Every accepted
-decision explanation is appended automatically; the bot may return an additional `notes` string of
-up to 8,000 characters, or `null` for no extra note. The full notepad accompanies every request to
-that bot. Use it for concise hypotheses, corrections, reminders, and source-event references;
-its contents are revisable model beliefs, not factual clue evidence. The journal and extra notes
-are excluded from other bots' requests, public game state, and transcripts. The decision explanation
-also appears in public debug chat.
+Bot responses contain only `actionId`, `arrangement`, and `explanation`. Accepted explanations
+remain in the model conversation and appear in public debug chat. There is no private scratchpad,
+notes response field, or local explanation journal. Initialization and recovery send the permitted
+board and public event history, without replaying past explanations. Legacy saved scratchpads are
+removed on load, and affected conversations restart with the current response contract.
 
 A bot makes decisions on its own turn, immediately after receiving a clue when dragging is enabled,
 and after its own play or discard. On its turn, it returns one supplied action ID, a nullable full-hand arrangement,
-and a brief explanation, with optional extra notes. An off-turn clue opportunity permits an optional
-arrangement, explanation, and notes; its action ID is null. If the clue makes it the next player, one request combines the
+and a brief explanation. An off-turn clue opportunity permits an optional
+arrangement and explanation; its action ID is null. If the clue makes it the next player, one request combines the
 arrangement and turn action. Arrangement consumes no turn. Setting touched cards aside is coaching,
 not an automatic move: the bot may keep them in place, move them below, or reorder its discard queue.
 After a play or discard, the bot receives the revealed result and its updated hand, including any
-replacement card without that card's face. It can briefly interpret the result, update its notepad,
-and optionally rearrange; its action ID is null. This review runs in the background without a status
+replacement card without that card's face. It can briefly interpret the result and optionally rearrange; its action ID is null. This review runs in the background without a status
 pill, allowing the next human or bot to take their turn while it finishes. A bot completes its own
 pending review before responding to another clue or taking its next turn. This follow-up also runs when dragging is disabled,
-with no arrangement, and after an action ends the game, with notes only. Protected cards remain
+with no arrangement, and after an action ends the game, with an explanation only. Protected cards remain
 conceptually reserved when dragging is disabled. Humans retain ordinary off-turn dragging.
 
 The server validates the entire decision before applying it, then posts its explanation as a chat
@@ -163,8 +161,9 @@ limit. Debug messages are visible to every player and watcher and may reveal tea
 owners cannot see. They are persisted with chat, consume no turn, and are excluded from bot
 observations, factual history, and gameplay transcripts. Explanations are not written to the server
 console. Rejected or stale decisions produce no debug message.
-Existing v1 rounds keep their saved prompt and action-only contract. Existing v2 rounds without
-`notepadVersion` retain their three-field decision contract; new rounds enable the private notepad.
+Existing v1 rounds keep their saved coaching and action-only contract. Conversation initialization
+adapts saved transport instructions and removes scratchpad instructions. All v2 rounds use the
+three-field decision contract.
 Saved policies without `reflectionAfterAction` retain their original decision opportunities.
 Old saves without layout history are marked incomplete rather than
 assigned invented events.
@@ -184,9 +183,24 @@ They receive one attempt and are skipped on failure or timeout so the next turn 
 The revealed action remains in the complete history for interpretation on a later turn. These
 requests share the concurrency limit; they never replay the completed action.
 
-V2 requests include the complete history and enabled private notepad within a 512,000-byte combined
-input limit. Oversized requests report an error without sending input or truncating saved events or notes.
+V2 requests enforce a 512,000-byte limit on the new input and any initialization instructions.
+Only initialization or recovery includes the complete public history.
+Oversized requests report an error without truncating saved events.
 Human movement and other permitted game controls remain available during bot errors.
+
+The accepted response ID and delivered-history checkpoint are persisted per seat in the active round.
+Only a validated, accepted decision advances the chain; failed or stale responses leave it unchanged.
+Result reflections advance the same seat's chain before its next opportunity. Resetting a round starts
+fresh conversations. Missing or expired response IDs and exhausted context windows trigger one recovery
+request using the current permitted view and full public history. OpenAI response
+storage is enabled (`store: true`); response objects have a 30-day default retention period.
+
+Output schemas stay stable across changing hands and turn/clue/result opportunities; the server checks
+current action legality and card membership after parsing. The cache key is stable per seat, round, and
+policy. Server decision logs include the API-reported `cachedInputTokens`. Caching depends on an exact
+prefix match and provider availability; changing reasoning effort for low-effort result reflections can
+reduce reuse. Stored conversation context still counts as input tokens, with cache hits billed at the
+cached rate. See the [live before/after benchmark](docs/bot-cache-benchmark.md) for measured usage.
 
 Round usage counters and recovery state use existing active-game persistence. A crash can lose the
 latest unflushed save, so persistence does not guarantee exactly-once API billing. Disabled or

@@ -12,6 +12,7 @@ import { isBotRound, type BotRound } from './BotRound.js';
 import { BotRuntime, type BotLimits } from './BotRuntime.js';
 import { BotTurnCoordinator, MAX_BOT_INPUT_BYTES, type BotTurn } from './BotTurnCoordinator.js';
 import { BotDecisionError, type BotDecision, type BotDecisionProvider } from './OpenAiBot.js';
+import type { BotConversation } from './BotConversation.js';
 
 function deferred<T>() {
 	let resolve!: (value: T) => void;
@@ -146,6 +147,91 @@ function harness(
 
 describe('BotTurnCoordinator', () => {
 	const coordinators: BotTurnCoordinator[] = [];
+	function conversation(turn: BotTurn, responseId: string): BotConversation {
+		return {
+			responseId,
+			roundId: turn.round.roundId,
+			playerId: turn.playerId,
+			policyHash: turn.round.policy.hash,
+			historyLength: 0,
+			lastEventId: null,
+		};
+	}
+
+	it('passes the saved player conversation and stages its successor before applying', async () => {
+		const turn = botTurn();
+		const previous = conversation(turn, 'resp_previous');
+		const next = conversation(turn, 'resp_next');
+		turn.round.conversations = { bot: previous };
+		const test = harness({
+			turn,
+			apply: () => {
+				expect(turn.round.conversations?.bot).toEqual(next);
+				test.setTurn(null);
+				return null;
+			},
+		});
+		coordinators.push(test.coordinator);
+		test.chooseAction.mockResolvedValue({ actionId: 'action-0', conversation: next });
+		test.coordinator.start();
+		await flush();
+		expect(test.chooseAction.mock.calls[0][0]).toMatchObject({
+			roundId: turn.round.roundId,
+			conversation: previous,
+		});
+		expect(turn.round.conversations?.bot).toEqual(next);
+	});
+
+	it('preserves the accepted cursor when applying a response fails', async () => {
+		const turn = botTurn();
+		const previous = conversation(turn, 'resp_previous');
+		turn.round.conversations = { bot: previous };
+		const test = harness({ turn, apply: () => 'Invalid action.' });
+		coordinators.push(test.coordinator);
+		test.chooseAction.mockResolvedValue({
+			actionId: 'action-0',
+			conversation: conversation(turn, 'resp_rejected'),
+		});
+		test.coordinator.start();
+		await flush();
+		expect(turn.round.conversations?.bot).toEqual(previous);
+		expect(turn.round.failure).toBe('invalid_action');
+	});
+
+	it('ignores conversation cursors from stale responses', async () => {
+		const turn = botTurn();
+		const previous = conversation(turn, 'resp_previous');
+		turn.round.conversations = { bot: previous };
+		const pending = deferred<BotDecision>();
+		const test = harness({ turn });
+		coordinators.push(test.coordinator);
+		test.chooseAction.mockReturnValue(pending.promise);
+		test.coordinator.start();
+		await flush();
+		test.setTurn(null);
+		test.coordinator.changed();
+		pending.resolve({ actionId: 'action-0', conversation: conversation(turn, 'resp_stale') });
+		await flush();
+		expect(test.apply).not.toHaveBeenCalled();
+		expect(turn.round.conversations?.bot).toEqual(previous);
+	});
+
+	it('rejects a response cursor belonging to another player before applying', async () => {
+		const turn = botTurn();
+		const previous = conversation(turn, 'resp_previous');
+		turn.round.conversations = { bot: previous };
+		const test = harness({ turn });
+		coordinators.push(test.coordinator);
+		test.chooseAction.mockResolvedValue({
+			actionId: 'action-0',
+			conversation: { ...conversation(turn, 'resp_wrong_seat'), playerId: 'another-bot' },
+		});
+		test.coordinator.start();
+		await flush();
+		expect(test.apply).not.toHaveBeenCalled();
+		expect(turn.round.conversations?.bot).toEqual(previous);
+		expect(turn.round.failure).toBe('invalid_action');
+	});
 	beforeEach(() => {
 		vi.useFakeTimers({ toFake: ['Date', 'setTimeout', 'clearTimeout'] });
 		vi.setSystemTime(new Date('2026-09-04T20:00:00Z'));
@@ -740,7 +826,7 @@ describe('BotTurnCoordinator', () => {
 		await flush();
 		expect(h.chooseAction).toHaveBeenCalledTimes(1);
 	});
-	it('reports oversized v2 history without spending tokens or dropping evidence', async () => {
+	it('bounds bootstrap history but excludes already-delivered events from continuation limits', async () => {
 		const turn = botTurn();
 		turn.gameData.tilePositions = { own: { x: 10, y: 10, z: 1 }, other: { x: 10, y: 10, z: 1 } };
 		turn.round.version = 2;
@@ -761,6 +847,19 @@ describe('BotTurnCoordinator', () => {
 		expect(turn.round).toMatchObject({ failure: 'input_too_large', attempts: 0, tokens: 0 });
 		expect(h.chooseAction).not.toHaveBeenCalled();
 		expect(turn.round.history).toEqual(history);
+		if (history.version !== 2) throw new Error('Expected event history.');
+		turn.round.conversations = {
+			bot: {
+				...conversation(turn, 'resp_previous'),
+				historyLength: history.events.length,
+				lastEventId: history.events.at(-1)!.eventId,
+			},
+		};
+		turn.round.status = 'ready';
+		h.coordinator.changed();
+		await flush();
+		expect(h.chooseAction).toHaveBeenCalledOnce();
+		expect(turn.round.history).toEqual(history);
 	});
 
 	it('dispatches off-turn clue responses only through the arrangement hook', async () => {
@@ -776,7 +875,6 @@ describe('BotTurnCoordinator', () => {
 			actionId: null,
 			arrangement: null,
 			explanation: 'I will leave my cards in place.',
-			notes: null,
 		};
 		const chooseAction = vi.fn<BotDecisionProvider['chooseAction']>().mockResolvedValue(decision);
 		let active: BotTurn | null = turn;
@@ -818,7 +916,6 @@ describe('BotTurnCoordinator', () => {
 				actionId: null,
 				arrangement: null,
 				explanation: 'The revealed play succeeded.',
-				notes: null,
 			};
 			const chooseAction = vi.fn<BotDecisionProvider['chooseAction']>().mockResolvedValue(decision);
 			const apply = vi.fn();
@@ -942,71 +1039,18 @@ describe('BotTurnCoordinator', () => {
 		expect(isBotRound({ ...round, history: createBotHistory(turn.gameData) })).toBe(false);
 		expect(isBotRound({ ...round, policy: turn.round.policy })).toBe(false);
 	});
-	it('supplies only the receiving bot notepad as a detached request snapshot', async () => {
+	it('does not pass legacy scratchpads to the provider', async () => {
 		const turn = botTurn();
-		turn.round.version = 2;
-		turn.round.policy = createRoundBotPolicy(turn.round.policy, turn.gameData);
-		turn.round.history = createBotHistory(turn.gameData, 2);
-		const checkpoint = { eventId: 'initial', sequence: 0, turnIndex: 0 };
-		const entry = {
-			decisionId: 'prior-decision',
-			opportunity: 'clue' as const,
-			observedAt: checkpoint,
-			recordedAt: checkpoint,
-			sourceClueEventIds: [],
-			explanation: 'Leave this card in place.',
-			notes: 'A tentative play signal, not a confirmed identity.',
-		};
-		turn.round.notepads = {
-			bot: { version: 1, entries: [entry] },
-			anotherBot: { version: 1, entries: [{ ...entry, notes: 'Another seat private note' }] },
-		};
-		const pending = deferred<BotDecision>();
-		const h = tracked({
-			turn,
-			provider: {
-				chooseAction: vi
-					.fn()
-					.mockImplementation((request: Parameters<BotDecisionProvider['chooseAction']>[0]) => {
-						expect(request.notepad).toEqual(turn.round.notepads!.bot);
-						expect(JSON.stringify(request)).not.toContain('Another seat private note');
-						request.notepad!.entries[0].notes = 'Mutating a request cannot rewrite durable memory';
-						return pending.promise;
-					}),
-			},
+		Object.assign(turn.round, {
+			notepads: { bot: { entries: [{ notes: 'Discard this old scratchpad.' }] } },
 		});
-		h.coordinator.start();
-		await flush();
-		expect(turn.round.notepads.bot.entries[0].notes).toBe(
-			'A tentative play signal, not a confirmed identity.',
-		);
-	});
-
-	it('counts the complete private notepad against the request limit without truncating it', async () => {
-		const turn = botTurn();
-		turn.round.version = 2;
-		turn.round.policy = createRoundBotPolicy(turn.round.policy, turn.gameData);
-		turn.round.history = createBotHistory(turn.gameData, 2);
-		const checkpoint = { eventId: 'initial', sequence: 0, turnIndex: 0 };
-		turn.round.notepads = {
-			bot: {
-				version: 1,
-				entries: Array.from({ length: 70 }, (_, index) => ({
-					decisionId: `note-${index}`,
-					opportunity: 'turn',
-					observedAt: checkpoint,
-					recordedAt: checkpoint,
-					sourceClueEventIds: [],
-					explanation: 'A recorded decision summary.',
-					notes: 'x'.repeat(8000),
-				})),
-			},
-		};
 		const h = tracked({ turn });
 		h.coordinator.start();
 		await flush();
-		expect(turn.round).toMatchObject({ failure: 'input_too_large', attempts: 0 });
-		expect(turn.round.notepads.bot.entries).toHaveLength(70);
-		expect(h.chooseAction).not.toHaveBeenCalled();
+		expect(h.chooseAction).toHaveBeenCalled();
+		expect(h.chooseAction.mock.calls[0][0]).not.toHaveProperty('notepad');
+		expect(JSON.stringify(h.chooseAction.mock.calls[0][0])).not.toContain(
+			'Discard this old scratchpad.',
+		);
 	});
 });
