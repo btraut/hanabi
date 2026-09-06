@@ -69,13 +69,12 @@ import {
 import { GameTranscriptRecorder, NOOP_GAME_TRANSCRIPT_RECORDER } from './GameTranscriptRecorder.js';
 import { BotRuntime } from './bots/BotRuntime.js';
 import { BotTurnCoordinator, type BotTurn } from './bots/BotTurnCoordinator.js';
-import { type BotRound } from './bots/BotRound.js';
+import { removeBotScratchpad, type BotRound } from './bots/BotRound.js';
 import { createBotHistory, appendBotHistory, appendBotArrangement } from './bots/BotHistory.js';
 import { createRoundBotPolicy } from './bots/BotPolicy.js';
 import { isV2BotDecision, type BotDecision } from './bots/OpenAiBot.js';
 import { getBotLegalActions } from './bots/BotLegalActions.js';
 import { createBotDecisionChat } from './bots/BotDecisionChat.js';
-import { getBotNotepadCheckpoint } from './bots/BotNotepad.js';
 import { chooseBotName } from './bots/BotNames.js';
 
 export interface HanabiGameSerialized extends GameSerialized {
@@ -145,7 +144,9 @@ export default class HanabiGame extends Game {
 			// Review data belongs to recipient snapshots, never authoritative game state.
 			delete this._gameData.reviewTranscript;
 			delete this._gameData.bots;
-			this._botRound = creatorIdOrData.botRound ? structuredClone(creatorIdOrData.botRound) : null;
+			this._botRound = creatorIdOrData.botRound
+				? removeBotScratchpad(structuredClone(creatorIdOrData.botRound))
+				: null;
 			if (this._botRound?.pendingResult) {
 				this._botRound.pendingResults = [this._botRound.pendingResult];
 				delete this._botRound.pendingResult;
@@ -816,7 +817,6 @@ export default class HanabiGame extends Game {
 				hand,
 				this._gameData.allowDragging && this._gameData.stage === HanabiStage.Playing,
 				opportunity,
-				round.policy.notepadVersion === 1,
 			) ||
 			(action !== null &&
 				!getBotLegalActions(this._gameData, playerId).some(
@@ -838,9 +838,6 @@ export default class HanabiGame extends Game {
 		const beforePositions = this._gameData.tilePositions;
 		const beforeTranscript = this._transcript;
 		const beforeHistory = round.history;
-		const observedAt = getBotNotepadCheckpoint(
-			opportunity === 'result' ? current.round.history : beforeHistory,
-		);
 		const beforePendingClues = round.pendingClues;
 		const sources = current.sourceClueEventIds ?? [];
 		// All checks finish before mutation; these synchronous handlers cannot interleave.
@@ -857,26 +854,10 @@ export default class HanabiGame extends Game {
 			return error;
 		}
 		const decisionId = randomUUID();
-		if (round.policy.notepadVersion === 1) {
-			const notepad = round.notepads?.[playerId] ?? { version: 1 as const, entries: [] };
-			round.notepads = {
-				...round.notepads,
-				[playerId]: {
-					version: 1,
-					entries: [
-						...notepad.entries,
-						{
-							decisionId,
-							opportunity,
-							observedAt,
-							recordedAt: getBotNotepadCheckpoint(round.history),
-							sourceClueEventIds: [...sources],
-							...(sourceActionEventId ? { sourceActionEventId } : {}),
-							explanation: decision.explanation,
-							notes: decision.notes ?? null,
-						},
-					],
-				},
+		if (opportunity === 'result' && decision.conversation) {
+			round.conversations = {
+				...round.conversations,
+				[playerId]: structuredClone(decision.conversation),
 			};
 		}
 		this._appendActions(createBotDecisionChat(playerId, decisionId, decision.explanation));
@@ -1331,7 +1312,6 @@ export default class HanabiGame extends Game {
 				status: 'ready',
 				lastAttemptAt: 0,
 				pendingClues: [],
-				notepads: {},
 			};
 		}
 

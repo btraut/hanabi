@@ -18,6 +18,7 @@ import { createBotHistory } from './bots/BotHistory.js';
 import { createBotPolicy, createRoundBotPolicy } from './bots/BotPolicy.js';
 import { BotRuntime } from './bots/BotRuntime.js';
 import type { BotDecision, BotDecisionProvider, BotDecisionRequest } from './bots/OpenAiBot.js';
+import type { BotConversation } from './bots/BotConversation.js';
 
 class FakeSocketManager {
 	readonly onMessage = new PubSub<{ userId: string | undefined; message: HanabiMessage }>();
@@ -55,7 +56,6 @@ function decision(
 				: null,
 		arrangement,
 		explanation: 'Interpret the revealed card and retain the current plan.',
-		notes: null,
 		inputTokens: 10,
 		outputTokens: 5,
 	};
@@ -151,7 +151,6 @@ function seeded(
 		status: 'ready',
 		lastAttemptAt: 0,
 		pendingClues: [],
-		notepads: {},
 	};
 	saved.transcript = createGameTranscript(
 		{ gameId: saved.id, gameCode: saved.code },
@@ -196,14 +195,60 @@ function firstAction(harness: ReturnType<typeof seeded>, type: 'play' | 'discard
 	);
 	return tileId!;
 }
-async function finishedResult(harness: Harness & { botId: string }) {
-	await vi.waitFor(() =>
-		expect(snapshot(harness.game).botRound?.notepads?.[harness.botId].entries).toHaveLength(2),
+function chats(harness: Harness, botId: string) {
+	return snapshot(harness.game).data.actions.filter(
+		(action) => action.type === HanabiGameActionType.Chat && action.playerId === botId,
 	);
+}
+async function finishedResult(harness: Harness & { botId: string }) {
+	await vi.waitFor(() => expect(chats(harness, harness.botId)).toHaveLength(2));
 	await settle();
 }
 
 describe('bot result reflections', () => {
+	it('persists an action-to-reflection chain and resumes it after restoration', async () => {
+		const harness = seeded();
+		function cursor(request: BotDecisionRequest, responseId: string): BotConversation {
+			if (request.observation.version !== 2) throw new Error('Expected event history.');
+			const events = request.observation.history.events;
+			return {
+				responseId,
+				roundId: request.roundId!,
+				playerId: request.observation.playerId,
+				policyHash: request.policy.hash,
+				historyLength: events.length,
+				lastEventId: events.at(-1)?.eventId ?? null,
+			};
+		}
+		harness.chooseAction.mockImplementation((request) =>
+			Promise.resolve({
+				...decision(request),
+				actionId:
+					request.opportunity === 'turn'
+						? request.legalActions.find(({ action }) => action.type === 'discard')!.id
+						: null,
+				conversation: cursor(request, request.opportunity === 'turn' ? 'resp_turn' : 'resp_result'),
+				cachedInputTokens: request.opportunity === 'turn' ? 0 : 1024,
+			}),
+		);
+		harness.game.startBackgroundWork();
+		await finishedResult(harness);
+		expect(harness.chooseAction.mock.calls[0][0].conversation).toBeUndefined();
+		expect(harness.chooseAction.mock.calls[1][0].conversation?.responseId).toBe('resp_turn');
+		const saved = snapshot(harness.game);
+		expect(saved.botRound?.conversations?.[harness.botId].responseId).toBe('resp_result');
+		expect(JSON.stringify(harness.sockets.send.mock.calls)).not.toContain('resp_result');
+		harness.game.cleanUp();
+		const restored = createHarness(saved);
+		restored.chooseAction.mockReturnValue(new Promise(() => {}));
+		send(restored, 'DiscardTileMessage', { id: saved.data.playerTiles.host[0] });
+		restored.game.startBackgroundWork();
+		await vi.waitFor(() => expect(restored.chooseAction).toHaveBeenCalledOnce());
+		expect(restored.chooseAction.mock.calls[0][0].conversation?.responseId).toBe('resp_result');
+		send(restored, 'ResetGameMessage', undefined);
+		expect(snapshot(restored.game).botRound).toBeUndefined();
+	});
+
 	it.each(['successful play', 'failed play', 'discard'] as const)(
 		'reflects on its own %s without taking another turn',
 		async (scenario) => {
@@ -239,7 +284,7 @@ describe('bot result reflections', () => {
 					.find(({ id }) => id === harness.botId)!
 					.hand.every(({ face }) => face === null),
 			).toBe(true);
-			expect(request.notepad?.entries).toHaveLength(1);
+			expect(request).not.toHaveProperty('notepad');
 			expect(history.events).toHaveLength(1);
 			expect(history.events[0]).toMatchObject({
 				type,
@@ -253,11 +298,8 @@ describe('bot result reflections', () => {
 			expect(after.data.currentPlayerId).toBe('host');
 			expect(after.transcript?.moves).toHaveLength(1);
 			expect(harness.chooseAction).toHaveBeenCalledTimes(2);
-			expect(after.botRound?.notepads?.[harness.botId].entries[1]).toMatchObject({
-				opportunity: 'result',
-				sourceActionEventId: history.events[0].eventId,
-				observedAt: { turnIndex: 1 },
-				recordedAt: { turnIndex: 1 },
+			expect(chats(harness, harness.botId)[1]).toMatchObject({
+				message: `Debug: ${decision(request).explanation}`,
 			});
 		},
 	);
@@ -291,10 +333,7 @@ describe('bot result reflections', () => {
 		expect(
 			getHanabiHandLayout(after.data.playerTiles[harness.botId], after.data.tilePositions),
 		).toEqual(layout);
-		expect(after.botRound?.notepads?.[harness.botId].entries[1]).toMatchObject({
-			observedAt: { turnIndex: 1 },
-			recordedAt: { turnIndex: 2 },
-		});
+		expect(chats(harness, harness.botId)).toHaveLength(2);
 		expect(harness.chooseAction).toHaveBeenCalledTimes(3);
 		expect(() => createHarness(after)).not.toThrow();
 	});
@@ -325,8 +364,8 @@ describe('bot result reflections', () => {
 		pending.resolve(decision(request, reverseLayout(request)));
 		await vi.waitFor(() => expect(snapshot(harness.game).botRound?.pendingResults).toEqual([]));
 		const after = snapshot(harness.game);
-		expect(after.botRound?.notepads?.[harness.botId].entries).toHaveLength(2);
-		expect(after.botRound?.notepads?.[harness.secondBotId].entries).toHaveLength(2);
+		expect(chats(harness, harness.botId)).toHaveLength(2);
+		expect(chats(harness, harness.secondBotId)).toHaveLength(2);
 		expect(after.transcript?.handMovements).toHaveLength(1);
 		expect(() => createHarness(after)).not.toThrow();
 	});
@@ -357,22 +396,22 @@ describe('bot result reflections', () => {
 		expect(harness.chooseAction).toHaveBeenCalledTimes(3);
 	});
 
-	it('accepts private reservation notes with dragging disabled', async () => {
+	it('publishes a result explanation with dragging disabled', async () => {
 		const harness = seeded({ dragging: false });
 		firstAction(harness, 'discard');
 		harness.chooseAction.mockImplementation((request) =>
 			Promise.resolve({
 				...decision(request),
-				notes: 'Reserve the oldest remaining card conceptually.',
+				explanation: 'Reserve the oldest remaining card conceptually.',
 			}),
 		);
 		harness.game.startBackgroundWork();
 		await finishedResult(harness);
 		const after = snapshot(harness.game);
 		expect(harness.chooseAction.mock.calls[1][0].policy.rules?.allowDragging).toBe(false);
-		expect(after.botRound?.notepads?.[harness.botId].entries[1].notes).toBe(
-			'Reserve the oldest remaining card conceptually.',
-		);
+		expect(chats(harness, harness.botId)[1]).toMatchObject({
+			message: 'Debug: Reserve the oldest remaining card conceptually.',
+		});
 		expect(after.transcript?.handMovements).toEqual([]);
 	});
 
@@ -394,7 +433,7 @@ describe('bot result reflections', () => {
 		expect(after.transcript?.handMovements).toHaveLength(1);
 	});
 
-	it('rejects a result layout containing the removed card without applying notes or movement', async () => {
+	it('rejects a result layout containing the removed card without publishing an explanation or applying movement', async () => {
 		const harness = seeded();
 		const oldHand = snapshot(harness.game).data.playerTiles[harness.botId];
 		firstAction(harness, 'discard');
@@ -407,7 +446,7 @@ describe('bot result reflections', () => {
 			expect(snapshot(harness.game).botRound?.pendingResults ?? []).toEqual([]),
 		);
 		const after = snapshot(harness.game);
-		expect(after.botRound?.notepads?.[harness.botId].entries).toHaveLength(1);
+		expect(chats(harness, harness.botId)).toHaveLength(1);
 		expect(after.transcript?.handMovements).toEqual([]);
 	});
 
@@ -449,9 +488,7 @@ describe('bot result reflections', () => {
 			completed.game.startBackgroundWork();
 			await settle();
 			expect(completed.chooseAction).not.toHaveBeenCalled();
-			expect(snapshot(completed.game).botRound?.notepads).toEqual(
-				snapshot(resumed.game).botRound?.notepads,
-			);
+			expect(chats(completed, harness.botId)).toEqual(chats(resumed, harness.botId));
 		},
 	);
 
@@ -467,17 +504,17 @@ describe('bot result reflections', () => {
 		expect(request.signal.aborted).toBe(true);
 		harness.chooseAction.mockImplementation((r) => Promise.resolve(decision(r)));
 		harness.game.startBackgroundWork();
-		pending.resolve({ ...decision(request), notes: 'Cancelled review' });
+		pending.resolve({ ...decision(request), explanation: 'Cancelled review' });
 		await finishedResult(harness);
 		const after = snapshot(harness.game);
 		expect(harness.chooseAction).toHaveBeenCalledTimes(3);
-		expect(after.botRound?.notepads?.[harness.botId].entries[1].notes).toBeNull();
+		expect(JSON.stringify(chats(harness, harness.botId))).not.toContain('Cancelled review');
 		expect(after.botRound?.attempts).toBe(3);
 		expect(after.botRound?.tokens).toBeGreaterThanOrEqual(45);
 		expect(() => createHarness(after)).not.toThrow();
 	});
 
-	it('keeps review notes without moving tiles if another player ends the game', async () => {
+	it('publishes the review explanation without moving tiles if another player ends the game', async () => {
 		const initial = seeded();
 		const saved = snapshot(initial.game);
 		saved.data.discardedTiles = [...saved.data.discardedTiles, ...saved.data.remainingTiles];
@@ -505,14 +542,14 @@ describe('bot result reflections', () => {
 		expect(snapshot(harness.game).data.stage).toBe(HanabiStage.Finished);
 		pending.resolve({
 			...decision(request, reverseLayout(request)),
-			notes: 'Remember the revealed card.',
+			explanation: 'Remember the revealed card.',
 		});
 		await finishedResult(harness);
 		const after = snapshot(harness.game);
 		expect(after.transcript?.handMovements).toEqual([]);
-		expect(after.botRound?.notepads?.[harness.botId].entries[1].notes).toBe(
-			'Remember the revealed card.',
-		);
+		expect(chats(harness, harness.botId)[1]).toMatchObject({
+			message: 'Debug: Remember the revealed card.',
+		});
 		expect(() => createHarness(after)).not.toThrow();
 	});
 
@@ -528,7 +565,7 @@ describe('bot result reflections', () => {
 		const reset = snapshot(harness.game);
 		pending.resolve({
 			...decision(request, reverseLayout(request)),
-			notes: 'Stale result must not be saved.',
+			explanation: 'Stale result must not be saved.',
 		});
 		await settle();
 		expect(request.signal.aborted).toBe(true);

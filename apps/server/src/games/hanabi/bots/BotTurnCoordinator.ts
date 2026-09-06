@@ -1,10 +1,11 @@
 import type { DebugPlayerAction, HanabiBotTurnStatus, HanabiGameData } from '@hanabi/shared';
 import { buildBotObservation } from './BotObservation.js';
-import type { BotNotepad } from './BotNotepad.js';
 import { BotDecisionError, type BotDecision } from './OpenAiBot.js';
 import { BOT_FAILURE_MESSAGES, type BotFailureCode, type BotRound } from './BotRound.js';
 import { BotRuntime } from './BotRuntime.js';
 import Logger from '../../../utils/Logger.js';
+import { botInputBytes, MAX_BOT_INPUT_BYTES, prepareBotInput } from './BotConversation.js';
+export { MAX_BOT_INPUT_BYTES } from './BotConversation.js';
 
 export interface BotTurn {
 	playerId: string;
@@ -33,9 +34,6 @@ interface BotTurnHooks {
 		sourceClueEventIds: string[],
 	) => string | null;
 }
-
-// Preserve complete history and report oversized input without dropping evidence.
-export const MAX_BOT_INPUT_BYTES = 512_000;
 
 function withAbort<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
 	return new Promise((resolve, reject) => {
@@ -237,10 +235,6 @@ export class BotTurnCoordinator {
 			round.history,
 			round.version,
 		);
-		const notepad: BotNotepad | undefined =
-			round.policy.notepadVersion === 1
-				? structuredClone(round.notepads?.[turn.playerId] ?? { version: 1, entries: [] })
-				: undefined;
 		const isTurn = !turn.opportunity || turn.opportunity === 'turn';
 		const isResult = turn.opportunity === 'result';
 		const legalActions = isTurn ? observation.legalActions : [];
@@ -265,11 +259,19 @@ export class BotTurnCoordinator {
 			return;
 		}
 		// UTF-8 bytes conservatively bound input tokens without sending state to a tokenizer service.
-		const inputBytes = Buffer.byteLength(
-			JSON.stringify(notepad ? { ...observation, privateNotepad: notepad } : observation) +
-				round.policy.instructions,
-			'utf8',
-		);
+		const inputRequest = {
+			observation,
+			legalActions,
+			policy: round.policy,
+			roundId: round.roundId,
+			conversation: round.conversations?.[turn.playerId],
+			opportunity: turn.opportunity,
+			sourceClueEventIds: turn.sourceClueEventIds,
+			sourceActionEventId: turn.sourceActionEventId,
+			signal: controller.signal,
+		};
+		const prepared = prepareBotInput(inputRequest);
+		const inputBytes = botInputBytes(inputRequest, prepared);
 		if (round.version === 2 && inputBytes > MAX_BOT_INPUT_BYTES) {
 			this.fail(round, 'input_too_large');
 			return;
@@ -330,7 +332,10 @@ export class BotTurnCoordinator {
 							observation,
 							legalActions,
 							policy: round.policy,
-							...(notepad ? { notepad: structuredClone(notepad) } : {}),
+							roundId: round.roundId,
+							...(round.conversations?.[turn.playerId]
+								? { conversation: structuredClone(round.conversations[turn.playerId]) }
+								: {}),
 							...(round.version === 2
 								? {
 										opportunity: turn.opportunity ?? 'turn',
@@ -361,24 +366,50 @@ export class BotTurnCoordinator {
 						this.fail(round, 'invalid_action');
 						return;
 					}
-					const error = isResult
-						? this.hooks.applyResultResponse
-							? this.hooks.applyResultResponse(turn.playerId, result, turn.sourceActionEventId!)
-							: 'Result responses are unavailable.'
-						: turn.opportunity === 'clue'
-							? this.hooks.applyClueResponse
-								? this.hooks.applyClueResponse(turn.playerId, result, turn.sourceClueEventIds ?? [])
-								: 'Clue responses are unavailable.'
-							: round.version === 2
-								? this.hooks.apply(turn.playerId, selected!.action, result)
-								: this.hooks.apply(turn.playerId, selected!.action);
+					if (
+						result.conversation &&
+						!prepareBotInput({ ...inputRequest, conversation: result.conversation }).conversation
+					) {
+						this.fail(round, 'invalid_action');
+						return;
+					}
+					// Applying a move can persist synchronously, so stage its accepted chain first.
+					const previousConversations = round.conversations;
+					if (result.conversation) {
+						round.conversations = {
+							...round.conversations,
+							[turn.playerId]: structuredClone(result.conversation),
+						};
+					}
+					let error: string | null;
+					try {
+						error = isResult
+							? this.hooks.applyResultResponse
+								? this.hooks.applyResultResponse(turn.playerId, result, turn.sourceActionEventId!)
+								: 'Result responses are unavailable.'
+							: turn.opportunity === 'clue'
+								? this.hooks.applyClueResponse
+									? this.hooks.applyClueResponse(
+											turn.playerId,
+											result,
+											turn.sourceClueEventIds ?? [],
+										)
+									: 'Clue responses are unavailable.'
+								: round.version === 2
+									? this.hooks.apply(turn.playerId, selected!.action, result)
+									: this.hooks.apply(turn.playerId, selected!.action);
+					} catch (error) {
+						round.conversations = previousConversations;
+						throw error;
+					}
 					if (error) {
+						round.conversations = previousConversations;
 						this.fail(round, 'invalid_action');
 						return;
 					}
 					this.failures = 0;
 					Logger.info(
-						`Bot decision game=${this.hooks.gameId} model=${round.policy.model} policy=${round.policy.hash} latencyMs=${Date.now() - startedAt} tokens=${usedTokens ?? 'unknown'}`,
+						`Bot decision game=${this.hooks.gameId} model=${round.policy.model} policy=${round.policy.hash} latencyMs=${Date.now() - startedAt} tokens=${usedTokens ?? 'unknown'} cachedInputTokens=${result.cachedInputTokens ?? 'unknown'}`,
 					);
 					return;
 				} catch (error) {

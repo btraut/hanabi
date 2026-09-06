@@ -21,6 +21,32 @@ function fixture(): BotRound {
 }
 
 describe('pending result queues', () => {
+	it('round-trips conversation checkpoints and rejects mismatched identity or history', () => {
+		const round = fixture();
+		const conversation = {
+			responseId: 'resp_accepted',
+			roundId: round.roundId,
+			playerId: 'bot',
+			policyHash: round.policy.hash,
+			historyLength: 0,
+			lastEventId: null,
+		};
+		round.conversations = { bot: conversation };
+		expect(isBotRound(JSON.parse(JSON.stringify(round)))).toBe(true);
+		for (const invalid of [
+			{ ...conversation, roundId: 'another-round' },
+			{ ...conversation, playerId: 'another-bot' },
+			{ ...conversation, policyHash: 'another-policy' },
+			{ ...conversation, historyLength: 1, lastEventId: 'missing-event' },
+			{ ...conversation, lastEventId: 'missing-event' },
+		]) {
+			expect(isBotRound({ ...round, conversations: { bot: invalid } })).toBe(false);
+		}
+		for (const conversations of [null, [], 'invalid', { bot: null }]) {
+			expect(isBotRound({ ...round, conversations })).toBe(false);
+		}
+	});
+
 	it('accepts independent bot results and legacy singular results', () => {
 		const round = fixture();
 		expect(isBotRound(round)).toBe(true);

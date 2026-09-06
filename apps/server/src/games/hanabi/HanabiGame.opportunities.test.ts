@@ -69,7 +69,6 @@ function decision(
 		actionId: request.opportunity && request.opportunity !== 'turn' ? null : action!.id,
 		arrangement,
 		explanation: 'Keep the current queue until stronger evidence arrives.',
-		...(request.policy.notepadVersion === 1 ? { notes: null } : {}),
 		inputTokens: 10,
 		outputTokens: 5,
 	};
@@ -276,7 +275,7 @@ describe('bot turn and clue decision opportunities', () => {
 		send(harness, 'host', 'StartGameMessage', undefined);
 		expect(snapshot(harness.game).botRound).toMatchObject({
 			version: 2,
-			policy: { contractVersion: 2, reasoningEffort: 'medium' },
+			policy: { contractVersion: 2, reasoningEffort: 'high' },
 			history: { version: 2 },
 			pendingClues: [],
 		});
@@ -756,8 +755,7 @@ describe('bot turn and clue decision opportunities', () => {
 		harness.chooseAction.mockImplementation((request) => {
 			requestSizes.push(
 				Buffer.byteLength(
-					JSON.stringify({ ...request.observation, privateNotepad: request.notepad }) +
-						request.policy.instructions,
+					JSON.stringify(request.observation) + request.policy.instructions,
 					'utf8',
 				),
 			);
@@ -819,10 +817,7 @@ describe('bot turn and clue decision opportunities', () => {
 		);
 		const finalObservation = buildBotObservation(finished.data, harness.botId, history, 2);
 		const finalBytes = Buffer.byteLength(
-			JSON.stringify({
-				...finalObservation,
-				privateNotepad: finished.botRound!.notepads?.[harness.botId],
-			}) + finished.botRound!.policy.instructions,
+			JSON.stringify(finalObservation) + finished.botRound!.policy.instructions,
 			'utf8',
 		);
 		const peakBytes = Math.max(...requestSizes, finalBytes);

@@ -1,6 +1,6 @@
-import { isBotPolicy, type BotPolicy } from './BotPolicy.js';
+import { isBotPolicy, migrateBotPolicy, type BotPolicy } from './BotPolicy.js';
 import { isBotHistory, type BotHistory } from './BotHistory.js';
-import { isBotNotepads, type BotNotepad } from './BotNotepad.js';
+import { isBotConversation, type BotConversation } from './BotConversation.js';
 
 export type BotFailureCode =
 	| 'timeout'
@@ -31,7 +31,7 @@ export interface BotRound {
 	pendingResult?: { playerId: string; eventId: string };
 	pendingResults?: Array<{ playerId: string; eventId: string }>;
 	pendingClues?: Array<{ playerId: string; eventIds: string[] }>;
-	notepads?: Record<string, BotNotepad>;
+	conversations?: Record<string, BotConversation>;
 }
 
 export const BOT_FAILURE_MESSAGES: Record<
@@ -71,6 +71,23 @@ export function isBotRound(value: unknown): value is BotRound {
 		typeof round.roundId === 'string' &&
 		isBotPolicy(policy) &&
 		isBotHistory(round.history) &&
+		(round.conversations === undefined ||
+			(round.conversations !== null &&
+				typeof round.conversations === 'object' &&
+				!Array.isArray(round.conversations) &&
+				Object.entries(round.conversations).every(([playerId, conversation]) => {
+					if (!isBotConversation(conversation) || !round.history) return false;
+					const events = round.history.version === 2 ? round.history.events : round.history.moves;
+					const lastEvent = events[conversation.historyLength - 1];
+					return (
+						conversation.playerId === playerId &&
+						conversation.roundId === round.roundId &&
+						conversation.policyHash === policy.hash &&
+						conversation.historyLength <= events.length &&
+						conversation.lastEventId ===
+							(lastEvent ? ('eventId' in lastEvent ? lastEvent.eventId : lastEvent.actionId) : null)
+					);
+				}))) &&
 		(round.pendingResult === undefined || round.pendingResults === undefined) &&
 		(round.pendingResult === undefined ||
 			(round.version === 2 &&
@@ -86,8 +103,6 @@ export function isBotRound(value: unknown): value is BotRound {
 					round.pendingResults.length &&
 				new Set(round.pendingResults.map((pending) => pending.eventId)).size ===
 					round.pendingResults.length)) &&
-		(round.notepads === undefined ||
-			(policy.notepadVersion === 1 && isBotNotepads(round.notepads))) &&
 		(round.version === 2
 			? policy.contractVersion === 2 &&
 				round.history.version === 2 &&
@@ -116,4 +131,13 @@ export function isBotRound(value: unknown): value is BotRound {
 			round.failure === 'global_budget' ||
 			Object.hasOwn(BOT_FAILURE_MESSAGES, round.failure))
 	);
+}
+
+/** Discard retired private notes and reset conversations that contain the old response contract. */
+export function removeBotScratchpad(round: BotRound): BotRound {
+	const { notepads, ...retained } = round as BotRound & { notepads?: unknown };
+	const policy = migrateBotPolicy(round.policy);
+	if (policy === round.policy && notepads === undefined) return retained;
+	const { conversations: _conversations, ...withoutConversations } = retained;
+	return { ...withoutConversations, policy };
 }

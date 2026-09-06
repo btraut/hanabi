@@ -5,14 +5,24 @@ import {
 	type HanabiHandLayout,
 } from '@hanabi/shared';
 import OpenAI from 'openai';
+import { createHash } from 'node:crypto';
+import {
+	botConversationInstructions,
+	botInputBytes,
+	MAX_BOT_INPUT_BYTES,
+	conversationCheckpoint,
+	prepareBotInput,
+	type BotConversation,
+} from './BotConversation.js';
 import type { BotObservation } from './BotObservation.js';
 import type { BotPolicy } from './BotPolicy.js';
-import { MAX_BOT_NOTE_LENGTH, type BotNotepad } from './BotNotepad.js';
 import { MAX_BOT_EXPLANATION_LENGTH } from './BotDecisionChat.js';
 
 export type BotDecisionOpportunity = 'turn' | 'clue' | 'result';
 
 export interface BotDecisionRequest {
+	roundId?: string;
+	conversation?: BotConversation;
 	observation: BotObservation;
 	legalActions: readonly { id: string; action: DebugPlayerAction }[];
 	policy: BotPolicy;
@@ -20,7 +30,6 @@ export interface BotDecisionRequest {
 	opportunity?: BotDecisionOpportunity;
 	sourceClueEventIds?: readonly string[];
 	sourceActionEventId?: string;
-	notepad?: BotNotepad;
 	/** Result-only limits supplied by the runtime; gameplay keeps the provider configuration. */
 	resultTimeoutMs?: number;
 	resultMaxOutputTokens?: number;
@@ -30,7 +39,8 @@ export interface BotDecision {
 	actionId: string | null;
 	arrangement?: HanabiHandLayout | null;
 	explanation?: string;
-	notes?: string | null;
+	conversation?: BotConversation;
+	cachedInputTokens?: number;
 	inputTokens?: number;
 	outputTokens?: number;
 }
@@ -46,7 +56,6 @@ export function isV2BotDecision(
 	ownTileIds: readonly string[],
 	allowDragging: boolean,
 	opportunity: BotDecisionOpportunity = 'turn',
-	notepadEnabled = false,
 ): value is V2BotDecision {
 	if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
 	const decision = value as Partial<BotDecision>;
@@ -57,19 +66,15 @@ export function isV2BotDecision(
 		typeof decision.explanation !== 'string' ||
 		!decision.explanation.trim() ||
 		decision.explanation.length > MAX_BOT_EXPLANATION_LENGTH ||
-		(notepadEnabled &&
-			decision.notes !== null &&
-			(typeof decision.notes !== 'string' ||
-				!decision.notes.trim() ||
-				decision.notes.length > MAX_BOT_NOTE_LENGTH)) ||
 		!Object.keys(value).every((key) =>
 			[
 				'actionId',
 				'arrangement',
 				'explanation',
+				'conversation',
+				'cachedInputTokens',
 				'inputTokens',
 				'outputTokens',
-				...(notepadEnabled ? ['notes'] : []),
 			].includes(key),
 		)
 	)
@@ -89,7 +94,8 @@ export function isV2BotDecision(
 
 function decisionSchema(request: BotDecisionRequest, ownTileIds: readonly string[]) {
 	const actionIds = request.legalActions.map(({ id }) => id);
-	const actionId = { type: 'string', enum: actionIds };
+	const threaded = !!request.roundId;
+	const actionId = threaded ? { type: 'string' } : { type: 'string', enum: actionIds };
 	if (request.policy.contractVersion !== 2) {
 		return {
 			type: 'object',
@@ -100,8 +106,7 @@ function decisionSchema(request: BotDecisionRequest, ownTileIds: readonly string
 	}
 	const arrangement =
 		request.observation.rules.allowDragging &&
-		request.observation.stage === HanabiStage.Playing &&
-		ownTileIds.length > 0
+		(threaded || (request.observation.stage === HanabiStage.Playing && ownTileIds.length > 0))
 			? {
 					anyOf: [
 						{ type: 'null' },
@@ -110,16 +115,16 @@ function decisionSchema(request: BotDecisionRequest, ownTileIds: readonly string
 							properties: {
 								orderedRow: {
 									type: 'array',
-									items: { type: 'string', enum: ownTileIds },
-									maxItems: ownTileIds.length,
+									items: threaded ? { type: 'string' } : { type: 'string', enum: ownTileIds },
+									maxItems: threaded ? 5 : ownTileIds.length,
 								},
 								lowerArea: {
 									type: 'array',
-									maxItems: ownTileIds.length,
+									maxItems: threaded ? 5 : ownTileIds.length,
 									items: {
 										type: 'object',
 										properties: {
-											tileId: { type: 'string', enum: ownTileIds },
+											tileId: threaded ? { type: 'string' } : { type: 'string', enum: ownTileIds },
 											x: { type: 'number', minimum: 0, maximum: 1 },
 											y: { type: 'number', minimum: 0, maximum: 1 },
 											stackOrder: { type: 'integer', minimum: 0, maximum: Number.MAX_SAFE_INTEGER },
@@ -138,19 +143,15 @@ function decisionSchema(request: BotDecisionRequest, ownTileIds: readonly string
 	return {
 		type: 'object',
 		properties: {
-			actionId: request.opportunity && request.opportunity !== 'turn' ? { type: 'null' } : actionId,
+			actionId: threaded
+				? { type: ['string', 'null'] }
+				: request.opportunity && request.opportunity !== 'turn'
+					? { type: 'null' }
+					: actionId,
 			arrangement,
 			explanation: { type: 'string', minLength: 1, maxLength: MAX_BOT_EXPLANATION_LENGTH },
-			...(request.policy.notepadVersion === 1
-				? { notes: { type: ['string', 'null'], minLength: 1, maxLength: MAX_BOT_NOTE_LENGTH } }
-				: {}),
 		},
-		required: [
-			'actionId',
-			'arrangement',
-			'explanation',
-			...(request.policy.notepadVersion === 1 ? ['notes'] : []),
-		],
+		required: ['actionId', 'arrangement', 'explanation'],
 		additionalProperties: false,
 	};
 }
@@ -167,7 +168,8 @@ export type BotDecisionErrorCode =
 	| 'transient'
 	| 'refused'
 	| 'incomplete'
-	| 'invalid_action';
+	| 'invalid_action'
+	| 'input_too_large';
 
 /** Contains no provider response, player data, prompt, or credential. */
 export class BotDecisionError extends Error {
@@ -207,7 +209,6 @@ export class OpenAiBot implements BotDecisionProvider {
 	async chooseAction(request: BotDecisionRequest): Promise<BotDecision> {
 		if (request.signal.aborted) throw new BotDecisionError('cancelled');
 		const v2 = request.policy.contractVersion === 2;
-		const notepadEnabled = v2 && request.policy.notepadVersion === 1;
 		const opportunity = request.opportunity ?? 'turn';
 		if (
 			(opportunity === 'turn' && request.legalActions.length === 0) ||
@@ -238,31 +239,42 @@ export class OpenAiBot implements BotDecisionProvider {
 				? 'low'
 				: (request.policy.reasoningEffort ??
 					(request.policy.model.startsWith('gpt-5.4-mini') ? 'none' : undefined));
+		const prepared = prepareBotInput(request);
+		if (v2 && botInputBytes(request, prepared) > MAX_BOT_INPUT_BYTES) {
+			throw new BotDecisionError('input_too_large');
+		}
 		try {
 			const response = await this.client.responses.create(
 				{
 					model: request.policy.model,
-					instructions: request.policy.instructions,
-					input: JSON.stringify(
-						v2
-							? {
-									...request.observation,
-									...(opportunity !== 'turn' ? { legalActions: [] } : {}),
-									...(notepadEnabled
-										? { privateNotepad: request.notepad ?? { version: 1, entries: [] } }
-										: {}),
-									decisionContext: {
-										opportunity,
-										sourceClueEventIds:
-											opportunity === 'result' ? [] : (request.sourceClueEventIds ?? []),
-										...(opportunity === 'result'
-											? { sourceActionEventId: request.sourceActionEventId }
-											: {}),
-									},
-								}
-							: request.observation,
-					),
-					store: false,
+					...(request.roundId
+						? {
+								input: [
+									...(!prepared.conversation
+										? [
+												{
+													role: 'developer' as const,
+													content: botConversationInstructions(request),
+												},
+											]
+										: []),
+									{ role: 'user' as const, content: prepared.input },
+								],
+								store: true,
+								...(prepared.conversation
+									? { previous_response_id: prepared.conversation.responseId }
+									: {}),
+								prompt_cache_key: createHash('sha256')
+									.update(
+										`hanabi-thread-v1:${request.policy.hash}:${request.roundId}:${request.observation.playerId}`,
+									)
+									.digest('hex'),
+							}
+						: {
+								instructions: request.policy.instructions,
+								input: prepared.input,
+								store: false,
+							}),
 					...(reasoningEffort ? { reasoning: { effort: reasoningEffort } } : {}),
 					max_output_tokens: maxOutputTokens,
 					text: {
@@ -299,14 +311,13 @@ export class OpenAiBot implements BotDecisionProvider {
 			}
 			if (v2) {
 				if (
-					Object.keys(result).length !== (notepadEnabled ? 4 : 3) ||
+					Object.keys(result).length !== 3 ||
 					!isV2BotDecision(
 						result,
 						ownTileIds,
 						request.observation.rules.allowDragging &&
 							request.observation.stage === HanabiStage.Playing,
 						opportunity,
-						notepadEnabled,
 					) ||
 					(opportunity === 'turn' &&
 						(typeof result.actionId !== 'string' || !actionIds.includes(result.actionId)))
@@ -317,7 +328,12 @@ export class OpenAiBot implements BotDecisionProvider {
 					actionId: result.actionId,
 					arrangement: result.arrangement,
 					explanation: result.explanation,
-					...(notepadEnabled ? { notes: result.notes } : {}),
+					...(request.roundId
+						? { conversation: conversationCheckpoint(request, response.id) }
+						: {}),
+					...(response.usage?.input_tokens_details?.cached_tokens !== undefined
+						? { cachedInputTokens: response.usage.input_tokens_details.cached_tokens }
+						: {}),
 					inputTokens: response.usage?.input_tokens,
 					outputTokens: response.usage?.output_tokens,
 				};
@@ -332,6 +348,10 @@ export class OpenAiBot implements BotDecisionProvider {
 			}
 			return {
 				actionId: result.actionId,
+				...(request.roundId ? { conversation: conversationCheckpoint(request, response.id) } : {}),
+				...(response.usage?.input_tokens_details?.cached_tokens !== undefined
+					? { cachedInputTokens: response.usage.input_tokens_details.cached_tokens }
+					: {}),
 				inputTokens: response.usage?.input_tokens,
 				outputTokens: response.usage?.output_tokens,
 			};
@@ -342,6 +362,14 @@ export class OpenAiBot implements BotDecisionProvider {
 				throw new BotDecisionError('timeout');
 			}
 			if (error instanceof OpenAI.APIError) {
+				if (
+					prepared.conversation &&
+					(error.code === 'previous_response_not_found' ||
+						error.code === 'context_length_exceeded' ||
+						(error.status === 404 && error.param === 'previous_response_id'))
+				) {
+					return this.chooseAction({ ...request, conversation: undefined, signal });
+				}
 				if (error.status === 429) throw new BotDecisionError('rate_limit');
 				if (error.status === 408 || error.status === 409 || (error.status ?? 0) >= 500) {
 					throw new BotDecisionError('transient');

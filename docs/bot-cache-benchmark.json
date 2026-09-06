@@ -1,0 +1,357 @@
+{
+	"baselineRef": "eb13670c60d2ecfc3eb5c97256d7c9687f74cce3",
+	"baselineSourceSha256": {
+		"OpenAiBot": "39003e018125ed251eea552124ec76a675e856b3fa79bf6cd74b5835f7b582a5",
+		"BotPolicy": "978b14fc20a8eff17d9225fb1247e274cf1d58e306115b13b172b992757e07a7"
+	},
+	"verified": {
+		"identicalObservationFixtures": true,
+		"continuationsChained": true,
+		"continuationsCacheHit": true,
+		"continuationsOmitPreamble": true,
+		"stableAfterSchema": true,
+		"afterRequestsOmitScratchpad": true
+	},
+	"summary": {
+		"before": {
+			"requests": 4,
+			"inputTokens": 52655,
+			"cachedTokens": 0,
+			"cacheWriteTokens": 52643,
+			"outputTokens": 1156,
+			"requestBytes": 244997,
+			"latencyMs": 26251,
+			"uncachedInputTokens": 52655
+		},
+		"after": {
+			"requests": 4,
+			"inputTokens": 78391,
+			"cachedTokens": 51129,
+			"cacheWriteTokens": 27250,
+			"outputTokens": 807,
+			"requestBytes": 121910,
+			"latencyMs": 18140,
+			"uncachedInputTokens": 27262
+		},
+		"comparison": {
+			"uncachedInputTokenReductionPercent": 48.225239768303105,
+			"requestByteReductionPercent": 50.24020702294314,
+			"continuationRequestByteReductionPercent": 64.98293006385913,
+			"afterContinuationCachedFraction": 0.7681871450464257
+		}
+	},
+	"before": {
+		"mode": "before",
+		"measuredAt": "2026-09-06T07:03:42.016Z",
+		"fixtureHash": "9bdc186ad49630ba2239b8552fef53b7ec9a6db86442b0c2d7e8d711461d2709",
+		"method": "Four synthetic evolving five-card Hanabi discard turns, interleaved with teammate clues. Supplied action list narrowed to one legal scripted discard for identical before/after state. No live game mutations. Medium reasoning, 4096 output-token limit. Raw API usage captured from response; null means the field was absent.",
+		"policyHash": "ff1b2998a3d372cf77233add815ef2d6053c2e2ced4518ce1e5972dcbef68316",
+		"records": [
+			{
+				"turn": 1,
+				"httpStatus": 200,
+				"model": "gpt-5.6-sol",
+				"responseId": "resp_0832df104afdf74e016a9d10349ebc87d0b9804fa0da11b535",
+				"previousResponseId": null,
+				"status": "completed",
+				"errorCode": null,
+				"inputTokens": 12092,
+				"outputTokens": 101,
+				"cachedTokens": 0,
+				"cacheWriteTokens": 12089,
+				"inputTokenDetails": {
+					"cache_write_tokens": 12089,
+					"cached_tokens": 0
+				},
+				"latencyMs": 4272,
+				"requestBytes": 57240,
+				"store": false,
+				"developerMessageCount": 0,
+				"instructionsBytes": 32567,
+				"schemaHash": "f1f03a7d1e664b5283ccb9fa90ab280b0d305adfdb7c0b193b94d897e970460f"
+			},
+			{
+				"turn": 2,
+				"httpStatus": 200,
+				"model": "gpt-5.6-sol",
+				"responseId": "resp_0169e611cdb138db016a9d10382f6c87d0b09f303889a6607a",
+				"previousResponseId": null,
+				"status": "completed",
+				"errorCode": null,
+				"inputTokens": 12664,
+				"outputTokens": 280,
+				"cachedTokens": 0,
+				"cacheWriteTokens": 12661,
+				"inputTokenDetails": {
+					"cache_write_tokens": 12661,
+					"cached_tokens": 0
+				},
+				"latencyMs": 5911,
+				"requestBytes": 59269,
+				"store": false,
+				"developerMessageCount": 0,
+				"instructionsBytes": 32567,
+				"schemaHash": "68713d7214cd407f3b5ea028af5fc9e0bbfa14adbcd2787d4527ad3f1a28fef7"
+			},
+			{
+				"turn": 3,
+				"httpStatus": 200,
+				"model": "gpt-5.6-sol",
+				"responseId": "resp_0b5b0f86554ccce2016a9d103e1c4887d087c0687cb1c59d41",
+				"previousResponseId": null,
+				"status": "completed",
+				"errorCode": null,
+				"inputTokens": 13507,
+				"outputTokens": 442,
+				"cachedTokens": 0,
+				"cacheWriteTokens": 13504,
+				"inputTokenDetails": {
+					"cache_write_tokens": 13504,
+					"cached_tokens": 0
+				},
+				"latencyMs": 8890,
+				"requestBytes": 62520,
+				"store": false,
+				"developerMessageCount": 0,
+				"instructionsBytes": 32567,
+				"schemaHash": "3f3ce2c05828a05d543d174962a709436dab9625a5256fad0b319ca66d3994b8"
+			},
+			{
+				"turn": 4,
+				"httpStatus": 200,
+				"model": "gpt-5.6-sol",
+				"responseId": "resp_098406f732312161016a9d1046fe5887d0b5ba78f518129262",
+				"previousResponseId": null,
+				"status": "completed",
+				"errorCode": null,
+				"inputTokens": 14392,
+				"outputTokens": 333,
+				"cachedTokens": 0,
+				"cacheWriteTokens": 14389,
+				"inputTokenDetails": {
+					"cache_write_tokens": 14389,
+					"cached_tokens": 0
+				},
+				"latencyMs": 7178,
+				"requestBytes": 65968,
+				"store": false,
+				"developerMessageCount": 0,
+				"instructionsBytes": 32567,
+				"schemaHash": "bb455d69c9c5267b1ffa59fe5b494d3c260124988dff726f10f0b51e02a26937"
+			}
+		]
+	},
+	"after": {
+		"mode": "after",
+		"scratchpadEnabled": false,
+		"measuredAt": "2026-09-06T07:13:53.276Z",
+		"fixtureHash": "9bdc186ad49630ba2239b8552fef53b7ec9a6db86442b0c2d7e8d711461d2709",
+		"method": "Four synthetic evolving five-card Hanabi discard turns, interleaved with teammate clues. Supplied action list narrowed to one legal scripted discard for identical before/after state. No live game mutations. Medium reasoning, 4096 output-token limit. Raw API usage captured from response; null means the field was absent.",
+		"policyHash": "f31c63c049fe901547ad0d9cae5b07bc73aa693917015c02098020b25837c3bf",
+		"sourceSha256": {
+			"OpenAiBot": "e1091c3ac003e97dabbcab75acb085aad97266f7f09b1d781adf6a795835bd50",
+			"BotPolicy": "8ac06b0fb478f137381cbcebb867e81f15e8005ffd3d6fb441888aa89273f845",
+			"BotConversation": "c154b1dcad3c86001dfe68751c141a8e5c090fb3b47bbf3d79f1f1004765f524",
+			"conventions": "4ecb68f0e6c56f55bdcbcc757f1e79c81a2ee37c4d2391b5d66e67475406624c"
+		},
+		"records": [
+			{
+				"turn": 1,
+				"httpStatus": 200,
+				"model": "gpt-5.6-sol",
+				"responseId": "resp_0581e288d0a31456006a9d129f68a087d08069d8d50e53f471",
+				"previousResponseId": null,
+				"status": "completed",
+				"errorCode": null,
+				"inputTokens": 11833,
+				"outputTokens": 76,
+				"cachedTokens": 0,
+				"cacheWriteTokens": 11830,
+				"inputTokenDetails": {
+					"cache_write_tokens": 11830,
+					"cached_tokens": 0
+				},
+				"latencyMs": 2901,
+				"requestBytes": 56163,
+				"store": true,
+				"developerMessageCount": 1,
+				"instructionsBytes": 0,
+				"schemaHash": "56a01e7be265ef74cf72163cf16153a0d99b338abb8cc96c80f124ff4e47efeb"
+			},
+			{
+				"turn": 2,
+				"httpStatus": 200,
+				"model": "gpt-5.6-sol",
+				"responseId": "resp_0581e288d0a31456006a9d12a2227087d0b8b7deb25824b081",
+				"previousResponseId": "resp_0581e288d0a31456006a9d129f68a087d08069d8d50e53f471",
+				"status": "completed",
+				"errorCode": null,
+				"inputTokens": 17104,
+				"outputTokens": 198,
+				"cachedTokens": 11830,
+				"cacheWriteTokens": 5271,
+				"inputTokenDetails": {
+					"cache_write_tokens": 5271,
+					"cached_tokens": 11830
+				},
+				"latencyMs": 4465,
+				"requestBytes": 23036,
+				"store": true,
+				"developerMessageCount": 0,
+				"instructionsBytes": 0,
+				"schemaHash": "56a01e7be265ef74cf72163cf16153a0d99b338abb8cc96c80f124ff4e47efeb"
+			},
+			{
+				"turn": 3,
+				"httpStatus": 200,
+				"model": "gpt-5.6-sol",
+				"responseId": "resp_0581e288d0a31456006a9d12a69cf487d0a855d7fa615eea80",
+				"previousResponseId": "resp_0581e288d0a31456006a9d12a2227087d0b8b7deb25824b081",
+				"status": "completed",
+				"errorCode": null,
+				"inputTokens": 22201,
+				"outputTokens": 304,
+				"cachedTokens": 17101,
+				"cacheWriteTokens": 5097,
+				"inputTokenDetails": {
+					"cache_write_tokens": 5097,
+					"cached_tokens": 17101
+				},
+				"latencyMs": 6593,
+				"requestBytes": 21714,
+				"store": true,
+				"developerMessageCount": 0,
+				"instructionsBytes": 0,
+				"schemaHash": "56a01e7be265ef74cf72163cf16153a0d99b338abb8cc96c80f124ff4e47efeb"
+			},
+			{
+				"turn": 4,
+				"httpStatus": 200,
+				"model": "gpt-5.6-sol",
+				"responseId": "resp_0581e288d0a31456006a9d12ad347087d0aa9c94396d4433f1",
+				"previousResponseId": "resp_0581e288d0a31456006a9d12a69cf487d0a855d7fa615eea80",
+				"status": "completed",
+				"errorCode": null,
+				"inputTokens": 27253,
+				"outputTokens": 229,
+				"cachedTokens": 22198,
+				"cacheWriteTokens": 5052,
+				"inputTokenDetails": {
+					"cache_write_tokens": 5052,
+					"cached_tokens": 22198
+				},
+				"latencyMs": 4181,
+				"requestBytes": 20997,
+				"store": true,
+				"developerMessageCount": 0,
+				"instructionsBytes": 0,
+				"schemaHash": "56a01e7be265ef74cf72163cf16153a0d99b338abb8cc96c80f124ff4e47efeb"
+			}
+		]
+	},
+	"historicalConversationWithScratchpadRun": {
+		"description": "Initial persistent-conversation experiment before scratchpad removal; preserved as historical evidence and excluded from the current comparison.",
+		"measurements": {
+			"mode": "after",
+			"measuredAt": "2026-09-06T07:04:13.647Z",
+			"fixtureHash": "9bdc186ad49630ba2239b8552fef53b7ec9a6db86442b0c2d7e8d711461d2709",
+			"method": "Four synthetic evolving five-card Hanabi discard turns, interleaved with teammate clues. Supplied action list narrowed to one legal scripted discard for identical before/after state. No live game mutations. Medium reasoning, 4096 output-token limit. Raw API usage captured from response; null means the field was absent.",
+			"policyHash": "aba549e453b6e33fd92bf410a2f6cf2b9fd992e2f3a465efd378489be68165fd",
+			"records": [
+				{
+					"turn": 1,
+					"httpStatus": 200,
+					"model": "gpt-5.6-sol",
+					"responseId": "resp_03d1d4786c92ab64006a9d1057d5a887d09c1951ef13e56766",
+					"previousResponseId": null,
+					"status": "completed",
+					"errorCode": null,
+					"inputTokens": 12213,
+					"outputTokens": 80,
+					"cachedTokens": 0,
+					"cacheWriteTokens": 12210,
+					"inputTokenDetails": {
+						"cache_write_tokens": 12210,
+						"cached_tokens": 0
+					},
+					"latencyMs": 2884,
+					"requestBytes": 58241,
+					"store": true,
+					"developerMessageCount": 1,
+					"instructionsBytes": 0,
+					"schemaHash": "7c29a1f8d5c54e35930a210fc38e2f9b0bd55bb71c2a411468102b09083c8055"
+				},
+				{
+					"turn": 2,
+					"httpStatus": 200,
+					"model": "gpt-5.6-sol",
+					"responseId": "resp_03d1d4786c92ab64006a9d105a9e0487d0b013d57f0bb4d739",
+					"previousResponseId": "resp_03d1d4786c92ab64006a9d1057d5a887d09c1951ef13e56766",
+					"status": "completed",
+					"errorCode": null,
+					"inputTokens": 17488,
+					"outputTokens": 221,
+					"cachedTokens": 12210,
+					"cacheWriteTokens": 5275,
+					"inputTokenDetails": {
+						"cache_write_tokens": 5275,
+						"cached_tokens": 12210
+					},
+					"latencyMs": 4297,
+					"requestBytes": 23110,
+					"store": true,
+					"developerMessageCount": 0,
+					"instructionsBytes": 0,
+					"schemaHash": "7c29a1f8d5c54e35930a210fc38e2f9b0bd55bb71c2a411468102b09083c8055"
+				},
+				{
+					"turn": 3,
+					"httpStatus": 200,
+					"model": "gpt-5.6-sol",
+					"responseId": "resp_03d1d4786c92ab64006a9d105f0a0887d09d9f121a60829346",
+					"previousResponseId": "resp_03d1d4786c92ab64006a9d105a9e0487d0b013d57f0bb4d739",
+					"status": "completed",
+					"errorCode": null,
+					"inputTokens": 22608,
+					"outputTokens": 409,
+					"cachedTokens": 17485,
+					"cacheWriteTokens": 5120,
+					"inputTokenDetails": {
+						"cache_write_tokens": 5120,
+						"cached_tokens": 17485
+					},
+					"latencyMs": 8427,
+					"requestBytes": 21788,
+					"store": true,
+					"developerMessageCount": 0,
+					"instructionsBytes": 0,
+					"schemaHash": "7c29a1f8d5c54e35930a210fc38e2f9b0bd55bb71c2a411468102b09083c8055"
+				},
+				{
+					"turn": 4,
+					"httpStatus": 200,
+					"model": "gpt-5.6-sol",
+					"responseId": "resp_03d1d4786c92ab64006a9d1067635c87d09602e830a5e07b0f",
+					"previousResponseId": "resp_03d1d4786c92ab64006a9d105f0a0887d09d9f121a60829346",
+					"status": "completed",
+					"errorCode": null,
+					"inputTokens": 27765,
+					"outputTokens": 285,
+					"cachedTokens": 22605,
+					"cacheWriteTokens": 5157,
+					"inputTokenDetails": {
+						"cache_write_tokens": 5157,
+						"cached_tokens": 22605
+					},
+					"latencyMs": 6402,
+					"requestBytes": 21071,
+					"store": true,
+					"developerMessageCount": 0,
+					"instructionsBytes": 0,
+					"schemaHash": "7c29a1f8d5c54e35930a210fc38e2f9b0bd55bb71c2a411468102b09083c8055"
+				}
+			]
+		}
+	},
+	"comparisonScope": "Original stateless provider with scratchpad compared with persistent conversations after complete scratchpad removal. Original before measurements are unchanged."
+}
