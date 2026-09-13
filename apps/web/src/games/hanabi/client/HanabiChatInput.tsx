@@ -1,6 +1,5 @@
 import { useGameMessenger } from '~/games/hanabi/client/HanabiGameContext';
 import PaperPlane from '~/games/hanabi/client/icons/PaperPlane';
-import useFocusVisible from '~/utils/client/useFocusVisible';
 import classNames from 'classnames';
 import { FormEvent, KeyboardEvent, useCallback, useState } from 'react';
 
@@ -14,7 +13,6 @@ export default function HanabiChatInput({
 	variant?: 'desktop' | 'legacy';
 }): JSX.Element {
 	const gameMessenger = useGameMessenger();
-	const isFocusVisible = useFocusVisible();
 	const [message, setMessage] = useState('');
 	const [isSending, setIsSending] = useState(false);
 	const [sendError, setSendError] = useState(false);
@@ -54,17 +52,14 @@ export default function HanabiChatInput({
 			<form className="grid grid-cols-[1fr_58px] items-stretch gap-3 p-2" onSubmit={handleSubmit}>
 				<textarea
 					aria-label="Chat message"
-					className="resize-none border-2 border-gray-800 bg-gray-100 p-2 text-sm text-black focus:border-red-600 focus:bg-white focus:outline-none"
+					className="resize-none border-2 border-gray-800 bg-gray-100 p-2 text-sm text-black hocus:border-red-600 hocus:bg-white focus:outline-none"
 					onChange={(event) => setMessage(event.target.value)}
 					onKeyDown={handleKeyDown}
 					rows={1}
 					value={message}
 				/>
 				<button
-					className={classNames(
-						'block select-none bg-gray-800 text-center font-bold text-white duration-100 hover:bg-red-600 focus:outline-none active:scale-95 disabled:cursor-not-allowed disabled:opacity-45',
-						{ 'bg-red-600': isFocusVisible },
-					)}
+					className="block select-none bg-gray-800 text-center font-bold text-white transition-colors duration-75 hocus:bg-red-600 focus:outline-none disabled:cursor-not-allowed disabled:opacity-45"
 					disabled={!canSend}
 					type="submit"
 				>

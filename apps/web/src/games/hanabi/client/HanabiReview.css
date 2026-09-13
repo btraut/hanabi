@@ -61,19 +61,23 @@
 	padding-right: 40px;
 }
 
-.hanabi-review-header button:hover:not(:disabled),
-.hanabi-review-controls button:hover:not(:disabled),
-.hanabi-review-entry:hover {
+.hanabi-review-header button:not(:disabled):is(:hover, :focus-visible),
+.hanabi-review-controls button:not(:disabled):is(:hover, :focus-visible),
+.hanabi-review-entry:is(:hover, :focus-visible) {
 	border-color: var(--color-hanabi-coral);
 }
 .hanabi-review button:disabled {
 	opacity: 0.4;
 	cursor: default;
 }
-.hanabi-review :focus-visible,
-.hanabi-review-entry:focus-visible {
-	outline: 2px solid var(--color-hanabi-coral);
-	outline-offset: 3px;
+.hanabi-review
+	:is(button, select, input, a):not(:disabled):not([aria-disabled='true']):is(
+		:hover,
+		:focus-visible
+	),
+.hanabi-review-entry:is(:hover, :focus-visible) {
+	outline: 1px solid var(--color-hanabi-coral);
+	outline-offset: -1px;
 }
 .hanabi-review-header > button {
 	display: inline-flex;
@@ -135,15 +139,15 @@
 	text-align: left;
 	padding: 10px 14px;
 }
-.hanabi-review-move-list button:hover {
+.hanabi-review-move-list button:enabled:is(:hover, :focus-visible) {
 	background: var(--color-hanabi-surface-raised);
 }
 .hanabi-review-move-list button[aria-current='step'] {
 	border-left-color: var(--color-hanabi-coral);
 	background: var(--color-hanabi-table);
 }
-.hanabi-review-move-list button:focus-visible {
-	outline-offset: -3px;
+.hanabi-review-move-list button:enabled:is(:hover, :focus-visible) {
+	outline-offset: -1px;
 }
 .hanabi-review .hanabi-review-future,
 .hanabi-review-moves > p {

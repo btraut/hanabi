@@ -36,7 +36,7 @@ export default function HanabiTileAction({ action }: Props): JSX.Element {
 	return (
 		<button
 			className={classNames(
-				'text-md p-3 flex justify-between items-center w-full focus:outline-none',
+				'text-md p-3 flex justify-between items-center w-full focus:outline-none hocus:bg-gray-300',
 				{
 					'cursor-zoom-in': !thisActionHighlighted,
 					'cursor-zoom-out': thisActionHighlighted,
@@ -62,9 +62,9 @@ export default function HanabiTileAction({ action }: Props): JSX.Element {
 			{thisActionHighlighted && (
 				<div className="mx-0.5">
 					{hovering || (focused && isFocusVisible) ? (
-						<EyeOff size={32} color={focused && isFocusVisible ? '#E11D48' : 'black'} />
+						<EyeOff size={32} color="#E11D48" />
 					) : (
-						<Eye size={32} color={focused && isFocusVisible ? '#E11D48' : 'black'} />
+						<Eye size={32} color="black" />
 					)}
 				</div>
 			)}

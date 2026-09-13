@@ -8,7 +8,6 @@ import {
 	isHanabiRainbowRuleSet,
 	tileBackgroundClasses,
 } from '@hanabi/shared';
-import useFocusVisible from '~/utils/client/useFocusVisible';
 import classNames from 'classnames';
 import { useEffect, useRef } from 'react';
 
@@ -31,7 +30,7 @@ interface Props {
 }
 
 const colorClueButtonClassName =
-	'size-11 rounded-full border border-white/15 shadow-[0_2px_7px_rgb(0_0_0_/_38%)] transition-[border-color,filter,box-shadow] focus:outline-none hover:border-hanabi-text-muted/80 hover:brightness-110 focus-visible:ring-2 focus-visible:ring-hanabi-text-muted/60 focus-visible:ring-offset-1 focus-visible:ring-offset-hanabi-table-deep';
+	'size-11 rounded-full border border-white/15 shadow-[0_2px_7px_rgb(0_0_0_/_38%)] transition-[border-color,filter,box-shadow] focus:outline-none hocus:border-hanabi-text-muted/80 hocus:brightness-110';
 
 export default function HanabiTileActionsTooltip({
 	tileId,
@@ -45,8 +44,6 @@ export default function HanabiTileActionsTooltip({
 	const tile = gameData.tiles[tileId];
 	const isBlackTile = tile.color === 'black';
 	const canDiscard = canHanabiPlayerDiscard(gameData.clues);
-
-	const isFocusVisible = useFocusVisible();
 
 	const firstButtonRef = useRef<HTMLButtonElement | null>(null);
 
@@ -84,12 +81,7 @@ export default function HanabiTileActionsTooltip({
 					{type === HanabiTileActionsTooltipType.Own && (
 						<div className="flex items-center gap-1">
 							<button
-								className={classNames(
-									'hanabi-focus-ring min-h-11 rounded-md px-3 text-base font-semibold text-white focus:outline-none hover:bg-hanabi-coral/15 hover:text-hanabi-coral-soft disabled:cursor-not-allowed disabled:text-hanabi-text-muted disabled:hover:bg-transparent',
-									{
-										'focus:text-red-600': isFocusVisible,
-									},
-								)}
+								className="hanabi-focus-ring min-h-11 rounded-md px-3 text-base font-semibold text-white focus:outline-none hocus:bg-hanabi-coral/15 hocus:text-hanabi-coral-soft disabled:cursor-not-allowed disabled:text-hanabi-text-muted"
 								onClick={() => {
 									if (canDiscard) onAction('discard', tile);
 								}}
@@ -109,12 +101,7 @@ export default function HanabiTileActionsTooltip({
 								}}
 							/>
 							<button
-								className={classNames(
-									'hanabi-focus-ring min-h-11 rounded-md px-3 text-base font-semibold text-white focus:outline-none hover:bg-hanabi-coral/15 hover:text-hanabi-coral-soft',
-									{
-										'focus:text-red-600': isFocusVisible,
-									},
-								)}
+								className="hanabi-focus-ring min-h-11 rounded-md px-3 text-base font-semibold text-white focus:outline-none hocus:bg-hanabi-coral/15 hocus:text-hanabi-coral-soft"
 								onClick={() => {
 									onAction('play', tile);
 								}}
@@ -171,7 +158,7 @@ export default function HanabiTileActionsTooltip({
 							)}
 							<button
 								aria-label={`Give number ${tile.number} clue`}
-								className="min-h-11 min-w-11 rounded-md px-3 text-2xl font-bold leading-none text-white transition-colors focus:outline-none hover:bg-hanabi-coral/15 hover:text-hanabi-coral-soft focus-visible:bg-hanabi-coral/15 focus-visible:text-hanabi-coral-soft"
+								className="min-h-11 min-w-11 rounded-md px-3 text-2xl font-bold leading-none text-white transition-colors focus:outline-none hocus:bg-hanabi-coral/15 hocus:text-hanabi-coral-soft"
 								onClick={() => {
 									onAction('number', tile);
 								}}

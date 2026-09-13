@@ -74,6 +74,7 @@ describe('HanabiLobby bot controls', () => {
 	it('lets the joined creator add and remove bot seats', async () => {
 		render();
 		expect(button('Add bot')?.disabled).toBe(false);
+		expect(button('Add bot')?.closest('[aria-label="Players"]')).not.toBeNull();
 		expect(document.body.textContent).toContain('EmberBot');
 		expect(document.querySelector('[aria-label="Players"] .opacity-60')).toBeNull();
 		await settleAction(() => button('Add bot')!.click());
@@ -113,11 +114,11 @@ describe('HanabiLobby bot controls', () => {
 		);
 	});
 
-	it('explains unavailable bots without preventing removal', () => {
+	it('hides unavailable bots without a server notice or preventing removal', () => {
 		gameData.bots!.available = false;
 		render();
-		expect(button('Add bot')?.disabled).toBe(true);
-		expect(document.body.textContent).toContain('Bots are unavailable on this server.');
+		expect(button('Add bot')).toBeUndefined();
+		expect(document.body.textContent).not.toContain('Bots are unavailable on this server.');
 		expect(document.querySelector<HTMLButtonElement>('[aria-label="Remove Ember"]')!.disabled).toBe(
 			false,
 		);

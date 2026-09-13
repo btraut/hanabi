@@ -47,7 +47,7 @@ export default function HanabiGameMenu({ onClose }: Props): JSX.Element | null {
 			<section className="hanabi-dialog-section">
 				<h2 className="hanabi-dialog-section-title">Preferences</h2>
 				<label
-					className="flex cursor-pointer items-center justify-between gap-5 rounded-lg border border-hanabi-border bg-hanabi-table-deep/30 px-4 py-3 transition-colors hover:border-hanabi-border-bright"
+					className="flex cursor-pointer items-center justify-between gap-5 rounded-lg border border-hanabi-border bg-hanabi-table-deep/30 px-4 py-3 transition-colors hover:border-hanabi-border-bright has-[:focus-visible]:border-hanabi-border-bright"
 					htmlFor="game-menu-play-sounds"
 				>
 					<span className="min-w-0">

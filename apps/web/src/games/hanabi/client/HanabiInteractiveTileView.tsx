@@ -1,7 +1,6 @@
 import HanabiTileView from '~/games/hanabi/client/HanabiTileView';
 import useTileDrag from '~/games/hanabi/client/useTileDrag';
 import { HANABI_TILE_SIZE, HANABI_TILE_SIZE_SMALL, HanabiTile } from '@hanabi/shared';
-import useFocusVisible from '~/utils/client/useFocusVisible';
 import classNames from 'classnames';
 import { HanabiTileHighlightTone } from '~/games/hanabi/client/HanabiHighlightContext';
 import { useCallback, useEffect, useRef } from 'react';
@@ -70,8 +69,6 @@ export default function HanabiInteractiveTileView({
 	notesIndicator = false,
 	viewTransitionName,
 }: Props): JSX.Element | null {
-	const isFocusVisible = useFocusVisible();
-
 	const cursor = draggable ? 'cursor-move' : onClick ? 'cursor-pointer' : 'cursor-default';
 
 	const { isDragging, dragRef } = useTileDrag(
@@ -248,8 +245,7 @@ export default function HanabiInteractiveTileView({
 				{
 					'touch-none': draggable,
 					'touch-manipulation': !draggable,
-					'focus:ring': isFocusVisible,
-					'focus:border-blue-800': isFocusVisible,
+					'hocus:ring hocus:ring-hanabi-coral': !!onClick,
 					'opacity-0': isDragging,
 				},
 			])}

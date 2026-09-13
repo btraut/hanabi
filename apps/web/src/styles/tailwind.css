@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @source '../../../../packages/shared/src';
+@custom-variant hocus (&:is(:hover, :focus-visible):not(:disabled):not([aria-disabled='true']));
 
 /* Custom theme extensions */
 @theme {
@@ -111,27 +112,20 @@ body {
 		background-color 140ms ease,
 		border-color 140ms ease,
 		box-shadow 140ms ease,
-		color 140ms ease,
-		transform 140ms ease;
+		color 140ms ease;
 	user-select: none;
 }
 
-.hanabi-button:not(:disabled):hover {
+.hanabi-button:not(:disabled):is(:hover, :focus-visible) {
 	border-color: var(--hanabi-control-border-hover);
 	background: var(--hanabi-control-bg-hover);
-	transform: translateY(-1px);
 }
 
-.hanabi-button:not(:disabled):active {
-	transform: translateY(0);
-}
-
-.hanabi-button:focus-visible,
-.hanabi-field:focus-visible,
-.hanabi-checkbox:focus-visible,
-.hanabi-icon-button:focus-visible {
-	outline: 2px solid var(--color-hanabi-coral-soft);
-	outline-offset: 3px;
+.hanabi-button:not(:disabled):not([aria-disabled='true']):is(:hover, :focus-visible),
+.hanabi-checkbox:not(:disabled):not([aria-disabled='true']):is(:hover, :focus-visible),
+.hanabi-icon-button:not(:disabled):not([aria-disabled='true']):is(:hover, :focus-visible) {
+	outline: 1px solid var(--color-hanabi-coral-soft);
+	outline-offset: -1px;
 }
 
 .hanabi-button:disabled {
@@ -148,7 +142,7 @@ body {
 	color: #fffaf3;
 }
 
-.hanabi-button-primary:not(:disabled):hover {
+.hanabi-button-primary:not(:disabled):is(:hover, :focus-visible) {
 	border-color: #f1b0a7;
 	background: var(--color-hanabi-coral-soft);
 }
@@ -159,7 +153,7 @@ body {
 	color: #f3bbb4;
 }
 
-.hanabi-button-danger:not(:disabled):hover {
+.hanabi-button-danger:not(:disabled):is(:hover, :focus-visible) {
 	border-color: rgb(241 176 167 / 88%);
 	background: rgb(211 107 101 / 26%);
 }
@@ -206,11 +200,7 @@ body {
 		box-shadow 140ms ease;
 }
 
-.hanabi-field:hover {
-	border-color: var(--color-hanabi-border-bright);
-}
-
-.hanabi-field:focus {
+.hanabi-field:enabled:is(:hover, :focus) {
 	border-color: var(--color-hanabi-coral-soft);
 	background: rgb(5 19 36 / 94%);
 	outline: none;
@@ -231,14 +221,12 @@ body {
 	font-weight: 600;
 	transition:
 		background-color 140ms ease,
-		border-color 140ms ease,
-		transform 140ms ease;
+		border-color 140ms ease;
 }
 
-.hanabi-copy-control:hover {
+.hanabi-copy-control:not(:disabled):not([aria-disabled='true']):is(:hover, :focus-visible) {
 	border-color: var(--hanabi-control-border-hover);
 	background: var(--hanabi-control-bg-hover);
-	transform: translateY(-1px);
 }
 
 .hanabi-copy-control-value,
@@ -258,6 +246,139 @@ body {
 	justify-content: center;
 	border-left: 1px solid var(--hanabi-control-border);
 	color: var(--color-hanabi-coral-soft);
+}
+
+.hanabi-rule-control {
+	overflow: hidden;
+	border: 1px solid var(--color-hanabi-border-bright);
+	border-radius: var(--hanabi-control-radius);
+	background: rgb(11 23 40 / 70%);
+}
+
+.hanabi-lobby {
+	--hanabi-lobby-transition-duration: 75ms;
+}
+
+.hanabi-lobby :is(button, input, select, textarea):enabled,
+.hanabi-lobby label[for] {
+	cursor: pointer;
+}
+
+.hanabi-lobby :is(button, input, select, textarea):disabled,
+.hanabi-lobby label[for][aria-disabled='true'],
+.hanabi-lobby label[for]:has(:disabled),
+.hanabi-lobby fieldset:disabled label[for] {
+	cursor: not-allowed;
+}
+
+.hanabi-lobby :is(a, button, input, select, label, .hanabi-rule-control) {
+	transition-property: color, background-color, border-color, outline-color, box-shadow, opacity;
+	transition-duration: var(--hanabi-lobby-transition-duration);
+	transition-timing-function: ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.hanabi-lobby {
+		--hanabi-lobby-transition-duration: 0ms;
+	}
+}
+
+.hanabi-rule-control:has(select:enabled):hover,
+.hanabi-rule-control:has(select:focus-visible) {
+	border-color: var(--color-hanabi-coral-soft);
+}
+
+.hanabi-rule-control > .hanabi-select-wrap {
+	display: block;
+}
+
+.hanabi-rule-control select {
+	width: 100%;
+	border: 0;
+	border-bottom: 1px solid var(--color-hanabi-border-bright);
+	border-radius: 0;
+	box-shadow: none;
+}
+
+.hanabi-rule-control select:enabled:is(:hover, :focus) {
+	border-bottom-color: var(--color-hanabi-border-bright);
+	background: rgb(3 14 27 / 72%);
+	outline: none;
+}
+
+.hanabi-rule-preview {
+	display: block;
+	padding: 15px;
+	cursor: pointer;
+}
+
+.hanabi-rule-description {
+	margin-top: 10px;
+	color: var(--color-hanabi-ivory-muted);
+	font-size: 16px;
+	line-height: 1.3;
+}
+
+.hanabi-rule-tiles {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+.hanabi-lobby-invite > div {
+	display: block;
+}
+
+.hanabi-lobby-add-bot {
+	display: grid;
+	grid-template-rows: 108px 28px;
+	min-width: 108px;
+	place-items: center;
+	gap: 8px;
+	border-radius: 4px;
+	outline: 1px solid transparent;
+	outline-offset: 3px;
+	color: #b5b9c0;
+	font-size: 16px;
+	font-weight: 700;
+	line-height: 24px;
+	cursor: pointer;
+}
+
+.hanabi-lobby-add-bot > span:last-child {
+	align-self: end;
+}
+
+.hanabi-lobby-add-bot-icon {
+	display: grid;
+	width: 56px;
+	height: 56px;
+	place-items: center;
+	color: inherit;
+}
+
+.hanabi-lobby-add-bot:not(:disabled):is(:hover, :focus-visible) {
+	color: #fff;
+	outline: 1px solid var(--color-hanabi-coral-soft);
+	outline-offset: 3px;
+}
+
+.hanabi-lobby-add-bot:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+.hanabi-lobby-invite .hanabi-copy-control {
+	width: 100%;
+}
+
+.hanabi-lobby-invite .hanabi-copy-control-value {
+	font-size: 13px;
+	padding-left: 10px;
+}
+
+.hanabi-lobby-invite .hanabi-copy-control-action {
+	min-width: 58px;
 }
 
 .hanabi-select-wrap {
@@ -306,7 +427,7 @@ body {
 		box-shadow 140ms ease;
 }
 
-.hanabi-checkbox:hover {
+.hanabi-checkbox:not(:disabled):not([aria-disabled='true']):is(:hover, :focus-visible) {
 	border-color: var(--hanabi-control-border-hover);
 }
 
@@ -314,6 +435,10 @@ body {
 	border-color: var(--color-hanabi-coral-soft);
 	background: var(--color-hanabi-coral);
 	box-shadow: inset 0 1px rgb(255 255 255 / 18%);
+}
+
+.hanabi-checkbox:checked:enabled:is(:hover, :focus-visible) {
+	outline-color: #fffaf3;
 }
 
 .hanabi-checkbox-check {
@@ -433,7 +558,7 @@ body {
 		color 140ms ease;
 }
 
-.hanabi-icon-button:hover {
+.hanabi-icon-button:not(:disabled):not([aria-disabled='true']):is(:hover, :focus-visible) {
 	border-color: var(--hanabi-control-border-hover);
 	background: rgb(218 113 99 / 10%);
 	color: var(--color-hanabi-text);
@@ -760,7 +885,7 @@ body {
 	--hanabi-emphasis-rgb: 238 233 223;
 }
 
-.hanabi-history-action:hover {
+.hanabi-history-action:not(:disabled):not([aria-disabled='true']):is(:hover, :focus-visible) {
 	background: rgb(255 255 255 / 3%);
 }
 
@@ -1051,11 +1176,10 @@ body {
 		box-shadow 140ms ease;
 }
 
+.hanabi-chat-field:has(textarea:enabled):hover,
 .hanabi-chat-field:focus-within {
 	border-color: #5e9dec;
-	box-shadow:
-		inset 0 1px 4px rgb(0 0 0 / 28%),
-		0 0 0 3px rgb(59 130 246 / 18%);
+	box-shadow: inset 0 1px 4px rgb(0 0 0 / 28%);
 }
 
 .hanabi-chat-field.has-error {
@@ -1093,17 +1217,12 @@ body {
 		0 7px 18px rgb(2 28 75 / 34%);
 	color: var(--color-hanabi-ivory);
 	transition:
-		transform 100ms ease,
 		filter 120ms ease,
 		opacity 120ms ease;
 }
 
-.hanabi-chat-send:not(:disabled):hover {
+.hanabi-chat-send:not(:disabled):is(:hover, :focus-visible) {
 	filter: brightness(1.12);
-}
-
-.hanabi-chat-send:not(:disabled):active {
-	transform: translateY(1px) scale(0.97);
 }
 
 .hanabi-chat-send:disabled {
@@ -1742,9 +1861,9 @@ body {
 	-webkit-text-fill-color: #fffaf0;
 }
 
-.hanabi-focus-ring:focus-visible {
-	outline: 2px solid var(--color-hanabi-coral-soft);
-	outline-offset: 3px;
+.hanabi-focus-ring:not(:disabled):not([aria-disabled='true']):is(:hover, :focus-visible) {
+	outline: 1px solid var(--color-hanabi-coral-soft);
+	outline-offset: -1px;
 }
 
 /* The admin archive is intentionally separate from the game UI. */
@@ -1809,13 +1928,13 @@ body {
 	font-size: 18px;
 }
 
-.admin-login-card input:focus,
-.admin-login-card button:focus-visible,
-.admin-state-shell button:focus-visible,
-.admin-header button:focus-visible,
-.admin-pagination button:focus-visible {
-	outline: 2px solid var(--color-hanabi-coral-soft);
-	outline-offset: 3px;
+.admin-login-card input:enabled:is(:hover, :focus),
+.admin-login-card button:enabled:is(:hover, :focus-visible),
+.admin-state-shell button:enabled:is(:hover, :focus-visible),
+.admin-header button:enabled:is(:hover, :focus-visible),
+.admin-pagination button:enabled:is(:hover, :focus-visible) {
+	outline: 1px solid var(--color-hanabi-coral-soft);
+	outline-offset: -1px;
 }
 
 .admin-login-card button,

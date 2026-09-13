@@ -54,11 +54,11 @@ function DebugButton({
 			disabled={disabled}
 			onClick={onClick}
 			className={classNames(
-				'rounded-md border-2 font-bold uppercase transition focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900',
+				'rounded-md border-2 font-bold uppercase transition-colors duration-75 focus:outline-none',
 				compact ? 'min-h-8 px-2 py-1 text-xs' : 'min-h-10 px-3 py-2 text-sm',
 				disabled
 					? 'cursor-not-allowed border-gray-600 text-gray-500'
-					: 'border-white text-white hover:border-red-500 hover:bg-red-700 active:scale-95',
+					: 'border-white text-white hocus:border-red-500 hocus:bg-red-700',
 			)}
 		>
 			{children}
@@ -124,7 +124,7 @@ export default function HanabiDebugPanel(): JSX.Element | null {
 	return (
 		<aside className="fixed bottom-3 left-3 right-3 z-20 max-h-[min(34rem,calc(100vh-1.5rem))] overflow-auto rounded-xl border-4 border-black bg-gray-900 text-white shadow-dark sm:left-auto sm:w-[24rem]">
 			<details open>
-				<summary className="sticky top-0 z-10 cursor-pointer select-none rounded-t-lg bg-red-900 px-4 py-3 font-bold uppercase tracking-wide focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white">
+				<summary className="sticky top-0 z-10 cursor-pointer select-none rounded-t-lg bg-red-900 px-4 py-3 font-bold uppercase tracking-wide focus:outline-none hocus:ring-2 hocus:ring-inset hocus:ring-white">
 					{DEBUG_PLAYER_NAME} Controls
 				</summary>
 				<div className="grid gap-4 p-4">
@@ -269,7 +269,7 @@ export default function HanabiDebugPanel(): JSX.Element | null {
 																			);
 																		}}
 																		className={classNames(
-																			'h-9 w-9 rounded-full border-4 border-black shadow-light focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 disabled:cursor-not-allowed disabled:opacity-30',
+																			'h-9 w-9 rounded-full border-4 border-black shadow-light focus:outline-none hocus:border-red-500 disabled:cursor-not-allowed disabled:opacity-30',
 																			tileBackgroundClasses[color],
 																		)}
 																	/>
