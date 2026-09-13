@@ -2316,11 +2316,8 @@ body {
 	text-underline-offset: 3px;
 }
 
-.admin-review-link:hover {
+.admin-review-link:is(:hover, :focus-visible) {
 	color: var(--color-hanabi-text);
-}
-
-.admin-review-link:focus-visible {
-	outline: 2px solid var(--color-hanabi-coral);
-	outline-offset: 4px;
+	outline: 1px solid var(--color-hanabi-coral);
+	outline-offset: -1px;
 }
