@@ -1,5 +1,6 @@
 import express from 'express';
 import { createHash, timingSafeEqual } from 'node:crypto';
+import { isReplayableTranscript } from '@hanabi/shared';
 import type { GameTranscriptSummaryReader } from './games/hanabi/PostgresGameTranscriptSummaryReader.js';
 import Logger from './utils/Logger.js';
 
@@ -94,6 +95,42 @@ export function createAdminRouter(options: AdminRouterOptions): express.Router {
 				const errorName = error instanceof Error ? error.name : 'UnknownError';
 				Logger.error(`Failed to load admin round history (${errorName}).`);
 				res.status(503).json({ error: 'Round history is unavailable.' });
+			});
+	});
+
+	router.get('/transcripts/:roundId', (req, res) => {
+		if (!hasAdminSession(req.signedCookies)) {
+			res.status(401).json({ error: 'Authentication required.' });
+			return;
+		}
+
+		const { roundId } = req.params;
+		if (!/^[a-zA-Z0-9_-]{1,128}$/.test(roundId)) {
+			res.status(400).json({ error: 'Invalid round ID.' });
+			return;
+		}
+		if (!options.transcriptSummaryReader) {
+			res.status(503).json({ error: 'Round replay is unavailable.' });
+			return;
+		}
+
+		void options.transcriptSummaryReader
+			.get(roundId)
+			.then((transcript) => {
+				if (!transcript) {
+					res.status(404).json({ error: 'Round not found.' });
+					return;
+				}
+				if (!isReplayableTranscript(transcript)) {
+					res.status(409).json({ error: 'Only complete, finished rounds can be replayed.' });
+					return;
+				}
+				res.json(transcript);
+			})
+			.catch((error: unknown) => {
+				const errorName = error instanceof Error ? error.name : 'UnknownError';
+				Logger.error(`Failed to load admin round replay (${errorName}).`);
+				res.status(503).json({ error: 'Round replay is unavailable.' });
 			});
 	});
 

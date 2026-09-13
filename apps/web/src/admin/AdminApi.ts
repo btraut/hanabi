@@ -1,4 +1,4 @@
-import type { HanabiRuleSet } from '@hanabi/shared';
+import type { GameTranscriptV1, HanabiRuleSet } from '@hanabi/shared';
 
 export type AdminGameStatus = 'in_progress' | 'finished' | 'reset' | 'abandoned';
 export type AdminGameIntegrity = 'complete' | 'partial' | 'conflicted';
@@ -71,6 +71,10 @@ export default class AdminApi {
 
 	public static logout(): Promise<void> {
 		return request('/api/admin/session', { method: 'DELETE' });
+	}
+
+	public static transcript(roundId: string): Promise<GameTranscriptV1> {
+		return request(`/api/admin/transcripts/${encodeURIComponent(roundId)}`);
 	}
 
 	public static games(page: number): Promise<AdminGamesPage> {

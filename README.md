@@ -213,7 +213,11 @@ unconfigured bots do not prevent human-only games.
 #### Game archive
 
 Visit `/admin` directly to see the unlinked, read-only game archive. It lists the newest transcript
-rounds first with player names, turn count, score, and result, 25 at a time. The default dashboard
+rounds first with player names, turn count, score, and result, 25 at a time. Choose **Review** on a
+complete, finished round to scrub through its recorded moves and switch between player perspectives
+or all hands. Reviews work for any recorded player without joining the original game; **Back to
+archive** returns to the same page. Older rounds without a replayable recording show an unavailable
+message. Review URLs retain the round and require the same admin session. The default dashboard
 password is `tenfour`; set `ADMIN_PASSWORD` to override it. Successful sign-in creates a signed,
 HTTP-only browser-session cookie and the password is never stored by the web client.
 

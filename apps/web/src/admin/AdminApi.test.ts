@@ -43,4 +43,14 @@ describe('AdminApi', () => {
 			expect.objectContaining<Partial<AdminApiError>>({ status: 401 }),
 		);
 	});
+	it('fetches an archived transcript with the admin session and encodes the round ID', async () => {
+		const fetchMock = vi
+			.spyOn(globalThis, 'fetch')
+			.mockResolvedValue(new Response(JSON.stringify({ roundId: 'round/1' })));
+		await expect(AdminApi.transcript('round/1')).resolves.toEqual({ roundId: 'round/1' });
+		expect(fetchMock).toHaveBeenCalledWith(
+			'/api/admin/transcripts/round%2F1',
+			expect.objectContaining({ credentials: 'same-origin' }),
+		);
+	});
 });
