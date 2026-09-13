@@ -37,7 +37,7 @@ interface Props {
 	variant?: 'desktop' | 'legacy';
 	onTileClick?: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
 	onTileMouseOver?: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
-	onTileMouseOut?: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
+	onTileMouseOut?: (event: React.SyntheticEvent<HTMLElement>, tileId: string) => void;
 	onTileMouseDown?: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
 	onTileLongPress?: (element: HTMLElement, tileId: string) => void;
 }

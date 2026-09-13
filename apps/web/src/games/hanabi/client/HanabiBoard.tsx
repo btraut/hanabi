@@ -171,13 +171,16 @@ export default function HanabiBoard({
 					onClose={handleActionsTooltipOnClose}
 				/>
 			)}
-			{shouldShowTileOverlay(showNotesForTile, isDraggingTile) && !showMenuForTile && (
-				<HanabiTileNotesTooltip
-					notes={showNotesForTile.notes}
-					coords={showNotesForTile.coords}
-					onClose={hideNotesForTile}
-				/>
-			)}
+			{gameData.showNotes &&
+				shouldShowTileOverlay(showNotesForTile, isDraggingTile) &&
+				!showMenuForTile && (
+					<HanabiTileNotesTooltip
+						notes={showNotesForTile.notes}
+						position={showNotesForTile.position}
+						coords={showNotesForTile.coords}
+						onClose={hideNotesForTile}
+					/>
+				)}
 			{showGameOverPopup && (
 				<HanabiGameOverPopup
 					onReview={onReview}
