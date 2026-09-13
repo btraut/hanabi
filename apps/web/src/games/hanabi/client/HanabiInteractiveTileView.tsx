@@ -262,7 +262,7 @@ export default function HanabiInteractiveTileView({
 				{
 					'touch-none': draggable,
 					'touch-manipulation': !draggable,
-					'hocus:ring hocus:ring-hanabi-coral': !!onClick,
+					'hocus:ring hocus:ring-hanabi-coral': !!onClick || !!onLongPress,
 					'opacity-0': isDragging,
 				},
 			])}
