@@ -19,6 +19,7 @@ interface Props {
 	notes: HanabiTileNotes | undefined;
 	coords: { left: number; top: number };
 	onClose: () => void;
+	position?: 'above' | 'below';
 }
 
 export function getHanabiTileNotesDescription(notes: HanabiTileNotes | undefined): string {
@@ -32,7 +33,12 @@ export function getHanabiTileNotesDescription(notes: HanabiTileNotes | undefined
 	return descriptions.join(' ');
 }
 
-export default function HanabiTileNotesTooltip({ notes, coords, onClose }: Props): JSX.Element {
+export default function HanabiTileNotesTooltip({
+	notes,
+	coords,
+	onClose,
+	position = 'below',
+}: Props): JSX.Element {
 	const gameData = useBoardData();
 
 	const allColors: HanabiClueColor[] = ['red', 'blue', 'green', 'yellow', 'white'];
@@ -44,8 +50,8 @@ export default function HanabiTileNotesTooltip({ notes, coords, onClose }: Props
 
 	return (
 		<Portal>
-			<Tooltip top={coords.top} left={coords.left} position="below" fadeIn onClose={onClose}>
-				<div className="mt-1" role="tooltip" aria-live="polite">
+			<Tooltip top={coords.top} left={coords.left} position={position} fadeIn onClose={onClose}>
+				<div className={position === 'above' ? 'mb-1' : 'mt-1'} role="tooltip" aria-live="polite">
 					<span className="sr-only">{getHanabiTileNotesDescription(notes)}</span>
 					<div className="bg-gray-900 rounded-lg pb-2 pt-1 px-2">
 						<div aria-hidden="true" className="grid grid-flow-col gap-1.5 justify-center">

@@ -2,14 +2,13 @@ export default function HanabiStyles(): JSX.Element {
 	return (
 		<style>{`
 @keyframes hanabi-clue-mark-arrive {
-	0% { opacity: 0; transform: scale(0.88); }
-	58% { opacity: 1; transform: scale(1.08); }
-	100% { opacity: 1; transform: scale(1); }
+	from { opacity: 0; }
+	to { opacity: 1; }
 }
 
 @keyframes hanabi-clue-mark-breathe {
-	0%, 100% { filter: drop-shadow(0 0 5px rgb(var(--hanabi-emphasis-rgb) / 60%)); }
-	50% { filter: drop-shadow(0 0 8px rgb(var(--hanabi-emphasis-rgb) / 85%)); }
+	0%, 100% { opacity: 0.15; }
+	50% { opacity: 1; }
 }
 
 .hanabi-tile-surface-clipped {
@@ -52,8 +51,8 @@ export default function HanabiStyles(): JSX.Element {
 .hanabi-tile-emphasis-red { --hanabi-emphasis-rgb: 211 107 101; }
 .hanabi-tile-emphasis-blue { --hanabi-emphasis-rgb: 99 143 209; }
 .hanabi-tile-emphasis-green { --hanabi-emphasis-rgb: 108 171 127; }
-.hanabi-tile-emphasis-yellow,
-.hanabi-tile-emphasis-number { --hanabi-emphasis-rgb: 213 173 97; }
+.hanabi-tile-emphasis-yellow { --hanabi-emphasis-rgb: 213 173 97; }
+.hanabi-tile-emphasis-number { --hanabi-emphasis-rgb: 225 234 245; }
 .hanabi-tile-emphasis-white { --hanabi-emphasis-rgb: 238 233 223; }
 .hanabi-tile-emphasis-purple { --hanabi-emphasis-rgb: 146 120 196; }
 .hanabi-tile-emphasis-black { --hanabi-emphasis-rgb: 115 128 150; }
@@ -69,10 +68,28 @@ export default function HanabiStyles(): JSX.Element {
 	overflow: visible;
 	pointer-events: none;
 	color: rgb(var(--hanabi-emphasis-rgb));
-	filter: drop-shadow(0 0 5px rgb(var(--hanabi-emphasis-rgb) / 60%));
-	animation:
-		hanabi-clue-mark-arrive 520ms cubic-bezier(0.2, 0.8, 0.2, 1) both,
-		hanabi-clue-mark-breathe 1800ms ease-in-out 520ms 2 both;
+	animation: hanabi-clue-mark-arrive 200ms ease-out both;
+}
+
+.hanabi-tile-emphasis-outline,
+.hanabi-tile-emphasis-glow,
+.hanabi-tile-emphasis-separator {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	overflow: visible;
+}
+
+.hanabi-tile-emphasis-outline {
+	filter: drop-shadow(0 0 3px rgb(var(--hanabi-emphasis-rgb) / 80%));
+}
+
+/* Keep the blur fixed so only the glow layer's opacity changes each frame. */
+.hanabi-tile-emphasis-glow {
+	filter: drop-shadow(0 0 5px rgb(var(--hanabi-emphasis-rgb))) drop-shadow(0 0 9px rgb(var(--hanabi-emphasis-rgb) / 75%));
+	will-change: opacity;
+	animation: hanabi-clue-mark-breathe 1600ms ease-in-out infinite;
 }
 @keyframes bg-blue-to-red {
   0% { background-color: #1e3a8a; }
@@ -91,8 +108,13 @@ export default function HanabiStyles(): JSX.Element {
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.hanabi-tile-emphasis-mark {
+	.hanabi-tile-emphasis-mark,
+	.hanabi-tile-emphasis-glow {
 		animation: none;
+	}
+	.hanabi-tile-emphasis-glow {
+		opacity: 0.55;
+		will-change: auto;
 	}
 }
 

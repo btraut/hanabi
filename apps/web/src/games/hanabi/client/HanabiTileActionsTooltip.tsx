@@ -79,7 +79,7 @@ export default function HanabiTileActionsTooltip({
 
 	return (
 		<Portal>
-			<Tooltip onClose={onClose} top={coords.top - 18} left={coords.left}>
+			<Tooltip onClose={onClose} top={coords.top - 18} left={coords.left} position="above">
 				<div className="rounded-lg border border-hanabi-border bg-hanabi-table-deep px-2 py-1.5 shadow-[0_12px_28px_rgb(0_0_0_/_45%)]">
 					{type === HanabiTileActionsTooltipType.Own && (
 						<div className="flex items-center gap-1">

@@ -59,10 +59,10 @@ function HanabiTileNoteCorner(): JSX.Element {
 						y2="12"
 						gradientUnits="userSpaceOnUse"
 					>
-						<stop offset="0" stopColor="#fff4dc" />
-						<stop offset="0.4" stopColor="#e9ddc5" />
-						<stop offset="0.8" stopColor="#b3a58c" />
-						<stop offset="1" stopColor="#746954" />
+						<stop offset="0" stopColor="#ffffff" />
+						<stop offset="0.4" stopColor="#eeeeee" />
+						<stop offset="0.8" stopColor="#aaaaaa" />
+						<stop offset="1" stopColor="#666666" />
 					</linearGradient>
 					<filter
 						id={shadowBlurId}

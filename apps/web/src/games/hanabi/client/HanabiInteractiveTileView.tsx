@@ -43,7 +43,7 @@ interface Props {
 	// Specify custom event handlers.
 	onClick?: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
 	onMouseOver?: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
-	onMouseOut?: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
+	onMouseOut?: (event: React.SyntheticEvent<HTMLElement>, tileId: string) => void;
 	onMouseDown?: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
 	onLongPress?: (element: HTMLElement, tileId: string) => void;
 
@@ -210,7 +210,7 @@ export default function HanabiInteractiveTileView({
 		[onMouseOver, tile],
 	);
 	const handleMouseOut = useCallback(
-		(event: React.MouseEvent<HTMLElement>) => {
+		(event: React.SyntheticEvent<HTMLElement>) => {
 			if (onMouseOut) {
 				onMouseOut(event, tile.id);
 			}
@@ -237,6 +237,23 @@ export default function HanabiInteractiveTileView({
 		<Comp
 			ref={connectDragSource}
 			data-hanabi-tile-id={tile.id}
+			tabIndex={!onClick && onLongPress ? 0 : undefined}
+			onFocus={
+				onLongPress
+					? (event) => {
+							if (event.currentTarget.matches(':focus-visible'))
+								onLongPress(event.currentTarget, tile.id);
+						}
+					: undefined
+			}
+			onBlur={onMouseOut ? handleMouseOut : undefined}
+			onKeyDown={
+				onMouseOut
+					? (event) => {
+							if (event.key === 'Escape') onMouseOut(event, tile.id);
+						}
+					: undefined
+			}
 			style={{
 				...(dimensions ??
 					(size === TileViewSize.Regular ? HANABI_TILE_SIZE : HANABI_TILE_SIZE_SMALL)),
