@@ -59,4 +59,9 @@ export function useTransitioningTileId(): string | null {
 	const getSnapshot = () => presentation?.getSnapshot().transitioningTileId ?? null;
 	return useSyncExternalStore(presentation?.subscribe ?? noSubscription, getSnapshot, getSnapshot);
 }
+export function useDrawingTileId(): string | null {
+	const presentation = useBoardPresentationChannel();
+	const getSnapshot = () => presentation?.getSnapshot().drawingTileId ?? null;
+	return useSyncExternalStore(presentation?.subscribe ?? noSubscription, getSnapshot, getSnapshot);
+}
 export const HanabiGameContextProvider = context.Provider;

@@ -95,7 +95,11 @@ board snapshot. Tile rendering, drag positions, and gameplay effects subscribe t
 that presentation. Chat and bot indicators subscribe to authoritative state and
 update during animation capture or playback. Gameplay tracking uses action IDs
 and its own bounded history, so chat retention cannot trigger an animation or
-hide a newly played card. Review and static fixtures use independent snapshots.
+hide a newly played card. Plays and discards animate the outgoing card first,
+then move a card back from the deck into the hand, revealing other players’
+cards as they arrive. The deck shows up to three real card backs, exactly two or
+one as it runs out, and an empty outline at zero. Reduced-motion preferences and
+browsers without View Transitions use immediate updates. Review and static fixtures use independent snapshots.
 
 #### Single-browser debug player
 

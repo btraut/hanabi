@@ -9,6 +9,7 @@ type TransitionAction = {
 type TransitionState = {
 	readonly actions: readonly TransitionAction[];
 	readonly stage?: HanabiStage;
+	readonly playerTiles?: Readonly<Record<string, readonly string[]>>;
 };
 
 type TileViewTransition = {
@@ -18,8 +19,8 @@ type TileViewTransition = {
 };
 
 interface CoordinatorOptions<State extends TransitionState> {
-	applyState(state: State, transitioningTileId: string | null): void;
-	markTransitioningTile(tileId: string): void;
+	applyState(state: State, transitioningTileId: string | null, drawingTileId: string | null): void;
+	markTransitioningTile(tileId: string, drawingTileId: string | null): void;
 	clearTransitioningTile(): void;
 	prefersReducedMotion(): boolean;
 	startTransition?: (update: () => void) => TileViewTransition;
@@ -76,12 +77,30 @@ export function getTileViewTransitionName(tileId: string): string {
 	return `hanabi-tile-${tileId}`;
 }
 
+export const DRAW_TILE_VIEW_TRANSITION_NAME = 'hanabi-drawn-tile';
+
+export function getDrawnTileId(
+	previous: TransitionState,
+	next: TransitionState,
+	outgoingTileId: string,
+): string | null {
+	const owner = Object.entries(previous.playerTiles ?? {}).find(([, tiles]) =>
+		tiles.includes(outgoingTileId),
+	);
+	if (!owner) return null;
+	const [playerId, previousTiles] = owner;
+	const nextTiles = next.playerTiles?.[playerId];
+	if (!nextTiles || nextTiles.includes(outgoingTileId)) return null;
+	const addedTiles = nextTiles.filter((tileId) => !previousTiles.includes(tileId));
+	return addedTiles.length === 1 ? addedTiles[0] : null;
+}
+
 export class HanabiActionTransitionCoordinator<State extends TransitionState> {
 	private readonly options: CoordinatorOptions<State>;
 	private currentState: State | null = null;
 	private activeTransition: {
 		transition: TileViewTransition;
-		update: { state: State; tileId: string; applied: boolean };
+		update: { state: State; tileId: string; drawingTileId: string | null; applied: boolean };
 	} | null = null;
 	private generation = 0;
 	private disposed = false;
@@ -113,7 +132,7 @@ export class HanabiActionTransitionCoordinator<State extends TransitionState> {
 		) {
 			const { update } = this.activeTransition;
 			update.state = nextState;
-			if (update.applied) this.options.applyState(nextState, update.tileId);
+			if (update.applied) this.options.applyState(nextState, update.tileId, update.drawingTileId);
 			return;
 		}
 
@@ -131,14 +150,21 @@ export class HanabiActionTransitionCoordinator<State extends TransitionState> {
 
 		if (!shouldAnimate) {
 			this.cancelActiveTransition();
-			this.options.applyState(nextState, null);
+			this.options.applyState(nextState, null, null);
 			return;
 		}
 
 		this.cancelActiveTransition();
-		this.options.markTransitioningTile(transitioningTileId);
 
-		const update = { state: nextState, tileId: transitioningTileId, applied: false };
+		const update = {
+			state: nextState,
+			tileId: transitioningTileId,
+			drawingTileId: previousState
+				? getDrawnTileId(previousState, nextState, transitioningTileId)
+				: null,
+			applied: false,
+		};
+		this.options.markTransitioningTile(transitioningTileId, update.drawingTileId);
 		try {
 			const transition = this.options.startTransition!(() => {
 				if (this.disposed || updateGeneration !== this.generation) {
@@ -146,7 +172,7 @@ export class HanabiActionTransitionCoordinator<State extends TransitionState> {
 				}
 
 				update.applied = true;
-				this.options.applyState(update.state, update.tileId);
+				this.options.applyState(update.state, update.tileId, update.drawingTileId);
 			});
 			this.activeTransition = { transition, update };
 
@@ -163,7 +189,7 @@ export class HanabiActionTransitionCoordinator<State extends TransitionState> {
 					}
 				});
 		} catch {
-			this.options.applyState(nextState, null);
+			this.options.applyState(nextState, null, null);
 		}
 	}
 

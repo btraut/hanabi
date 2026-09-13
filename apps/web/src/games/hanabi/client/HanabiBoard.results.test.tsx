@@ -22,6 +22,7 @@ vi.mock('~/components/SocketContext', () => ({ useUserId: () => mocks.userId }))
 vi.mock('./HanabiGameContext', () => ({
 	useBoardData: () => mocks.useBoardData(),
 	useTransitioningTileId: () => null,
+	useDrawingTileId: () => null,
 	useBotStatusData: () => ({}),
 	useGameMessenger: () => ({ reset: mocks.reset }),
 }));

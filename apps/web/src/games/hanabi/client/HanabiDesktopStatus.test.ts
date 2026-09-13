@@ -34,13 +34,49 @@ describe('HanabiDesktopStatus', () => {
 		expect(markup).toContain('data-status-icon="deck"');
 		expect(markup).toContain('data-status-icon="clues"');
 		expect(markup).toContain('data-status-icon="lives"');
-		expect(markup).toContain('tile-back-firework-v5.png');
+		expect(markup).toContain('data-deck-empty="true"');
+		expect(markup).not.toContain('tile-back-firework-v5.png');
 		expect(markup).toContain('class="hanabi-status-regions"');
 		expect(markup).toContain('class="hanabi-mobile-game-menu"');
 		expect(markup).toContain('aria-label="Open game menu"');
 		expect(markup).not.toContain('h-[78px] w-[270px]');
 		expect(markup).not.toContain('h-[86px] w-[650px]');
 		expect(markup.match(/>0</g)?.length).toBeGreaterThanOrEqual(3);
+	});
+
+	it.each([
+		[0, 0],
+		[1, 1],
+		[2, 2],
+		[3, 3],
+		[40, 3],
+	])('renders %i remaining cards as %i card backs', (count, visibleCards) => {
+		const gameData = generateHanabiGameData({
+			remainingTiles: Array.from({ length: count }, (_, index) => `tile-${index}`),
+		});
+		const markup = renderToStaticMarkup(
+			createElement(HanabiDesktopStatus, {
+				gameData,
+				userId: 'alice',
+				showGameMenu: false,
+				deckTransitionName: 'hanabi-drawn-card',
+			}),
+		);
+
+		expect(markup.match(/class="hanabi-status-deck-card hanabi-player-tile"/g) ?? []).toHaveLength(
+			visibleCards,
+		);
+		expect(markup.match(/tile-back-firework-v5.png/g) ?? []).toHaveLength(visibleCards);
+		expect(markup.match(/view-transition-name:hanabi-drawn-card/g) ?? []).toHaveLength(
+			count > 0 ? 1 : 0,
+		);
+		if (count > 0) {
+			const topCard = markup.slice(markup.indexOf('data-deck-depth="0"'));
+			expect(topCard).toContain('view-transition-name:hanabi-drawn-card');
+			expect(markup).not.toContain('data-deck-empty');
+		} else {
+			expect(markup).toContain('data-deck-empty="true"');
+		}
 	});
 
 	it('names another player, their connection state, and remaining turns', () => {

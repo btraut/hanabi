@@ -1,5 +1,9 @@
 import { useUserId } from '~/components/SocketContext';
-import { useBoardData, useTransitioningTileId } from '~/games/hanabi/client/HanabiGameContext';
+import {
+	useBoardData,
+	useDrawingTileId,
+	useTransitioningTileId,
+} from '~/games/hanabi/client/HanabiGameContext';
 import {
 	HANABI_DESKTOP_SURFACE_HEIGHT,
 	HANABI_DESKTOP_ZONE_HEIGHT,
@@ -9,7 +13,10 @@ import {
 import { useHanabiHighlightContext } from '~/games/hanabi/client/HanabiHighlightContext';
 import HanabiInteractiveTileView from '~/games/hanabi/client/HanabiInteractiveTileView';
 import { useHanabiMoveTileContext } from '~/games/hanabi/client/HanabiMoveTileContext';
-import { getTileViewTransitionName } from '~/games/hanabi/client/HanabiActionTransition';
+import {
+	DRAW_TILE_VIEW_TRANSITION_NAME,
+	getTileViewTransitionName,
+} from '~/games/hanabi/client/HanabiActionTransition';
 import HanabiPlayerTilesDragLayer from '~/games/hanabi/client/HanabiPlayerTilesDragLayer';
 import HanabiTileEmphasis from './HanabiTileEmphasis';
 import { HanabiDragTypes, getHanabiPositionForDrag } from '~/games/hanabi/client/HanabiDragTypes';
@@ -102,6 +109,7 @@ export default function HanabiPlayerTiles({
 }: Props): JSX.Element {
 	const gameData = useBoardData();
 	const transitioningTileId = useTransitioningTileId();
+	const drawingTileId = useDrawingTileId();
 	const userId = useUserId();
 	const { tilePositions } = useHanabiMoveTileContext();
 
@@ -159,7 +167,8 @@ export default function HanabiPlayerTiles({
 			>
 				{gameData.playerTiles[id].map((tileId, index) => {
 					const displayedPosition = responsivePreviewPositions?.[tileId] ?? tilePositions[tileId];
-					const isTransitioning = transitioningTileId === tileId;
+					const isDrawing = drawingTileId === tileId;
+					const isTransitioning = transitioningTileId === tileId || isDrawing;
 					const permissions = getHanabiPlayerTilePermissions({
 						gameData,
 						isTransitioning,
@@ -206,7 +215,7 @@ export default function HanabiPlayerTiles({
 									tile={gameData.tiles[tileId]}
 									ariaLabel={tileLabel}
 									hidden={permissions.hidden}
-									onClick={permissions.canAct ? onTileClick : undefined}
+									onClick={permissions.canAct && !isTransitioning ? onTileClick : undefined}
 									onMouseOver={isTransitioning ? undefined : onTileMouseOver}
 									onMouseOut={isTransitioning ? undefined : onTileMouseOut}
 									onMouseDown={isTransitioning ? undefined : onTileMouseDown}
@@ -219,7 +228,11 @@ export default function HanabiPlayerTiles({
 									dragHighlight={highlighted}
 									responsiveDragSurface={variant === 'desktop'}
 									viewTransitionName={
-										isTransitioning ? getTileViewTransitionName(tileId) : undefined
+										isDrawing
+											? DRAW_TILE_VIEW_TRANSITION_NAME
+											: isTransitioning
+												? getTileViewTransitionName(tileId)
+												: undefined
 									}
 								/>
 							</div>
@@ -231,7 +244,9 @@ export default function HanabiPlayerTiles({
 								) && (
 									<span
 										aria-hidden="true"
-										className={`hanabi-player-tile-emphasis hanabi-tile-emphasis-${highlightedTone ?? 'action'} pointer-events-none absolute left-0 top-0 z-20 rounded-lg`}
+										className={`hanabi-player-tile-emphasis hanabi-tile-emphasis-${
+											highlightedTone ?? 'action'
+										} pointer-events-none absolute left-0 top-0 z-20 rounded-lg`}
 										key={`highlight-${highlightedAction}-${tileId}`}
 										style={{
 											height: visualDimensions.height,
