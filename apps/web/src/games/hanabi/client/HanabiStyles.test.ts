@@ -208,12 +208,12 @@ describe('Hanabi desktop visual foundation', () => {
 			/\.hanabi-tile-face\s*\{[^}]*background-image:\s*var\(--hanabi-tile-face-art\);[^}]*background-size:\s*100% 100%;/s,
 		);
 		expect(styles).toMatch(
-			/\.hanabi-tile-face\s*\{[^}]*--hanabi-card-frame:\s*#e8dcc2;[^}]*border:\s*1px solid var\(--hanabi-card-frame\);/s,
+			/\.hanabi-tile-face\s*\{[^}]*--hanabi-card-frame:\s*#ffffff;[^}]*border:\s*1px solid var\(--hanabi-card-frame\);/s,
 		);
 		expect(styles).toMatch(
 			/\.hanabi-player-tile \.hanabi-tile-back,[\s\S]*?\.hanabi-player-tile \.hanabi-tile-face\s*\{[^}]*inset 0 0 0 1px var\(--hanabi-card-hairline,/s,
 		);
-		expect(styles).toMatch(/\.hanabi-tile-back\s*\{[^}]*border:\s*1px solid #d9cfba;/s);
+		expect(styles).toMatch(/\.hanabi-tile-back\s*\{[^}]*border:\s*1px solid #ffffff;/s);
 		expect(styles).not.toContain('.hanabi-tile-art');
 		expect(styles).not.toContain('.hanabi-tile-face::before');
 		expect(styles).not.toContain('--hanabi-tile-face-background');
@@ -288,7 +288,7 @@ describe('Hanabi desktop visual foundation', () => {
 		expect(markup).not.toContain('aria-hidden');
 	});
 
-	it('uses a single glowing clue outline with a reduced-motion fallback', () => {
+	it('keeps a prominent clue outline pulsing with a reduced-motion fallback', () => {
 		const markup = renderToStaticMarkup(createElement(HanabiStyles));
 
 		expect(markup).toContain('.hanabi-tile-emphasis-red');
@@ -298,9 +298,13 @@ describe('Hanabi desktop visual foundation', () => {
 		expect(markup).toContain('.hanabi-tile-emphasis-mark');
 		expect(markup).not.toContain('.hanabi-player-tile-emphasis::after');
 		expect(markup).not.toContain('.hanabi-player-tile-emphasis::before');
-		expect(markup).toContain('hanabi-clue-mark-arrive 520ms');
-		expect(markup).toContain('hanabi-clue-mark-breathe 1800ms ease-in-out 520ms 2 both');
-		expect(markup).not.toContain('hanabi-clue-mark-breathe 1800ms ease-in-out 520ms infinite');
+		expect(markup).toContain('hanabi-clue-mark-arrive 200ms');
+		expect(markup).toContain('hanabi-clue-mark-breathe 1600ms ease-in-out infinite');
+		const pulse = markup.match(/@keyframes hanabi-clue-mark-breathe\s*\{([\s\S]*?)\n\}/)?.[1];
+		expect(pulse).toContain('opacity:');
+		expect(pulse).not.toContain('filter:');
+		expect(markup).toContain('will-change: opacity');
+		expect(markup).toMatch(/\.hanabi-tile-emphasis-glow\s*\{[^}]*animation: none/s);
 		expect(markup).toContain('filter: drop-shadow(');
 		expect(markup).not.toContain('box-shadow:');
 		expect(markup).not.toContain('2300ms');

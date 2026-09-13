@@ -8,6 +8,7 @@ import { useCallback, useState } from 'react';
 
 type NotesDetails = {
 	tileId: string;
+	position: 'above' | 'below';
 	notes: HanabiTileNotes | undefined;
 	coords: {
 		top: number;
@@ -19,7 +20,7 @@ export default function useTileNotesHandlers(): {
 	showNotesForTile: NotesDetails | null;
 	hideNotesForTile: () => void;
 	handleTileMouseOver: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
-	handleTileMouseOut: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
+	handleTileMouseOut: () => void;
 	handleTileMouseDown: (event: React.MouseEvent<HTMLElement>, tileId: string) => void;
 	handleTileLongPress: (element: HTMLElement, tileId: string) => void;
 } {
@@ -28,15 +29,17 @@ export default function useTileNotesHandlers(): {
 	const [showNotesForTile, setShowNotesForTile] = useState<NotesDetails | null>(null);
 
 	const showNotes = useCallback(
-		(element: HTMLElement, tileId: string) => {
+		(element: HTMLElement, tileId: string, position: 'above' | 'below') => {
+			if (!gameData.showNotes) return;
 			const rect = element.getBoundingClientRect();
 
 			setShowNotesForTile({
 				tileId,
+				position,
 				notes: gameData.tileNotes[tileId],
 				coords: {
 					left: rect.x + rect.width / 2,
-					top: rect.y + rect.height + window.scrollY,
+					top: rect.y + (position === 'below' ? rect.height : 0) + window.scrollY,
 				},
 			});
 		},
@@ -45,8 +48,13 @@ export default function useTileNotesHandlers(): {
 
 	const handleTileMouseOver = useCallback(
 		(event: React.MouseEvent<HTMLElement>, tileId: string) => {
-			showNotes(event.currentTarget, tileId);
+			showNotes(event.currentTarget, tileId, 'below');
 		},
+		[showNotes],
+	);
+
+	const handleTileLongPress = useCallback(
+		(element: HTMLElement, tileId: string) => showNotes(element, tileId, 'above'),
 		[showNotes],
 	);
 
@@ -60,6 +68,6 @@ export default function useTileNotesHandlers(): {
 		handleTileMouseOver,
 		handleTileMouseOut: hideNotesForTile,
 		handleTileMouseDown: hideNotesForTile,
-		handleTileLongPress: showNotes,
+		handleTileLongPress,
 	};
 }
