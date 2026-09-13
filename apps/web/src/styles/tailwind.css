@@ -632,6 +632,9 @@ body {
 }
 
 .hanabi-status-deck-icon {
+	--hanabi-deck-scale: 0.7;
+	--hanabi-deck-step: 4px;
+
 	position: relative;
 	display: block;
 	width: 43px;
@@ -639,52 +642,28 @@ body {
 	filter: drop-shadow(0 5px 5px rgb(0 0 0 / 36%));
 }
 
-.hanabi-status-deck-icon::before,
-.hanabi-status-deck-icon::after,
-.hanabi-status-deck-face {
+/* Scale the same card used in hands so the captured back lands without
+   changing its aspect ratio, border geometry, or artwork. */
+.hanabi-status-deck-card,
+.hanabi-status-deck-icon[data-deck-empty]::before {
 	position: absolute;
-	width: 35px;
-	height: 46px;
-	border: 2px solid rgb(235 226 208 / 82%);
-	border-radius: 5px;
-	background: linear-gradient(145deg, #15344e, #071a2d);
-	box-shadow: inset 0 0 0 1px rgb(4 13 24 / 80%);
+	width: var(--hanabi-player-tile-width);
+	height: var(--hanabi-player-tile-height);
+	transform: scale(var(--hanabi-deck-scale));
+	transform-origin: top left;
 }
 
-.hanabi-status-deck-icon::before,
-.hanabi-status-deck-icon::after {
-	content: '';
+.hanabi-status-deck-card {
+	top: calc(var(--hanabi-deck-depth) * var(--hanabi-deck-step));
+	left: calc(var(--hanabi-deck-depth) * var(--hanabi-deck-step));
 }
 
-.hanabi-status-deck-icon::before {
-	top: 8px;
-	left: 8px;
-	opacity: 0.64;
-}
-
-.hanabi-status-deck-icon::after {
-	top: 4px;
-	left: 4px;
-	opacity: 0.86;
-}
-
-.hanabi-status-deck-face {
+.hanabi-status-deck-icon[data-deck-empty]::before {
 	top: 0;
 	left: 0;
-	z-index: 1;
-	border-color: #e7dfce;
-	box-shadow:
-		inset 0 0 0 1px rgb(3 12 22 / 88%),
-		inset 0 0 0 3px rgb(130 155 176 / 26%);
-}
-
-.hanabi-status-deck-face::after {
-	position: absolute;
-	inset: 6px 4px 7px;
-	background: #718da1;
+	border: 1px dashed rgb(235 226 208 / 34%);
+	border-radius: 5px;
 	content: '';
-	mask: var(--hanabi-status-deck-art) center / contain no-repeat;
-	opacity: 0.62;
 }
 
 .hanabi-clue-token {
@@ -1361,32 +1340,12 @@ body {
 	}
 
 	.hanabi-status-deck-icon {
+		--hanabi-deck-scale: 0.46;
+		--hanabi-deck-step: 2.5px;
+
 		width: 28px;
 		height: 35px;
 		filter: drop-shadow(0 3px 3px rgb(0 0 0 / 36%));
-	}
-
-	.hanabi-status-deck-icon::before,
-	.hanabi-status-deck-icon::after,
-	.hanabi-status-deck-face {
-		width: 23px;
-		height: 30px;
-		border-width: 1px;
-		border-radius: 4px;
-	}
-
-	.hanabi-status-deck-icon::before {
-		top: 5px;
-		left: 5px;
-	}
-
-	.hanabi-status-deck-icon::after {
-		top: 3px;
-		left: 3px;
-	}
-
-	.hanabi-status-deck-face::after {
-		inset: 4px 3px 5px;
 	}
 
 	.hanabi-status-clue-icon {
@@ -2168,6 +2127,37 @@ body {
 	animation-duration: 420ms;
 }
 
+/* The top deck card and the replacement share a capture name. Let the
+   outgoing card lead, then carry the card back to its owner's hand. */
+::view-transition-group(hanabi-drawn-tile) {
+	z-index: 1;
+	animation-duration: 420ms;
+	animation-delay: 260ms;
+	animation-fill-mode: both;
+}
+
+::view-transition-old(hanabi-drawn-tile) {
+	/* Keep an opaque card underneath the arriving face through capture teardown. */
+	animation: none;
+	opacity: 1;
+	mix-blend-mode: normal;
+}
+
+::view-transition-new(hanabi-drawn-tile) {
+	animation: hanabi-draw-face 420ms ease 260ms both;
+	mix-blend-mode: normal;
+}
+
+@keyframes hanabi-draw-face {
+	0%,
+	70% {
+		opacity: 0;
+	}
+	100% {
+		opacity: 1;
+	}
+}
+
 :root {
 	/* Only named cards are captured; chat and bot status stay visibly live. */
 	view-transition-name: none;
@@ -2192,8 +2182,12 @@ body {
 
 	::view-transition-group(*),
 	::view-transition-old(*),
-	::view-transition-new(*) {
+	::view-transition-new(*),
+	::view-transition-new(hanabi-drawn-tile),
+	::view-transition-old(hanabi-drawn-tile),
+	::view-transition-group(hanabi-drawn-tile) {
 		animation-duration: 1ms;
+		animation-delay: 0ms;
 	}
 }
 

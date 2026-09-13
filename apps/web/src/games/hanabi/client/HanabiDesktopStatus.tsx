@@ -1,5 +1,5 @@
 import Star from '~/games/hanabi/client/icons/Star';
-import { HANABI_TILE_BACK_PATH } from '~/games/hanabi/client/HanabiArtwork';
+import HanabiDeck from '~/games/hanabi/client/HanabiDeck';
 import HanabiHeaderMenuButton from '~/games/hanabi/client/HanabiHeaderMenuButton';
 import {
 	getHanabiMaxScore,
@@ -8,13 +8,13 @@ import {
 	HanabiStage,
 	HanabiFinishedReason,
 } from '@hanabi/shared';
-import { CSSProperties } from 'react';
 
 interface Props {
 	gameData: HanabiGameData;
 	userId: string;
 	turnLabel?: string;
 	showGameMenu?: boolean;
+	deckTransitionName?: string;
 	onShowResult?: () => void;
 }
 
@@ -72,6 +72,7 @@ export default function HanabiDesktopStatus({
 	userId,
 	turnLabel,
 	showGameMenu = true,
+	deckTransitionName,
 	onShowResult,
 }: Props): JSX.Element {
 	const status = getHanabiDesktopStatusData(gameData, userId);
@@ -115,7 +116,7 @@ export default function HanabiDesktopStatus({
 						value={`${status.score}/${status.maxScore}`}
 					/>
 					<StatusItem
-						icon={<DeckStatusIcon />}
+						icon={<HanabiDeck count={status.deck} viewTransitionName={deckTransitionName} />}
 						label="Deck"
 						tone="text-hanabi-ivory-muted"
 						value={status.deck}
@@ -135,23 +136,6 @@ export default function HanabiDesktopStatus({
 				</dl>
 			</section>
 		</div>
-	);
-}
-
-function DeckStatusIcon(): JSX.Element {
-	return (
-		<span
-			aria-hidden="true"
-			className="hanabi-status-deck-icon"
-			data-status-icon="deck"
-			style={
-				{
-					'--hanabi-status-deck-art': `url(${HANABI_TILE_BACK_PATH})`,
-				} as CSSProperties
-			}
-		>
-			<span className="hanabi-status-deck-face" />
-		</span>
 	);
 }
 

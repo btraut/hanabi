@@ -11,12 +11,14 @@ import { createRoot, Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { HanabiActionTransitionCoordinator } from './HanabiActionTransition';
 import HanabiBoardPresentation from './HanabiBoardPresentation';
+import HanabiLiveDesktopStatus from './HanabiLiveDesktopStatus';
 import {
 	HanabiGameContextProvider,
 	useActivityData,
 	useBoardData,
 	useBotStatusData,
 	useGameData,
+	useDrawingTileId,
 	useTransitioningTileId,
 } from './HanabiGameContext';
 import { HanabiGameStore } from './HanabiGameStore';
@@ -147,14 +149,22 @@ describe('board presentation subscriptions', () => {
 			renders.board += 1;
 			const board = useBoardData();
 			return (
-				<output id="board">
-					{board.stage}:{board.playedTiles.join(',')}
-				</output>
+				<>
+					<output id="board">
+						{board.stage}:{board.playedTiles.join(',')}
+					</output>
+					<HanabiLiveDesktopStatus gameData={board} userId="alice" />
+				</>
 			);
 		}
 		function TileProbe() {
 			renders.tile += 1;
-			return <output id="tile">{useTransitioningTileId() ?? 'none'}</output>;
+			return (
+				<>
+					<output id="tile">{useTransitioningTileId() ?? 'none'}</output>
+					<output id="draw">{useDrawingTileId() ?? 'none'}</output>
+				</>
+			);
 		}
 		function ActivityProbe() {
 			renders.activity += 1;
@@ -206,6 +216,34 @@ describe('board presentation subscriptions', () => {
 	function text(id: string) {
 		return document.querySelector(`#${id}`)?.textContent;
 	}
+
+	it('captures the last deck card before handing its transition name to the replacement', async () => {
+		const initial = initialGame();
+		initial.remainingTiles = ['drawn'];
+		const harness = mount(initial);
+		const next = play(initial);
+		next.tiles = { ...next.tiles, drawn: { id: 'drawn', color: 'blue', number: 1 } };
+		next.playerTiles = { ...next.playerTiles, bot: ['two', 'drawn'] };
+		next.remainingTiles = [];
+		harness.receive(next);
+		expect(text('draw')).toBe('drawn');
+		const deckSource = () =>
+			Array.from(
+				document.querySelectorAll<HTMLElement>('[data-status-icon="deck"] .hanabi-tile-shell'),
+			).find((tile) => tile.style.viewTransitionName === 'hanabi-drawn-tile') ?? null;
+		expect(deckSource()).not.toBeNull();
+		act(() => transitions[0].update());
+		expect(deckSource()).toBeNull();
+		expect(text('draw')).toBe('drawn');
+		harness.receive({ ...next, tileNotes: { drawn: { colors: ['blue'], numbers: [] } } });
+		expect(text('draw')).toBe('drawn');
+		await act(async () => {
+			transitions[0].finished.resolve();
+			await transitions[0].finished.promise;
+		});
+		expect(text('draw')).toBe('none');
+		expect(text('tile')).toBe('none');
+	});
 
 	it('shows chat and bot status immediately while a play waits for its board capture', async () => {
 		const coordinatorUpdate = vi.spyOn(HanabiActionTransitionCoordinator.prototype, 'update');

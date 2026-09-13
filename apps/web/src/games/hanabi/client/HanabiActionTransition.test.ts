@@ -1,5 +1,6 @@
 import {
 	getNewTileActionId,
+	getDrawnTileId,
 	getTileViewTransitionName,
 	HanabiActionTransitionCoordinator,
 } from './HanabiActionTransition';
@@ -13,6 +14,7 @@ type TestAction = {
 };
 
 type TestState = {
+	playerTiles?: Record<string, readonly string[]>;
 	actions: readonly TestAction[];
 	positions?: readonly { tileId: string; x: number }[];
 	notes?: string;
@@ -147,10 +149,38 @@ describe('getNewTileActionId', () => {
 	});
 });
 
+describe('getDrawnTileId', () => {
+	const previous = { actions: [], playerTiles: { alice: ['out', 'kept'], bob: ['other'] } };
+
+	it('finds the replacement in the outgoing card owner hand regardless of ordering', () => {
+		expect(
+			getDrawnTileId(
+				previous,
+				{
+					actions: [],
+					playerTiles: { alice: ['drawn', 'kept'], bob: ['other'] },
+				},
+				'out',
+			),
+		).toBe('drawn');
+	});
+
+	it.each([
+		{ alice: ['kept'], bob: ['other'] },
+		{ alice: ['out', 'kept', 'drawn'], bob: ['other'] },
+		{ alice: ['kept'], bob: ['other', 'drawn'] },
+		{ alice: ['kept', 'drawn', 'another'], bob: ['other'] },
+	])('skips missing or ambiguous replacements: %j', (playerTiles) => {
+		expect(getDrawnTileId(previous, { actions: [], playerTiles }, 'out')).toBeNull();
+	});
+});
+
 describe('HanabiActionTransitionCoordinator', () => {
 	function setup({ reducedMotion = false, supported = true } = {}) {
 		const applied: Array<{ state: TestState; tileId: string | null }> = [];
 		const marked: string[] = [];
+		const markedDraws: Array<string | null> = [];
+		const drawn: Array<string | null> = [];
 		let cleared = 0;
 		const transitions: Array<{
 			update: () => void;
@@ -161,8 +191,14 @@ describe('HanabiActionTransitionCoordinator', () => {
 		}> = [];
 
 		const coordinator = new HanabiActionTransitionCoordinator<TestState>({
-			applyState: (nextState, tileId) => applied.push({ state: nextState, tileId }),
-			markTransitioningTile: (tileId) => marked.push(tileId),
+			applyState: (nextState, tileId, drawingTileId) => {
+				applied.push({ state: nextState, tileId });
+				drawn.push(drawingTileId);
+			},
+			markTransitioningTile: (tileId, drawingTileId) => {
+				marked.push(tileId);
+				markedDraws.push(drawingTileId);
+			},
 			clearTransitioningTile: () => {
 				cleared += 1;
 			},
@@ -183,12 +219,59 @@ describe('HanabiActionTransitionCoordinator', () => {
 			coordinator,
 			applied,
 			marked,
+			markedDraws,
+			drawn,
 			transitions,
 			get cleared() {
 				return cleared;
 			},
 		};
 	}
+
+	it.each([HanabiGameActionType.Play, HanabiGameActionType.Discard])(
+		'keeps the drawn card attached to a %s across position and note refreshes',
+		(type) => {
+			const harness = setup();
+			const initial = {
+				...state(action('started', HanabiGameActionType.GameStarted)),
+				playerTiles: { alice: ['out', 'kept'] },
+			};
+			const next = {
+				...state(...initial.actions, action('move', type, 'out')),
+				playerTiles: { alice: ['kept', 'drawn'] },
+			};
+			harness.coordinator.update(initial);
+			harness.coordinator.update(next);
+			expect(harness.drawn).toEqual([null]);
+			expect(harness.markedDraws).toEqual(['drawn']);
+			harness.coordinator.update({ ...next, notes: 'updated before capture' });
+			harness.transitions[0].update();
+			expect(harness.drawn.at(-1)).toBe('drawn');
+			harness.coordinator.update({ ...next, notes: 'updated after capture' });
+			expect(harness.drawn.at(-1)).toBe('drawn');
+			harness.coordinator.update({ ...next, stage: HanabiStage.Setup });
+			expect(harness.drawn.at(-1)).toBeNull();
+		},
+	);
+
+	it.each([{ reducedMotion: true }, { supported: false }])(
+		'does not hide a drawn card with immediate updates: %j',
+		(options) => {
+			const harness = setup(options);
+			const initial = {
+				...state(action('started', HanabiGameActionType.GameStarted)),
+				playerTiles: { alice: ['out'] },
+			};
+			const next = {
+				...state(...initial.actions, action('move', HanabiGameActionType.Discard, 'out')),
+				playerTiles: { alice: ['drawn'] },
+			};
+			harness.coordinator.update(initial);
+			harness.coordinator.update(next);
+			expect(harness.drawn).toEqual([null, null]);
+			expect(harness.transitions).toHaveLength(0);
+		},
+	);
 
 	it('commits eligible actions inside the transition callback and clears after finishing', async () => {
 		const harness = setup();

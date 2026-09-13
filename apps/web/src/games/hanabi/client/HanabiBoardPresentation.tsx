@@ -20,6 +20,7 @@ export default function HanabiBoardPresentation({
 			new SnapshotChannel<HanabiBoardPresentationSnapshot>({
 				gameData: store.board.getSnapshot()!,
 				transitioningTileId: null,
+				drawingTileId: null,
 			}),
 		[store],
 	);
@@ -28,11 +29,12 @@ export default function HanabiBoardPresentation({
 			if (presentation.prepare(next)) flushSync(() => presentation.publish());
 		};
 		const coordinator = new HanabiActionTransitionCoordinator<HanabiBoardData>({
-			applyState: (gameData, transitioningTileId) => publish({ gameData, transitioningTileId }),
-			markTransitioningTile: (transitioningTileId) =>
-				publish({ ...presentation.getSnapshot(), transitioningTileId }),
+			applyState: (gameData, transitioningTileId, drawingTileId) =>
+				publish({ gameData, transitioningTileId, drawingTileId }),
+			markTransitioningTile: (transitioningTileId, drawingTileId) =>
+				publish({ ...presentation.getSnapshot(), transitioningTileId, drawingTileId }),
 			clearTransitioningTile: () =>
-				publish({ ...presentation.getSnapshot(), transitioningTileId: null }),
+				publish({ ...presentation.getSnapshot(), transitioningTileId: null, drawingTileId: null }),
 			prefersReducedMotion: () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
 			startTransition:
 				'startViewTransition' in document
