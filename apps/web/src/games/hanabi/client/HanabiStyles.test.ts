@@ -39,8 +39,39 @@ describe('Hanabi desktop visual foundation', () => {
 		expect(styles).toContain('--color-hanabi-ivory:');
 		expect(styles).toContain('--color-hanabi-coral:');
 		expect(styles).toContain('--color-hanabi-purple:');
-		expect(styles).toContain('.hanabi-focus-ring:focus-visible');
+		expect(styles).toMatch(/\.hanabi-focus-ring[^{}]*:is\(:hover, :focus-visible\)/);
 		expect(styles).toContain('@media (prefers-reduced-motion: reduce)');
+	});
+
+	it('keeps hover feedback stationary across shared controls and replay', () => {
+		for (const path of ['../../../styles/tailwind.css', './HanabiReview.css']) {
+			const styles = readFileSync(new URL(path, import.meta.url), 'utf8');
+			const hoverRules = [...styles.matchAll(/([^{};]+:hover[^{};]*)\{([^{}]*)\}/g)];
+			expect(hoverRules.length).toBeGreaterThan(0);
+			for (const [, selector, declarations] of hoverRules) {
+				expect(selector).toMatch(/:focus(?:-visible|-within)?/);
+				expect(declarations).not.toMatch(
+					/(?:^|[;\n])\s*(?:transform|translate|scale|font-size|font-weight|padding|margin|top|left|bottom|right)\s*:/,
+				);
+			}
+		}
+	});
+
+	it('draws one hover/focus edge instead of an offset second border', () => {
+		for (const path of ['../../../styles/tailwind.css', './HanabiReview.css']) {
+			const styles = readFileSync(new URL(path, import.meta.url), 'utf8');
+			const stateRules = [...styles.matchAll(/([^{};]+:hover[^{};]*)\{([^{}]*)\}/g)];
+			for (const [, selector, declarations] of stateRules) {
+				if (
+					!declarations.includes('outline:') ||
+					declarations.includes('outline: none') ||
+					selector.includes('.hanabi-lobby-add-bot')
+				)
+					continue;
+				expect(declarations).toMatch(/outline:\s*1px solid/);
+				expect(declarations).toMatch(/outline-offset:\s*-1px/);
+			}
+		}
 	});
 
 	it('keeps tableau emblem blocks crisp instead of fading into their lanes', () => {
@@ -230,14 +261,12 @@ describe('Hanabi desktop visual foundation', () => {
 		expect(tooltip).not.toContain('hanabi-focus-ring size-11');
 		expect(tooltip).not.toContain('hanabi-focus-ring min-h-11 min-w-11');
 		expect(tooltip).toContain('border border-white/15');
-		expect(tooltip).toContain('hover:border-hanabi-text-muted/80');
-		expect(tooltip).toContain('focus-visible:ring-hanabi-text-muted/60');
+		expect(tooltip).toContain('hocus:border-hanabi-text-muted/80');
+		expect(tooltip).not.toContain('hocus:ring');
 		expect(tooltip).not.toContain('border-4 border-hanabi-table-deep');
-		expect(tooltip).not.toContain('hover:border-hanabi-coral');
+		expect(tooltip).not.toContain('hocus:border-hanabi-coral');
 		expect(tooltip).toContain('text-2xl');
-		expect(tooltip).toContain(
-			'focus-visible:bg-hanabi-coral/15 focus-visible:text-hanabi-coral-soft',
-		);
+		expect(tooltip).toContain('hocus:bg-hanabi-coral/15 hocus:text-hanabi-coral-soft');
 	});
 
 	it('renders decorative icons with currentColor and no accessible duplication', () => {

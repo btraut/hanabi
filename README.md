@@ -2,6 +2,11 @@
 
 An online multiplayer Hanabi game.
 
+The lobby offers a rules dropdown with a tile preview and description of the selected variant. Advanced Features
+contains the critical-discard, tile-reordering, and tile-note options. Each joined player's browser
+remembers the lobby's rules and options, including changes made by other players, and applies them
+when that player hosts and joins a new game. Joining an existing game uses its current settings.
+
 The Activity feed combines moves and chat in chronological order, with compact game events and
 distinct chat bubbles. Clues name the hinted color or number and the number of affected tiles.
 The feed scrolls within the available window height and follows new activity while pinned to the

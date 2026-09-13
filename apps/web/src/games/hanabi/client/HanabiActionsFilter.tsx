@@ -28,15 +28,18 @@ export default function HanabiActionsFilter({ filter, onChange }: Props): JSX.El
 			{Object.keys(FILTER_OPTIONS).map((filterKey) => (
 				<label
 					key={filterKey}
-					className={classNames('cursor-pointer px-2 py-0.5 text-sm rounded-xl select-none', {
-						'bg-gray-600': filter === filterKey,
-						'text-white': filter === filterKey,
-						'hover:bg-gray-200': filter !== filterKey,
-					})}
+					className={classNames(
+						'cursor-pointer px-2 py-0.5 text-sm rounded-xl select-none hover:ring-1 hover:ring-gray-400 has-[:focus-visible]:ring-1 has-[:focus-visible]:ring-gray-400',
+						{
+							'bg-gray-600': filter === filterKey,
+							'text-white': filter === filterKey,
+							'hover:bg-gray-200 has-[:focus-visible]:bg-gray-200': filter !== filterKey,
+						},
+					)}
 				>
 					{FILTER_OPTIONS[filterKey]}
 					<input
-						className="hidden"
+						className="sr-only"
 						type="radio"
 						name="actions-filter"
 						value={filterKey}

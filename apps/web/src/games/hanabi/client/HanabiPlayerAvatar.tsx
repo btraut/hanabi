@@ -56,7 +56,7 @@ export default function HanabiPlayerAvatar({
 						type="button"
 						aria-label={`Remove ${player.name}`}
 						title={`Remove ${player.name}`}
-						className="hanabi-focus-ring absolute -top-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border border-hanabi-border-bright bg-hanabi-surface-raised text-hanabi-text shadow-md transition-colors hover:bg-hanabi-border disabled:cursor-not-allowed disabled:opacity-50"
+						className="hanabi-focus-ring absolute -top-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border border-hanabi-border-bright bg-hanabi-surface-raised text-hanabi-text shadow-md transition-colors hocus:bg-hanabi-border disabled:cursor-not-allowed disabled:opacity-50"
 						disabled={removeDisabled}
 						onClick={onRemove}
 					>

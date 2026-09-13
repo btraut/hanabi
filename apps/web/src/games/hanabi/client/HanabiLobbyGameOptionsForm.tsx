@@ -43,11 +43,11 @@ export default function HanabiLobbyGameOptionsForm({
 	}, [checked]);
 
 	return (
-		<div className="grid grid-flow-col gap-3 justify-start items-center">
+		<div className="grid grid-cols-[auto_minmax(0,1fr)] gap-3 items-start">
 			<HanabiCheckbox id={id} checked={displayedChecked} onChange={handleChange} />
 			<label
 				htmlFor={id}
-				className="text-lg font-bold truncate text-center text-white cursor-pointer select-none"
+				className="text-lg font-bold text-white cursor-pointer select-none leading-6"
 			>
 				{label}
 			</label>

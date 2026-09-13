@@ -10,6 +10,7 @@ import {
 import HanabiHeader from '~/games/hanabi/client/HanabiHeader';
 import HanabiJoinForm from '~/games/hanabi/client/HanabiJoinForm';
 import HanabiLobbyGameOptionsForm from '~/games/hanabi/client/HanabiLobbyGameOptionsForm';
+import { useRememberHanabiLobbySettings } from '~/games/hanabi/client/HanabiLobbySettings';
 import HanabiPlayerAvatar from '~/games/hanabi/client/HanabiPlayerAvatar';
 import { HANABI_MAX_PLAYERS, HANABI_MIN_PLAYERS, HanabiStage } from '@hanabi/shared';
 import { useRef, useState } from 'react';
@@ -36,6 +37,7 @@ export default function HanabiLobby(): JSX.Element {
 	};
 
 	const userIsJoined = !!(userId && gameData.players[userId]);
+	useRememberHanabiLobbySettings(gameData, userIsJoined);
 	const canManageBots =
 		userIsJoined &&
 		gameData.players[userId].kind !== 'bot' &&
@@ -66,9 +68,9 @@ export default function HanabiLobby(): JSX.Element {
 	};
 
 	return (
-		<div className="w-screen min-h-screen grid grid-flow-row gap-6 content-start">
+		<div className="hanabi-lobby w-screen min-h-screen grid grid-flow-row content-start">
 			<HanabiHeader />
-			<div className="grid w-full max-w-2xl gap-10 justify-self-center px-4 py-8 sm:p-10">
+			<div className="grid w-full max-w-[560px] gap-[22px] justify-self-center px-4 pt-5 pb-6">
 				{players.length > 0 && (
 					<div
 						className="flex flex-wrap items-start justify-center gap-x-6 gap-y-5"
@@ -86,57 +88,76 @@ export default function HanabiLobby(): JSX.Element {
 								removeDisabled={botRequest !== null}
 							/>
 						))}
+						{canManageBots && gameData.bots?.available && (
+							<button
+								type="button"
+								className="hanabi-lobby-add-bot"
+								onClick={() => void manageBot()}
+								disabled={botRequest !== null || !gameData.bots?.available || lobbyFull}
+								aria-describedby={lobbyFull ? 'bot-availability' : undefined}
+							>
+								<span className="hanabi-lobby-add-bot-icon" aria-hidden="true">
+									<svg width="56" height="56" viewBox="0 0 56 56" fill="currentColor">
+										<path
+											fillRule="evenodd"
+											d="M28 0a28 28 0 1 0 0 56a28 28 0 1 0 0-56ZM25 17h6v8h8v6h-8v8h-6v-8h-8v-6h8Z"
+										/>
+									</svg>
+								</span>
+								<span>{botRequest === 'add' ? 'Adding…' : 'Add bot'}</span>
+							</button>
+						)}
 					</div>
 				)}
-				{userIsJoined && <HanabiCopyLinkButton link={link} />}
+				{canManageBots && lobbyFull && (
+					<p id="bot-availability" className="text-center text-base text-hanabi-text-muted">
+						The lobby is full (5 players).
+					</p>
+				)}
+				{botError && (
+					<p role="alert" className="text-center text-base text-hanabi-coral-soft">
+						{botError}
+					</p>
+				)}
+
+				{userIsJoined && (
+					<div className="hanabi-lobby-invite">
+						<HanabiCopyLinkButton link={link} />
+					</div>
+				)}
 				{userIsJoined ? (
 					<>
-						<div className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-[auto_auto] sm:gap-y-6">
-							<div className="mt-2 text-lg font-bold text-white cursor-default select-none sm:justify-self-end">
-								Game Rules:
-							</div>
-							<div className="justify-self-start grid gap-3">
-								<HanabiChooseRuleSetForm ruleSet={gameData.ruleSet} />
-								<HanabiLobbyGameOptionsForm
-									checked={gameData.criticalGameOver}
-									label="Discarding a critical tile ends the game"
-									settingsKey="criticalGameOver"
-								/>
-							</div>
-
-							<div className="text-lg font-bold text-white cursor-default select-none sm:justify-self-end">
-								Advanced Features:
-							</div>
-							<div className="justify-self-start grid gap-2">
-								<HanabiLobbyGameOptionsForm
-									checked={gameData.allowDragging}
-									label="Allow reordering of tiles"
-									settingsKey="allowDragging"
-								/>
-								<HanabiLobbyGameOptionsForm
-									checked={gameData.showNotes}
-									label="Show notes on tiles"
-									settingsKey="showNotes"
-								/>
-							</div>
+						<div className="grid min-w-0 gap-[22px]">
+							<HanabiChooseRuleSetForm ruleSet={gameData.ruleSet} />
+							<fieldset className="min-w-0">
+								<legend className="mb-3 text-lg font-bold text-white">Advanced Features</legend>
+								<div className="grid gap-3">
+									<HanabiLobbyGameOptionsForm
+										checked={gameData.criticalGameOver}
+										label="Discarding a critical tile ends the game"
+										settingsKey="criticalGameOver"
+									/>
+									<HanabiLobbyGameOptionsForm
+										checked={gameData.allowDragging}
+										label="Allow reordering of tiles"
+										settingsKey="allowDragging"
+									/>
+									<HanabiLobbyGameOptionsForm
+										checked={gameData.showNotes}
+										label="Show notes on tiles"
+										settingsKey="showNotes"
+									/>
+								</div>
+							</fieldset>
 						</div>
 						<div className="grid gap-3">
-							<div className="flex flex-wrap justify-center gap-4">
+							<div className="flex flex-wrap justify-center gap-2.5">
 								<HanabiMenuButton
 									label="Leave"
 									onClick={handleLeaveClick}
 									disabled={botRequest !== null}
 								/>
-								{canManageBots && (
-									<HanabiMenuButton
-										label={botRequest === 'add' ? 'Adding…' : 'Add bot'}
-										onClick={() => void manageBot()}
-										disabled={botRequest !== null || !gameData.bots?.available || lobbyFull}
-										aria-describedby={
-											!gameData.bots?.available || lobbyFull ? 'bot-availability' : undefined
-										}
-									/>
-								)}
+
 								<HanabiMenuButton
 									label="Start game"
 									onClick={handleStartClick}
@@ -144,18 +165,6 @@ export default function HanabiLobby(): JSX.Element {
 									variant="primary"
 								/>
 							</div>
-							{canManageBots && (!gameData.bots?.available || lobbyFull) && (
-								<p id="bot-availability" className="text-center text-base text-hanabi-text-muted">
-									{!gameData.bots?.available
-										? 'Bots are unavailable on this server.'
-										: 'The lobby is full (5 players).'}
-								</p>
-							)}
-							{botError && (
-								<p role="alert" className="text-center text-base text-hanabi-coral-soft">
-									{botError}
-								</p>
-							)}
 						</div>
 					</>
 				) : (
