@@ -1,5 +1,5 @@
 import type { HanabiFinishedReason } from '@hanabi/shared';
-import { count, desc, sql } from 'drizzle-orm';
+import { count, desc, eq, sql } from 'drizzle-orm';
 import type { DatabaseConnection } from '../../db/database.js';
 import { gameTranscripts } from '../../db/schema.js';
 import type {
@@ -36,6 +36,7 @@ export interface AdminTranscriptSummaryPage {
 
 export interface GameTranscriptSummaryReader {
 	list(page: number): Promise<AdminTranscriptSummaryPage>;
+	get(roundId: string): Promise<GameTranscriptV1 | null>;
 }
 
 export default class PostgresGameTranscriptSummaryReader implements GameTranscriptSummaryReader {
@@ -43,6 +44,15 @@ export default class PostgresGameTranscriptSummaryReader implements GameTranscri
 		private readonly _db: DatabaseConnection['db'],
 		private readonly _now: () => Date = () => new Date(),
 	) {}
+
+	public async get(roundId: string): Promise<GameTranscriptV1 | null> {
+		const [row] = await this._db
+			.select({ transcript: gameTranscripts.transcript })
+			.from(gameTranscripts)
+			.where(eq(gameTranscripts.roundId, roundId))
+			.limit(1);
+		return row?.transcript ?? null;
+	}
 
 	public async list(page: number): Promise<AdminTranscriptSummaryPage> {
 		const offset = (page - 1) * ADMIN_TRANSCRIPT_PAGE_SIZE;

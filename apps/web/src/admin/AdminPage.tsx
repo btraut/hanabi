@@ -1,6 +1,9 @@
 import AdminApi, { AdminApiError, AdminGameSummary, AdminGamesPage } from './AdminApi';
 import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { GameTranscriptV1 } from '@hanabi/shared';
+import HanabiReview from '~/games/hanabi/client/HanabiReview';
+import HanabiStyles from '~/games/hanabi/client/HanabiStyles';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 type ViewState = 'loading' | 'locked' | 'ready' | 'error';
 
@@ -59,7 +62,13 @@ function modeLabel(settings: AdminGameSummary['initialSettings']): string {
 	].join(' · ');
 }
 
-function GameRow({ game }: { readonly game: AdminGameSummary }): JSX.Element {
+function GameRow({
+	game,
+	page,
+}: {
+	readonly game: AdminGameSummary;
+	readonly page: number;
+}): JSX.Element {
 	return (
 		<tr>
 			<td>
@@ -75,6 +84,18 @@ function GameRow({ game }: { readonly game: AdminGameSummary }): JSX.Element {
 			<td>{resultLabel(game)}</td>
 			<td className="admin-number">{game.score ?? '—'}</td>
 			<td>{wordsLabel(game.integrity)}</td>
+			<td>
+				{game.status === 'finished' && game.integrity === 'complete' ? (
+					<Link
+						className="admin-review-link"
+						to={`/admin?page=${page}&round=${encodeURIComponent(game.roundId)}`}
+					>
+						Review
+					</Link>
+				) : (
+					'—'
+				)}
+			</td>
 		</tr>
 	);
 }
@@ -83,6 +104,9 @@ export default function AdminPage(): JSX.Element {
 	const location = useLocation();
 	const navigate = useNavigate();
 	const page = pageFromSearch(location.search);
+	const roundId = new URLSearchParams(location.search).get('round');
+	const [transcript, setTranscript] = useState<GameTranscriptV1 | null>(null);
+	const [loadError, setLoadError] = useState('');
 	const [view, setView] = useState<ViewState>('loading');
 	const [games, setGames] = useState<AdminGamesPage | null>(null);
 	const [password, setPassword] = useState('');
@@ -90,10 +114,19 @@ export default function AdminPage(): JSX.Element {
 	const [busy, setBusy] = useState(false);
 	const requestId = useRef(0);
 
-	const loadGames = useCallback(async () => {
+	const loadArchive = useCallback(async () => {
 		const id = ++requestId.current;
 		setView('loading');
+		setTranscript(null);
+		setLoadError('');
 		try {
+			if (roundId !== null) {
+				const nextTranscript = await AdminApi.transcript(roundId);
+				if (id !== requestId.current) return;
+				setTranscript(nextTranscript);
+				setView('ready');
+				return;
+			}
 			const nextGames = await AdminApi.games(page);
 			if (id !== requestId.current) return;
 			if (nextGames.items.length === 0 && nextGames.total > 0 && page > 1) {
@@ -118,23 +151,40 @@ export default function AdminPage(): JSX.Element {
 				setView('locked');
 				return;
 			}
+			setLoadError(
+				roundId !== null
+					? error instanceof AdminApiError && error.status === 404
+						? 'This recorded game could not be found.'
+						: error instanceof AdminApiError && (error.status === 409 || error.status === 400)
+							? 'Review unavailable: this game does not have a complete finished recording.'
+							: 'The game review could not be loaded.'
+					: 'The game archive could not be loaded.',
+			);
 			setView('error');
 		}
-	}, [navigate, page]);
+	}, [navigate, page, roundId]);
 
 	useEffect(() => {
-		void loadGames();
-	}, [loadGames]);
+		void loadArchive();
+		return () => {
+			// Invalidate every pending request; this counter is not a DOM ref.
+			// eslint-disable-next-line react-hooks/exhaustive-deps
+			requestId.current++;
+		};
+	}, [loadArchive]);
 
 	async function submitPassword(event: FormEvent): Promise<void> {
 		event.preventDefault();
+		const id = requestId.current;
 		setBusy(true);
 		setLoginError('');
 		try {
 			await AdminApi.login(password);
+			if (id !== requestId.current) return;
 			setPassword('');
-			await loadGames();
+			await loadArchive();
 		} catch (error) {
+			if (id !== requestId.current) return;
 			setPassword('');
 			setLoginError(
 				error instanceof AdminApiError && error.status === 401
@@ -180,8 +230,23 @@ export default function AdminPage(): JSX.Element {
 	if (view === 'loading') {
 		return (
 			<main className="admin-state-shell">
-				<p>Loading game archive…</p>
+				<p>{roundId !== null ? 'Loading game review…' : 'Loading game archive…'}</p>
 			</main>
+		);
+	}
+
+	if (view === 'ready' && transcript) {
+		return (
+			<>
+				<HanabiStyles />
+				<HanabiReview
+					key={roundId}
+					transcript={transcript}
+					userId={transcript.turnOrder[0]}
+					exitLabel="Back to archive"
+					onExit={() => goToPage(page)}
+				/>
+			</>
 		);
 	}
 
@@ -189,8 +254,13 @@ export default function AdminPage(): JSX.Element {
 		return (
 			<main className="admin-state-shell">
 				<h1>Game archive</h1>
-				<p>The game archive could not be loaded.</p>
-				<button onClick={() => void loadGames()} type="button">
+				<p role="alert">{loadError}</p>
+				{roundId !== null && (
+					<button onClick={() => goToPage(page)} type="button">
+						Back to archive
+					</button>
+				)}
+				<button onClick={() => void loadArchive()} type="button">
 					Try again
 				</button>
 			</main>
@@ -225,17 +295,18 @@ export default function AdminPage(): JSX.Element {
 								Score
 							</th>
 							<th scope="col">Integrity</th>
+							<th scope="col">Review</th>
 						</tr>
 					</thead>
 					<tbody>
 						{games.items.length === 0 ? (
 							<tr>
-								<td className="admin-empty" colSpan={9}>
+								<td className="admin-empty" colSpan={10}>
 									No games yet. Completed and active rounds will appear here once recorded.
 								</td>
 							</tr>
 						) : (
-							games.items.map((game) => <GameRow game={game} key={game.roundId} />)
+							games.items.map((game) => <GameRow game={game} page={page} key={game.roundId} />)
 						)}
 					</tbody>
 				</table>
