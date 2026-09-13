@@ -1,10 +1,33 @@
 import { describe, expect, it, vi } from 'vitest';
+import type { SQL } from 'drizzle-orm';
+import { PgDialect } from 'drizzle-orm/pg-core';
 import type { DatabaseConnection } from '../../db/database.js';
+import { gameTranscripts } from '../../db/schema.js';
 import PostgresGameTranscriptSummaryReader, {
 	ADMIN_TRANSCRIPT_PAGE_SIZE,
 } from './PostgresGameTranscriptSummaryReader.js';
 
 describe('PostgresGameTranscriptSummaryReader', () => {
+	it('loads one archived transcript by its round ID and returns null for a missing round', async () => {
+		const transcript = { roundId: 'archived-round' };
+		const limit = vi.fn().mockResolvedValueOnce([{ transcript }]).mockResolvedValueOnce([]);
+		const where = vi.fn<(condition: SQL) => { limit: typeof limit }>().mockReturnValue({ limit });
+		const from = vi.fn().mockReturnValue({ where });
+		const select = vi.fn().mockReturnValue({ from });
+		const reader = new PostgresGameTranscriptSummaryReader({
+			select,
+		} as unknown as DatabaseConnection['db']);
+
+		await expect(reader.get('archived-round')).resolves.toEqual(transcript);
+		expect(select).toHaveBeenCalledWith({ transcript: gameTranscripts.transcript });
+		expect(from).toHaveBeenCalledWith(gameTranscripts);
+		expect(limit).toHaveBeenCalledWith(1);
+		const query = new PgDialect().sqlToQuery(where.mock.calls[0][0]);
+		expect(query.sql).toBe('"game_transcripts"."round_id" = $1');
+		expect(query.params).toEqual(['archived-round']);
+		await expect(reader.get('missing-round')).resolves.toBeNull();
+	});
+
 	it('returns the requested fixed-size offset page without loading full transcripts', async () => {
 		const rows = [
 			{

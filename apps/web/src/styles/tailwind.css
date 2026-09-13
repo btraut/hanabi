@@ -2196,3 +2196,18 @@ body {
 		animation-duration: 1ms;
 	}
 }
+
+.admin-review-link {
+	color: var(--color-hanabi-coral);
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+
+.admin-review-link:hover {
+	color: var(--color-hanabi-text);
+}
+
+.admin-review-link:focus-visible {
+	outline: 2px solid var(--color-hanabi-coral);
+	outline-offset: 4px;
+}
