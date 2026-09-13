@@ -27,6 +27,7 @@ import {
 } from '@hanabi/shared';
 import AuthSocketManager, { AuthenticationState } from '~/utils/client/AuthSocketManager';
 import SocketManager, { ConnectionState } from '~/utils/client/SocketManager';
+import type { HanabiLobbySettings } from './HanabiLobbySettings';
 
 export default class HanabiGameMessenger {
 	private _id: string;
@@ -42,14 +43,17 @@ export default class HanabiGameMessenger {
 	private _socketManagerOnAuthenticateSubscriptionId: number;
 
 	private _updateGameDataDelegate: (gameData: HanabiGameData) => void;
+	private _initialSettings: HanabiLobbySettings | undefined;
 
 	constructor(
 		id: string,
 		socketManager: SocketManager<HanabiMessage>,
 		authSocketManager: AuthSocketManager,
 		updateGameDataDelegate: (gameData: HanabiGameData) => void,
+		initialSettings?: HanabiLobbySettings,
 	) {
 		this._id = id;
+		this._initialSettings = initialSettings;
 
 		this._socketManager = socketManager;
 		this._socketManagerOnConnectSubscriptionId = socketManager.onConnect.subscribe(
@@ -145,6 +149,14 @@ export default class HanabiGameMessenger {
 
 		if (addPlayerResponseMessage.data.error) {
 			throw new Error(addPlayerResponseMessage.data.error);
+		}
+
+		// New games apply remembered preferences after the creator becomes a player.
+		// Messengers for existing games never receive these initial preferences.
+		if (this._initialSettings) {
+			const settings = this._initialSettings;
+			this._initialSettings = undefined;
+			await this.changeSettings(settings);
 		}
 
 		// After responding to our initial message, the server will also send a
