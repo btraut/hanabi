@@ -38,7 +38,9 @@ export function getHanabiDesktopLogicalPositionFromRendered(
 	surfaceWidth: number,
 	tileSize: { height: number; width: number } = HANABI_DESKTOP_TILE_SIZE,
 ): Position {
-	if (renderedPosition.y < HANABI_DESKTOP_ZONE_HEIGHT) {
+	// Choose the zone by card overlap, so a lower-edge grab can cross the divider
+	// without requiring the entire card to leave the queue.
+	if (renderedPosition.y + tileSize.height / 2 < HANABI_DESKTOP_ZONE_HEIGHT) {
 		const visualStep = tileSize.width + HANABI_DESKTOP_TILE_GAP;
 		const slot = Math.max(
 			0,

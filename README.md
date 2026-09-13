@@ -20,6 +20,9 @@ it again dismisses it. Reduced-motion preferences keep the glow steady.
 Touch long-press notes and card action menus open above the card to stay clear of the player’s
 finger. Mouse-hover notes open below the card.
 
+Dragging between the ordered queue and lower workspace changes zones when the card's center
+crosses the divider. Cards dropped in the lower workspace settle fully inside that area.
+
 New clues, plays, and discards also appear in a black toast at the top of the screen on phones
 and desktop, using the Activity feed's player names, action text, and colors. Toasts appear one
 at a time, dismiss after four seconds, and have a close button. Existing history is not replayed
