@@ -33,11 +33,13 @@ As the giver, prefer clues whose entire touched set satisfies this expectation. 
 
 A verified useless or redundant tile can be discarded. Do not discard a reserved tile merely because it might be a duplicate. A deliberate clue that includes duplicates requires a plan to resolve the duplication before it causes a failed play; the right-to-left convention below can make this possible.
 
+Keep good-touch beliefs and established play signals until a partner intervenes or concrete evidence contradicts them. For example, an opening clue touching three 1s means all three are conventionally different colors and playable. After successfully playing blue 1, continue treating the remaining two as non-blue 1s and play them in the agreed right-to-left order. A duplicate remaining possible under literal clue knowledge is not contrary evidence and does not require another clue. Carry these beliefs through result follow-ups and subsequent turns; rechecking the board does not mean forgetting the clue's intent. If the giver deliberately included a duplicate, they remain responsible for resolving it before the redundant play.
+
 ## Clues that signal a play
 
 ### A clue touching exactly one tile
 
-If a clue touches exactly one tile and at least one identity consistent with the recipient's literal information would be playable on the board at clue time, assume that tile is playable. Narrow its inferred identity to the playable possibilities. For example, if only red has a played 2 and a single-tile 3 clue could represent red 3, infer that the tile is red 3.
+If a clue touches exactly one tile and at least one identity consistent with the recipient's literal information would be playable on the board at clue time, assume that tile is playable unless the recipient can recognize the duplicate-resolution context described under Advanced advice. Narrow its inferred identity to the playable possibilities. For example, if only red has a played 2 and a single-tile 3 clue could represent red 3, infer that the tile is red 3.
 
 If no consistent identity is playable, the clue asks for retention. On an empty ordinary board, a single-tile 2 clue safely asks the recipient to save the 2. Once a 1 has been played, the same clue can signal a play and must be evaluated accordingly.
 
@@ -45,17 +47,17 @@ A play signal does not force an immediate play when a more urgent save or useful
 
 ### A multi-tile clue touching the rightmost queued tile
 
-If a clue touches multiple tiles and includes the rightmost tile in the recipient's discard queue at clue time, assume that rightmost queued tile is playable. Preserve every other touched tile under good touch; they are not automatically playable too.
+If a clue touches multiple tiles and includes the rightmost tile in the recipient's discard queue at clue time, assume that rightmost queued tile is playable unless the recipient can recognize the duplicate-resolution context described under Advanced advice. Preserve every other touched tile under good touch; they are not automatically playable too.
 
 The signal targets the rightmost tile in the queue, even if a more recently acquired tile is already set aside. It does not target whichever touched tile happens to be farthest right when the actual rightmost queued tile is untouched. Evaluate the trigger before setting the newly clued tiles aside.
 
 ### Respect what your clue will make people do
 
-Before giving a clue, work out its meaning to the recipient. You cannot use a play-signaling clue as an ordinary save for a tile that is not playable. The exceptions are a supported finesse that makes it playable before their turn and a deliberate emergency signal described below. Good intentions do not erase a misleading play signal.
+Before giving a clue, work out its meaning to the recipient. You cannot use a play-signaling clue as an ordinary save for a tile that is not playable. The exceptions are recognizable duplicate resolution that lets the recipient safely choose between play and discard, a supported finesse that makes it playable before their turn, and a deliberate emergency signal described below. Good intentions do not erase a misleading play signal.
 
 Waiting for a draw can make a misleading multi-tile clue safe. If the recipient plays or safely discards and draws, their rightmost queued tile changes; a later clue may then preserve the older tiles without signaling an unwanted play. Recheck the entire touched set and the rightmost queued tile after the draw, because the replacement may also match. An empty deck provides no replacement. Never sacrifice an important tile or delay an urgent save just to change the clue's meaning.
 
-Clue tokens are a resource meant to advance the game. Spend them to create plays and prevent important losses. Clues that neither save an endangered tile nor give an immediate play are usually poor uses of a turn; early protection of 2s and preserving the endgame's remaining draws are valuable exceptions. Do not hoard clues while productive plays can be enabled, but look ahead so the team can still afford urgent saves. At zero clues you cannot clue; at the clue limit you cannot discard. Choose among the supplied legal actions.
+Clue tokens are a resource meant to advance the game. Spend them to create plays and prevent important losses. Clues that neither save an endangered tile nor give an immediate play are usually poor uses of a turn; early protection of 2s, resolving a duplicate or transferring its reservation, and preserving the endgame's remaining draws are valuable exceptions. Do not hoard clues while productive plays can be enabled, but look ahead so the team can still afford urgent saves. At zero clues you cannot clue; at the clue limit you cannot discard. Choose among the supplied legal actions.
 
 ### Use information gain to break ties
 
@@ -64,6 +66,14 @@ When clues have comparable urgency, safety, and useful effect, prefer the one th
 Information gain is only a tie-breaker. It does not justify a misleading play signal, a bad touch, an information-only clue over a productive action, or delaying an urgent save. A repeated clue can still be useful when its timing communicates a needed action.
 
 ## Advanced advice
+
+### Let partners resolve duplicates and transfer reservations
+
+If you have a reserved family, such as three clued 1s, consider a color clue for a partner's 1. Your partner can see the faces of your reserved tiles and use that information, their own clues, and the board to decide whether their tile contributes independently or duplicates a protected copy. Give them enough information to choose a useful play or safe discard for themselves. A color clue does not literally establish rank: evaluate the entire touched set under the active clue-matching rules, including special suits, and what the recipient can actually infer.
+
+A recognizable duplicate-resolution clue is a contextual exception to good touch and the usual single-tile or rightmost-queue play signal. The recipient should keep one useful copy protected and decide which copy should contribute. Do not invent a duplicate merely because one is possible or treat every color clue as permission to discard. If the recipient lacks enough information to recognize the choice, the ordinary play signals still apply; the giver cannot rely on their own view of the recipient's hidden tiles as though the recipient shares it.
+
+Sometimes clueing a partner's duplicate is useful because you can release your own copy. If your clues and public history identify which reserved tile duplicates theirs, move yours into the discard queue while clueing their copy in the same turn. Submit the rearrangement with the clue; movement occurs before the clue and there is no result follow-up after giving it. This transfers responsibility for the needed identity: the partner's copy becomes a good touch because yours is available to discard. Make the transfer recognizable and keep one needed copy protected. As the recipient, account for the giver's released reservation before deciding your own tile is redundant. Do not release an unidentified member of a clued family just because one might match. With dragging disabled, a private change of intention is not visible; rely on public clues and actions to establish which copy remains protected.
 
 ### Keep enough tiles in the discard queue
 
@@ -85,7 +95,7 @@ Ordinary suits need their low ranks before higher ranks can contribute. Advance 
 
 Protect early 2s especially carefully. Each ordinary 1 has three copies, while each 2 has only two. Losing an early 2 can leave a suit waiting until late in the deck and make its higher ranks much harder to preserve and play. This makes an opening clue touching one or more 2s a common useful choice, even before they can be played.
 
-An opening single-tile 2 clue is a safe retention clue because no 2 is plausibly playable yet. An opening multi-tile 2 clue must still respect the rightmost-queue play signal: do not touch an unplayable rightmost queued 2 unless a supported finesse or emergency justifies that signal. Protecting 2s does not override preventing the loss of a critical tile. Apply this opening advice to ascending suits; different build orders require different priorities.
+An opening single-tile 2 clue is a safe retention clue because no 2 is plausibly playable yet. An opening multi-tile 2 clue must still respect the rightmost-queue play signal: do not touch an unplayable rightmost queued 2 unless recognizable duplicate resolution, a supported finesse, or an emergency justifies the exception. Protecting 2s does not override preventing the loss of a critical tile. Apply this opening advice to ascending suits; different build orders require different priorities.
 
 Unprotected 3s and 4s are usually reasonable early discards while another copy remains available. Avoid setting them aside without a useful purpose: they occupy space needed to draw and cycle tiles. This does not make them useless or override protecting an imminent playable or critical discard. Reassess as the board and discard pile change.
 
@@ -102,6 +112,8 @@ This requires a recognizable obligation and a suitable clue that B can afford wh
 In a two-player game, a partner's discard can make a matching tile in your own discard slot critical before they get a chance to warn you. For example, your partner discards a needed blue 3 and only then discovers its identity. If your discard slot also holds blue 3, immediately discarding it loses the last copy. Their silence before their discard is not reassurance about a danger that the discard itself created.
 
 After a partner discards a still-needed 3 or 4, give a slight extra preference to a useful clue or supported safe play that lets them take another turn and warn you if necessary. Check that they will have a clue available. This is a narrow caution, not a ban on consecutive discards or a reason to reserve every unknown tile. It does not apply when your discard cannot match, the identity is already built, or the remaining copy is safely accounted for elsewhere. Do not give a misleading clue or make an unsafe play just to create a warning window.
+
+This caution does not suspend established play signals or good-touch beliefs. A supported play already gives your partner another turn to intervene. A red 1 discard is not a reason to delay a group of conventionally playable 1s, suspect a duplicate blue 1, or demand another clue.
 
 ## Play multiple playable tiles from right to left
 
