@@ -550,6 +550,12 @@ describe('bot result reflections', () => {
 		expect(chats(harness, harness.botId)[1]).toMatchObject({
 			message: 'Debug: Remember the revealed card.',
 		});
+		expect(after.transcript?.chat?.messages.at(-1)).toMatchObject({
+			actorId: harness.botId,
+			actorKind: 'bot',
+			message: 'Debug: Remember the revealed card.',
+			afterMoveIndex: after.transcript!.moves.length,
+		});
 		expect(() => createHarness(after)).not.toThrow();
 	});
 

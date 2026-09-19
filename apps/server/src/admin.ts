@@ -98,7 +98,7 @@ export function createAdminRouter(options: AdminRouterOptions): express.Router {
 			});
 	});
 
-	router.get('/transcripts/:roundId', (req, res) => {
+	router.get(['/transcripts/:roundId', '/transcripts/:roundId/export'], (req, res) => {
 		if (!hasAdminSession(req.signedCookies)) {
 			res.status(401).json({ error: 'Authentication required.' });
 			return;
@@ -121,7 +121,8 @@ export function createAdminRouter(options: AdminRouterOptions): express.Router {
 					res.status(404).json({ error: 'Round not found.' });
 					return;
 				}
-				if (!isReplayableTranscript(transcript)) {
+				// Analysis exports include unfinished and partial rounds with their integrity metadata.
+				if (!req.path.endsWith('/export') && !isReplayableTranscript(transcript)) {
 					res.status(409).json({ error: 'Only complete, finished rounds can be replayed.' });
 					return;
 				}

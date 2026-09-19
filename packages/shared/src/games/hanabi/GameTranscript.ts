@@ -90,6 +90,23 @@ export interface GameTranscriptHandMovement {
 	positions: Record<string, Position>;
 }
 
+export interface GameTranscriptChatMessage {
+	id: string;
+	createdAt: string;
+	actorId: string;
+	actorName: string;
+	actorKind: 'human' | 'bot';
+	message: string;
+	/** Number of accepted gameplay moves before this message. Array order breaks ties. */
+	afterMoveIndex: number;
+}
+
+export interface GameTranscriptChat {
+	coverage: 'complete' | 'partial';
+	reason?: string;
+	messages: GameTranscriptChatMessage[];
+}
+
 export interface GameTranscriptV1 {
 	version: typeof GAME_TRANSCRIPT_VERSION;
 	revision: number;
@@ -102,6 +119,8 @@ export interface GameTranscriptV1 {
 	turnOrder: string[];
 	deck: HanabiTile[] | null;
 	moves: GameTranscriptMove[];
+	/** Absent on recordings made before durable chat capture. */
+	chat?: GameTranscriptChat;
 	/** Absent on older recordings that did not retain hand layouts. */
 	initialTilePositions?: Record<string, Position>;
 	handMovements?: GameTranscriptHandMovement[];

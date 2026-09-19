@@ -59,10 +59,12 @@ import Logger from '../../utils/Logger.js';
 import { randomUUID } from 'node:crypto';
 import {
 	appendGameTranscriptMove,
+	appendGameTranscriptChat,
 	appendGameTranscriptHandMovement,
 	createGameTranscript,
 	createPartialGameTranscript,
 	GameTranscriptV1,
+	type GameTranscriptChat,
 	resetGameTranscript,
 	transcriptMatchesRound,
 } from './GameTranscript.js';
@@ -81,6 +83,7 @@ export interface HanabiGameSerialized extends GameSerialized {
 	data: HanabiGameData;
 	transcript?: GameTranscriptV1 | null;
 	botRound?: BotRound | null;
+	pendingChat?: GameTranscriptChat;
 }
 
 const INVALID_MESSAGE_PAYLOAD = 'Invalid message payload.';
@@ -101,6 +104,7 @@ export default class HanabiGame extends Game {
 	private _lastReadActivitySaveAt = 0;
 	private readonly _debugPlayerControls: boolean;
 	private _transcript: GameTranscriptV1 | null = null;
+	private _pendingChat: GameTranscriptChat = { coverage: 'complete', messages: [] };
 	private _botRound: BotRound | null = null;
 	private readonly _botCoordinator?: BotTurnCoordinator;
 	private readonly _resultCoordinator?: BotTurnCoordinator;
@@ -126,6 +130,13 @@ export default class HanabiGame extends Game {
 		if (typeof creatorIdOrData === 'string') {
 			this._gameData = generateHanabiGameData({ creatorId: creatorIdOrData });
 		} else {
+			this._pendingChat = structuredClone(
+				creatorIdOrData.pendingChat ?? {
+					coverage: 'partial',
+					reason: 'Lobby chat sent before durable chat capture became available is not recorded.',
+					messages: [],
+				},
+			);
 			this._id = creatorIdOrData.id;
 			this._code = creatorIdOrData.code;
 			this._creatorId = creatorIdOrData.creatorId;
@@ -243,6 +254,7 @@ export default class HanabiGame extends Game {
 			...baseSerialized,
 			data: this._gameData,
 			transcript: this._transcript,
+			...(this._gameData.stage === HanabiStage.Setup ? { pendingChat: this._pendingChat } : {}),
 			...(this._botRound ? { botRound: this._botRound } : {}),
 		};
 		return JSON.stringify(serialized);
@@ -427,6 +439,25 @@ export default class HanabiGame extends Game {
 		this._gameData.actions = [...this._gameData.actions, ...timestampedActions].slice(
 			-HANABI_MAX_ACTIONS,
 		);
+		for (const action of timestampedActions) {
+			if (action.type !== HanabiGameActionType.Chat) continue;
+			const player = this._gameData.players[action.playerId];
+			const message = {
+				id: action.id,
+				createdAt: action.createdAt,
+				actorId: action.playerId,
+				actorName: player.name,
+				actorKind: player.kind ?? 'human',
+				message: action.message,
+				afterMoveIndex: this._transcript?.moves.length ?? 0,
+			};
+			if (this._transcript) {
+				this._transcript = appendGameTranscriptChat(this._transcript, message);
+				this._recordTranscriptSnapshot();
+			} else {
+				this._pendingChat.messages.push(message);
+			}
+		}
 		return timestampedActions;
 	}
 
@@ -860,10 +891,10 @@ export default class HanabiGame extends Game {
 				[playerId]: structuredClone(decision.conversation),
 			};
 		}
+		const layoutChanged = this._transcript !== beforeTranscript;
 		this._appendActions(createBotDecisionChat(playerId, decisionId, decision.explanation));
 		if (!action) {
-			if (this._transcript !== beforeTranscript) this._recordTranscriptSnapshot();
-			if (opportunity === 'result') this._finishResult(this._transcript !== beforeTranscript);
+			if (opportunity === 'result') this._finishResult(layoutChanged);
 			else this._invalidateBotTurn(true);
 		}
 		this._broadcastGameData();
@@ -1325,7 +1356,9 @@ export default class HanabiGame extends Game {
 			{ gameId: this.id, gameCode: this.code },
 			this._gameData,
 			startedAction.createdAt!,
+			this._pendingChat,
 		);
+		this._pendingChat = { coverage: 'complete', messages: [] };
 		this._recordTranscriptSnapshot();
 
 		// Send success message.
@@ -1908,6 +1941,7 @@ export default class HanabiGame extends Game {
 			ruleSet: this._gameData.ruleSet,
 		});
 		this._transcript = null;
+		this._pendingChat = { coverage: 'complete', messages: [] };
 
 		// Send the updated state to all players/watchers.
 		this._messenger.send(userId, {

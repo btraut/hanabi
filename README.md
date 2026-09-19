@@ -179,7 +179,8 @@ message, including a response that keeps the layout unchanged. The complete expl
 contain up to 1,000 characters plus the prefix; ordinary player messages retain their 500-character
 limit. Debug messages are visible to every player and watcher and may reveal teammate cards their
 owners cannot see. They are persisted with chat, consume no turn, and are excluded from bot
-observations, factual history, and gameplay transcripts. Explanations are not written to the server
+observations and factual history. Transcript chat retains these public explanations separately from
+gameplay moves. Explanations are not written to the server
 console. Rejected or stale decisions produce no debug message.
 Existing v1 rounds keep their saved coaching and action-only contract. Conversation initialization
 adapts saved transport instructions and removes scratchpad instructions. All v2 rounds use the
@@ -236,6 +237,21 @@ archive** returns to the same page. Older rounds without a replayable recording 
 message. Review URLs retain the round and require the same admin session. The default dashboard
 password is `tenfour`; set `ADMIN_PASSWORD` to override it. Successful sign-in creates a signed,
 HTTP-only browser-session cookie and the password is never stored by the web client.
+
+For agent analysis, use the repository skill at
+[`.agents/skills/hanabi-transcript/SKILL.md`](.agents/skills/hanabi-transcript/SKILL.md).
+`pnpm transcript list --code ABCDEF` finds recorded rounds; `pnpm transcript fetch ROUND_ID`
+downloads the selected round into ignored `.context/game-transcripts/` with private file permissions.
+The helper uses Railway CLI authentication to read the existing production admin configuration,
+then signs into the admin API without printing credentials. Set a strong `ADMIN_PASSWORD` in
+production; the documented default is for local convenience.
+
+The authenticated `/api/admin/transcripts/:roundId/export` endpoint includes unfinished, reset,
+and partial rounds for diagnosis. Replay review still requires a complete finished round. Transcript
+chat includes lobby messages for the ensuing round and human/bot messages during and after play
+until reset. Chat is independent of the capped activity feed; older recordings have unavailable or
+partial chat coverage. A lobby that never starts has no permanent round archive. See
+[`docs/specs/game-transcript-v1.md`](docs/specs/game-transcript-v1.md) for ordering and completeness.
 
 ### Available Commands
 

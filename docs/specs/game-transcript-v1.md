@@ -9,9 +9,38 @@ Complete, finished transcripts are included as `reviewTranscript` in recipient g
 - `players` preserves the player iteration order used when dealing. `dealOrder` records each player's initial hand in the exact order it was dealt.
 - `deck` contains every tile exactly once in first-consumed-first order. Its prefix is the full hands in `dealOrder`; its suffix is the remaining draw stack reversed from the runtime's internal array because gameplay draws with `pop()`.
 - `turnOrder` is the independently randomized player order. It must not be inferred from `players` or `dealOrder`.
-- `moves` contains only accepted play, discard, and clue actions in server order. Chat, tile positioning, connection changes, and rejected requests are excluded.
+- `moves` contains only accepted play, discard, and clue actions in server order. Chat and hand movements are separate fields; connection changes and rejected requests are excluded.
 - Each move contains the source action ID and timestamp, a zero-based index, action-specific input and outcome, and the authoritative post-turn state. A terminal move carries the result both in `postTurn.result` and at the transcript root.
-- `revision` starts at 1 for the round-start snapshot and increases for every accepted move or reset finalization. Recorder implementations may use it to reject stale snapshots.
+- `revision` starts at 1 for the round-start snapshot and increases for accepted moves, hand movements, chat, and reset finalization. Recorder implementations may use it to reject stale snapshots.
+
+## Chat and analysis exports
+
+The optional `chat` field contains `coverage` (`complete` or `partial`), optional `reason`, and
+`messages`. An absent field means chat is unavailable; it does not mean nobody spoke. Replay
+`integrity` and chat coverage describe independent histories.
+
+Messages preserve `id`, `createdAt`, `actorId`, `actorName`, `actorKind`, `message`, and
+`afterMoveIndex`. The latter is the number of accepted moves preceding the message, so a value
+of 1 places it after `moves[0]`. Message array order breaks ties. Lobby messages have zero preceding
+moves; timestamps distinguish them from messages sent after play starts but before the first move.
+Human chat and public bot Debug explanations use the same capture path. Explanations are not
+private model reasoning and do not enter the bot's factual observations.
+
+Lobby chat is carried into the ensuing round, and post-game discussion remains attached to the
+finished round until reset. Chat is retained independently of the activity feed's 1,000-event cap.
+A lobby that never starts exists only in active-game persistence, which expires after inactivity.
+Chat already lost to reset, truncation, or expiry cannot be recovered from an older transcript.
+
+Authenticated administrators can fetch any stored round with
+`GET /api/admin/transcripts/:roundId/export`, including unfinished, reset, and partial recordings.
+The replay endpoint and player-facing review remain restricted to complete finished rounds.
+Exports contain private full-deck data and must not be exposed to unauthenticated users. The
+repository's `hanabi-transcript` skill describes round discovery and private local downloads.
+
+Persistence is asynchronous with bounded retries. A complete recording describes replay coverage,
+not proof that every most-recent write survived a crash or database outage. An active export is a
+snapshot and can gain later moves and messages. Chat can advance `lifecycle.updatedAt` after a
+round ends; `endedAt` remains the gameplay finish time.
 
 `integrity.status: "complete"` means the document has everything required for deterministic replay. A restored game from before transcript support uses `"partial"`, with `deck` and `dealOrder` set to `null`; later accepted moves may still be appended for telemetry, but the document must not be advertised as replayable. `"conflicted"` is reserved for storage reconciliation that detects divergent histories.
 
