@@ -62,6 +62,29 @@ function replayDefinition(transcript: GameTranscriptSnapshot) {
 	};
 }
 
+function chatHistoryExtends(existing: GameTranscriptSnapshot, incoming: GameTranscriptSnapshot) {
+	if (existing.chat) {
+		if (
+			!incoming.chat ||
+			existing.chat.coverage !== incoming.chat.coverage ||
+			existing.chat.reason !== incoming.chat.reason
+		) {
+			return false;
+		}
+	} else if (incoming.chat?.coverage === 'complete') {
+		return false;
+	}
+
+	const durableMessages = existing.chat?.messages ?? [];
+	const incomingMessages = incoming.chat?.messages ?? [];
+	return (
+		moveHistoryIsPrefix(durableMessages, incomingMessages) &&
+		incomingMessages
+			.slice(durableMessages.length)
+			.every((message) => message.afterMoveIndex >= existing.moves.length)
+	);
+}
+
 export function reconcileTranscriptSnapshot(
 	existingRow: ExistingTranscriptRow | undefined,
 	snapshot: GameTranscriptSnapshot,
@@ -86,6 +109,7 @@ export function reconcileTranscriptSnapshot(
 	if (
 		!isDeepStrictEqual(replayDefinition(existing), replayDefinition(snapshot)) ||
 		!moveHistoryIsPrefix(existing.moves, snapshot.moves) ||
+		!chatHistoryExtends(existing, snapshot) ||
 		!moveHistoryIsPrefix(existing.handMovements ?? [], snapshot.handMovements ?? []) ||
 		(snapshot.handMovements ?? [])
 			.slice(existing.handMovements?.length ?? 0)

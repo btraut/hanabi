@@ -320,17 +320,63 @@ function validateGameData(value: unknown): void {
 	data.actions = retainedActions;
 }
 
-/** Validated private histories may grow beyond ordinary game-envelope limits. */
-function withoutBotRecords(game: Record<string, unknown>, round: BotRound | null) {
+/** Validated histories may grow beyond ordinary game-envelope limits. */
+function withoutHistoricalRecords(game: Record<string, unknown>, round: BotRound | null) {
+	const transcript = game.transcript as Record<string, unknown> | undefined;
+	const chat = transcript?.chat as Record<string, unknown> | undefined;
+	const pendingChat = game.pendingChat as Record<string, unknown> | undefined;
+	const envelope = {
+		...game,
+		...(chat ? { transcript: { ...transcript, chat: { ...chat, messages: [] } } } : {}),
+		...(pendingChat ? { pendingChat: { ...pendingChat, messages: [] } } : {}),
+	};
 	return round?.version === 2
 		? {
-				...game,
+				...envelope,
 				botRound: {
 					...round,
 					history: undefined,
 				},
 			}
-		: game;
+		: envelope;
+}
+
+/** Chat history has no aggregate size cap; each excluded message is independently validated. */
+function validateTranscriptChat(value: unknown, path: string, moveCount: number): void {
+	const chat = requireRecord(value, path);
+	requireOneOf(chat.coverage, ['complete', 'partial'], `${path}.coverage`);
+	if (chat.reason !== undefined) requireString(chat.reason, `${path}.reason`);
+	const ids = new Set<string>();
+	let previousMoveIndex = 0;
+	for (const [index, value] of requireArray(chat.messages, `${path}.messages`).entries()) {
+		const messagePath = `${path}.messages[${index}]`;
+		const message = requireRecord(value, messagePath);
+		if (Buffer.byteLength(JSON.stringify(message), 'utf8') > 8192) {
+			hydrationError(`${messagePath} exceeds the per-message size limit.`);
+		}
+		const id = requireString(message.id, `${messagePath}.id`);
+		if (!id || ids.has(id)) hydrationError(`${messagePath}.id must be nonempty and unique.`);
+		ids.add(id);
+		const createdAt = requireString(message.createdAt, `${messagePath}.createdAt`);
+		if (Number.isNaN(Date.parse(createdAt)))
+			hydrationError(`${messagePath}.createdAt must be a valid date.`);
+		const actorId = requireString(message.actorId, `${messagePath}.actorId`);
+		requireString(message.actorName, `${messagePath}.actorName`);
+		const kind = requireOneOf(message.actorKind, ['human', 'bot'], `${messagePath}.actorKind`);
+		const text = requireString(message.message, `${messagePath}.message`);
+		const limit =
+			kind === 'bot' && actorId.startsWith('bot:') && text.startsWith(BOT_DEBUG_CHAT_PREFIX)
+				? MAX_BOT_DEBUG_CHAT_LENGTH
+				: HANABI_MAX_CHAT_LENGTH;
+		if (!text.trim() || text.length > limit)
+			hydrationError(`${messagePath}.message must contain between 1 and ${limit} characters.`);
+		previousMoveIndex = requireIntegerInRange(
+			message.afterMoveIndex,
+			previousMoveIndex,
+			moveCount,
+			`${messagePath}.afterMoveIndex`,
+		);
+	}
 }
 
 function validateV2Round(round: BotRound, data: HanabiGameData): void {
@@ -510,6 +556,17 @@ function parsePersistedGame(value: string): HanabiGameSerialized {
 		hydrationError('persisted data is not valid JSON.');
 	}
 	const game = requireRecord(parsed, 'game');
+	if (game.pendingChat !== undefined) validateTranscriptChat(game.pendingChat, 'pendingChat', 0);
+	if (game.transcript !== undefined && game.transcript !== null) {
+		const transcript = requireRecord(game.transcript, 'transcript');
+		if (transcript.chat !== undefined) {
+			validateTranscriptChat(
+				transcript.chat,
+				'transcript.chat',
+				requireArray(transcript.moves, 'transcript.moves').length,
+			);
+		}
+	}
 	let round: BotRound | null = null;
 	if (game.botRound !== undefined && game.botRound !== null) {
 		if (!isBotRound(game.botRound))
@@ -517,10 +574,10 @@ function parsePersistedGame(value: string): HanabiGameSerialized {
 		round = removeBotScratchpad(game.botRound);
 		game.botRound = round;
 	}
-	const rawEnvelopeBytes =
-		round?.version === 2
-			? Buffer.byteLength(JSON.stringify(withoutBotRecords(game, round)), 'utf8')
-			: Buffer.byteLength(value, 'utf8');
+	const rawEnvelopeBytes = Buffer.byteLength(
+		JSON.stringify(withoutHistoricalRecords(game, round)),
+		'utf8',
+	);
 	if (rawEnvelopeBytes > MAX_LEGACY_PERSISTED_GAME_BYTES) {
 		hydrationError(`persisted data exceeds ${MAX_LEGACY_PERSISTED_GAME_BYTES} bytes.`);
 	}
@@ -550,7 +607,7 @@ function parsePersistedGame(value: string): HanabiGameSerialized {
 		hydrationError('Started bot games must preserve their bot round.');
 	}
 	if (
-		Buffer.byteLength(JSON.stringify(withoutBotRecords(game, round)), 'utf8') >
+		Buffer.byteLength(JSON.stringify(withoutHistoricalRecords(game, round)), 'utf8') >
 		MAX_PERSISTED_GAME_BYTES
 	) {
 		hydrationError(`normalized persisted data exceeds ${MAX_PERSISTED_GAME_BYTES} bytes.`);

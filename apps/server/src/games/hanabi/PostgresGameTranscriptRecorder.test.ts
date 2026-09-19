@@ -228,6 +228,75 @@ describe('PostgresGameTranscriptRecorder queue', () => {
 });
 
 describe('reconcileTranscriptSnapshot', () => {
+	it('persists chat-only revisions and preserves durable chat against rewrites and backdating', () => {
+		const durable = snapshot('round-1', 2, ['move-1']);
+		durable.chat = {
+			coverage: 'complete',
+			messages: [
+				{
+					id: 'chat-1',
+					createdAt: '2026-09-02T04:00:00.000Z',
+					actorId: 'alice',
+					actorName: 'Alice',
+					actorKind: 'human',
+					message: 'Good luck!',
+					afterMoveIndex: 0,
+				},
+			],
+		};
+		const incoming = structuredClone(durable);
+		incoming.revision += 1;
+		incoming.chat!.messages.push({
+			...incoming.chat!.messages[0],
+			id: 'chat-2',
+			message: 'Thanks!',
+			afterMoveIndex: 1,
+		});
+		const row = { revision: durable.revision, transcript: durable };
+		expect(reconcileTranscriptSnapshot(row, incoming)).toMatchObject({
+			action: 'write',
+			transcript: incoming,
+		});
+		incoming.chat!.messages[1].afterMoveIndex = 0;
+		expect(reconcileTranscriptSnapshot(row, incoming).action).toBe('conflict');
+		incoming.chat!.messages[1].afterMoveIndex = 1;
+		incoming.chat!.messages[0].message = 'Rewritten';
+		const conflict = reconcileTranscriptSnapshot(row, incoming);
+		expect(conflict).toMatchObject({ action: 'conflict', transcript: { chat: durable.chat } });
+		incoming.chat!.messages = [];
+		expect(reconcileTranscriptSnapshot(row, incoming).action).toBe('conflict');
+	});
+
+	it.each(['complete', 'partial'] as const)(
+		'preserves %s chat coverage metadata even when there are no messages',
+		(coverage) => {
+			const durable = snapshot('round-1', 2);
+			durable.chat = { coverage, reason: 'Recording coverage.', messages: [] };
+			const incoming = structuredClone(durable);
+			incoming.revision += 1;
+			const row = { revision: durable.revision, transcript: durable };
+			expect(reconcileTranscriptSnapshot(row, incoming).action).toBe('write');
+			incoming.chat!.coverage = coverage === 'complete' ? 'partial' : 'complete';
+			expect(reconcileTranscriptSnapshot(row, incoming).action).toBe('conflict');
+			incoming.chat!.coverage = coverage;
+			incoming.chat!.reason = 'Changed coverage claim.';
+			expect(reconcileTranscriptSnapshot(row, incoming).action).toBe('conflict');
+			delete incoming.chat;
+			expect(reconcileTranscriptSnapshot(row, incoming).action).toBe('conflict');
+		},
+	);
+
+	it('permits only partial chat coverage when extending a legacy transcript', () => {
+		const durable = snapshot('round-1', 2, ['move-1']);
+		const incoming = snapshot('round-1', 3, ['move-1']);
+		incoming.chat = { coverage: 'partial', reason: 'Legacy transcript.', messages: [] };
+		const row = { revision: durable.revision, transcript: durable };
+		expect(reconcileTranscriptSnapshot(row, incoming).action).toBe('write');
+		incoming.chat.coverage = 'complete';
+		expect(reconcileTranscriptSnapshot(row, incoming).action).toBe('conflict');
+		expect(reconcileTranscriptSnapshot(undefined, incoming).action).toBe('write');
+	});
+
 	it('persists movement-only revisions and rejects rewrites or missing movement history', () => {
 		const durable = snapshot('round-1', 2, ['move-1']);
 		durable.handMovements = [

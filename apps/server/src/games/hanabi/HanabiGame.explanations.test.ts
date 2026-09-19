@@ -172,7 +172,7 @@ async function settle() {
 }
 
 describe('bot explanations', () => {
-	it('publishes the explanation once as bot chat and keeps gameplay transcripts unchanged', async () => {
+	it('publishes and archives the explanation once as bot chat independently of gameplay moves', async () => {
 		const harness = seeded({ botStarts: true });
 		const explanation = 'The host can use this clue to identify a playable card.';
 		harness.chooseAction.mockImplementation((request) =>
@@ -204,11 +204,18 @@ describe('bot explanations', () => {
 		expect(visible).toContain(`Debug: ${explanation}`);
 		expect(visible).not.toContain('"notepads"');
 		expect(visible).not.toContain('"privateNotepad"');
-		const replay = JSON.stringify({
-			history: snapshot(harness.game).botRound?.history,
-			transcript: snapshot(harness.game).transcript,
-		});
-		expect(replay).not.toContain(explanation);
+		const recorded = snapshot(harness.game);
+		expect(JSON.stringify(recorded.botRound?.history)).not.toContain(explanation);
+		expect(recorded.transcript?.chat?.messages).toEqual([
+			expect.objectContaining({
+				id: decisionId,
+				actorId: harness.botId,
+				actorKind: 'bot',
+				message: `Debug: ${explanation}`,
+				afterMoveIndex: 1,
+			}),
+		]);
+		expect(recorded.transcript?.moves).toHaveLength(1);
 		harness.game.startBackgroundWork();
 		await settle();
 		expect(chats(harness)).toHaveLength(1);
@@ -229,6 +236,7 @@ describe('bot explanations', () => {
 		harness.game.cleanUp();
 		const restored = createHarness(saved);
 		expect(chats(restored)).toEqual(chats(harness));
+		expect(snapshot(restored.game).transcript?.chat).toEqual(saved.transcript?.chat);
 		expect(chats(restored)).toHaveLength(1);
 		expect(chats(restored)[0].message).toBe(`Debug: ${explanation}`);
 		expect(chats(restored)[0].message).toHaveLength(1007);

@@ -2,6 +2,8 @@ import {
 	getHanabiScore,
 	GAME_TRANSCRIPT_VERSION,
 	type GameTranscriptMove,
+	type GameTranscriptChat,
+	type GameTranscriptChatMessage,
 	type GameTranscriptHandMovement,
 	type GameTranscriptPlayer,
 	type GameTranscriptPostTurn,
@@ -71,6 +73,7 @@ export function createGameTranscript(
 	identity: GameTranscriptIdentity,
 	gameData: HanabiGameData,
 	startedAt: string,
+	chat: GameTranscriptChat = { coverage: 'complete', messages: [] },
 ): GameTranscriptV1 {
 	const players = playersFor(gameData);
 	const dealOrder = players.map(({ id }) => ({
@@ -94,6 +97,7 @@ export function createGameTranscript(
 		turnOrder: [...gameData.turnOrder],
 		deck: deckIds.map((tileId) => ({ ...gameData.tiles[tileId] })),
 		moves: [],
+		chat: structuredClone(chat),
 		initialTilePositions: structuredClone(gameData.tilePositions),
 		handMovements: [],
 		lifecycle: {
@@ -219,6 +223,23 @@ export function appendGameTranscriptHandMovement(
 			{ ...structuredClone(movement), type: 'reposition', afterMoveIndex: transcript.moves.length },
 		],
 		lifecycle: { ...transcript.lifecycle, updatedAt: movement.createdAt },
+	};
+}
+
+export function appendGameTranscriptChat(
+	transcript: GameTranscriptV1,
+	message: GameTranscriptChatMessage,
+): GameTranscriptV1 {
+	const chat = transcript.chat ?? {
+		coverage: 'partial' as const,
+		reason: 'Chat sent before durable chat capture became available is not recorded.',
+		messages: [],
+	};
+	return {
+		...transcript,
+		revision: transcript.revision + 1,
+		chat: { ...chat, messages: [...chat.messages, structuredClone(message)] },
+		lifecycle: { ...transcript.lifecycle, updatedAt: message.createdAt },
 	};
 }
 

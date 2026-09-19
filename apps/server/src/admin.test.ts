@@ -86,6 +86,29 @@ afterEach(async () => {
 });
 
 describe('admin routes', () => {
+	it.each(['in_progress', 'reset', 'finished'] as const)(
+		'exports %s rounds for analysis only with an authenticated admin session',
+		async (status) => {
+			const transcript = finishedTranscript();
+			transcript.lifecycle.status = status;
+			transcript.integrity = { status: 'partial', reason: 'Legacy round' };
+			const get = vi.fn().mockResolvedValue(transcript);
+			const origin = await startRuntime({ list: vi.fn(), get });
+			const url = `${origin}/api/admin/transcripts/round-1/export`;
+			expect((await fetch(url)).status).toBe(401);
+			expect(
+				(await fetch(url, { headers: { cookie: `${ADMIN_SESSION_COOKIE_NAME}=authorized` } }))
+					.status,
+			).toBe(401);
+			expect(get).not.toHaveBeenCalled();
+			const cookie = (await login(origin)).headers.get('set-cookie')!.split(';', 1)[0];
+			const response = await fetch(url, { headers: { cookie } });
+			expect(response.status).toBe(200);
+			expect(response.headers.get('cache-control')).toBe('no-store');
+			await expect(response.json()).resolves.toEqual(transcript);
+		},
+	);
+
 	it('serves a stored finished replay only to a signed admin session without joining its game', async () => {
 		const transcript = finishedTranscript();
 		const get = vi.fn().mockResolvedValue(transcript);

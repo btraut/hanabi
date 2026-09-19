@@ -312,7 +312,8 @@ describe('bot turn and clue decision opportunities', () => {
 		]);
 		expect({ ...afterResponse, actions: afterResponse.actions.slice(0, -1) }).toEqual(afterClue);
 		expect(historyEvents(harness).map(({ type }) => type)).toEqual(['clue']);
-		expect(snapshot(harness.game).transcript).toEqual(transcriptAfterClue);
+		expect(snapshot(harness.game).transcript?.moves).toEqual(transcriptAfterClue?.moves);
+		expect(snapshot(harness.game).transcript?.chat?.messages).toHaveLength(1);
 	});
 
 	it('allows a clued bot to reorder the queue without forcing touched cards below', async () => {
@@ -345,7 +346,7 @@ describe('bot turn and clue decision opportunities', () => {
 			sourceClueEventId: historyEvents(harness)[0].eventId,
 		});
 		expect(after.transcript?.moves).toEqual(before.transcript?.moves);
-		expect(after.transcript?.revision).toBe(before.transcript!.revision + 1);
+		expect(after.transcript?.revision).toBe(before.transcript!.revision + 2);
 		expect(after.transcript?.handMovements).toEqual([
 			expect.objectContaining({
 				actorId: harness.botId,
@@ -402,7 +403,9 @@ describe('bot turn and clue decision opportunities', () => {
 			expect(historyEvents(harness).map(({ type }) => type)).toEqual(['arrangement', type]);
 			expect(after.botRound?.history.moves).toHaveLength(1);
 			expect(after.transcript?.moves).toHaveLength(1);
-			expect(after.transcript?.revision).toBe(before.transcript!.revision + 2);
+			expect(after.transcript?.revision).toBe(
+				before.transcript!.revision + 2 + (type === 'clue' ? 1 : 2),
+			);
 			expect(after.transcript?.handMovements).toEqual([
 				expect.objectContaining({
 					actorId: harness.botId,
@@ -572,7 +575,7 @@ describe('bot turn and clue decision opportunities', () => {
 			).toEqual(reverseLayout(request));
 		}
 		expect(saved.data.actions.at(-1)?.id).toBe(chats[0].id);
-		expect(JSON.stringify(saved.transcript)).not.toContain(explanation);
+		expect(saved.transcript?.chat?.messages.at(-1)?.message).toBe(`Debug: ${explanation}`);
 		expect(
 			JSON.stringify(buildBotObservation(saved.data, harness.botId, saved.botRound!.history, 2)),
 		).not.toContain('The single-card clue is uncertain.');
