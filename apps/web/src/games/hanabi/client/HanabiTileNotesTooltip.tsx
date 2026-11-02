@@ -33,12 +33,11 @@ export function getHanabiTileNotesDescription(notes: HanabiTileNotes | undefined
 	return descriptions.join(' ');
 }
 
-export default function HanabiTileNotesTooltip({
+export function HanabiTileNotesContent({
 	notes,
-	coords,
-	onClose,
-	position = 'below',
-}: Props): JSX.Element {
+}: {
+	notes: HanabiTileNotes | undefined;
+}): JSX.Element {
 	const gameData = useBoardData();
 
 	const allColors: HanabiClueColor[] = ['red', 'blue', 'green', 'yellow', 'white'];
@@ -49,35 +48,48 @@ export default function HanabiTileNotesTooltip({
 	const allNumbers: HanabiTileNumber[] = [1, 2, 3, 4, 5];
 
 	return (
+		<>
+			<span className="sr-only">{getHanabiTileNotesDescription(notes)}</span>
+			<div className="grid grid-flow-col gap-1.5 justify-center" aria-hidden="true">
+				{allNumbers.map((number) => (
+					<div
+						key={number}
+						className={classNames('font-bold text-l text-white', {
+							'opacity-30': !notes?.numbers.includes(number),
+						})}
+					>
+						{number}
+					</div>
+				))}
+			</div>
+			<div className="grid grid-flow-col gap-1 justify-center" aria-hidden="true">
+				{allColors.map((color) => (
+					<div
+						key={color}
+						className={classNames(
+							'w-4 h-4 rounded-full border-black border-2',
+							tileBackgroundClasses[color],
+							{ 'opacity-30': !notes?.colors.includes(color) },
+						)}
+					/>
+				))}
+			</div>
+		</>
+	);
+}
+
+export default function HanabiTileNotesTooltip({
+	notes,
+	coords,
+	onClose,
+	position = 'below',
+}: Props): JSX.Element {
+	return (
 		<Portal>
 			<Tooltip top={coords.top} left={coords.left} position={position} fadeIn onClose={onClose}>
 				<div className={position === 'above' ? 'mb-1' : 'mt-1'} role="tooltip" aria-live="polite">
-					<span className="sr-only">{getHanabiTileNotesDescription(notes)}</span>
 					<div className="bg-gray-900 rounded-lg pb-2 pt-1 px-2">
-						<div aria-hidden="true" className="grid grid-flow-col gap-1.5 justify-center">
-							{allNumbers.map((number) => (
-								<div
-									key={number}
-									className={classNames('font-bold text-l text-white', {
-										'opacity-30': !notes?.numbers.includes(number),
-									})}
-								>
-									{number}
-								</div>
-							))}
-						</div>
-						<div aria-hidden="true" className="grid grid-flow-col gap-1 justify-center">
-							{allColors.map((color) => (
-								<div
-									key={color}
-									className={classNames(
-										'w-4 h-4 rounded-full border-black border-2',
-										tileBackgroundClasses[color],
-										{ 'opacity-30': !notes?.colors.includes(color) },
-									)}
-								/>
-							))}
-						</div>
+						<HanabiTileNotesContent notes={notes} />
 					</div>
 				</div>
 			</Tooltip>
