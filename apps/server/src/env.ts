@@ -11,6 +11,7 @@ import {
 	assertValidProductionSessionSecret,
 	DEVELOPMENT_SESSION_COOKIE_SECRET,
 } from './sessionSecret.js';
+import type { LogLevel } from './utils/Logger.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -23,6 +24,7 @@ export type GameStoreType = 'file' | 'redis';
 export interface RuntimeEnv {
 	NODE_ENV: 'development' | 'test' | 'production';
 	PORT: string;
+	LOG_LEVEL: LogLevel;
 	SESSION_COOKIE_SECRET: string;
 	GAME_STORE: GameStoreType;
 	REDIS_URL: string;
@@ -61,6 +63,10 @@ export function parseEnv(source: NodeJS.ProcessEnv): RuntimeEnv {
 	}
 
 	const port = source.PORT || '3000';
+	const logLevel = source.LOG_LEVEL ?? 'info';
+	if (!['error', 'warn', 'info', 'debug'].includes(logLevel)) {
+		throw new Error('LOG_LEVEL must be error, warn, info, or debug.');
+	}
 	const parsedPort = Number(port);
 	if (!Number.isInteger(parsedPort) || parsedPort < 0 || parsedPort > 65_535) {
 		throw new Error(`PORT must be an integer between 0 and 65535; received "${port}".`);
@@ -138,6 +144,7 @@ export function parseEnv(source: NodeJS.ProcessEnv): RuntimeEnv {
 	return {
 		NODE_ENV: nodeEnv as RuntimeEnv['NODE_ENV'],
 		PORT: port,
+		LOG_LEVEL: logLevel as LogLevel,
 		SESSION_COOKIE_SECRET: sessionCookieSecret,
 		GAME_STORE: gameStore,
 		REDIS_URL: redisUrl,

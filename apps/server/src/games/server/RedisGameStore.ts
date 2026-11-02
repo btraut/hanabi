@@ -30,7 +30,6 @@ export default class RedisGameStore implements GameStore {
 		}
 
 		await this._enqueueMutation(async () => {
-			Logger.info(`Saving game: ${scope}`);
 			await this._redisClient.saveGameRecord(
 				scope,
 				serialized,
@@ -40,6 +39,7 @@ export default class RedisGameStore implements GameStore {
 				title,
 				id,
 			);
+			Logger.event('game.saved', { gameId: id, gameCode: game.code, title }, 'debug');
 		});
 	}
 

@@ -132,38 +132,63 @@ export default class GameManager {
 				this._games[game.id] = game;
 				restoredGameCount += 1;
 
-				console.log(`Restoring ${title} game ${game.id}.`);
+				Logger.event('game.restore_registered', { gameId: game.id, gameCode: game.code, title });
 			}
 		}
+	}
+
+	private _rejectRequest(
+		socketId: string,
+		userId: string,
+		responseType: 'CreateGameResponseMessage' | 'WatchGameResponseMessage',
+		reason: string,
+		error: string,
+	): void {
+		Logger.event(
+			responseType === 'CreateGameResponseMessage' ? 'game.create_rejected' : 'game.watch_rejected',
+			{ userId, socketId, reason },
+			'warn',
+		);
+		this._socketManager.sendToSocket(socketId, {
+			scope: GAME_MANAGER_SCOPE,
+			type: responseType,
+			data: { error },
+		});
 	}
 
 	private _createGame(title: string, watch: boolean, userId: string, socketId: string) {
 		// Make sure the title is valid.
 		if (!this._gameFactories[title]) {
-			this._socketManager.sendToSocket(socketId, {
-				scope: GAME_MANAGER_SCOPE,
-				type: 'CreateGameResponseMessage',
-				data: { error: `No game with title "${title}".` },
-			});
+			this._rejectRequest(
+				socketId,
+				userId,
+				'CreateGameResponseMessage',
+				'unknown_title',
+				`No game with title "${title}".`,
+			);
 			return;
 		}
 		if (Object.keys(this._games).length >= MAX_ACTIVE_GAMES) {
-			this._socketManager.sendToSocket(socketId, {
-				scope: GAME_MANAGER_SCOPE,
-				type: 'CreateGameResponseMessage',
-				data: { error: 'The server has reached its active game limit.' },
-			});
+			this._rejectRequest(
+				socketId,
+				userId,
+				'CreateGameResponseMessage',
+				'server_game_limit',
+				'The server has reached its active game limit.',
+			);
 			return;
 		}
 		const gamesForCreator = Object.values(this._games).filter(
 			(game) => game.creatorId === userId,
 		).length;
 		if (gamesForCreator >= MAX_ACTIVE_GAMES_PER_CREATOR) {
-			this._socketManager.sendToSocket(socketId, {
-				scope: GAME_MANAGER_SCOPE,
-				type: 'CreateGameResponseMessage',
-				data: { error: `You can have at most ${MAX_ACTIVE_GAMES_PER_CREATOR} active games.` },
-			});
+			this._rejectRequest(
+				socketId,
+				userId,
+				'CreateGameResponseMessage',
+				'creator_game_limit',
+				`You can have at most ${MAX_ACTIVE_GAMES_PER_CREATOR} active games.`,
+			);
 			return;
 		}
 
@@ -184,11 +209,13 @@ export default class GameManager {
 			candidate.cleanUp();
 		}
 		if (!game) {
-			this._socketManager.sendToSocket(socketId, {
-				scope: GAME_MANAGER_SCOPE,
-				type: 'CreateGameResponseMessage',
-				data: { error: 'Could not allocate a unique game code.' },
-			});
+			this._rejectRequest(
+				socketId,
+				userId,
+				'CreateGameResponseMessage',
+				'code_allocation_failed',
+				'Could not allocate a unique game code.',
+			);
 			return;
 		}
 		this._games[game.id] = game;
@@ -198,6 +225,15 @@ export default class GameManager {
 		if (watch) {
 			game.watchers.push(userId);
 		}
+
+		Logger.event('game.created', {
+			gameId: game.id,
+			gameCode: game.code,
+			title: game.title,
+			userId,
+			socketId,
+			watching: watch,
+		});
 
 		// Send game data back.
 		this._socketManager.sendToSocket(socketId, {
@@ -215,11 +251,13 @@ export default class GameManager {
 			userRateLimit.failedAttempts >= MAX_FAILED_WATCH_ATTEMPTS ||
 			abuseRateLimit.failedAttempts >= MAX_FAILED_WATCH_ATTEMPTS
 		) {
-			this._socketManager.sendToSocket(socketId, {
-				scope: GAME_MANAGER_SCOPE,
-				type: 'WatchGameResponseMessage',
-				data: { error: 'Too many failed game-code attempts. Try again in a minute.' },
-			});
+			this._rejectRequest(
+				socketId,
+				userId,
+				'WatchGameResponseMessage',
+				'watch_rate_limited',
+				'Too many failed game-code attempts. Try again in a minute.',
+			);
 			return;
 		}
 		// Find the game from the code.
@@ -228,17 +266,28 @@ export default class GameManager {
 		if (!game) {
 			userRateLimit.failedAttempts += 1;
 			abuseRateLimit.failedAttempts += 1;
-			this._socketManager.sendToSocket(socketId, {
-				scope: GAME_MANAGER_SCOPE,
-				type: 'WatchGameResponseMessage',
-				data: { error: `No game with code "${code}".` },
-			});
+			this._rejectRequest(
+				socketId,
+				userId,
+				'WatchGameResponseMessage',
+				'room_not_found',
+				`No game with code "${code}".`,
+			);
 			return;
 		}
+		const alreadyWatching = game.watchers.includes(userId);
 		// Add the watcher. Prevent duplicates.
 		if (!game.watchers.includes(userId)) {
 			game.watchers.push(userId);
 		}
+
+		Logger.event('game.watch_accepted', {
+			gameId: game.id,
+			gameCode: game.code,
+			userId,
+			socketId,
+			alreadyWatching,
+		});
 
 		// Send game id/code as a success message.
 		this._socketManager.sendToSocket(socketId, {
@@ -321,6 +370,14 @@ export default class GameManager {
 		for (const game of Object.values(this._games)) {
 			if (game.updated < oldestGameTime) {
 				prunedEntries.push(game);
+				Logger.event('game.pruned', {
+					gameId: game.id,
+					gameCode: game.code,
+					lastActivityAt: game.updated.toISOString(),
+					cutoffAt: oldestGameTime.toISOString(),
+					reason: 'inactive',
+					inactivityThresholdMs: olderThan,
+				});
 				this._removeGame(game.id);
 			}
 		}
@@ -351,11 +408,13 @@ export default class GameManager {
 					((data as Record<string, unknown>).watch !== undefined &&
 						typeof (data as Record<string, unknown>).watch !== 'boolean')
 				) {
-					this._socketManager.sendToSocket(socketId, {
-						scope: GAME_MANAGER_SCOPE,
-						type: 'CreateGameResponseMessage',
-						data: { error: 'Invalid create-game request.' },
-					});
+					this._rejectRequest(
+						socketId,
+						userId,
+						'CreateGameResponseMessage',
+						'invalid_payload',
+						'Invalid create-game request.',
+					);
 					return;
 				}
 				this._createGame(
@@ -375,11 +434,13 @@ export default class GameManager {
 						? (data as { code: string }).code.trim().toLowerCase()
 						: '';
 				if (!/^[23456789abdegjkmnpqrvwxyz]{4,12}$/.test(code)) {
-					this._socketManager.sendToSocket(socketId, {
-						scope: GAME_MANAGER_SCOPE,
-						type: 'WatchGameResponseMessage',
-						data: { error: 'Invalid game code.' },
-					});
+					this._rejectRequest(
+						socketId,
+						userId,
+						'WatchGameResponseMessage',
+						'invalid_game_code',
+						'Invalid game code.',
+					);
 					return;
 				}
 				this._watchGame(code, userId, socketId, abuseKey);

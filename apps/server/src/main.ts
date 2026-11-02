@@ -28,7 +28,7 @@ async function createGameStore(): Promise<GameStore> {
 }
 
 async function main(): Promise<void> {
-	Logger.init();
+	Logger.init(env.LOG_LEVEL);
 	const gameStore = await createGameStore();
 	const databaseConnection = env.DATABASE_URL
 		? createDatabaseConnection(env.DATABASE_URL)
@@ -74,7 +74,7 @@ async function main(): Promise<void> {
 	const shutdown = async () => {
 		if (shuttingDown) return;
 		shuttingDown = true;
-		Logger.info('Shutting down server.');
+		Logger.event('server.stopping');
 		const forcedShutdown = setTimeout(() => {
 			Logger.error(`Shutdown exceeded ${SHUTDOWN_TIMEOUT_MS}ms; forcing process exit.`);
 			process.exit(1);
@@ -94,13 +94,11 @@ async function main(): Promise<void> {
 		});
 	}
 
-	Logger.info(`
-———————————————————————————————————————————————————————————————————
- Hanabi Server
- http://localhost:${env.PORT}
- Listening for requests in ${env.NODE_ENV} mode.
-———————————————————————————————————————————————————————————————————
-`);
+	Logger.event('server.started', {
+		nodeEnv: env.NODE_ENV,
+		port: Number(env.PORT),
+		logLevel: env.LOG_LEVEL,
+	});
 }
 
 void main().catch((error: unknown) => {

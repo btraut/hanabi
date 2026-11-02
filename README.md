@@ -28,6 +28,37 @@ and desktop, using the Activity feed's player names, action text, and colors. To
 at a time, dismiss after four seconds, and have a close button. Existing history is not replayed
 when joining a game. Reduced-motion preferences disable the slide animation.
 
+## Server diagnostics
+
+Server identity and room lifecycle events are JSON records on stdout with `timestamp`, `level`,
+`event`, `serverInstanceId`, and correlation fields. Railway deployments also include `deploymentId`.
+Session events distinguish new identities caused by missing or
+invalid cookies from reuse of an existing identity. Socket events connect `userId` to `socketId`,
+record authentication changes, and report disconnect reasons and the number of remaining sockets.
+A player becomes offline only when their last authenticated socket disconnects.
+
+Room events include `gameId`, `gameCode`, the actor, and projected player rosters where relevant.
+Joins, name updates, duplicate-name warnings, removals, rejected requests, presence transitions,
+starts, resets, restores, and pruning make it possible to reconstruct how a seat appeared and why
+it remains. Duplicate-name warnings do not prevent joining; disconnects preserve seats.
+Roster metadata contains player IDs, names, kinds, and connection flags. Diagnostic events exclude
+cookies, authentication tokens, raw IP addresses, chat bodies, card faces, and deck contents.
+`roundRef` and `previousRoundRef` are SHA-256 hashes of the private round ID, which also seeds the
+shuffle. Hash a transcript's round ID with SHA-256 to correlate it with diagnostic events.
+
+`LOG_LEVEL=info` is the default. `LOG_LEVEL=debug` also includes socket envelope types and routing
+metadata; `warn` and `error` reduce output. Logs use Railway's retention; the Postgres round archive
+and Redis room snapshots complement them rather than retaining the full identity event history.
+
+Find a room's events, then search its `userId` values to follow session and socket activity:
+
+```bash
+railway logs --service hanabi --environment production --since 2h --lines 1000 --filter wn5z7p --json
+```
+
+If a query reaches the line limit, narrow the window with `--since` and `--until` and inspect adjacent
+windows. Session and socket events have no room code because one identity can watch multiple rooms.
+
 ## Development Environment
 
 This project uses:

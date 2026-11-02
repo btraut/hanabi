@@ -7,6 +7,7 @@ import { createServer, Server as HTTPServer } from 'node:http';
 import { createAdminRouter } from './admin.js';
 import type { GameTranscriptSummaryReader } from './games/hanabi/PostgresGameTranscriptSummaryReader.js';
 import SocketManager from './utils/SocketManager.js';
+import Logger from './utils/Logger.js';
 import {
 	assertValidProductionSessionSecret,
 	DEVELOPMENT_SESSION_COOKIE_SECRET,
@@ -65,6 +66,17 @@ export function createApp(options: CreateAppOptions): ServerRuntime {
 
 	app.get('/api/auth-socket', (req, res) => {
 		res.set('Cache-Control', 'no-store');
+		const signedCookies: unknown = req.signedCookies;
+		const sessionCookie =
+			typeof signedCookies === 'object' && signedCookies !== null
+				? (signedCookies as Record<string, unknown>)[SESSION_COOKIE_NAME]
+				: undefined;
+		let userId = typeof sessionCookie === 'string' && sessionCookie ? sessionCookie : undefined;
+		const cookieState = userId
+			? 'valid'
+			: sessionCookie !== undefined || Object.hasOwn(req.cookies as object, SESSION_COOKIE_NAME)
+				? 'invalid'
+				: 'missing';
 		const now = Date.now();
 		const rateLimitKey = req.ip || req.socket.remoteAddress || 'unknown';
 		let rateLimit = authTokenRateLimits.get(rateLimitKey);
@@ -74,6 +86,11 @@ export function createApp(options: CreateAppOptions): ServerRuntime {
 		}
 		rateLimit.count += 1;
 		if (rateLimit.count > AUTH_TOKEN_RATE_LIMIT) {
+			Logger.event(
+				'session.auth_rejected',
+				{ userId, cookieState, reason: 'rate_limited' },
+				'warn',
+			);
 			res.set('Retry-After', String(Math.ceil(AUTH_TOKEN_RATE_WINDOW_MS / 1000)));
 			res.status(429).json({ error: 'Too many authentication attempts.' });
 			return;
@@ -91,12 +108,6 @@ export function createApp(options: CreateAppOptions): ServerRuntime {
 			}
 		}
 
-		const signedCookies: unknown = req.signedCookies;
-		const sessionCookie =
-			typeof signedCookies === 'object' && signedCookies !== null
-				? (signedCookies as Record<string, unknown>)[SESSION_COOKIE_NAME]
-				: undefined;
-		let userId = typeof sessionCookie === 'string' ? sessionCookie : undefined;
 		if (!userId) {
 			userId = randomUUID();
 			res.cookie(SESSION_COOKIE_NAME, userId, {
@@ -107,6 +118,10 @@ export function createApp(options: CreateAppOptions): ServerRuntime {
 				signed: true,
 			});
 		}
+		Logger.event(cookieState === 'valid' ? 'session.reused' : 'session.created', {
+			userId,
+			cookieState,
+		});
 
 		res.json({ token: socketManager.addTokenForUser(userId, rateLimitKey) });
 	});

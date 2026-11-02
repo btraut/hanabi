@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { createHash } from 'node:crypto';
 import { DatabaseConnection } from '../../db/database.js';
 import { GameTranscriptSnapshot, GameTranscriptV1 } from './GameTranscript.js';
 import PostgresGameTranscriptRecorder, {
@@ -132,7 +133,7 @@ describe('PostgresGameTranscriptRecorder queue', () => {
 			message: 'Game transcript persistence reported failures.',
 			errors: [
 				{
-					message: 'Transcript write failed for game game-bad, round bad (ETIMEDOUT).',
+					message: `Transcript write failed for game game-bad, round reference ${createHash('sha256').update('bad').digest('hex')} (ETIMEDOUT).`,
 				},
 			],
 		});
@@ -182,7 +183,7 @@ describe('PostgresGameTranscriptRecorder queue', () => {
 		await expect(recorder.close()).rejects.toMatchObject({
 			errors: [
 				{
-					message: 'Transcript queue reached 1 pending rounds; dropped round dropped.',
+					message: `Transcript queue reached 1 pending rounds; dropped round reference ${createHash('sha256').update('dropped').digest('hex')}.`,
 				},
 			],
 		});
