@@ -1,5 +1,6 @@
 import Portal from '~/components/Portal';
 import Tooltip from '~/components/Tooltip';
+import { HanabiTileNotesContent } from './HanabiTileNotesTooltip';
 import { useBoardData } from '~/games/hanabi/client/HanabiGameContext';
 import {
 	HanabiClueColor,
@@ -78,6 +79,15 @@ export default function HanabiTileActionsTooltip({
 		<Portal>
 			<Tooltip onClose={onClose} top={coords.top - 18} left={coords.left} position="above">
 				<div className="rounded-lg border border-hanabi-border bg-hanabi-table-deep px-2 py-1.5 shadow-[0_12px_28px_rgb(0_0_0_/_45%)]">
+					{type === HanabiTileActionsTooltipType.Own && gameData.showNotes && (
+						<div
+							aria-label="Recorded clues"
+							className="mb-1 border-b border-hanabi-border px-2 pb-2"
+							role="group"
+						>
+							<HanabiTileNotesContent notes={gameData.tileNotes[tileId]} />
+						</div>
+					)}
 					{type === HanabiTileActionsTooltipType.Own && (
 						<div className="flex items-center gap-1">
 							<button
