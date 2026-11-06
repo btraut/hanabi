@@ -61,6 +61,17 @@ export default function HanabiActivityRail({
 	const feedContentRef = useRef<HTMLDivElement>(null);
 	const headingId = useId();
 	const userCanChat = Boolean(gameData.players[userId]);
+	const latestMove = gameData.actions
+		.filter((action) =>
+			[
+				HanabiGameActionType.Play,
+				HanabiGameActionType.Discard,
+				HanabiGameActionType.GiveColorClue,
+				HanabiGameActionType.GiveNumberClue,
+				HanabiGameActionType.GameFinished,
+			].includes(action.type),
+		)
+		.at(-1);
 
 	const scrollFeedToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
 		const scroller = feedScrollerRef.current;
@@ -262,7 +273,7 @@ export default function HanabiActivityRail({
 					aria-label={
 						unreadChat ? `Open activity, ${unreadChat} unread chat messages` : 'Open activity'
 					}
-					className="hanabi-mobile-chat-trigger hanabi-focus-ring"
+					className="hanabi-mobile-chat-trigger hanabi-compact-activity-trigger hanabi-focus-ring"
 					onClick={() => {
 						setMobileSheetOpen(true);
 					}}
@@ -271,7 +282,26 @@ export default function HanabiActivityRail({
 					type="button"
 				>
 					<ChatBubble size={22} />
-					<span className="hanabi-mobile-chat-trigger-label">Activity</span>
+					<span className="hanabi-mobile-activity-summary" aria-hidden="true">
+						{latestMove ? (
+							<HanabiActivityEvent action={latestMove} gameData={gameData} userId={userId} />
+						) : (
+							'Waiting for the first action'
+						)}
+					</span>
+					<span className="hanabi-mobile-chat-trigger-label">
+						Activity
+						<svg aria-hidden="true" viewBox="0 0 16 16" width="14" height="14">
+							<path
+								d="m3 10 5-5 5 5"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="1.8"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+							/>
+						</svg>
+					</span>
 					{unreadChat > 0 && <span className="hanabi-mobile-chat-badge">{unreadChat}</span>}
 				</button>
 				<button

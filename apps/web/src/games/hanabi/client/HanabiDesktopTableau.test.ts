@@ -1,7 +1,7 @@
 import {
 	getHanabiDiscardsForColor,
 	getHanabiPlayedTopTile,
-	default as HanabiDesktopTableau,
+	DesktopTableau as HanabiDesktopTableau,
 } from '~/games/hanabi/client/HanabiDesktopTableau';
 import { generateHanabiGameData, HanabiTile, HanabiTileColor } from '@hanabi/shared';
 import { createElement } from 'react';

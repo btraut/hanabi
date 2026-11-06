@@ -39,7 +39,11 @@ const variants = [
 ] as const;
 const ranks: readonly HanabiTileNumber[] = [1, 2, 3, 4, 5];
 
-function makePreviewGame(ruleSet: HanabiRuleSet, manyDiscards: boolean): HanabiGameData {
+function makePreviewGame(
+	ruleSet: HanabiRuleSet,
+	manyDiscards: boolean,
+	start: boolean,
+): HanabiGameData {
 	const tiles: Record<string, HanabiTile> = {};
 	const pool: HanabiTile[] = [];
 	const colors = getHanabiRuleSetColors(ruleSet);
@@ -90,7 +94,7 @@ function makePreviewGame(ruleSet: HanabiRuleSet, manyDiscards: boolean): HanabiG
 			for (const tile of extras) discardedTiles.push(take(tile.color, tile.number));
 		}
 	}
-	return generateHanabiGameData({
+	const game = generateHanabiGameData({
 		ruleSet,
 		stage: HanabiStage.Playing,
 		currentPlayerId: 'you',
@@ -117,22 +121,37 @@ function makePreviewGame(ruleSet: HanabiRuleSet, manyDiscards: boolean): HanabiG
 			},
 		],
 	});
+	if (start) {
+		const hands = new Set([...ownHand, ...partnerHand]);
+		return {
+			...game,
+			playedTiles: [],
+			discardedTiles: [],
+			remainingTiles: Object.keys(tiles).filter((id) => !hands.has(id)),
+			clues: 8,
+			lives: 3,
+			actions: [],
+		};
+	}
+	return game;
 }
 
 export default function HanabiMobileLayoutPreview(): JSX.Element {
 	const [params] = useSearchParams();
 	const [variant, setVariant] = useState<HanabiRuleSet>('5-color');
 	const [short, setShort] = useState(false);
+	const [start, setStart] = useState(false);
 	const [manyDiscards, setManyDiscards] = useState(params.get('discards') === 'many');
 	const embedded = params.get('view');
 	const ruleSet = variants.find(([value]) => value === params.get('rules'))?.[0] ?? '5-color';
-	if (embedded === 'current' || embedded === 'compact') {
+	if (embedded === 'current' || embedded === 'fixed') {
 		return (
 			<PhoneBoard
-				key={`${embedded}-${ruleSet}-${params.get('discards')}`}
-				compact={embedded === 'compact'}
+				key={`${embedded}-${ruleSet}-${params.get('discards')}-${params.get('start')}`}
+				compact={embedded !== 'current'}
 				ruleSet={ruleSet}
 				manyDiscards={params.get('discards') === 'many'}
+				start={params.get('start') === 'true'}
 			/>
 		);
 	}
@@ -172,8 +191,16 @@ export default function HanabiMobileLayoutPreview(): JSX.Element {
 						/>{' '}
 						Many discards
 					</label>
+					<label>
+						<input
+							type="checkbox"
+							checked={start}
+							onChange={(event) => setStart(event.target.checked)}
+						/>
+						Start of game
+					</label>
 					<a
-						href={`/dev/mobile-layout?view=compact&rules=${variant}&discards=${manyDiscards ? 'many' : 'few'}`}
+						href={`/dev/mobile-layout?view=fixed&rules=${variant}&discards=${manyDiscards ? 'many' : 'few'}&start=${start}`}
 						target="_blank"
 						rel="noreferrer"
 					>
@@ -182,23 +209,21 @@ export default function HanabiMobileLayoutPreview(): JSX.Element {
 				</div>
 			</header>
 			<div className="mobile-study-comparison">
-				{(['current', 'compact'] as const).map((view) => (
+				{(['current', 'fixed'] as const).map((view) => (
 					<section key={view}>
 						<div className="mobile-study-caption">
-							<h2>{view === 'current' ? 'Current layout' : 'Compact proposal'}</h2>
+							<h2>{view === 'current' ? 'Production components' : 'Approved design study'}</h2>
 							<span>402 × {short ? 620 : 740}</span>
 						</div>
 						<iframe
-							title={
-								view === 'current' ? 'Current mobile game layout' : 'Compact mobile game prototype'
-							}
-							src={`/dev/mobile-layout?view=${view}&rules=${variant}&discards=${manyDiscards ? 'many' : 'few'}`}
+							title={`${view} mobile game layout`}
+							src={`/dev/mobile-layout?view=${view}&rules=${variant}&discards=${manyDiscards ? 'many' : 'few'}&start=${start}`}
 							style={{ height: short ? 620 : 740 }}
 						/>
 						<p className="mobile-study-note">
 							{view === 'current'
-								? 'Existing tableau and status components. Scroll to find both hands.'
-								: 'Tap a stack for discards. Tap your cards to try the arrangement space.'}
+								? 'Production tableau, status, and workspace components with sample state.'
+								: 'Discards appear below each card, oldest first across each row. Longer piles wrap naturally. Tap a pile for details.'}
 						</p>
 					</section>
 				))}
@@ -215,12 +240,17 @@ function PhoneBoard({
 	compact,
 	ruleSet,
 	manyDiscards,
+	start,
 }: {
 	compact: boolean;
 	ruleSet: HanabiRuleSet;
 	manyDiscards: boolean;
+	start: boolean;
 }): JSX.Element {
-	const game = useMemo(() => makePreviewGame(ruleSet, manyDiscards), [ruleSet, manyDiscards]);
+	const game = useMemo(
+		() => makePreviewGame(ruleSet, manyDiscards, start),
+		[ruleSet, manyDiscards, start],
+	);
 	const status = getHanabiDesktopStatusData(game, 'you');
 	const [detail, setDetail] = useState<HanabiTileColor | 'activity' | 'menu' | null>(null);
 	const [parked, setParked] = useState<ReadonlySet<string>>(
@@ -301,7 +331,11 @@ function PhoneBoard({
 									icon: <Star size={26} />,
 								},
 								{ label: 'Deck', value: status.deck, icon: <HanabiDeck count={status.deck} /> },
-								{ label: 'Clues', value: status.clues, icon: <ClueStatusIcon /> },
+								{
+									label: 'Clues',
+									value: status.clues,
+									icon: <ClueStatusIcon />,
+								},
 								{ label: 'Lives', value: status.lives, icon: <LifeStatusIcon /> },
 							].map(({ label, value, icon }) => (
 								<div key={label} title={label}>
@@ -327,7 +361,7 @@ function PhoneBoard({
 										<button
 											key={color}
 											className="mobile-study-stack"
-											aria-label={`${color}, ${top ? `played ${top.number}` : 'not started'}, ${discards.length} discards. Inspect pile`}
+											aria-label={`${color}, ${top ? `played ${top.number}` : 'not started'}, discards oldest first: ${discards.map((tile) => tile.number).join(', ') || 'none'}. Inspect pile`}
 											onClick={() => setDetail(color)}
 										>
 											<HanabiTileView
@@ -339,11 +373,13 @@ function PhoneBoard({
 													height: colors.length === 7 ? 51.2 : 58.88,
 												}}
 											/>
-											<span className="mobile-study-discards">
-												{discards.length
-													? discards.map((tile) => <span key={tile.id}>{tile.number}</span>)
-													: '—'}
-											</span>
+											{discards.length > 0 && (
+												<span className="mobile-study-discards">
+													{discards.map((tile) => (
+														<span key={tile.id}>{tile.number}</span>
+													))}
+												</span>
+											)}
 										</button>
 									);
 								})}
@@ -367,9 +403,27 @@ function PhoneBoard({
 					</div>
 					<button className="mobile-study-activity" onClick={() => setDetail('activity')}>
 						<span>
-							<strong>Timur → You</strong> Gave a 2 clue
+							{start ? (
+								'Waiting for the first action'
+							) : (
+								<>
+									<strong>Timur → You</strong> Gave a 2 clue
+								</>
+							)}
 						</span>
-						<span>Activity ↗</span>
+						<span className="mobile-study-activity-label">
+							Activity{' '}
+							<svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24">
+								<path
+									d="m6 15 6-6 6 6"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="2"
+									strokeLinecap="round"
+									strokeLinejoin="round"
+								/>
+							</svg>
+						</span>
 					</button>
 				</>
 			) : (
@@ -404,7 +458,7 @@ function PhoneBoard({
 					onClose={() => setDetail(null)}
 				>
 					{detail === 'activity' ? (
-						<p>Timur gave you a 2 clue, touching two cards.</p>
+						<p>{start ? 'No actions yet.' : 'Timur gave you a 2 clue, touching two cards.'}</p>
 					) : detail === 'menu' ? (
 						<p>Layout prototype · two players · {colors.length} colors.</p>
 					) : (

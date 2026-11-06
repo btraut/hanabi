@@ -131,24 +131,24 @@
 	letter-spacing: 3px;
 }
 .mobile-study-counts {
-	display: grid;
-	grid-template-columns: repeat(4, 1fr);
+	display: flex;
+	justify-content: space-between;
+	gap: 12px;
 	height: 48px;
 }
 .mobile-study-counts > div {
 	display: flex;
 	align-items: center;
-	gap: 5px;
+	gap: 8px;
 	justify-content: center;
-	border-right: 1px solid #263c51;
 	margin-block: 5px 10px;
-}
-.mobile-study-counts > div:last-child {
-	border: 0;
 }
 .mobile-study-counts dt {
 	display: flex;
 	align-items: center;
+	justify-content: center;
+	width: 30px;
+	height: 35px;
 	flex-shrink: 0;
 	color: #eee7d9;
 }
@@ -180,19 +180,6 @@
 	border-radius: 8px;
 	padding: 1px 0 0;
 	gap: 4px;
-}
-.mobile-study-discards {
-	font-size: 16px;
-	display: flex;
-	flex-wrap: wrap;
-	justify-content: center;
-	align-content: start;
-	column-gap: 5px;
-	width: 40px;
-	min-height: 23px;
-	line-height: 21px;
-	color: #e3daca;
-	font-variant-numeric: tabular-nums;
 }
 .mobile-study-stack:focus-visible,
 .mobile-study-phone button:focus-visible {
@@ -334,4 +321,27 @@
 	.mobile-study-hand-card {
 		transition: none;
 	}
+}
+
+.mobile-study-discards {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	align-content: start;
+	gap: 0 2px;
+	width: 44px;
+	color: #e3daca;
+	font-size: 14px;
+	line-height: 19px;
+	font-variant-numeric: tabular-nums;
+}
+.mobile-study-discards > span {
+	width: 7px;
+	text-align: center;
+}
+
+.mobile-study-activity-label {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
 }

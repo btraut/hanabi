@@ -105,11 +105,17 @@ instance. If the first launcher is still assigning ports, it reports startup in 
 Use `pnpm dev:status` to print the current URLs and
 `pnpm dev:down` to stop the launcher.
 
-The development-only `/dev/mobile-layout` page compares the current two-player layout with a
-compact mobile prototype. It includes five-, six-, and seven-color sample games, a shorter-screen
-toggle, a discard-heavy example, pinned resource icons and counts, discard details, and local
-card-position toggles. The prototype
-uses sample state and does not send live game actions.
+Phones use a compact board with pinned status icons, horizontal fireworks, and chronological
+discard numbers beneath each firework. Numbers wrap without hiding cards or reserving blank rows.
+Tap a pile to inspect its played and discarded cards. The Activity footer opens the full move/chat
+drawer. Player surfaces retain their drag and parking coordinates. Tablet and desktop compositions
+retain their wider layout.
+
+The development-only `/dev/mobile-layout` page compares the production layout with the approved
+compact design study. It includes five-, six-, and seven-color sample games, shorter-screen
+and start-of-game toggles, a discard-heavy example, pinned status icons, and local card-position
+toggles. Chronological discard numbers appear beneath each firework and wrap as the pile grows.
+Empty piles reserve no discard space. The prototype uses sample state and sends no live game actions.
 
 #### Client state and animations
 
@@ -127,7 +133,11 @@ hide a newly played card. Plays and discards animate the outgoing card first,
 then move a card back from the deck into the hand, revealing other players’
 cards as they arrive. The deck shows up to three real card backs, exactly two or
 one as it runs out, and an empty outline at zero. Reduced-motion preferences and
-browsers without View Transitions use immediate updates. Review and static fixtures use independent snapshots.
+browsers without View Transitions use immediate updates. On phones, the outgoing discard shares
+its transition identity with its numeric destination, shrinking and fading into the new number.
+A separate 220 ms workspace snapshot transition slides the hands when a discard row wraps.
+The card flight remains 420 ms and the replacement draw starts after 260 ms. Review and static
+fixtures use independent snapshots.
 
 #### Single-browser debug player
 
