@@ -105,6 +105,12 @@ instance. If the first launcher is still assigning ports, it reports startup in 
 Use `pnpm dev:status` to print the current URLs and
 `pnpm dev:down` to stop the launcher.
 
+The development-only `/dev/mobile-layout` page compares the current two-player layout with a
+compact mobile prototype. It includes five-, six-, and seven-color sample games, a shorter-screen
+toggle, a discard-heavy example, pinned resource icons and counts, discard details, and local
+card-position toggles. The prototype
+uses sample state and does not send live game actions.
+
 #### Client state and animations
 
 `HanabiGameStore` receives complete socket snapshots and publishes separate board,
