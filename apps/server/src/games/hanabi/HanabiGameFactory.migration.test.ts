@@ -107,7 +107,12 @@ function hydrate(value: HanabiGameSerialized | string) {
 }
 
 function legacyV2Policy(policy: BotPolicy): BotPolicy {
-	const { hash: _hash, ...identity } = policy;
+	const {
+		hash: _hash,
+		conventionsTrustVersion: _trust,
+		customConventions: _custom,
+		...identity
+	} = policy;
 	const conventions =
 		"Custom coaching. Preserve those reservations in your notepad and interpret teammates' hands the same way.";
 	const legacy = {

@@ -65,7 +65,11 @@ export class BotTurnCoordinator {
 		if (this.started) return;
 		this.started = true;
 		const round = this.hooks.getTurn()?.round;
-		if (round && ['error', 'exhausted'].includes(round.status)) {
+		if (
+			round &&
+			['error', 'exhausted'].includes(round.status) &&
+			!(round.policy.customConventions && round.failure === 'round_budget')
+		) {
 			round.status = 'ready';
 			delete round.failure;
 			this.hooks.notify();
@@ -112,7 +116,11 @@ export class BotTurnCoordinator {
 			status: round.failure === 'unavailable' ? 'disabled' : round.status,
 			message:
 				round.failure === 'round_budget' || round.failure === 'global_budget'
-					? undefined
+					? round.policy.customConventions
+						? round.failure === 'round_budget'
+							? 'Custom bots reached this round’s usage limit. Reset the game to continue.'
+							: 'Custom bots reached the server’s hourly usage limit. Retrying automatically.'
+						: undefined
 					: BOT_FAILURE_MESSAGES[round.failure ?? 'transient'],
 			canRetry: false,
 		};
@@ -180,7 +188,11 @@ export class BotTurnCoordinator {
 			)
 				return;
 			if (!['ready', 'thinking'].includes(turn.round.status)) {
-				if (turn.opportunity !== 'result') this.recover(turn);
+				if (
+					turn.opportunity !== 'result' &&
+					!(turn.round.policy.customConventions && turn.round.failure === 'round_budget')
+				)
+					this.recover(turn);
 				return;
 			}
 			this.running = true;
@@ -293,7 +305,17 @@ export class BotTurnCoordinator {
 					this.fail(round, 'timeout');
 					return;
 				}
-				const reservation = this.runtime.reserve();
+				const reservation = round.policy.customConventions
+					? this.runtime.reserveCustom(
+							`${this.hooks.gameId}:${round.roundId}`,
+							estimatedTokens,
+							round,
+						)
+					: this.runtime.reserve();
+				if (reservation === 'round_budget' || reservation === 'global_budget') {
+					this.fail(round, reservation);
+					return;
+				}
 				if (reservation === 'busy') {
 					if (isResult) {
 						this.fail(round, 'busy');
@@ -358,7 +380,8 @@ export class BotTurnCoordinator {
 						const total = result.inputTokens + result.outputTokens;
 						if (Number.isSafeInteger(total) && total >= 0) {
 							usedTokens = total;
-							round.tokens += total - estimatedTokens;
+							// Keep custom admission reservations durable across server restarts.
+							if (!round.policy.customConventions) round.tokens += total - estimatedTokens;
 						}
 					}
 					const selected = legalActions.find(({ id }) => id === result.actionId);

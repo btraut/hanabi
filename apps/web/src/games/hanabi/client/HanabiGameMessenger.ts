@@ -9,6 +9,7 @@ import {
 	AddPlayerResponseMessage,
 	AddBotResponseMessage,
 	ChangeGameSettingsResponseMessage,
+	ChangeBotConventionsResponseMessage,
 	CreateDebugPlayerResponseMessage,
 	DebugPlayerAction,
 	DebugPlayerActionResponseMessage,
@@ -200,6 +201,21 @@ export default class HanabiGameMessenger {
 			'RemovePlayerResponseMessage',
 			this._scope,
 		);
+		if (response.data.error) throw new Error(response.data.error);
+	}
+
+	public async changeBotConventions(text: string | null, revision: number): Promise<void> {
+		const requestId = crypto.randomUUID();
+		// Admission review can outlast ordinary socket commands. Sending and
+		// registering the response happen in one synchronous event-loop turn.
+		this._sendMessage({ type: 'ChangeBotConventionsMessage', data: { text, revision, requestId } });
+		const response = (await this._socketManager.expect(
+			(response) =>
+				response.type === 'ChangeBotConventionsResponseMessage' &&
+				response.scope === this._scope &&
+				response.data.requestId === requestId,
+			45_000,
+		)) as ChangeBotConventionsResponseMessage;
 		if (response.data.error) throw new Error(response.data.error);
 	}
 

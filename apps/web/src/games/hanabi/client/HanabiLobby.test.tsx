@@ -13,6 +13,7 @@ const messenger = {
 	removeBot: vi.fn<(playerId: string) => Promise<void>>(),
 	leave: vi.fn(),
 	start: vi.fn(),
+	changeBotConventions: vi.fn(),
 };
 
 vi.mock('~/components/SocketContext', () => ({ useUserId: () => userId }));
@@ -160,5 +161,37 @@ describe('HanabiLobby bot controls', () => {
 		expect(document.querySelector('[role="alert"]')?.textContent).toBe(
 			'Only the creator can remove bots.',
 		);
+	});
+
+	it('shows conventions only after a bot is added and makes them readable to watchers', () => {
+		gameData.bots!.conventions = {
+			text: 'Save critical tiles.',
+			defaultText: 'Save critical tiles.',
+			revision: 0,
+			custom: false,
+			reviewing: false,
+		};
+		gameData.players = { alice: human };
+		render();
+		expect(document.querySelector('[aria-label="Bot conventions"]')).toBeNull();
+		gameData.players = { ...gameData.players, [bot.id]: bot };
+		render();
+		expect(button('Edit')).toBeDefined();
+		userId = 'watcher';
+		render();
+		expect(button('View')).toBeDefined();
+		expect(button('Edit')).toBeUndefined();
+	});
+
+	it('prevents starting while conventions are being reviewed', () => {
+		gameData.bots!.conventions = {
+			text: 'Save critical tiles.',
+			defaultText: 'Save critical tiles.',
+			revision: 0,
+			custom: false,
+			reviewing: true,
+		};
+		render();
+		expect(button('Start game')?.disabled).toBe(true);
 	});
 });

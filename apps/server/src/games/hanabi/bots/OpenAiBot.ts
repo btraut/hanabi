@@ -328,7 +328,7 @@ export class OpenAiBot implements BotDecisionProvider {
 					actionId: result.actionId,
 					arrangement: result.arrangement,
 					explanation: result.explanation,
-					...(request.roundId
+					...(request.roundId && !request.policy.customConventions
 						? { conversation: conversationCheckpoint(request, response.id) }
 						: {}),
 					...(response.usage?.input_tokens_details?.cached_tokens !== undefined

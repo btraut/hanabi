@@ -4,6 +4,7 @@ import {
 	HANABI_GAME_TITLE,
 	HANABI_MAX_ACTIONS,
 	HANABI_MAX_CHAT_LENGTH,
+	HANABI_MAX_BOT_CONVENTIONS_BYTES,
 	HANABI_MAX_CLUES,
 	HANABI_MAX_LIVES,
 	HANABI_MAX_PLAYERS,
@@ -556,6 +557,22 @@ function parsePersistedGame(value: string): HanabiGameSerialized {
 		hydrationError('persisted data is not valid JSON.');
 	}
 	const game = requireRecord(parsed, 'game');
+	if (game.botConventions !== undefined) {
+		const conventions = requireRecord(game.botConventions, 'botConventions');
+		requireIntegerInRange(
+			conventions.revision,
+			0,
+			Number.MAX_SAFE_INTEGER,
+			'botConventions.revision',
+		);
+		if (conventions.text !== undefined) {
+			const text = requireString(conventions.text, 'botConventions.text');
+			if (!text.trim() || Buffer.byteLength(text, 'utf8') > HANABI_MAX_BOT_CONVENTIONS_BYTES)
+				hydrationError(
+					'botConventions.text must contain at most 32000 UTF-8 bytes of nonempty text.',
+				);
+		}
+	}
 	if (game.pendingChat !== undefined) validateTranscriptChat(game.pendingChat, 'pendingChat', 0);
 	if (game.transcript !== undefined && game.transcript !== null) {
 		const transcript = requireRecord(game.transcript, 'transcript');
