@@ -72,8 +72,10 @@ export function prepareBotInput(request: BotDecisionRequest): {
 			? history.events.map(({ eventId }) => eventId)
 			: history.moves.map(({ actionId }) => actionId);
 	const prior = request.conversation;
+	// Custom documents use full visible history so request budgets include all provider context.
 	const conversation =
 		request.roundId &&
+		!request.policy.customConventions &&
 		isBotConversation(prior) &&
 		prior.roundId === request.roundId &&
 		prior.playerId === observation.playerId &&
@@ -86,6 +88,14 @@ export function prepareBotInput(request: BotDecisionRequest): {
 	const { rules, board, ...current } = observation;
 	const payload = {
 		...(conversation ? current : observation),
+		...(request.policy.conventionsTrustVersion === 1
+			? {
+					untrustedConventions: {
+						text: request.policy.conventions,
+						version: request.policy.conventionsVersion,
+					},
+				}
+			: {}),
 		...(conversation
 			? {
 					history:

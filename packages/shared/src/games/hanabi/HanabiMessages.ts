@@ -63,6 +63,15 @@ export type DebugPlayerActionResponseMessage = SocketMessage<
 >;
 
 // State Management
+export type ChangeBotConventionsMessage = SocketMessage<
+	'ChangeBotConventionsMessage',
+	{ text: string | null; revision: number; requestId: string }
+>;
+export type ChangeBotConventionsResponseMessage = SocketMessage<
+	'ChangeBotConventionsResponseMessage',
+	{ error?: string; requestId: string }
+>;
+
 export type ChangeGameSettingsMessage = SocketMessage<
 	'ChangeGameSettingsMessage',
 	{
@@ -129,6 +138,8 @@ export type HanabiMessage =
 	| CreateDebugPlayerResponseMessage
 	| DebugPlayerActionMessage
 	| DebugPlayerActionResponseMessage
+	| ChangeBotConventionsMessage
+	| ChangeBotConventionsResponseMessage
 	| ChangeGameSettingsMessage
 	| ChangeGameSettingsResponseMessage
 	| SendChatMessage

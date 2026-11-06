@@ -156,20 +156,37 @@ remove bots before the game starts. API calls run on the server and continue if 
 New bots receive a random robot name from `bots/BotNames.ts`, excluding names already used by
 any player in that lobby. Existing bots keep their names across reloads and game resets.
 
-Edit [conventions.md](apps/server/src/games/hanabi/bots/conventions.md) to coach the bot. New rounds
-compose this Markdown with the active mode's rules and enabled options: five colors, six colors,
-Rainbow, Black Powder, or Rainbow plus Black Powder. Restart development or rebuild/redeploy
-production, then start a new round to adopt edits. Each round snapshots its prompt, rules, coaching,
-model, effort, and communication contract. The defaults are `gpt-5.6-sol` and `high`; override them
-with `HANABI_BOT_MODEL` and `HANABI_BOT_REASONING_EFFORT`.
+The joined host can edit **Bot conventions** in a lobby containing a bot. One document applies to
+all bots; everyone in the lobby can read it. Save checks the document before applying it. Rejected
+or unavailable checks leave the accepted instructions unchanged. Reset restores the built-in
+[conventions.md](apps/server/src/games/hanabi/bots/conventions.md). Custom documents are limited to
+32,000 UTF-8 bytes, persist with the lobby, and survive game resets. Concurrent edits require the
+current revision. Starting is blocked during a check and freezes the accepted document for that round.
 
-Each bot seat has its own stored Responses API conversation for the round. The first request contains
-its instructions, conventions, rules, and complete recorded public history. Later requests use
-`previous_response_id` and send only new history events plus the current permitted view: visible
-teammate cards, resources, fireworks, discards, and every player's hand and layout. Stable card IDs carry positive
-and negative clue evidence, source events, and possible identities. Replacement draws start with
-fresh knowledge. Clue events preserve their original board and layout context. The bot's own faces,
-undealt cards, and shuffle seed are excluded. Requests have no tools; conversations are never shared between seats or rounds.
+New rounds keep trusted rules and the player contract separate from user-supplied conventions.
+Conventions are JSON-encoded user data whose permitted scope is Hanabi strategy and interpretation;
+they cannot authorize tools, change game rules, override response formats, or grant information access.
+A tool-free, strict-schema model checks custom submissions with a 15-second deadline and 1,024 output
+tokens. Checks fail closed and are limited to six per host per hour, sixty per server process per hour,
+and two concurrent requests. Model screening is fallible; legal-action checks, information projection,
+output handling, and resource limits enforce the application boundary.
+
+Each round snapshots its prompt, rules, conventions, model, effort, and communication contract.
+The defaults are `gpt-5.6-sol` and `high`; override them with `HANABI_BOT_MODEL` and
+`HANABI_BOT_REASONING_EFFORT`. Editing the built-in file requires restarting development or
+rebuilding/redeploying production before a new round uses those defaults. Existing round snapshots
+retain their original policy.
+
+Default-convention bot seats have separate stored Responses API conversations. The first request
+contains trusted instructions and a user payload with conventions, rules, and complete recorded public
+history. Later requests use `previous_response_id` and send new history events and the fixed convention
+document with the current permitted view. Custom-convention bots send the complete visible record on
+each request without chaining responses, allowing conservative input-cost reservations. Both modes
+see visible teammate cards, resources, fireworks, discards, and every player's hand and layout.
+Stable card IDs carry positive and negative clue evidence, source events, and possible identities.
+Replacement draws start with fresh knowledge. Clue events preserve their original board and layout
+context. The bot's own faces, undealt cards, and shuffle seed are excluded. Requests have no tools;
+conversations are never shared between seats or rounds.
 
 Literal knowledge is separate from convention interpretation. A teammate's visible face does not
 become that teammate's clue knowledge. Own-card `observerPossibleIdentities` can additionally account
@@ -177,7 +194,8 @@ for copies visible in other hands. Conventions such as a single-card clue usuall
 remain conditional; missed clues never create hard identity exclusions.
 
 Bot responses contain only `actionId`, `arrangement`, and `explanation`. Accepted explanations
-remain in the model conversation and appear in public debug chat. There is no private scratchpad,
+remain in the model conversation and appear in public debug chat for default-convention rounds.
+Custom-convention rounds discard explanations without broadcasting or recording them in chat. There is no private scratchpad,
 notes response field, or local explanation journal. Initialization and recovery send the permitted
 board and public event history, without replaying past explanations. Legacy saved scratchpads are
 removed on load, and affected conversations restart with the current response contract.
@@ -195,9 +213,11 @@ pending review before responding to another clue or taking its next turn. This f
 with no arrangement, and after an action ends the game, with an explanation only. Protected cards remain
 conceptually reserved when dragging is disabled. Humans retain ordinary off-turn dragging.
 
-The server validates the entire decision before applying it, then posts its explanation as a chat
-message from the bot, prefixed with `Debug: `. Every accepted turn, clue response, or result reflection produces one
-message, including a response that keeps the layout unchanged. The complete explanation can
+The server validates the entire decision before applying it. Default-convention rounds post its
+explanation as a chat message from the bot, prefixed with `Debug: `. Every accepted default-convention
+turn, clue response, or result reflection produces one message, including a response that keeps the
+layout unchanged. Custom-convention rounds never post model-generated explanations, preventing
+that output channel from disclosing teammate cards or unrelated injected content. The complete explanation can
 contain up to 1,000 characters plus the prefix; ordinary player messages retain their 500-character
 limit. Debug messages are visible to every player and watcher and may reveal teammate cards their
 owners cannot see. They are persisted with chat, consume no turn, and are excluded from bot
@@ -219,7 +239,14 @@ is 120 seconds per request cycle, including one immediate retry for transient AP
 cycle gets a fresh deadline. Responses allow up to 16,384 output tokens, including reasoning. Turn
 and clue requests wait for shared capacity automatically; the server allows three concurrent requests.
 Saved failed decisions resume automatically after a restart with their original policy and history.
-There are no cumulative request or token budgets. Environment examples list configurable limits.
+Default-convention rounds have no cumulative request or token budgets. Custom rounds allow at most
+256 model requests and 10 million conservatively reserved tokens per round, including optional
+reflections and retries. Reservations use input bytes plus schema/output allowances and are charged
+before inference without refunds; they are not a tokenizer measurement. The process also admits at
+most 1,000 custom requests and 50 million reserved tokens per hour. Exhausted rounds stop; process
+limits retry after capacity returns. Round counters survive restarts; process-wide hourly counters
+reset on restart and are not shared between replicas. These are abuse bounds, not dollar-denominated
+billing caps. Environment examples list configurable ordinary request limits.
 
 Result reflections use low reasoning effort, at most 2,048 output tokens, and a five-second deadline per attempt.
 They receive one attempt and are skipped on failure or timeout so the next turn can continue.
@@ -227,7 +254,8 @@ The revealed action remains in the complete history for interpretation on a late
 requests share the concurrency limit; they never replay the completed action.
 
 V2 requests enforce a 512,000-byte limit on the new input and any initialization instructions.
-Only initialization or recovery includes the complete public history.
+Default-convention rounds include complete public history only on initialization or recovery.
+Custom-convention rounds include it on every request.
 Oversized requests report an error without truncating saved events.
 Human movement and other permitted game controls remain available during bot errors.
 

@@ -10,6 +10,7 @@ import LocalFileGameStore from './games/server/LocalFileGameStore.js';
 import RedisGameStore from './games/server/RedisGameStore.js';
 import { createHanabiRuntime } from './runtime.js';
 import Logger from './utils/Logger.js';
+import { OpenAiConventionsReviewer } from './games/hanabi/bots/BotConventionsReview.js';
 import { BotRuntime } from './games/hanabi/bots/BotRuntime.js';
 import { OpenAiBot } from './games/hanabi/bots/OpenAiBot.js';
 import { createBotPolicy } from './games/hanabi/bots/BotPolicy.js';
@@ -65,6 +66,10 @@ async function main(): Promise<void> {
 							maxOutputTokens: env.HANABI_BOT_MAX_OUTPUT_TOKENS,
 							maxConcurrent: env.HANABI_BOT_MAX_CONCURRENT,
 						},
+						new OpenAiConventionsReviewer({
+							apiKey: env.OPENAI_API_KEY,
+							model: env.HANABI_BOT_MODEL,
+						}),
 					)
 				: undefined,
 	});

@@ -1,6 +1,7 @@
 import { useUserId } from '~/components/SocketContext';
 import HanabiMenuButton from '~/games/hanabi/client/design-system/HanabiMenuButton';
 import HanabiChooseRuleSetForm from '~/games/hanabi/client/HanabiChooseRuleSetForm';
+import HanabiBotConventions from '~/games/hanabi/client/HanabiBotConventions';
 import HanabiCopyLinkButton from '~/games/hanabi/client/HanabiCopyLinkButton';
 import {
 	useGameData,
@@ -49,6 +50,10 @@ export default function HanabiLobby(): JSX.Element {
 
 	const players = Object.values(gameData.players);
 	const lobbyFull = players.length >= HANABI_MAX_PLAYERS;
+	const conventions = gameData.bots?.conventions;
+	const conventionsControl = players.some((player) => player.kind === 'bot') && conventions && (
+		<HanabiBotConventions conventions={conventions} canEdit={canManageBots} />
+	);
 
 	const manageBot = async (playerId?: string) => {
 		if (!canManageBots || botRequestPending.current) return;
@@ -150,6 +155,7 @@ export default function HanabiLobby(): JSX.Element {
 								</div>
 							</fieldset>
 						</div>
+						{conventionsControl}
 						<div className="grid gap-3">
 							<div className="flex flex-wrap justify-center gap-2.5">
 								<HanabiMenuButton
@@ -161,14 +167,17 @@ export default function HanabiLobby(): JSX.Element {
 								<HanabiMenuButton
 									label="Start game"
 									onClick={handleStartClick}
-									disabled={!enoughPlayers || botRequest !== null}
+									disabled={!enoughPlayers || botRequest !== null || conventions?.reviewing}
 									variant="primary"
 								/>
 							</div>
 						</div>
 					</>
 				) : (
-					<HanabiJoinForm />
+					<>
+						{conventionsControl}
+						<HanabiJoinForm />
+					</>
 				)}
 			</div>
 			<div id="portal" />

@@ -20,6 +20,7 @@ import {
 	HANABI_GAME_TITLE,
 	HANABI_MAX_ACTIONS,
 	HANABI_MAX_CHAT_LENGTH,
+	HANABI_MAX_BOT_CONVENTIONS_BYTES,
 	HANABI_MAX_CLUES,
 	HANABI_MAX_PLAYERS,
 	HANABI_MIN_PLAYERS,
@@ -35,6 +36,7 @@ import {
 	Position,
 	AddPlayerMessage,
 	ChangeGameSettingsMessage,
+	ChangeBotConventionsMessage,
 	CreateDebugPlayerMessage,
 	DebugPlayerAction,
 	DebugPlayerActionMessage,
@@ -73,7 +75,7 @@ import { BotRuntime } from './bots/BotRuntime.js';
 import { BotTurnCoordinator, type BotTurn } from './bots/BotTurnCoordinator.js';
 import { removeBotScratchpad, type BotRound } from './bots/BotRound.js';
 import { createBotHistory, appendBotHistory, appendBotArrangement } from './bots/BotHistory.js';
-import { createRoundBotPolicy } from './bots/BotPolicy.js';
+import { createRoundBotPolicy, createBotPolicy, getBotConventions } from './bots/BotPolicy.js';
 import { isV2BotDecision, type BotDecision } from './bots/OpenAiBot.js';
 import { getBotLegalActions } from './bots/BotLegalActions.js';
 import { createBotDecisionChat } from './bots/BotDecisionChat.js';
@@ -84,6 +86,7 @@ export interface HanabiGameSerialized extends GameSerialized {
 	transcript?: GameTranscriptV1 | null;
 	botRound?: BotRound | null;
 	pendingChat?: GameTranscriptChat;
+	botConventions?: { text?: string; revision: number };
 }
 
 const INVALID_MESSAGE_PAYLOAD = 'Invalid message payload.';
@@ -111,6 +114,8 @@ export default class HanabiGame extends Game {
 	private _resultTurn: BotTurn | null = null;
 	private _resultAccounting = { attempts: 0, tokens: 0 };
 	private _backgroundStarted = false;
+	private _botConventions: { text?: string; revision: number } = { revision: 0 };
+	private _conventionsReview: symbol | null = null;
 
 	constructor(
 		creatorIdOrData: string | HanabiGameSerialized,
@@ -130,6 +135,7 @@ export default class HanabiGame extends Game {
 		if (typeof creatorIdOrData === 'string') {
 			this._gameData = generateHanabiGameData({ creatorId: creatorIdOrData });
 		} else {
+			this._botConventions = structuredClone(creatorIdOrData.botConventions ?? { revision: 0 });
 			this._pendingChat = structuredClone(
 				creatorIdOrData.pendingChat ?? {
 					coverage: 'partial',
@@ -166,6 +172,7 @@ export default class HanabiGame extends Game {
 			}
 			if (
 				this._botRound &&
+				!this._botRound.policy.customConventions &&
 				['round_budget', 'global_budget'].includes(this._botRound.failure ?? '')
 			) {
 				this._botRound.status = 'ready';
@@ -212,6 +219,7 @@ export default class HanabiGame extends Game {
 				gameId: this.id,
 				getTurn: () => this._resultTurn,
 				persist: async () => {
+					this._accountForResult();
 					this._update();
 					await this.flushSaves();
 				},
@@ -235,6 +243,7 @@ export default class HanabiGame extends Game {
 	}
 
 	public override stopBackgroundWork(): void {
+		this._conventionsReview = null;
 		this._backgroundStarted = false;
 		this._botCoordinator?.stop();
 		this._resultCoordinator?.stop();
@@ -243,6 +252,7 @@ export default class HanabiGame extends Game {
 	}
 
 	public cleanUp(): void {
+		this._conventionsReview = null;
 		this.stopBackgroundWork();
 		this._messenger.disconnect();
 		this._userConnectionListener.stop();
@@ -253,6 +263,7 @@ export default class HanabiGame extends Game {
 		const serialized: HanabiGameSerialized = {
 			...baseSerialized,
 			data: this._gameData,
+			botConventions: this._botConventions,
 			transcript: this._transcript,
 			...(this._gameData.stage === HanabiStage.Setup ? { pendingChat: this._pendingChat } : {}),
 			...(this._botRound ? { botRound: this._botRound } : {}),
@@ -282,6 +293,17 @@ export default class HanabiGame extends Game {
 			case 'RemovePlayerMessage':
 				return (
 					this._isRecord(data) && (data.playerId === undefined || typeof data.playerId === 'string')
+				);
+			case 'ChangeBotConventionsMessage':
+				return (
+					this._isRecord(data) &&
+					Object.keys(data).every((key) => ['text', 'revision', 'requestId'].includes(key)) &&
+					(data.text === null || typeof data.text === 'string') &&
+					typeof data.requestId === 'string' &&
+					data.requestId.length > 0 &&
+					data.requestId.length <= 100 &&
+					Number.isSafeInteger(data.revision) &&
+					(data.revision as number) >= 0
 				);
 			case 'ChangeGameSettingsMessage':
 				return (
@@ -331,6 +353,18 @@ export default class HanabiGame extends Game {
 			case 'RemovePlayerMessage':
 				this._messenger.send(userId, { type: 'RemovePlayerResponseMessage', data });
 				break;
+			case 'ChangeBotConventionsMessage':
+				this._messenger.send(userId, {
+					type: 'ChangeBotConventionsResponseMessage',
+					data: {
+						...data,
+						requestId:
+							this._isRecord(message.data) && typeof message.data.requestId === 'string'
+								? message.data.requestId.slice(0, 100)
+								: '',
+					},
+				});
+				break;
 			case 'ChangeGameSettingsMessage':
 				this._messenger.send(userId, { type: 'ChangeGameSettingsResponseMessage', data });
 				break;
@@ -361,7 +395,21 @@ export default class HanabiGame extends Game {
 	private _gameDataForRecipient(userId: string): HanabiGameData {
 		const currentPlayer =
 			this._gameData.currentPlayerId && this._gameData.players[this._gameData.currentPlayerId];
+		const defaultText = getBotConventions(this._botRuntime?.policy ?? createBotPolicy());
 		const bots = {
+			...(Object.values(this._gameData.players).some((player) => player.kind === 'bot')
+				? {
+						conventions: {
+							text: this._botRound?.policy.conventions ?? this._botConventions.text ?? defaultText,
+							defaultText,
+							revision: this._botConventions.revision,
+							custom: this._botRound
+								? this._botRound.policy.customConventions === true
+								: this._botConventions.text !== undefined,
+							reviewing: this._conventionsReview !== null,
+						},
+					}
+				: {}),
 			available: !!this._botRuntime,
 			canManage:
 				this._gameData.stage === HanabiStage.Setup &&
@@ -545,6 +593,9 @@ export default class HanabiGame extends Game {
 			case 'DebugPlayerActionMessage':
 				this._handleDebugPlayerActionMessage(message, userId);
 				break;
+			case 'ChangeBotConventionsMessage':
+				void this._handleChangeBotConventionsMessage(message, userId);
+				break;
 			case 'ChangeGameSettingsMessage':
 				this._handleChangeGameSettingsMessage(message, userId);
 				break;
@@ -682,6 +733,13 @@ export default class HanabiGame extends Game {
 		const round = this._botRound;
 		const pending = round?.pendingResults?.[0];
 		if (!this._backgroundStarted || this._resultTurn || !round || !pending) return;
+		if (round.policy.customConventions) {
+			this._botRuntime?.seedCustomRound(
+				`${this.id}:${round.roundId}`,
+				round.attempts,
+				round.tokens,
+			);
+		}
 		this._resultTurn = {
 			playerId: pending.playerId,
 			gameData: structuredClone(this._gameData),
@@ -892,7 +950,9 @@ export default class HanabiGame extends Game {
 			};
 		}
 		const layoutChanged = this._transcript !== beforeTranscript;
-		this._appendActions(createBotDecisionChat(playerId, decisionId, decision.explanation));
+		if (!round.policy.customConventions) {
+			this._appendActions(createBotDecisionChat(playerId, decisionId, decision.explanation));
+		}
 		if (!action) {
 			if (opportunity === 'result') this._finishResult(layoutChanged);
 			else this._invalidateBotTurn(true);
@@ -1153,6 +1213,87 @@ export default class HanabiGame extends Game {
 		this._update();
 	}
 
+	private _conventionsEditError(userId: string, revision: number): string | undefined {
+		if (this._gameData.stage !== HanabiStage.Setup)
+			return 'Conventions are locked after the game starts.';
+		if (
+			userId !== this.creatorId ||
+			!this._gameData.players[userId] ||
+			this._gameData.players[userId].kind === 'bot'
+		)
+			return 'Only the joined host can edit bot conventions.';
+		if (!this._botRuntime) return 'Bots are unavailable on this server.';
+		if (!Object.values(this._gameData.players).some((player) => player.kind === 'bot'))
+			return 'Add a bot before editing conventions.';
+		if (revision !== this._botConventions.revision)
+			return 'Conventions changed. Reload the saved instructions before saving.';
+		return undefined;
+	}
+
+	private async _handleChangeBotConventionsMessage(
+		message: ChangeBotConventionsMessage,
+		userId: string,
+	): Promise<void> {
+		const reply = (error?: string) =>
+			this._messenger.send(userId, {
+				type: 'ChangeBotConventionsResponseMessage',
+				data: { requestId: message.data.requestId, ...(error ? { error } : {}) },
+			});
+		const { text, revision } = message.data;
+		const error = this._conventionsEditError(userId, revision);
+		if (error) {
+			reply(error);
+			return;
+		}
+		if (this._conventionsReview) {
+			reply('Conventions are already being checked. Please wait.');
+			return;
+		}
+		if (
+			text !== null &&
+			(!text.trim() || Buffer.byteLength(text, 'utf8') > HANABI_MAX_BOT_CONVENTIONS_BYTES)
+		) {
+			reply('Conventions must contain text and fit within 32,000 UTF-8 bytes.');
+			return;
+		}
+		const defaultText = getBotConventions(this._botRuntime!.policy);
+		const customText = text === null || text === defaultText ? undefined : text;
+		if (customText === this._botConventions.text) {
+			reply();
+			return;
+		}
+		const review = Symbol('conventions review');
+		this._conventionsReview = review;
+		this._broadcastGameData();
+		try {
+			if (customText !== undefined) {
+				const result = await this._botRuntime!.reviewConventions(userId, customText);
+				if (!result.accepted) {
+					reply(result.reason ?? 'Use only Hanabi conventions in these instructions.');
+					return;
+				}
+			}
+			const stale = this._conventionsEditError(userId, revision);
+			if (this._conventionsReview !== review || stale) {
+				reply(stale ?? 'The lobby changed while conventions were being checked. Try saving again.');
+				return;
+			}
+			this._botConventions = {
+				...(customText === undefined ? {} : { text: customText }),
+				revision: revision + 1,
+			};
+			this._update();
+			reply();
+		} catch {
+			reply('Could not check conventions. Your saved instructions were not changed. Try again.');
+		} finally {
+			if (this._conventionsReview === review) {
+				this._conventionsReview = null;
+				this._broadcastGameData();
+			}
+		}
+	}
+
 	private _handleChangeGameSettingsMessage(
 		message: ChangeGameSettingsMessage,
 		userId: string,
@@ -1291,6 +1432,13 @@ export default class HanabiGame extends Game {
 			return;
 		}
 
+		if (this._conventionsReview) {
+			this._messenger.send(userId, {
+				type: 'StartGameResponseMessage',
+				data: { error: 'Wait for the conventions check before starting.' },
+			});
+			return;
+		}
 		// Start the game!
 		if (
 			Object.values(this._gameData.players).some((player) => player.kind === 'bot') &&
@@ -1335,7 +1483,11 @@ export default class HanabiGame extends Game {
 			this._botRound = {
 				version: 2,
 				roundId: this._gameData.seed,
-				policy: createRoundBotPolicy(this._botRuntime.policy, this._gameData),
+				policy: createRoundBotPolicy(
+					this._botRuntime.policy,
+					this._gameData,
+					this._botConventions.text,
+				),
 				history: createBotHistory(this._gameData, 2),
 				revision: 0,
 				attempts: 0,
@@ -1931,6 +2083,8 @@ export default class HanabiGame extends Game {
 		}
 
 		// Generate a new game.
+		this._conventionsReview = null;
+		this._botConventions = { ...this._botConventions, revision: this._botConventions.revision + 1 };
 		this._botCoordinator?.changed();
 		this._resultCoordinator?.changed();
 		this._resultTurn = null;

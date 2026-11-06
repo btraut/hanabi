@@ -248,6 +248,57 @@ describe('BotTurnCoordinator', () => {
 		return value;
 	}
 
+	it('stops custom rounds at their persisted attempt budget without automatic retry', async () => {
+		const turn = botTurn({ attempts: 2 });
+		turn.round.policy = createRoundBotPolicy(turn.round.policy, turn.gameData, 'Discard oldest.');
+		turn.round.version = 2;
+		turn.round.history = createBotHistory(turn.gameData, 2);
+		turn.round.pendingClues = [];
+		const h = tracked({ turn, limits: { customRoundMaxAttempts: 2 } });
+		h.coordinator.start();
+		await flush();
+		expect(h.chooseAction).not.toHaveBeenCalled();
+		expect(turn.round.failure).toBe('round_budget');
+		expect(h.coordinator.status()?.message).toContain('this round’s usage limit');
+		await vi.advanceTimersByTimeAsync(120_000);
+		expect(h.chooseAction).not.toHaveBeenCalled();
+		expect(turn.round.failure).toBe('round_budget');
+	});
+
+	it('refuses a custom request whose full input cannot fit the global reservation', async () => {
+		const turn = botTurn();
+		turn.round.policy = createRoundBotPolicy(turn.round.policy, turn.gameData, 'Discard oldest.');
+		turn.round.version = 2;
+		turn.round.history = createBotHistory(turn.gameData, 2);
+		turn.round.pendingClues = [];
+		const h = tracked({ turn, limits: { customGlobalMaxTokens: 1 } });
+		h.coordinator.start();
+		await flush();
+		expect(h.chooseAction).not.toHaveBeenCalled();
+		expect(turn.round.failure).toBe('global_budget');
+		expect(h.coordinator.status()?.message).toContain('hourly usage limit');
+	});
+
+	it('persists conservative custom reservations even when reported usage is smaller', async () => {
+		const turn = botTurn();
+		turn.round.policy = createRoundBotPolicy(turn.round.policy, turn.gameData, 'Discard oldest.');
+		turn.round.version = 2;
+		turn.round.history = createBotHistory(turn.gameData, 2);
+		turn.round.pendingClues = [];
+		const h = tracked({ turn });
+		h.coordinator.start();
+		await flush();
+		expect(h.apply).toHaveBeenCalledOnce();
+		const reserved = h.snapshots.find((snapshot) => snapshot.status === 'thinking')!.tokens;
+		expect(reserved).toBeGreaterThan(105);
+		const restored = JSON.parse(JSON.stringify(turn.round)) as BotRound;
+		expect(restored.tokens).toBe(reserved);
+		const restarted = new BotRuntime({ chooseAction: vi.fn() }, restored.policy, {
+			customRoundMaxTokens: reserved,
+		});
+		expect(restarted.reserveCustom('test-game:round-1', 1, restored)).toBe('round_budget');
+	});
+
 	it('starts only on explicit activation and persists the reserved budget before a single provider call', async () => {
 		const saved = deferred<void>();
 		const h = tracked({ persist: () => saved.promise });

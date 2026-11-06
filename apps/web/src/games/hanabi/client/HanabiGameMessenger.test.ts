@@ -21,7 +21,24 @@ function fixture(initialSettings?: HanabiLobbySettings) {
 		connectionState: ConnectionState.Connected,
 		send: vi.fn<(message: HanabiMessage) => void>(),
 		expectMessageOfType: vi.fn().mockResolvedValue({ data: {} }),
+		expect: vi
+			.fn<
+				(
+					matches: (message: HanabiMessage) => boolean,
+					timeout?: number,
+				) => Promise<{ data: { error?: string; requestId?: string } }>
+			>()
+			.mockResolvedValue({ data: {} }),
 	};
+	socket.expect.mockImplementation(() => {
+		const message = socket.send.mock.calls.at(-1)?.[0];
+		return Promise.resolve({
+			data: {
+				requestId:
+					message?.type === 'ChangeBotConventionsMessage' ? message.data.requestId : undefined,
+			},
+		});
+	});
 	const auth = {
 		onAuthenticate: event(),
 		authenticationState: AuthenticationState.Authenticated,
@@ -70,5 +87,88 @@ describe('new game preferences', () => {
 		expect(socket.send).toHaveBeenLastCalledWith(
 			expect.objectContaining({ type: 'ChangeGameSettingsMessage', data: settings }),
 		);
+	});
+});
+
+describe('bot conventions commands', () => {
+	it.each(['Save critical tiles.', null])(
+		'sends %s with the revision and allows time for review',
+		async (text) => {
+			const { messenger, socket } = fixture();
+			await messenger.changeBotConventions(text, 3);
+			expect(socket.send).toHaveBeenCalledExactlyOnceWith({
+				type: 'ChangeBotConventionsMessage',
+				scope: 'game.hanabi.game-id',
+				data: { text, revision: 3, requestId: expect.any(String) as string },
+			});
+			const message = socket.send.mock.calls[0][0];
+			if (message.type !== 'ChangeBotConventionsMessage') throw new Error('Unexpected message.');
+			const { requestId } = message.data;
+			expect(socket.expect).toHaveBeenCalledWith(expect.any(Function), 45_000);
+			const matches = socket.expect.mock.calls[0][0];
+			expect(
+				matches({
+					type: 'ChangeBotConventionsResponseMessage',
+					scope: 'game.hanabi.game-id',
+					data: { requestId },
+				}),
+			).toBe(true);
+			expect(
+				matches({
+					type: 'ChangeBotConventionsResponseMessage',
+					scope: 'game.hanabi.other',
+					data: { requestId },
+				}),
+			).toBe(false);
+			expect(
+				matches({
+					type: 'ChangeBotConventionsResponseMessage',
+					scope: 'game.hanabi.game-id',
+					data: { requestId: 'another-tab-request', error: 'Another request failed.' },
+				}),
+			).toBe(false);
+		},
+	);
+
+	it('correlates each command independently even in the same room', async () => {
+		const { messenger, socket } = fixture();
+		await messenger.changeBotConventions('First convention.', 0);
+		await messenger.changeBotConventions('Second convention.', 1);
+		const first = socket.send.mock.calls[0][0];
+		const second = socket.send.mock.calls[1][0];
+		if (
+			first.type !== 'ChangeBotConventionsMessage' ||
+			second.type !== 'ChangeBotConventionsMessage'
+		)
+			throw new Error('Unexpected message.');
+		expect(first.data.requestId).not.toBe(second.data.requestId);
+		const firstResponse: HanabiMessage = {
+			type: 'ChangeBotConventionsResponseMessage',
+			scope: first.scope,
+			data: { requestId: first.data.requestId },
+		};
+		expect(socket.expect.mock.calls[0][0](firstResponse)).toBe(true);
+		expect(socket.expect.mock.calls[1][0](firstResponse)).toBe(false);
+	});
+
+	it('propagates rejection and transport failure to the editor', async () => {
+		const { messenger, socket } = fixture();
+		socket.expect.mockResolvedValueOnce({ data: { error: 'The saved conventions changed.' } });
+		await expect(messenger.changeBotConventions('My draft.', 0)).rejects.toThrow(
+			'The saved conventions changed.',
+		);
+		socket.expect.mockRejectedValueOnce(new Error('Server disconnected.'));
+		await expect(messenger.changeBotConventions('My draft.', 0)).rejects.toThrow(
+			'Server disconnected.',
+		);
+	});
+
+	it('does not leave a response waiter when sending fails', async () => {
+		const { messenger, socket } = fixture();
+		socket.send.mockImplementationOnce(() => {
+			throw new Error('Socket closed.');
+		});
+		await expect(messenger.changeBotConventions('My draft.', 0)).rejects.toThrow('Socket closed.');
+		expect(socket.expect).not.toHaveBeenCalled();
 	});
 });

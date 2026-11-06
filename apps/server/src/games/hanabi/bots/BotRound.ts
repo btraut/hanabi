@@ -11,8 +11,8 @@ export type BotFailureCode =
 	| 'incomplete'
 	| 'invalid_action'
 	| 'busy'
-	| 'global_budget' // Accepted only when loading legacy snapshots; cleared during restoration.
-	| 'round_budget' // Accepted only when loading legacy snapshots; cleared during restoration.
+	| 'global_budget' // Custom-convention process allowance is exhausted.
+	| 'round_budget' // Custom-convention round allowance is exhausted.
 	| 'save_failed'
 	| 'input_too_large';
 

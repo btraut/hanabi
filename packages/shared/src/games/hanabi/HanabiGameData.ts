@@ -9,6 +9,7 @@ export const HANABI_MAX_PLAYERS = 5;
 export const HANABI_MAX_CLUES = 8;
 export const HANABI_MAX_LIVES = 3;
 export const HANABI_MAX_CHAT_LENGTH = 500;
+export const HANABI_MAX_BOT_CONVENTIONS_BYTES = 32_000;
 export const HANABI_MAX_ACTIONS = 1000;
 
 export function canHanabiPlayerDiscard(clues: number): boolean {
@@ -231,7 +232,16 @@ export interface HanabiBotTurnStatus {
 	canRetry: boolean;
 }
 
+export interface HanabiBotConventions {
+	text: string;
+	defaultText: string;
+	revision: number;
+	custom: boolean;
+	reviewing: boolean;
+}
+
 export interface HanabiBotStatus {
+	conventions?: HanabiBotConventions;
 	available: boolean;
 	canManage: boolean;
 	turn: HanabiBotTurnStatus | null;

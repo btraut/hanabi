@@ -310,7 +310,7 @@ describe('server bot game integration', () => {
 		const publicState = refresh(harness);
 		expect(publicState).not.toHaveProperty('botRound');
 		expect(JSON.stringify(publicState)).not.toContain(after.botRound!.policy.hash);
-		expect(JSON.stringify(publicState)).not.toContain('Test coaching');
+		expect(publicState.bots?.conventions?.text).toBe('Test coaching');
 	});
 
 	it('keeps complete clue history after chat evicts ordinary activity entries', async () => {
