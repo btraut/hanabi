@@ -1831,6 +1831,88 @@ body {
 	transform: translateX(-50%);
 }
 
+[data-hanabi-clue='color-red'] {
+	--hanabi-clue-light: #c84a4d;
+	--hanabi-clue-mid: #97252f;
+	--hanabi-clue-deep: #581922;
+}
+
+[data-hanabi-clue='color-blue'] {
+	--hanabi-clue-light: #4b9ddc;
+	--hanabi-clue-mid: #2367aa;
+	--hanabi-clue-deep: #163b69;
+}
+
+[data-hanabi-clue='color-green'] {
+	--hanabi-clue-light: #80ae56;
+	--hanabi-clue-mid: #4e7e31;
+	--hanabi-clue-deep: #294b22;
+}
+
+[data-hanabi-clue='color-yellow'] {
+	--hanabi-clue-light: #f0cf64;
+	--hanabi-clue-mid: #c39b32;
+	--hanabi-clue-deep: #82601f;
+}
+
+[data-hanabi-clue='color-white'] {
+	--hanabi-clue-light: #f4f3e9;
+	--hanabi-clue-mid: #d9dce0;
+	--hanabi-clue-deep: #99a5b2;
+}
+
+[data-hanabi-clue='color-purple'] {
+	--hanabi-clue-light: #b88bdc;
+	--hanabi-clue-mid: #8554ac;
+	--hanabi-clue-deep: #4f306f;
+}
+
+.hanabi-tile-back-color-clue {
+	background-image:
+		radial-gradient(circle at 42% 32%, rgb(255 255 255 / 14%), transparent 62%),
+		linear-gradient(
+			145deg,
+			var(--hanabi-clue-light),
+			var(--hanabi-clue-mid) 58%,
+			var(--hanabi-clue-deep)
+		);
+}
+
+.hanabi-tile-back-color-clue::before {
+	border-color: rgb(255 255 255 / 34%);
+}
+
+.hanabi-tile-back-color-clue::after {
+	background: #fff7e5;
+	opacity: 0.55;
+}
+
+[data-hanabi-clue='color-white'] .hanabi-tile-back::before {
+	border-color: rgb(52 66 83 / 30%);
+}
+
+[data-hanabi-clue='color-white'] .hanabi-tile-back::after {
+	background: #3b4b60;
+}
+
+.hanabi-tile-back-number-clue::after {
+	opacity: 0.24;
+}
+
+.hanabi-tile-clue-number {
+	position: relative;
+	z-index: 1;
+	transform: translateY(-0.08em);
+	font-family: Georgia, 'Times New Roman', serif;
+	font-size: calc(var(--hanabi-tile-number-size) * 1.15);
+	font-weight: 700;
+	line-height: 1;
+	color: #fff9eb;
+	text-shadow:
+		0 2px 3px #020b16,
+		0 0 8px rgb(2 11 22 / 65%);
+}
+
 .hanabi-player-tile .hanabi-tile-back,
 .hanabi-player-tile .hanabi-tile-face {
 	height: var(--hanabi-player-tile-height) !important;

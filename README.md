@@ -17,6 +17,12 @@ color; number clues use a neutral white glow. Card artwork remains visible. High
 through the next player's turn until another clue, play, or discard replaces them; chat and card
 rearrangement do not clear them. Selecting an action in Activity replays its highlight, and selecting
 it again dismisses it. Reduced-motion preferences keep the glow steady.
+The recipient's concealed cards also show the latest clue directly: color clues tint the card
+back, and number clues put a numeral over the back's firework. These temporary cues clear at the
+next clue, play, or discard, regardless of which Activity item is selected. They work with notes
+disabled, preserve folded note corners, and follow cards during rearrangement. Rainbow cards use
+the color of the clue. The development-only `/dev/clues` page previews every color (including
+purple) and number, with a control to demonstrate clearing the clue at the end of the next turn.
 Touch long-press notes and card action menus open above the card to stay clear of the player’s
 finger. Mouse-hover notes open below the card.
 

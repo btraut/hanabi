@@ -2,6 +2,7 @@ import HanabiTileView from './HanabiTileView';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
+import { HANABI_CLUE_COLORS } from '@hanabi/shared';
 
 describe('HanabiTileView artwork', () => {
 	it('keeps the live numeral above a flattened authored face', () => {
@@ -90,5 +91,70 @@ describe('HanabiTileView artwork', () => {
 		expect(new Set(paperIds).size).toBe(2);
 		expect(new Set(shadowIds).size).toBe(2);
 		for (const id of [...paperIds, ...shadowIds]) expect(markup).toContain(`url(#${id})`);
+	});
+});
+
+describe('HanabiTileView temporary clues', () => {
+	it.each(HANABI_CLUE_COLORS)(
+		'shows the %s clue on a concealed back without notes or highlight',
+		(color) => {
+			const markup = renderToStaticMarkup(
+				createElement(HanabiTileView, { recentClue: { type: 'color', value: color } }),
+			);
+
+			expect(markup).toContain(`data-hanabi-clue="color-${color}"`);
+			expect(markup).toContain(`Latest clue: ${color}.`);
+			expect(markup).toContain('hanabi-tile-back-color-clue');
+			expect(markup).not.toContain('hanabi-tile-clue-number');
+			expect(markup).not.toContain('hanabi-tile-note-marker');
+			expect(markup).not.toContain('hanabi-tile-emphasis');
+		},
+	);
+
+	it.each([1, 2, 3, 4, 5] as const)(
+		'shows number %i while retaining the concealed back and note fold',
+		(number) => {
+			const markup = renderToStaticMarkup(
+				createElement(HanabiTileView, {
+					recentClue: { type: 'number', value: number },
+					notesIndicator: true,
+				}),
+			);
+
+			expect(markup).toContain(`data-hanabi-clue="number-${number}"`);
+			expect(markup).toContain(`Latest clue: ${number}.`);
+			expect(markup).toContain(`>${number}</span>`);
+			expect(markup).toContain('hanabi-tile-clue-number');
+			expect(markup).toContain('tile-back-firework-v5.png');
+			expect(markup).toContain('hanabi-tile-note-marker');
+			expect(markup).toContain('hanabi-tile-surface-clipped');
+		},
+	);
+
+	it('does not paint clues over revealed faces or empty firework positions', () => {
+		for (const props of [{ color: 'green', number: 4 } as const, { placeholder: true }]) {
+			const markup = renderToStaticMarkup(
+				createElement(HanabiTileView, {
+					...props,
+					recentClue: { type: 'number', value: 3 },
+				}),
+			);
+			expect(markup).not.toContain('data-hanabi-clue');
+			expect(markup).not.toContain('Latest clue:');
+			expect(markup).not.toContain('hanabi-tile-clue-number');
+		}
+	});
+
+	it('does not infer a clue from a highlight or recorded-note marker', () => {
+		const markup = renderToStaticMarkup(
+			createElement(HanabiTileView, {
+				highlight: true,
+				highlightTone: 'red',
+				notesIndicator: true,
+			}),
+		);
+		expect(markup).not.toContain('data-hanabi-clue');
+		expect(markup).not.toContain('Latest clue:');
+		expect(markup).not.toContain('hanabi-tile-back-color-clue');
 	});
 });
