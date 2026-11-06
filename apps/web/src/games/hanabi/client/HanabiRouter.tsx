@@ -4,6 +4,7 @@ import HanabiMainMenu from '~/games/hanabi/client/HanabiMainMenu';
 import HanabiWatchForm from '~/games/hanabi/client/HanabiWatchForm';
 import HanabiDesktopFixtureView from '~/games/hanabi/client/dev/HanabiDesktopFixtureView';
 import HanabiReviewFixtureView from '~/games/hanabi/client/dev/HanabiReviewFixtureView';
+import HanabiCluePreview from '~/games/hanabi/client/dev/HanabiCluePreview';
 import Error404Page from '~/pages/Error404Page';
 import { Route, Routes } from 'react-router-dom';
 
@@ -12,6 +13,10 @@ export default function HanabiRouter(): JSX.Element {
 		<Routes>
 			<Route path="/" element={<HanabiMainMenu />} />
 			<Route path="/join" element={<HanabiWatchForm />} />
+			<Route
+				path="/dev/clues"
+				element={import.meta.env.DEV ? <HanabiCluePreview /> : <Error404Page />}
+			/>
 			<Route
 				path="/dev/review"
 				element={import.meta.env.DEV ? <HanabiReviewFixtureView /> : <Error404Page />}

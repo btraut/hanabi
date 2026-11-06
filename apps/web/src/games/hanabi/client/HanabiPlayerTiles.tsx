@@ -18,6 +18,7 @@ import {
 	getTileViewTransitionName,
 } from '~/games/hanabi/client/HanabiActionTransition';
 import HanabiPlayerTilesDragLayer from '~/games/hanabi/client/HanabiPlayerTilesDragLayer';
+import { getHanabiRecentTileClue } from './HanabiRecentClue';
 import HanabiTileEmphasis from './HanabiTileEmphasis';
 import { HanabiDragTypes, getHanabiPositionForDrag } from '~/games/hanabi/client/HanabiDragTypes';
 import { getHanabiTileNotesDescription } from '~/games/hanabi/client/HanabiTileNotesTooltip';
@@ -187,6 +188,10 @@ export default function HanabiPlayerTiles({
 					const ownerLabel = permissions.ownTiles
 						? `Your tile ${index + 1}`
 						: `${gameData.players[id].name}'s tile ${index + 1}`;
+					const recentClue =
+						permissions.hidden && !isTransitioning
+							? getHanabiRecentTileClue(gameData.actions, id, tileId)
+							: undefined;
 					const tileLabel = tileHasNotes
 						? `${ownerLabel}, ${getHanabiTileNotesDescription(gameData.tileNotes[tileId])}`
 						: ownerLabel;
@@ -213,7 +218,10 @@ export default function HanabiPlayerTiles({
 							<div className={variant === 'desktop' ? 'hanabi-player-tile' : undefined}>
 								<HanabiInteractiveTileView
 									tile={gameData.tiles[tileId]}
-									ariaLabel={tileLabel}
+									ariaLabel={
+										recentClue ? `${tileLabel} Latest clue: ${recentClue.value}.` : tileLabel
+									}
+									recentClue={recentClue}
 									hidden={permissions.hidden}
 									onClick={permissions.canAct && !isTransitioning ? onTileClick : undefined}
 									onMouseOver={isTransitioning ? undefined : onTileMouseOver}

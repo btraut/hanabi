@@ -8,6 +8,7 @@ import {
 } from '@hanabi/shared';
 import { HanabiTileHighlightTone } from '~/games/hanabi/client/HanabiHighlightContext';
 import HanabiTileEmphasis, { HANABI_TILE_NOTE_FOLD_SIZE } from './HanabiTileEmphasis';
+import { HanabiTileClue } from './HanabiRecentClue';
 import classNames from 'classnames';
 import { CSSProperties, useId } from 'react';
 
@@ -28,6 +29,9 @@ interface Props {
 	// Optionally emphasize the card edge in the clue color.
 	highlight?: boolean;
 	highlightTone?: HanabiTileHighlightTone;
+
+	// Temporary information from the latest clue, independent of stored notes.
+	recentClue?: HanabiTileClue;
 
 	// Optionally show a folded note corner meaning clue information is stored
 	// for this tile. This only shows for hidden tiles.
@@ -100,18 +104,21 @@ export default function HanabiTileView({
 	size = TileViewSize.Regular,
 	highlight = false,
 	highlightTone = 'action',
+	recentClue,
 	notesIndicator = false,
 	placeholder = false,
 	viewTransitionName,
 }: Props): JSX.Element | null {
 	const hasVisibleFace = !!(color && number);
 	const hasConcealedBack = !color && !number && !placeholder;
+	const backClue = hasConcealedBack ? recentClue : undefined;
 	const tileDimensions =
 		dimensions ?? (size === TileViewSize.Regular ? HANABI_TILE_SIZE : HANABI_TILE_SIZE_SMALL);
 
 	return (
 		<div
 			data-hanabi-tile-color={hasVisibleFace ? color : undefined}
+			data-hanabi-clue={backClue ? `${backClue.type}-${backClue.value}` : undefined}
 			style={
 				{
 					...tileDimensions,
@@ -137,6 +144,8 @@ export default function HanabiTileView({
 					'hanabi-tile-surface bg-black rounded-lg flex items-center justify-center absolute inset-0',
 					{
 						'hanabi-tile-back': hasConcealedBack,
+						'hanabi-tile-back-color-clue': backClue?.type === 'color',
+						'hanabi-tile-back-number-clue': backClue?.type === 'number',
 						'hanabi-tile-face': hasVisibleFace,
 						'hanabi-tile-black': color === 'black' && number !== undefined,
 						'hanabi-firework-placeholder': placeholder,
@@ -144,6 +153,12 @@ export default function HanabiTileView({
 					},
 				])}
 			>
+				{backClue && <span className="sr-only">Latest clue: {backClue.value}.</span>}
+				{backClue?.type === 'number' && (
+					<span aria-hidden="true" className="hanabi-tile-clue-number pointer-events-none">
+						{backClue.value}
+					</span>
+				)}
 				{hasVisibleFace && (
 					<div
 						className={classNames(

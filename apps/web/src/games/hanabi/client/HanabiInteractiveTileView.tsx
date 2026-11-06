@@ -1,6 +1,7 @@
 import HanabiTileView from '~/games/hanabi/client/HanabiTileView';
 import useTileDrag from '~/games/hanabi/client/useTileDrag';
 import { HANABI_TILE_SIZE, HANABI_TILE_SIZE_SMALL, HanabiTile } from '@hanabi/shared';
+import { HanabiTileClue } from './HanabiRecentClue';
 import classNames from 'classnames';
 import { HanabiTileHighlightTone } from '~/games/hanabi/client/HanabiHighlightContext';
 import { useCallback, useEffect, useRef } from 'react';
@@ -34,6 +35,7 @@ interface Props {
 	// Optionally show dashed highlight lines around the edges.
 	highlight?: boolean;
 	highlightTone?: HanabiTileHighlightTone;
+	recentClue?: HanabiTileClue;
 
 	// Optionally show a clue seal meaning there has been a clue given
 	// for this tile. This only shows for hidden tiles.
@@ -66,6 +68,7 @@ export default function HanabiInteractiveTileView({
 	responsiveDragSurface = false,
 	highlight = false,
 	highlightTone = 'action',
+	recentClue,
 	notesIndicator = false,
 	viewTransitionName,
 }: Props): JSX.Element | null {
@@ -289,6 +292,7 @@ export default function HanabiInteractiveTileView({
 				number={hidden ? undefined : tile.number}
 				highlight={highlight}
 				highlightTone={highlightTone}
+				recentClue={hidden ? recentClue : undefined}
 				notesIndicator={hidden && notesIndicator}
 				size={size}
 				viewTransitionName={viewTransitionName}

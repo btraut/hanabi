@@ -1,4 +1,7 @@
 import { HANABI_DRAG_TYPES, HanabiDragTypes } from '~/games/hanabi/client/HanabiDragTypes';
+import { useBoardData } from './HanabiGameContext';
+import { useUserId } from '~/components/SocketContext';
+import { getHanabiRecentTileClue } from './HanabiRecentClue';
 import { CSSProperties } from 'react';
 import HanabiTileView from '~/games/hanabi/client/HanabiTileView';
 import { useDragLayer } from 'react-dnd';
@@ -21,6 +24,8 @@ export function getHanabiTileDragPreviewStyle(offset: { x: number; y: number }):
 export default function HanabiPlayerTilesDragLayer({
 	variant = 'legacy',
 }: Props): JSX.Element | null {
+	const gameData = useBoardData();
+	const userId = useUserId();
 	const { itemType, isDragging, item, sourceClientOffset } = useDragLayer((monitor) => ({
 		item: monitor.getItem<HanabiDragTypes>(),
 		itemType: monitor.getItemType(),
@@ -51,6 +56,7 @@ export default function HanabiPlayerTilesDragLayer({
 					highlight={highlight}
 					highlightTone={item.highlightTone}
 					notesIndicator={notesIndicator}
+					recentClue={getHanabiRecentTileClue(gameData.actions, userId, item.id)}
 				/>
 			</div>
 		</div>
