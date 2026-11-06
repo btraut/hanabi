@@ -1,11 +1,19 @@
 import { AuthenticateSocketResponseMessage, SOCKET_MANAGER_SCOPE } from '@hanabi/shared';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { io, Socket } from 'socket.io-client';
 import { AddressInfo } from 'node:net';
 import { createApp, ServerRuntime } from './app.js';
+import Logger from './utils/Logger.js';
 
 const runtimes: ServerRuntime[] = [];
 const sockets: Socket[] = [];
+
+const eventLog = vi.fn<typeof Logger.event>();
+
+beforeEach(() => {
+	eventLog.mockReset();
+	vi.spyOn(Logger, 'event').mockImplementation(eventLog);
+});
 
 async function startRuntime(nodeEnv: 'development' | 'production' = 'development') {
 	const runtime = createApp({
@@ -54,6 +62,7 @@ afterEach(async () => {
 	for (const runtime of runtimes.splice(0)) {
 		await runtime.close();
 	}
+	vi.restoreAllMocks();
 });
 
 describe('createApp', () => {
@@ -87,6 +96,18 @@ describe('createApp', () => {
 
 		expect(nextAuthResponse.headers.get('set-cookie')).toBeNull();
 		expect(secondSocketAuth.data.userId).toBe(firstAuth.data.userId);
+		expect(eventLog).toHaveBeenCalledWith('session.created', {
+			userId: firstAuth.data.userId,
+			cookieState: 'missing',
+		});
+		expect(eventLog).toHaveBeenCalledWith('session.reused', {
+			userId: firstAuth.data.userId,
+			cookieState: 'valid',
+		});
+		const output = JSON.stringify(eventLog.mock.calls);
+		for (const secret of [cookieHeader, token, nextAuth.token, '127.0.0.1']) {
+			expect(output).not.toContain(secret);
+		}
 	});
 
 	it('replaces tampered session cookies instead of trusting their identity', async () => {
@@ -108,6 +129,14 @@ describe('createApp', () => {
 
 		expect(tamperedResponse.headers.get('set-cookie')).toMatch(/^SESSION=s%3A/);
 		expect(replacementAuth.data.userId).not.toBe(firstAuth.data.userId);
+		expect(eventLog).toHaveBeenCalledWith('session.created', {
+			userId: replacementAuth.data.userId,
+			cookieState: 'invalid',
+		});
+		const output = JSON.stringify(eventLog.mock.calls);
+		for (const secret of [firstCookie, tamperedCookie, firstToken, replacementToken]) {
+			expect(output).not.toContain(secret);
+		}
 	});
 
 	it('marks production session cookies secure and rejects the development secret', async () => {
@@ -138,5 +167,14 @@ describe('createApp', () => {
 		const limitedResponse = await fetch(`${url}/api/auth-socket`);
 		expect(limitedResponse.status).toBe(429);
 		expect(limitedResponse.headers.get('retry-after')).toBe('60');
+		expect(eventLog).toHaveBeenCalledWith(
+			'session.auth_rejected',
+			{
+				userId: undefined,
+				cookieState: 'missing',
+				reason: 'rate_limited',
+			},
+			'warn',
+		);
 	});
 });

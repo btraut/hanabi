@@ -2,6 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { parseEnv } from './env.js';
 
 describe('parseEnv', () => {
+	it('defaults to identity/lifecycle logs and allows explicit debug logging', () => {
+		expect(parseEnv({}).LOG_LEVEL).toBe('info');
+		for (const level of ['error', 'warn', 'info', 'debug']) {
+			expect(parseEnv({ LOG_LEVEL: level }).LOG_LEVEL).toBe(level);
+		}
+		expect(() => parseEnv({ LOG_LEVEL: 'verbose' })).toThrow('LOG_LEVEL');
+	});
+
 	it('keeps human games available when bots are disabled or their key is absent', () => {
 		expect(parseEnv({ NODE_ENV: 'test' })).toMatchObject({
 			HANABI_BOTS_ENABLED: false,

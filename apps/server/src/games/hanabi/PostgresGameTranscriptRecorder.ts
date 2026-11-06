@@ -1,4 +1,5 @@
 import { eq } from 'drizzle-orm';
+import { createHash } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
 import { DatabaseConnection } from '../../db/database.js';
 import { gameTranscripts } from '../../db/schema.js';
@@ -172,7 +173,7 @@ export default class PostgresGameTranscriptRecorder implements GameTranscriptRec
 			if (typeof oldestRoundId === 'string') {
 				this._pending.delete(oldestRoundId);
 				const overflow = new Error(
-					`Transcript queue reached ${this._maxPendingRounds} pending rounds; dropped round ${oldestRoundId}.`,
+					`Transcript queue reached ${this._maxPendingRounds} pending rounds; dropped round reference ${createHash('sha256').update(oldestRoundId).digest('hex')}.`,
 				);
 				this._recordError(overflow);
 				Logger.error(overflow.message);
@@ -211,7 +212,7 @@ export default class PostgresGameTranscriptRecorder implements GameTranscriptRec
 			} catch (error) {
 				const code = databaseErrorCode(error);
 				const sanitized = new Error(
-					`Transcript write failed for game ${snapshot.gameId}, round ${snapshot.roundId} (${code}).`,
+					`Transcript write failed for game ${snapshot.gameId}, round reference ${createHash('sha256').update(snapshot.roundId).digest('hex')} (${code}).`,
 				);
 				this._recordError(sanitized);
 				Logger.error(sanitized.message);

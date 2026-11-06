@@ -56,7 +56,7 @@ import { SaveGameDelegate } from '../server/GameStore.js';
 import UserConnectionListener, { UserConnectionChange } from '../server/UserConnectionListener.js';
 import ServerSocketManager from '../../utils/SocketManager.js';
 import Logger from '../../utils/Logger.js';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import {
 	appendGameTranscriptMove,
 	appendGameTranscriptChat,
@@ -184,11 +184,26 @@ export default class HanabiGame extends Game {
 			}
 		}
 
-		this._messenger = new GameMessenger(socketManager, getScope(HANABI_GAME_TITLE, this.id));
+		this._messenger = new GameMessenger(
+			socketManager,
+			getScope(HANABI_GAME_TITLE, this.id),
+			() => ({
+				...this._logContext(),
+				roster: this._rosterForLog(),
+			}),
+		);
 		this._messenger.connect(this._handleMessage);
 
 		this._userConnectionListener = new UserConnectionListener(socketManager);
 		this._userConnectionListener.start(this._handleUserConnectionChange);
+		if (typeof creatorIdOrData !== 'string') {
+			Logger.event('game.restored', {
+				...this._logContext(),
+				creatorId: this.creatorId,
+				rosterBefore: this._rosterForLog(creatorIdOrData.data.players),
+				rosterAfter: this._rosterForLog(),
+			});
+		}
 		if (_botRuntime) {
 			this._botCoordinator = new BotTurnCoordinator(_botRuntime, {
 				gameId: this.id,
@@ -225,6 +240,31 @@ export default class HanabiGame extends Game {
 					this._applyBotDecision(playerId, null, decision, [], sourceId),
 			});
 		}
+	}
+
+	private _rosterForLog(players = this._gameData.players) {
+		return Object.values(players).map(({ id, name, kind, connected }) => ({
+			id,
+			name,
+			kind,
+			connected,
+		}));
+	}
+
+	private _logContext(userId?: string): Record<string, unknown> {
+		return {
+			gameId: this.id,
+			gameCode: this.code,
+			roundRef: createHash('sha256').update(this._gameData.seed).digest('hex'),
+			stage: this._gameData.stage,
+			...(userId
+				? {
+						userId,
+						name: this._gameData.players[userId]?.name,
+						socketId: this._messenger?.requestSocketId,
+					}
+				: {}),
+		};
 	}
 
 	public override startBackgroundWork(): void {
@@ -467,7 +507,7 @@ export default class HanabiGame extends Game {
 			this._transcriptRecorder.record(structuredClone(this._transcript));
 		} catch (error) {
 			Logger.error(
-				`Failed to record Hanabi transcript for game ${this.id}, round ${this._transcript.roundId}.`,
+				`Failed to record Hanabi transcript for game ${this.id}, round reference ${createHash('sha256').update(this._transcript.roundId).digest('hex')}.`,
 				error,
 			);
 		}
@@ -507,7 +547,18 @@ export default class HanabiGame extends Game {
 		message: HanabiMessage;
 	}): void => {
 		// Bot seats have no socket credentials; only the internal dispatcher may act for them.
-		if (this._gameData.players[userId]?.kind === 'bot' || userId.startsWith('bot:')) return;
+		if (this._gameData.players[userId]?.kind === 'bot' || userId.startsWith('bot:')) {
+			Logger.event(
+				'game.request_rejected',
+				{
+					...this._logContext(userId),
+					requestType: message.type,
+					reason: 'Bot identity cannot use socket requests.',
+				},
+				'warn',
+			);
+			return;
+		}
 		if (!this._messagePayloadIsValid(message)) {
 			this._sendInvalidPayloadResponse(userId, message);
 			return;
@@ -577,7 +628,16 @@ export default class HanabiGame extends Game {
 			return;
 		}
 
+		const previousConnected = this._gameData.players[userId].connected;
 		this._gameData.players[userId].connected = change === UserConnectionChange.Authenticated;
+		if (previousConnected !== this._gameData.players[userId].connected) {
+			Logger.event('game.player_connection_changed', {
+				...this._logContext(userId),
+				previousConnected,
+				connected: this._gameData.players[userId].connected,
+				roster: this._rosterForLog(),
+			});
+		}
 
 		this._broadcastGameData();
 
@@ -632,7 +692,25 @@ export default class HanabiGame extends Game {
 		}
 
 		// Add the player to the player list.
+		const rosterBefore = this._rosterForLog();
+		const previousName = this._gameData.players[playerId]?.name;
 		this._addPlayer(playerId, trimmedName);
+		const fields = {
+			...this._logContext(playerId),
+			previousName,
+			rosterBefore,
+			rosterAfter: this._rosterForLog(),
+		};
+		Logger.event(previousName === undefined ? 'game.player_joined' : 'game.player_updated', fields);
+		const matchingPlayerIds = Object.values(this._gameData.players)
+			.filter(
+				(player) =>
+					player.id !== playerId && player.name.trim().toLowerCase() === trimmedName.toLowerCase(),
+			)
+			.map(({ id }) => id);
+		if (matchingPlayerIds.length > 0) {
+			Logger.event('game.duplicate_player_name', { ...fields, matchingPlayerIds }, 'warn');
+		}
 
 		// Success! Respond to the creator.
 		this._messenger.send(playerId, {
@@ -1112,34 +1190,51 @@ export default class HanabiGame extends Game {
 		userId: string,
 	): void {
 		const removeUserId = playerId || userId;
+		const rosterBefore = this._rosterForLog();
+		const reject = (reason: string) => {
+			Logger.event(
+				'game.player_remove_rejected',
+				{
+					...this._logContext(userId),
+					targetPlayerId: this._gameData.players[removeUserId]?.id,
+					targetKnown: !!this._gameData.players[removeUserId],
+					targetName: this._gameData.players[removeUserId]?.name,
+					reason,
+					roster: rosterBefore,
+				},
+				'warn',
+			);
+			this._messenger.send(userId, {
+				type: 'RemovePlayerResponseMessage',
+				data: { error: reason },
+			});
+		};
 
 		// Error if already started.
 		if (this._gameData.stage !== HanabiStage.Setup) {
-			this._messenger.send(userId, {
-				type: 'RemovePlayerResponseMessage',
-				data: {
-					error: 'Cannot remove user from game because it has already started.',
-				},
-			});
+			reject('Cannot remove user from game because it has already started.');
 			return;
 		}
 		if (removeUserId !== userId && this.creatorId !== userId) {
-			this._messenger.send(userId, {
-				type: 'RemovePlayerResponseMessage',
-				data: { error: 'Only the host can remove another player.' },
-			});
+			reject('Only the host can remove another player.');
 			return;
 		}
 
 		const { [removeUserId]: _removedPlayer, ...remainingPlayers } = this._gameData.players;
 		if (_removedPlayer?.kind === 'bot' && !this._gameData.players[userId]) {
-			this._messenger.send(userId, {
-				type: 'RemovePlayerResponseMessage',
-				data: { error: 'Only the joined host can remove a bot.' },
-			});
+			reject('Only the joined host can remove a bot.');
 			return;
 		}
 		this._gameData.players = remainingPlayers;
+		Logger.event('game.player_removed', {
+			...this._logContext(userId),
+			targetPlayerId: _removedPlayer?.id,
+			targetKnown: !!_removedPlayer,
+			targetName: _removedPlayer?.name,
+			removed: !!_removedPlayer,
+			rosterBefore,
+			rosterAfter: this._rosterForLog(),
+		});
 
 		this._messenger.send(userId, {
 			type: 'RemovePlayerResponseMessage',
@@ -1362,6 +1457,7 @@ export default class HanabiGame extends Game {
 		this._recordTranscriptSnapshot();
 
 		// Send success message.
+		Logger.event('game.started', { ...this._logContext(userId), roster: this._rosterForLog() });
 		this._messenger.send(userId, {
 			type: 'StartGameResponseMessage',
 			data: {},
@@ -1931,6 +2027,9 @@ export default class HanabiGame extends Game {
 		}
 
 		// Generate a new game.
+		const previousRoundRef = createHash('sha256').update(this._gameData.seed).digest('hex');
+		const previousStage = this._gameData.stage;
+		const rosterBefore = this._rosterForLog();
 		this._botCoordinator?.changed();
 		this._resultCoordinator?.changed();
 		this._resultTurn = null;
@@ -1942,6 +2041,13 @@ export default class HanabiGame extends Game {
 		});
 		this._transcript = null;
 		this._pendingChat = { coverage: 'complete', messages: [] };
+		Logger.event('game.reset', {
+			...this._logContext(userId),
+			previousRoundRef,
+			previousStage,
+			rosterBefore,
+			rosterAfter: this._rosterForLog(),
+		});
 
 		// Send the updated state to all players/watchers.
 		this._messenger.send(userId, {

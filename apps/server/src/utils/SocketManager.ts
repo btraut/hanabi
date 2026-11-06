@@ -2,6 +2,7 @@ import {
 	SocketMessageBase,
 	AuthenticateSocketMessage,
 	SOCKET_MANAGER_SCOPE,
+	GAME_MANAGER_SCOPE,
 	PubSub,
 } from '@hanabi/shared';
 import Logger from './Logger.js';
@@ -20,6 +21,80 @@ const MESSAGE_BUDGET_REFILL_PER_SECOND = 30;
 const FULL_STATE_MESSAGE_COST = 30;
 const MESSAGE_BUDGET_RETENTION_MS = 60_000;
 const RATE_LIMIT_WARNING_INTERVAL_MS = 10_000;
+const LOGGED_MESSAGE_TYPES = new Set([
+	'AuthenticateSocketMessage',
+	'AuthenticateSocketResponseMessage',
+	'GetGameDataMessage',
+	'RefreshGameDataMessage',
+	...[
+		'CreateGame',
+		'WatchGame',
+		'AddPlayer',
+		'RemovePlayer',
+		'AddBot',
+		'RetryBotTurn',
+		'CreateDebugPlayer',
+		'DebugPlayerAction',
+		'ChangeGameSettings',
+		'SendChat',
+		'StartGame',
+		'ResetGame',
+		'PlayTile',
+		'DiscardTile',
+		'GiveClue',
+		'MoveTiles',
+	].flatMap((name) => [`${name}Message`, `${name}ResponseMessage`]),
+]);
+
+function messageLogFields(message: unknown): { type: string; scope: string } {
+	const envelope =
+		typeof message === 'object' && message !== null ? (message as Record<string, unknown>) : {};
+	const type =
+		typeof envelope.type === 'string' && LOGGED_MESSAGE_TYPES.has(envelope.type)
+			? envelope.type
+			: 'unknown';
+	const scope =
+		typeof envelope.scope === 'string' &&
+		(envelope.scope === SOCKET_MANAGER_SCOPE ||
+			envelope.scope === GAME_MANAGER_SCOPE ||
+			/^game\.hanabi\.[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+				envelope.scope,
+			))
+			? envelope.scope
+			: 'unknown';
+	return { type, scope };
+}
+
+function handlerErrorLogFields(error: unknown): { errorKind: string; sourceFrames: string[] } {
+	if (!(error instanceof Error)) return { errorKind: 'NonError', sourceFrames: [] };
+	const errorKinds = [
+		TypeError,
+		RangeError,
+		ReferenceError,
+		SyntaxError,
+		URIError,
+		EvalError,
+		AggregateError,
+	];
+	const errorKind = errorKinds.find((kind) => error instanceof kind)?.name ?? 'Error';
+	// Strip the full header, including multiline messages, before selecting source locations.
+	const header = error.message ? `${error.name}: ${error.message}` : error.name;
+	const frames = error.stack?.startsWith(header)
+		? error.stack.slice(header.length).split('\n')
+		: [];
+	const sourceFrames = frames
+		.flatMap((frame) => {
+			const location = /^\s+at (?:.* \()?((?:file:\/\/\/|\/)[^()\s?#]+):(\d+):(\d+)\)?$/.exec(
+				frame,
+			);
+			const source = location?.[1].match(
+				/(?:^|\/)((?:apps\/server|packages\/shared|dist\/apps\/server)\/[^()\s?#]+\.(?:[cm]?[jt]s|tsx|jsx))$/,
+			)?.[1];
+			return location && source ? [`${source}:${location[2]}:${location[3]}`] : [];
+		})
+		.slice(0, 10);
+	return { errorKind, sourceFrames };
+}
 
 interface AuthToken {
 	abuseKey: string;
@@ -111,10 +186,10 @@ export default class ServerSocketManager {
 
 	public start(): void {
 		this._server.on('connection', (connection) => {
-			this._handleConnect(connection.id);
+			this._handleConnect(connection.id, connection.conn.transport.name);
 
-			connection.on('disconnect', () => {
-				this._handleDisconnect(connection.id);
+			connection.on('disconnect', (reason) => {
+				this._handleDisconnect(connection.id, reason);
 			});
 
 			connection.on('message', (data: SocketMessageBase) => {
@@ -123,17 +198,24 @@ export default class ServerSocketManager {
 		});
 	}
 
-	private _handleConnect = (socketId: string) => {
-		Logger.debug(`socket.io connected: ${socketId}`);
+	private _handleConnect = (socketId: string, transport: string) => {
+		Logger.event('socket.connected', { socketId, transport });
 
 		this._onConnect.emit({ socketId });
 	};
 
-	private _handleDisconnect = (socketId: string) => {
-		Logger.debug(`socket.io disconnected: ${socketId}`);
-
+	private _handleDisconnect = (socketId: string, reason: string) => {
+		const userId = this._authenticatedUsers[socketId];
 		this._failedAuthAttempts.delete(socketId);
 		this._removeSocketAuthentication(socketId);
+		const remainingSocketCount = userId ? (this._authenticatedSockets[userId]?.length ?? 0) : 0;
+		Logger.event('socket.disconnected', {
+			socketId,
+			userId,
+			reason,
+			remainingSocketCount,
+			playerOffline: !!userId && remainingSocketCount === 0,
+		});
 	};
 
 	private _removeSocketAuthentication(socketId: string): void {
@@ -161,6 +243,11 @@ export default class ServerSocketManager {
 	}
 
 	private _handleMessage = (socketId: string, message: SocketMessageBase) => {
+		const fields = {
+			socketId,
+			userId: this._authenticatedUsers[socketId],
+			...messageLogFields(message),
+		};
 		if (
 			typeof message !== 'object' ||
 			message === null ||
@@ -169,10 +256,10 @@ export default class ServerSocketManager {
 			typeof message.type !== 'string' ||
 			message.type.length > 100
 		) {
-			Logger.warn('Ignoring malformed socket message.');
+			Logger.event('socket.message_rejected', { ...fields, reason: 'malformed' }, 'warn');
 			return;
 		}
-		Logger.debug(`socket.io data recieved: ${message.type}`);
+		Logger.event('socket.message_received', fields, 'debug');
 
 		try {
 			// Capture all SocketManager messages. Emit the rest.
@@ -188,9 +275,19 @@ export default class ServerSocketManager {
 					userId: this._authenticatedUsers[socketId],
 					message,
 				});
+			} else if (!this._authenticatedUsers[socketId]) {
+				Logger.event('socket.message_rejected', { ...fields, reason: 'unauthenticated' }, 'warn');
 			}
 		} catch (error) {
-			Logger.error('Ignoring invalid socket message.', error);
+			Logger.event(
+				'socket.message_failed',
+				{
+					...fields,
+					reason: 'handler_failed',
+					...handlerErrorLogFields(error),
+				},
+				'error',
+			);
 		}
 	};
 
@@ -216,7 +313,16 @@ export default class ServerSocketManager {
 			this._messageBudgets.set(userId, budget);
 			if (!budget.lastWarningAt || now - budget.lastWarningAt >= RATE_LIMIT_WARNING_INTERVAL_MS) {
 				budget.lastWarningAt = now;
-				Logger.warn(`Ignoring rate-limited socket message from ${socketId}.`);
+				Logger.event(
+					'socket.message_rejected',
+					{
+						socketId,
+						userId,
+						...messageLogFields(message),
+						reason: 'rate_limited',
+					},
+					'warn',
+				);
 			}
 			return false;
 		}
@@ -261,6 +367,15 @@ export default class ServerSocketManager {
 		socketId: string,
 		message: OutboundMessage,
 	) {
+		Logger.event(
+			'socket.message_sent',
+			{
+				socketId,
+				userId: this._authenticatedUsers[socketId],
+				...messageLogFields(message),
+			},
+			'debug',
+		);
 		this._server.to(socketId).emit('message', message);
 	}
 
@@ -274,8 +389,6 @@ export default class ServerSocketManager {
 			const socketIds = this._authenticatedSockets[userId];
 
 			if (socketIds && socketIds.length > 0) {
-				console.log(`Sending message(s) to ${userId}:`, message.type);
-
 				for (const socketId of socketIds) {
 					this._send(socketId, message);
 				}
@@ -329,6 +442,7 @@ export default class ServerSocketManager {
 
 		if (tokenIsFresh) {
 			const userId = authToken.userId;
+			const previousUserId = this._authenticatedUsers[socketId];
 			this._deleteToken(token);
 			this._failedAuthAttempts.delete(socketId);
 			if (this._authenticatedUsers[socketId] !== userId) {
@@ -344,6 +458,20 @@ export default class ServerSocketManager {
 			if (!this._authenticatedSockets[userId].includes(socketId)) {
 				this._authenticatedSockets[userId].push(socketId);
 			}
+			if (previousUserId && previousUserId !== userId) {
+				Logger.event('socket.identity_changed', {
+					socketId,
+					previousUserId,
+					userId,
+					remainingSocketCount: this._authenticatedSockets[previousUserId]?.length ?? 0,
+				});
+			}
+			Logger.event('socket.authenticated', {
+				socketId,
+				userId,
+				previousUserId,
+				activeSocketCount: this._authenticatedSockets[userId].length,
+			});
 
 			this._onAuthenticate.emit({ userId });
 
@@ -355,6 +483,17 @@ export default class ServerSocketManager {
 		} else {
 			const failedAttempts = (this._failedAuthAttempts.get(socketId) ?? 0) + 1;
 			this._failedAuthAttempts.set(socketId, failedAttempts);
+			Logger.event(
+				'socket.auth_rejected',
+				{
+					socketId,
+					userId: this._authenticatedUsers[socketId],
+					failedAttempts,
+					reason: authToken ? 'expired_token' : 'invalid_token',
+					disconnecting: failedAttempts >= MAX_FAILED_AUTH_ATTEMPTS_PER_SOCKET,
+				},
+				'warn',
+			);
 			this._send(socketId, {
 				scope: SOCKET_MANAGER_SCOPE,
 				type: 'AuthenticateSocketResponseMessage',
@@ -380,13 +519,15 @@ export default class ServerSocketManager {
 	public prune(olderThan = 5 * 60 * 1000): void {
 		this._lastTokenPruneAt = Date.now();
 		const oldestTime = new Date(new Date().getTime() - olderThan);
+		let expiredTokenCount = 0;
 
 		for (const [token, authToken] of this._tokens) {
 			if (authToken.created < oldestTime) {
 				this._deleteToken(token);
-				Logger.debug(`Purged token "${token}" from ServerSocketManager.`);
+				expiredTokenCount += 1;
 			}
 		}
+		if (expiredTokenCount > 0) Logger.event('socket.tokens_pruned', { expiredTokenCount }, 'debug');
 		for (const [userId, budget] of this._messageBudgets) {
 			if (budget.expiresAt && budget.expiresAt <= Date.now()) {
 				this._messageBudgets.delete(userId);

@@ -5,6 +5,7 @@ import Game from './Game.js';
 import { GameStore, SaveGameDelegate } from './GameStore.js';
 import SocketManager from '../../utils/SocketManager.js';
 import GameFactory from './GameFactory.js';
+import Logger from '../../utils/Logger.js';
 
 class TestGame extends Game {
 	public cleanedUp = false;
@@ -378,5 +379,109 @@ describe('GameManager request hardening', () => {
 				data: { error: 'Too many failed game-code attempts. Try again in a minute.' },
 			}),
 		);
+	});
+});
+
+describe('GameManager identity diagnostics', () => {
+	it('records room identity for create/watch and hides rejected request values', async () => {
+		const log = vi.spyOn(Logger, 'event').mockImplementation(() => undefined);
+		const sockets = createSocketHarness();
+		const manager = new GameManager(sockets.socketManager, createStore());
+		const factory = new TestGameFactory();
+		manager.addGameFactory(factory);
+		try {
+			sockets.emit('creator', {
+				scope: GAME_MANAGER_SCOPE,
+				type: 'CreateGameMessage',
+				data: { title: 'Test' },
+			});
+			const game = factory.created[0];
+			sockets.emit('visitor', {
+				scope: GAME_MANAGER_SCOPE,
+				type: 'WatchGameMessage',
+				data: { code: game.code },
+			});
+			sockets.emit('visitor', {
+				scope: GAME_MANAGER_SCOPE,
+				type: 'WatchGameMessage',
+				data: { code: game.code },
+			});
+			sockets.emit('visitor', {
+				scope: GAME_MANAGER_SCOPE,
+				type: 'CreateGameMessage',
+				data: { title: 'private-token-sentinel' },
+			});
+			sockets.emit('visitor', {
+				scope: GAME_MANAGER_SCOPE,
+				type: 'WatchGameMessage',
+				data: { code: 'private-cookie-sentinel' },
+			});
+			expect(log).toHaveBeenCalledWith(
+				'game.created',
+				expect.objectContaining({
+					gameId: game.id,
+					gameCode: game.code,
+					userId: 'creator',
+					socketId: 'creator-socket',
+				}),
+			);
+			expect(log).toHaveBeenCalledWith(
+				'game.watch_accepted',
+				expect.objectContaining({ gameId: game.id, gameCode: game.code, alreadyWatching: false }),
+			);
+			expect(log).toHaveBeenCalledWith(
+				'game.watch_accepted',
+				expect.objectContaining({ alreadyWatching: true }),
+			);
+			expect(log).toHaveBeenCalledWith(
+				'game.create_rejected',
+				expect.objectContaining({ reason: 'unknown_title' }),
+				'warn',
+			);
+			expect(log).toHaveBeenCalledWith(
+				'game.watch_rejected',
+				expect.objectContaining({ reason: 'invalid_game_code' }),
+				'warn',
+			);
+			expect(JSON.stringify(log.mock.calls)).not.toMatch(
+				/private-token-sentinel|private-cookie-sentinel|127\.0\.0\.1/,
+			);
+		} finally {
+			await manager.close();
+			log.mockRestore();
+		}
+	});
+
+	it('correlates restore registration and inactivity pruning by game code', async () => {
+		const log = vi.spyOn(Logger, 'event').mockImplementation(() => undefined);
+		const store = createStore({
+			loadGameData: vi
+				.fn()
+				.mockResolvedValue({ Test: [JSON.stringify({ id: 'saved-game', code: 'abdegj' })] }),
+		});
+		const manager = new GameManager(createSocketManager(), store);
+		const factory = new HydratingTestGameFactory();
+		manager.addGameFactory(factory);
+		try {
+			await manager.restoreGames();
+			factory.hydrated[0].updated.setTime(0);
+			expect(manager.prune()).toHaveLength(1);
+			expect(log).toHaveBeenCalledWith(
+				'game.restore_registered',
+				expect.objectContaining({ gameId: 'saved-game', gameCode: 'abdegj' }),
+			);
+			expect(log).toHaveBeenCalledWith(
+				'game.pruned',
+				expect.objectContaining({
+					gameId: 'saved-game',
+					gameCode: 'abdegj',
+					lastActivityAt: new Date(0).toISOString(),
+					reason: 'inactive',
+				}),
+			);
+		} finally {
+			await manager.close();
+			log.mockRestore();
+		}
 	});
 });
