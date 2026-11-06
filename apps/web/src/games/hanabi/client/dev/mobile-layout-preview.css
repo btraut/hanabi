@@ -159,7 +159,7 @@
 	font-weight: 600;
 	font-variant-numeric: tabular-nums;
 }
-.mobile-study-counts > div:first-child dd {
+.mobile-study-counts > div:nth-child(3) dd {
 	color: #b7d1ff;
 }
 .mobile-study-table {

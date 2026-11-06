@@ -295,14 +295,14 @@ function PhoneBoard({
 						</div>
 						<dl className="mobile-study-counts">
 							{[
-								{ label: 'Clues', value: status.clues, icon: <ClueStatusIcon /> },
-								{ label: 'Deck', value: status.deck, icon: <HanabiDeck count={status.deck} /> },
-								{ label: 'Lives', value: status.lives, icon: <LifeStatusIcon /> },
 								{
 									label: 'Score',
 									value: `${status.score}/${status.maxScore}`,
 									icon: <Star size={26} />,
 								},
+								{ label: 'Deck', value: status.deck, icon: <HanabiDeck count={status.deck} /> },
+								{ label: 'Clues', value: status.clues, icon: <ClueStatusIcon /> },
+								{ label: 'Lives', value: status.lives, icon: <LifeStatusIcon /> },
 							].map(({ label, value, icon }) => (
 								<div key={label} title={label}>
 									<dt>
