@@ -22,7 +22,6 @@ export default function HanabiBotConventions({ conventions, canEdit }: Props): J
 	const id = useId();
 	const [open, setOpen] = useState(false);
 	const [draft, setDraft] = useState<Draft | null>(null);
-	const [reading, setReading] = useState(false);
 	const [pending, setPending] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const inFlight = useRef(false);
@@ -86,7 +85,6 @@ export default function HanabiBotConventions({ conventions, canEdit }: Props): J
 						disabled={pending}
 						onClick={() => {
 							if (!draft) loadSaved();
-							setReading(!canEdit);
 							setOpen(true);
 						}}
 					/>
@@ -111,23 +109,8 @@ export default function HanabiBotConventions({ conventions, canEdit }: Props): J
 				>
 					<div className="hanabi-conventions-editor">
 						<p className="text-base text-hanabi-text-muted">
-							Bots use these instructions to guide their actions. They are locked when the game
-							starts.
+							Bots use these instructions to guide their actions.
 						</p>
-						{canEdit && (
-							<div className="flex gap-2" aria-label="Editor view">
-								<HanabiMenuButton
-									label="Write"
-									aria-pressed={!reading}
-									onClick={() => setReading(false)}
-								/>
-								<HanabiMenuButton
-									label="Read"
-									aria-pressed={reading}
-									onClick={() => setReading(true)}
-								/>
-							</div>
-						)}
 						{conflict && (
 							<div role="alert" className="hanabi-conventions-conflict">
 								<p>The saved conventions changed. Your draft is preserved.</p>
@@ -147,7 +130,7 @@ export default function HanabiBotConventions({ conventions, canEdit }: Props): J
 								</div>
 							</div>
 						)}
-						{reading || !canEdit ? (
+						{!canEdit ? (
 							<pre className="hanabi-conventions-read" aria-label="Conventions text">
 								{text}
 							</pre>
@@ -163,7 +146,7 @@ export default function HanabiBotConventions({ conventions, canEdit }: Props): J
 									disabled={busy}
 									spellCheck={false}
 									aria-invalid={tooLong || undefined}
-									aria-describedby={`${id}-limit`}
+									aria-describedby={tooLong ? `${id}-limit` : undefined}
 									onChange={(event) => {
 										const value = event.target.value;
 										setDraft((current) =>
@@ -180,15 +163,9 @@ export default function HanabiBotConventions({ conventions, canEdit }: Props): J
 								/>
 							</div>
 						)}
-						{canEdit && (
-							<p
-								id={`${id}-limit`}
-								className={
-									tooLong ? 'text-base text-hanabi-coral-soft' : 'text-sm text-hanabi-text-muted'
-								}
-							>
-								{tooLong ? 'Shorten these instructions before saving. ' : ''}
-								{bytes.toLocaleString()} / {HANABI_MAX_BOT_CONVENTIONS_BYTES.toLocaleString()} bytes
+						{canEdit && tooLong && (
+							<p id={`${id}-limit`} className="text-base text-hanabi-coral-soft">
+								Shorten these instructions before saving.
 							</p>
 						)}
 						{error && (

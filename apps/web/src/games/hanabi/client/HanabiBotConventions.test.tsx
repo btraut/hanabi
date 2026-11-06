@@ -73,6 +73,10 @@ describe('HanabiBotConventions', () => {
 		expect(button('Reset')).toBeUndefined();
 		click('Edit');
 		expect(document.querySelector('textarea')?.value).toBe(conventions.defaultText);
+		expect(button('Write')).toBeUndefined();
+		expect(button('Read')).toBeUndefined();
+		expect(document.body.textContent).not.toContain('bytes');
+		expect(document.body.textContent).not.toContain('locked');
 		expect(button('Reset')).toBeUndefined();
 		write('Discard from the right.');
 		expect(button('Reset')).toBeDefined();

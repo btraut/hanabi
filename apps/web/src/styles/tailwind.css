@@ -550,11 +550,6 @@ body {
 	min-width: 0;
 }
 
-.hanabi-conventions-editor [aria-pressed='true'] {
-	border-color: var(--color-hanabi-coral-soft);
-	color: var(--color-hanabi-coral-soft);
-}
-
 .hanabi-conventions-input,
 .hanabi-conventions-read {
 	width: 100%;
