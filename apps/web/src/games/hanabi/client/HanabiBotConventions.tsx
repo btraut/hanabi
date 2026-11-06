@@ -108,9 +108,6 @@ export default function HanabiBotConventions({ conventions, canEdit }: Props): J
 					}}
 				>
 					<div className="hanabi-conventions-editor">
-						<p className="text-base text-hanabi-text-muted">
-							Bots use these instructions to guide their actions.
-						</p>
 						{conflict && (
 							<div role="alert" className="hanabi-conventions-conflict">
 								<p>The saved conventions changed. Your draft is preserved.</p>
@@ -136,7 +133,7 @@ export default function HanabiBotConventions({ conventions, canEdit }: Props): J
 							</pre>
 						) : (
 							<div>
-								<label htmlFor={id} className="mb-2 block text-lg font-semibold">
+								<label htmlFor={id} className="sr-only">
 									Instructions
 								</label>
 								<textarea
