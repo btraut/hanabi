@@ -1,0 +1,67 @@
+.hanabi-mobile-tableau {
+	display: none;
+}
+
+@media (width < 640px) {
+	.hanabi-wide-tableau {
+		display: none;
+	}
+
+	.hanabi-mobile-tableau {
+		display: grid;
+		grid-template-columns: repeat(var(--hanabi-mobile-colors), minmax(0, 1fr));
+		gap: 3px;
+		padding: 1px 0 8px;
+	}
+
+	.hanabi-mobile-stack {
+		display: flex;
+		min-width: 0;
+		flex-direction: column;
+		align-items: center;
+		align-self: start;
+		gap: 4px;
+		border-radius: 8px;
+	}
+
+	.hanabi-mobile-discards {
+		display: flex;
+		width: 44px;
+		max-width: 100%;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 0 2px;
+		color: #e3daca;
+		font-size: 14px;
+		line-height: 19px;
+		font-variant-numeric: tabular-nums;
+	}
+
+	.hanabi-mobile-discards > span {
+		width: 7px;
+		text-align: center;
+	}
+
+	.hanabi-mobile-discards > [data-highlighted] {
+		color: var(--color-hanabi-coral-soft);
+		text-shadow: 0 0 6px currentColor;
+	}
+
+	/* Snapshot the hand region separately so a newly wrapped discard row moves
+	   every hand smoothly without scaling cards or reserving empty space. */
+	[data-desktop-region='workspaces'] {
+		view-transition-name: hanabi-mobile-workspaces;
+	}
+}
+
+::view-transition-group(hanabi-mobile-workspaces),
+::view-transition-old(hanabi-mobile-workspaces),
+::view-transition-new(hanabi-mobile-workspaces) {
+	animation-duration: 220ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	[data-desktop-region='workspaces'] {
+		view-transition-name: none;
+	}
+}

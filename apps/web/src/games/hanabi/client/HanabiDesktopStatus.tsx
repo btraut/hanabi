@@ -139,7 +139,7 @@ export default function HanabiDesktopStatus({
 	);
 }
 
-function ClueStatusIcon(): JSX.Element {
+export function ClueStatusIcon(): JSX.Element {
 	return (
 		<span
 			aria-hidden="true"
@@ -149,7 +149,7 @@ function ClueStatusIcon(): JSX.Element {
 	);
 }
 
-function LifeStatusIcon(): JSX.Element {
+export function LifeStatusIcon(): JSX.Element {
 	return (
 		<svg
 			aria-hidden="true"

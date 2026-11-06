@@ -14,7 +14,9 @@ import {
 	HanabiTile,
 	HanabiTileColor,
 } from '@hanabi/shared';
-import { CSSProperties } from 'react';
+import { CSSProperties, useState } from 'react';
+import HanabiDialog from './design-system/HanabiDialog';
+import './HanabiMobileTableau.css';
 
 interface Props {
 	gameData: HanabiGameData;
@@ -62,7 +64,7 @@ export function getHanabiDiscardsForColor(
 		.filter((tile) => tile.color === color);
 }
 
-export default function HanabiDesktopTableau({
+export function DesktopTableau({
 	gameData,
 	highlightedTiles = new Set(),
 	highlightedTone,
@@ -139,5 +141,122 @@ export default function HanabiDesktopTableau({
 				);
 			})}
 		</div>
+	);
+}
+
+export default function HanabiDesktopTableau(props: Props): JSX.Element {
+	return (
+		<>
+			<div className="hanabi-wide-tableau">
+				<DesktopTableau {...props} />
+			</div>
+			<HanabiMobileTableau {...props} />
+		</>
+	);
+}
+
+export function HanabiMobileTableau({
+	gameData,
+	highlightedTiles = new Set(),
+	highlightedTone,
+	transitioningTileId = null,
+}: Props): JSX.Element {
+	const [inspection, setInspection] = useState<{ color: HanabiTileColor; roundKey: string } | null>(
+		null,
+	);
+	const roundKey = `${gameData.seed}:${gameData.stage}:${gameData.finishedReason}`;
+	const selectedColor = inspection?.roundKey === roundKey ? inspection.color : null;
+	const colors = getHanabiRuleSetColors(gameData.ruleSet);
+	const dimensions =
+		colors.length === 7 ? { width: 40, height: 51.2 } : { width: 46, height: 58.88 };
+	return (
+		<>
+			<div
+				aria-label="Fireworks and discards"
+				className="hanabi-mobile-tableau"
+				style={{ '--hanabi-mobile-colors': colors.length } as CSSProperties}
+			>
+				{colors.map((color) => {
+					const played = getHanabiPlayedTilesForColor(gameData, color);
+					const top = played.at(-1);
+					const discards = getHanabiDiscardsForColor(gameData, color);
+					return (
+						<button
+							type="button"
+							key={color}
+							className="hanabi-mobile-stack hanabi-focus-ring"
+							onClick={() => setInspection({ color, roundKey })}
+							aria-label={`${color} firework ${top ? `at ${top.number}` : 'empty'}. Discards, oldest first: ${discards.map((tile) => tile.number).join(', ') || 'none'}. Inspect pile.`}
+						>
+							<HanabiTileView
+								color={color}
+								number={top?.number ?? getHanabiFireworkSequence(color)[0]}
+								placeholder={!top}
+								dimensions={dimensions}
+								viewTransitionName={
+									top?.id === transitioningTileId ? getTileViewTransitionName(top.id) : undefined
+								}
+							/>
+							{discards.length > 0 && (
+								<span className="hanabi-mobile-discards" aria-hidden="true">
+									{discards.map((tile) => (
+										<span
+											key={tile.id}
+											data-discard-tile={tile.id}
+											data-highlighted={
+												highlightedTiles.has(tile.id) ? (highlightedTone ?? 'action') : undefined
+											}
+											style={{
+												viewTransitionName:
+													transitioningTileId === tile.id
+														? getTileViewTransitionName(tile.id)
+														: undefined,
+											}}
+										>
+											{tile.number}
+										</span>
+									))}
+								</span>
+							)}
+						</button>
+					);
+				})}
+			</div>
+			{selectedColor && (
+				<HanabiDialog
+					title={`${selectedColor[0].toUpperCase()}${selectedColor.slice(1)} pile`}
+					onClose={() => setInspection(null)}
+				>
+					<h2 className="mb-3 text-hanabi-text-muted">Firework</h2>
+					<div className="flex flex-wrap gap-2">
+						{getHanabiPlayedTilesForColor(gameData, selectedColor).map((tile) => (
+							<HanabiTileView
+								key={tile.id}
+								color={tile.color}
+								number={tile.number}
+								dimensions={HANABI_DESKTOP_TILE_SIZE}
+							/>
+						))}
+						{getHanabiPlayedTilesForColor(gameData, selectedColor).length === 0 && (
+							<p>Not started</p>
+						)}
+					</div>
+					<h2 className="mb-3 mt-5 text-hanabi-text-muted">Discards · oldest first</h2>
+					<div className="flex flex-wrap gap-2">
+						{getHanabiDiscardsForColor(gameData, selectedColor).map((tile) => (
+							<HanabiTileView
+								key={tile.id}
+								color={tile.color}
+								number={tile.number}
+								dimensions={HANABI_DESKTOP_TILE_SIZE}
+								highlight={highlightedTiles.has(tile.id)}
+								highlightTone={highlightedTone}
+							/>
+						))}
+						{getHanabiDiscardsForColor(gameData, selectedColor).length === 0 && <p>No discards</p>}
+					</div>
+				</HanabiDialog>
+			)}
+		</>
 	);
 }

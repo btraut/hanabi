@@ -121,7 +121,7 @@ export default function HanabiPlayerWorkspace({
 				>
 					{isLocal ? 'You' : player.name}
 				</p>
-				<div className="flex flex-wrap items-center justify-center gap-1.5">
+				<div className="hanabi-player-state flex flex-wrap items-center justify-center gap-1.5">
 					{reviewPerspective && <span className="text-sm text-hanabi-text-muted">Viewing as</span>}
 					{((active && !finished) || thinking) && (
 						<span
