@@ -1,0 +1,12 @@
+{
+	"name": "scripted-smoke",
+	"game": { "ruleSet": "5-color", "criticalGameOver": true, "allowDragging": false },
+	"players": [
+		{ "provider": "scripted", "model": "scripted", "effort": "none" },
+		{ "provider": "scripted", "model": "scripted", "effort": "none" },
+		{ "provider": "scripted", "model": "scripted", "effort": "none" }
+	],
+	"conventionsFile": "../conventions/minimal.md",
+	"dreamer": { "provider": "scripted", "model": "scripted", "effort": "none" },
+	"discussion": false
+}

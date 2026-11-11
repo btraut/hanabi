@@ -8,14 +8,15 @@ interface Props {
 }
 
 export default function HanabiDeck({ count, viewTransitionName }: Props): JSX.Element {
-	const layers = Math.min(3, Math.max(0, count));
+	const empty = count <= 0;
+	const layers = Math.min(3, Math.max(1, count));
 
 	return (
 		<span
 			aria-hidden="true"
 			className="hanabi-status-deck-icon"
 			data-status-icon="deck"
-			data-deck-empty={layers === 0 ? true : undefined}
+			data-deck-empty={empty ? true : undefined}
 		>
 			{Array.from({ length: layers }, (_, index) => {
 				const depth = layers - index - 1;
@@ -28,7 +29,7 @@ export default function HanabiDeck({ count, viewTransitionName }: Props): JSX.El
 					>
 						<HanabiTileView
 							dimensions={HANABI_DESKTOP_TILE_SIZE}
-							viewTransitionName={depth === 0 ? viewTransitionName : undefined}
+							viewTransitionName={!empty && depth === 0 ? viewTransitionName : undefined}
 						/>
 					</span>
 				);

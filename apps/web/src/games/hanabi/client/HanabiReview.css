@@ -1,9 +1,22 @@
 .hanabi-review {
-	padding-bottom: 20px;
+	display: flex;
+	flex-direction: column;
+	height: 100dvh;
+	min-height: 0;
+	overflow: hidden;
 	color: var(--color-hanabi-text);
 }
 
+.hanabi-review-content {
+	flex: 1;
+	min-height: 0;
+	overflow: auto;
+	scrollbar-gutter: stable;
+	overflow-anchor: none;
+}
+
 .hanabi-review .hanabi-desktop-board {
+	width: calc(100% - 42px);
 	grid-template-rows: auto auto;
 	padding-bottom: 20px;
 }
@@ -17,6 +30,7 @@
 }
 
 .hanabi-review-header {
+	flex-shrink: 0;
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
@@ -159,19 +173,26 @@
 }
 
 .hanabi-review-transport {
-	position: sticky;
-	bottom: 12px;
-	z-index: 10;
+	flex-shrink: 0;
+	margin-block: 12px;
 	border: 1px solid var(--color-hanabi-border);
 	border-radius: 8px;
 	background: var(--color-hanabi-table-deep);
 	box-shadow: 0 8px 30px #0005;
 }
 .hanabi-review-caption {
+	height: 44px;
+	line-height: 24px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 	padding: 10px 18px;
 	border-bottom: 1px solid var(--color-hanabi-border);
 }
 .hanabi-review-notes {
+	width: calc(100% - 42px);
+	max-width: 1660px;
+	margin-inline: auto;
 	padding: 8px 18px;
 	color: var(--color-hanabi-coral-soft);
 }
@@ -215,9 +236,6 @@
 	}
 	.hanabi-review .hanabi-desktop-board {
 		grid-template-rows: auto auto auto auto;
-	}
-	.hanabi-review-transport {
-		position: static;
 	}
 	.hanabi-review-controls {
 		grid-template-columns: repeat(4, minmax(0, 1fr));

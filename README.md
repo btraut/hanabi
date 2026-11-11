@@ -2,6 +2,9 @@
 
 An online multiplayer Hanabi game.
 
+[Hanabi Bench](bench/README.md) provides a separate headless CLI, local-Codex agent harness,
+repeatable model evaluations, and per-game convention evolution. Start with `pnpm bench --help`.
+
 The lobby offers a rules dropdown with a tile preview and description of the selected variant. Advanced Features
 contains the critical-discard, tile-reordering, and tile-note options. Each joined player's browser
 remembers the lobby's rules and options, including changes made by other players, and applies them

@@ -35,7 +35,7 @@ describe('HanabiDesktopStatus', () => {
 		expect(markup).toContain('data-status-icon="clues"');
 		expect(markup).toContain('data-status-icon="lives"');
 		expect(markup).toContain('data-deck-empty="true"');
-		expect(markup).not.toContain('tile-back-firework-v5.png');
+		expect(markup).toContain('tile-back-firework-v5.png');
 		expect(markup).toContain('class="hanabi-status-regions"');
 		expect(markup).toContain('class="hanabi-mobile-game-menu"');
 		expect(markup).toContain('aria-label="Open game menu"');
@@ -45,7 +45,7 @@ describe('HanabiDesktopStatus', () => {
 	});
 
 	it.each([
-		[0, 0],
+		[0, 1],
 		[1, 1],
 		[2, 2],
 		[3, 3],

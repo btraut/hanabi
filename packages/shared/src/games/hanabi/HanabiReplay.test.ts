@@ -299,6 +299,76 @@ describe('Hanabi replay', () => {
 		expect(isReplayableTranscript(missingResult)).toBe(false);
 	});
 
+	it('requires an explicit opt-in to reconstruct complete in-progress prefixes, including the initial deal', () => {
+		const finished = fixture();
+		for (const count of [0, 1, 3]) {
+			const live = structuredClone(finished);
+			live.moves = live.moves.slice(0, count);
+			live.lifecycle.status = 'in_progress';
+			live.lifecycle.endedAt = null;
+			delete live.result;
+			const saved = structuredClone(live);
+			expect(isReplayableTranscript(live)).toBe(false);
+			expect(isReplayableTranscript(live, { allowInProgress: false })).toBe(false);
+			expect(() => replayHanabiReview(live, count)).toThrow(/complete, finished/);
+			expect(() => replayHanabiTranscript(live, count)).toThrow(/complete, finished/);
+			expect(isReplayableTranscript(live, { allowInProgress: true })).toBe(true);
+			expect(replayHanabiReview(live, count, { allowInProgress: true })).toEqual(
+				replayHanabiReview(finished, count),
+			);
+			expect(replayHanabiTranscript(live, count, { allowInProgress: true })).toEqual(
+				replayHanabiTranscript(finished, count),
+			);
+			expect(live).toEqual(saved);
+		}
+		expect(replayHanabiReview(finished, 6, { allowInProgress: true })).toEqual(
+			replayHanabiReview(finished, 6),
+		);
+	});
+
+	it('does not let the in-progress opt-in admit reset, incomplete, or contradictory records', () => {
+		const live = fixture();
+		live.moves = live.moves.slice(0, 3);
+		live.lifecycle.status = 'in_progress';
+		live.lifecycle.endedAt = null;
+		delete live.result;
+		const changes: Array<(transcript: GameTranscriptV1) => void> = [
+			(transcript) => {
+				transcript.lifecycle.status = 'reset';
+			},
+			(transcript) => {
+				transcript.integrity.status = 'partial';
+			},
+			(transcript) => {
+				transcript.integrity.status = 'conflicted';
+			},
+			(transcript) => {
+				transcript.deck = null;
+			},
+			(transcript) => {
+				transcript.dealOrder = null;
+			},
+			(transcript) => {
+				transcript.result = fixture().result;
+			},
+			(transcript) => {
+				transcript.lifecycle.endedAt = '2026-01-01T00:00:00.000Z';
+			},
+			(transcript) => {
+				transcript.moves[0].postTurn.status = 'finished';
+			},
+			(transcript) => {
+				transcript.moves[0].postTurn.result = fixture().result;
+			},
+		];
+		for (const change of changes) {
+			const bad = structuredClone(live);
+			change(bad);
+			expect(isReplayableTranscript(bad, { allowInProgress: true })).toBe(false);
+			expect(() => replayHanabiReview(bad, 0, { allowInProgress: true })).toThrow();
+		}
+	});
+
 	it('rejects invalid cursor, perspective, deal, or tile references', () => {
 		const transcript = fixture();
 		for (const cursor of [-1, 0.5, 7, NaN, Infinity])

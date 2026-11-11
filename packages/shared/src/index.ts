@@ -16,3 +16,4 @@ export * from './games/hanabi/HanabiAnimatables.js';
 export * from './games/hanabi/HanabiDragDropUtils.js';
 export * from './games/hanabi/GameTranscript.js';
 export * from './games/hanabi/HanabiReplay.js';
+export type * from './games/hanabi/BenchReview.js';

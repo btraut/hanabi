@@ -303,4 +303,34 @@ describe('HanabiReview', () => {
 		click('← Back to game');
 		expect(onExit).toHaveBeenCalledOnce();
 	});
+
+	it('requires explicit opt-in for live transcripts and reports controlled cursor navigation', () => {
+		const live = structuredClone(transcript);
+		live.moves = live.moves.slice(0, 2);
+		live.lifecycle.status = 'in_progress';
+		live.lifecycle.endedAt = null;
+		delete live.result;
+		render('alice', live);
+		expect(document.querySelector('[role="alert"]')?.textContent).toContain('Review unavailable');
+		const onCursorChange = vi.fn();
+		act(() =>
+			root.render(
+				<HanabiReview
+					transcript={live}
+					userId="alice"
+					onExit={onExit}
+					allowInProgress
+					cursor={1}
+					onCursorChange={onCursorChange}
+				/>,
+			),
+		);
+		expect(document.querySelector('[role="alert"]')).toBeNull();
+		expect(cursor()).toBe(1);
+		click('Next');
+		expect(onCursorChange).toHaveBeenLastCalledWith(2);
+		expect(cursor()).toBe(1);
+		key('Home');
+		expect(onCursorChange).toHaveBeenLastCalledWith(0);
+	});
 });
