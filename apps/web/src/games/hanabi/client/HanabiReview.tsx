@@ -9,7 +9,7 @@ import {
 	projectHanabiReplay,
 	replayHanabiReview,
 } from '@hanabi/shared';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import HanabiDesktopBoard from './HanabiDesktopBoard';
 import HanabiDesktopTableau from './HanabiDesktopTableau';
 import HanabiDesktopStatus from './HanabiDesktopStatus';
@@ -29,6 +29,11 @@ interface Props {
 	userId: string;
 	onExit: () => void;
 	exitLabel?: string;
+	cursor?: number;
+	onCursorChange?: (cursor: number) => void;
+	allowInProgress?: boolean;
+	headerContent?: ReactNode;
+	activityDetails?: ReactNode;
 }
 
 export function getReviewMoveLabel(move: HanabiReviewStep, transcript: GameTranscriptV1): string {
@@ -48,8 +53,13 @@ export default function HanabiReview({
 	userId,
 	onExit,
 	exitLabel = 'Back to game',
+	cursor: controlledCursor,
+	onCursorChange,
+	allowInProgress = false,
+	headerContent,
+	activityDetails,
 }: Props): JSX.Element {
-	const [cursor, setCursor] = useState(0);
+	const [localCursor, setCursor] = useState(0);
 	const [perspective, setPerspective] = useState<string | null>(() =>
 		transcript.players.some((player) => player.id === userId) ? userId : transcript.turnOrder[0],
 	);
@@ -67,24 +77,30 @@ export default function HanabiReview({
 		}
 	}, [transcript]);
 	const total = steps.length;
+	const cursor = Math.max(0, Math.min(total, controlledCursor ?? localCursor));
 	const reconstruction = useMemo(() => {
 		try {
-			if (!isReplayableTranscript(transcript)) return null;
-			return replayHanabiReview(transcript, cursor);
+			if (!isReplayableTranscript(transcript, { allowInProgress })) return null;
+			return replayHanabiReview(transcript, cursor, { allowInProgress });
 		} catch {
 			return null;
 		}
-	}, [transcript, cursor]);
+	}, [transcript, cursor, allowInProgress]);
 	const gameData = useMemo(
 		() =>
 			reconstruction ? projectHanabiReplay(reconstruction, perspectivePlayerId, revealAll) : null,
 		[reconstruction, perspectivePlayerId, revealAll],
 	);
 
-	function goTo(next: number) {
-		setCursor(Math.max(0, Math.min(total, next)));
-		setSelectedCard(null);
-	}
+	const goTo = useCallback(
+		(next: number) => {
+			const bounded = Math.max(0, Math.min(total, next));
+			if (controlledCursor === undefined) setCursor(bounded);
+			onCursorChange?.(bounded);
+			setSelectedCard(null);
+		},
+		[total, controlledCursor, onCursorChange],
+	);
 
 	useEffect(() => {
 		exitRef.current?.focus();
@@ -101,18 +117,11 @@ export default function HanabiReview({
 			const offset = event.key === 'ArrowLeft' ? -1 : event.key === 'ArrowRight' ? 1 : null;
 			if (offset === null && event.key !== 'Home' && event.key !== 'End') return;
 			event.preventDefault();
-			setSelectedCard(null);
-			setCursor((current) =>
-				event.key === 'Home'
-					? 0
-					: event.key === 'End'
-						? total
-						: Math.max(0, Math.min(total, current + (offset ?? 0))),
-			);
+			goTo(event.key === 'Home' ? 0 : event.key === 'End' ? total : cursor + (offset ?? 0));
 		};
 		window.addEventListener('keydown', onKeyDown);
 		return () => window.removeEventListener('keydown', onKeyDown);
-	}, [total]);
+	}, [total, cursor, goTo]);
 
 	useEffect(() => {
 		const list = moveListRef.current;
@@ -147,12 +156,16 @@ export default function HanabiReview({
 		: `${gameData?.players[gameData.currentPlayerId ?? '']?.name ?? 'Player'}'s turn${gameData?.remainingTurns != null ? ` · ${gameData.remainingTurns} ${gameData.remainingTurns === 1 ? 'turn' : 'turns'} left` : ''}`;
 
 	return (
-		<div className="hanabi-game-surface hanabi-review min-h-screen" data-review-cursor={cursor}>
+		<div className="hanabi-game-surface hanabi-review" data-review-cursor={cursor}>
 			<header className="hanabi-review-header">
-				<button ref={exitRef} type="button" onClick={onExit}>
-					<span aria-hidden="true">←</span> {exitLabel}
-				</button>
-				<h1>Game review</h1>
+				{headerContent ?? (
+					<>
+						<button ref={exitRef} type="button" onClick={onExit}>
+							<span aria-hidden="true">←</span> {exitLabel}
+						</button>
+						<h1>Game review</h1>
+					</>
+				)}
 				<div className="hanabi-review-perspective">
 					<label>
 						Perspective{' '}
@@ -184,131 +197,148 @@ export default function HanabiReview({
 			</header>
 			{!gameData ? (
 				<p role="alert" className="hanabi-review-unavailable">
-					Review unavailable: this round does not have a complete, valid finished transcript.
+					{allowInProgress
+						? 'Review unavailable: this game does not have a valid replay yet.'
+						: 'Review unavailable: this round does not have a complete, valid finished transcript.'}
 				</p>
 			) : (
 				<>
-					<HanabiDesktopBoard
-						gameData={gameData}
-						userId={perspectivePlayerId}
-						status={
-							<HanabiDesktopStatus
-								gameData={gameData}
-								userId={perspectivePlayerId}
-								turnLabel={turnLabel}
-								showGameMenu={false}
-							/>
-						}
-						tableau={<HanabiDesktopTableau gameData={gameData} highlightedTiles={highlighted} />}
-						playerWorkspaces={
-							<div aria-label="Player workspaces" className="hanabi-player-workspaces grid gap-1.5">
-								{transcript.turnOrder.map((id) => (
-									<HanabiPlayerWorkspace
-										key={id}
-										player={gameData.players[id]}
-										active={!finished && gameData.currentPlayerId === id}
-										finished={finished}
-										isLocal={false}
-										reviewPerspective={perspective === id}
-										review
-									>
-										<div
-											className="hanabi-review-hand hanabi-player-tile-surface relative overflow-hidden bg-hanabi-table/25"
-											data-review-player={id}
-											style={{ height: HANABI_DESKTOP_SURFACE_HEIGHT }}
+					<div className="hanabi-review-content">
+						<HanabiDesktopBoard
+							gameData={gameData}
+							userId={perspectivePlayerId}
+							status={
+								<HanabiDesktopStatus
+									gameData={gameData}
+									userId={perspectivePlayerId}
+									turnLabel={turnLabel}
+									showGameMenu={false}
+								/>
+							}
+							tableau={<HanabiDesktopTableau gameData={gameData} highlightedTiles={highlighted} />}
+							playerWorkspaces={
+								<div
+									aria-label="Player workspaces"
+									className="hanabi-player-workspaces grid gap-1.5"
+								>
+									{transcript.turnOrder.map((id) => (
+										<HanabiPlayerWorkspace
+											key={id}
+											player={gameData.players[id]}
+											active={!finished && gameData.currentPlayerId === id}
+											finished={finished}
+											isLocal={false}
+											reviewPerspective={perspective === id}
+											review
 										>
-											{gameData.allowDragging && (
-												<div
-													aria-hidden="true"
-													className="absolute bottom-0 left-0 right-0 border-t border-hanabi-border bg-hanabi-table-deep/18"
-													data-review-hand-zone="freeform"
-													style={{ top: HANABI_DESKTOP_ZONE_HEIGHT }}
-												/>
-											)}
-											{gameData.playerTiles[id].map((tileId, index) => {
-												const tile = gameData.tiles[tileId];
-												const tileNotes = gameData.showNotes
-													? gameData.tileNotes[tileId]
-													: undefined;
-												const hasNotes = Boolean(
-													tileNotes && (tileNotes.colors.length || tileNotes.numbers.length),
-												);
-												const label = `${gameData.players[id].name}'s card ${index + 1}: ${tile.concealed ? 'hidden' : `${tile.color} ${tile.number}`}${gameData.showNotes ? `. ${getHanabiTileNotesDescription(tileNotes)}` : ''}`;
-												return (
-													<button
-														type="button"
-														className="hanabi-review-card"
-														data-review-tile={tileId}
-														style={{
-															...getHanabiDesktopTileStyle({
-																hidden: Boolean(tile.concealed),
-																position: gameData.tilePositions[tileId],
-																tileCount: gameData.playerTiles[id].length,
-															}),
-															zIndex: gameData.tilePositions[tileId].z,
-														}}
-														key={tileId}
-														aria-label={label}
-														aria-pressed={selectedCard === tileId}
-														onClick={() => setSelectedCard(selectedCard === tileId ? null : tileId)}
-														disabled={!gameData.showNotes}
-													>
-														<div className="hanabi-player-tile">
-															<HanabiTileView
-																color={tile.concealed ? undefined : tile.color}
-																number={tile.concealed ? undefined : tile.number}
-																dimensions={HANABI_DESKTOP_TILE_SIZE}
-																notesIndicator={hasNotes}
-															/>
-														</div>
-														{highlighted.has(tileId) && (
-															<span className="hanabi-review-card-highlight" aria-hidden="true" />
-														)}
-													</button>
-												);
-											})}
-										</div>
-									</HanabiPlayerWorkspace>
-								))}
-							</div>
-						}
-						activity={
-							<section className="hanabi-review-moves" aria-label="Move history">
-								<h2>Review steps</h2>
-								<div className="hanabi-review-move-list" ref={moveListRef}>
-									<button
-										type="button"
-										aria-current={cursor === 0 ? 'step' : undefined}
-										ref={cursor === 0 ? selectedMoveRef : undefined}
-										onClick={() => goTo(0)}
-									>
-										<span>0</span>
-										<span>Initial deal</span>
-									</button>
-									{steps.map((move, index) => (
-										<button
-											type="button"
-											ref={cursor === index + 1 ? selectedMoveRef : undefined}
-											key={move.type === 'reposition' ? move.id : move.actionId}
-											aria-current={cursor === index + 1 ? 'step' : undefined}
-											className={index >= cursor ? 'hanabi-review-future' : undefined}
-											onClick={() => goTo(index + 1)}
-										>
-											<span>{index + 1}</span>
-											<span>
-												{index < cursor
-													? getReviewMoveLabel(move, transcript)
-													: `${gameData.players[move.actorId]?.name ?? 'Player'}'s next action`}
-											</span>
-										</button>
+											<div
+												className="hanabi-review-hand hanabi-player-tile-surface relative overflow-hidden bg-hanabi-table/25"
+												data-review-player={id}
+												style={{ height: HANABI_DESKTOP_SURFACE_HEIGHT }}
+											>
+												{gameData.allowDragging && (
+													<div
+														aria-hidden="true"
+														className="absolute bottom-0 left-0 right-0 border-t border-hanabi-border bg-hanabi-table-deep/18"
+														data-review-hand-zone="freeform"
+														style={{ top: HANABI_DESKTOP_ZONE_HEIGHT }}
+													/>
+												)}
+												{gameData.playerTiles[id].map((tileId, index) => {
+													const tile = gameData.tiles[tileId];
+													const tileNotes = gameData.showNotes
+														? gameData.tileNotes[tileId]
+														: undefined;
+													const hasNotes = Boolean(
+														tileNotes && (tileNotes.colors.length || tileNotes.numbers.length),
+													);
+													const label = `${gameData.players[id].name}'s card ${index + 1}: ${tile.concealed ? 'hidden' : `${tile.color} ${tile.number}`}${gameData.showNotes ? `. ${getHanabiTileNotesDescription(tileNotes)}` : ''}`;
+													return (
+														<button
+															type="button"
+															className="hanabi-review-card"
+															data-review-tile={tileId}
+															style={{
+																...getHanabiDesktopTileStyle({
+																	hidden: Boolean(tile.concealed),
+																	position: gameData.tilePositions[tileId],
+																	tileCount: gameData.playerTiles[id].length,
+																}),
+																zIndex: gameData.tilePositions[tileId].z,
+															}}
+															key={tileId}
+															aria-label={label}
+															aria-pressed={selectedCard === tileId}
+															onClick={() =>
+																setSelectedCard(selectedCard === tileId ? null : tileId)
+															}
+															disabled={!gameData.showNotes}
+														>
+															<div className="hanabi-player-tile">
+																<HanabiTileView
+																	color={tile.concealed ? undefined : tile.color}
+																	number={tile.concealed ? undefined : tile.number}
+																	dimensions={HANABI_DESKTOP_TILE_SIZE}
+																	notesIndicator={hasNotes}
+																/>
+															</div>
+															{highlighted.has(tileId) && (
+																<span className="hanabi-review-card-highlight" aria-hidden="true" />
+															)}
+														</button>
+													);
+												})}
+											</div>
+										</HanabiPlayerWorkspace>
 									))}
 								</div>
-								<p>Future moves hidden</p>
-							</section>
-						}
-					/>
+							}
+							activity={
+								<>
+									<section className="hanabi-review-moves" aria-label="Move history">
+										<h2>Review steps</h2>
+										<div className="hanabi-review-move-list" ref={moveListRef}>
+											<button
+												type="button"
+												aria-current={cursor === 0 ? 'step' : undefined}
+												ref={cursor === 0 ? selectedMoveRef : undefined}
+												onClick={() => goTo(0)}
+											>
+												<span>0</span>
+												<span>Initial deal</span>
+											</button>
+											{steps.map((move, index) => (
+												<button
+													type="button"
+													ref={cursor === index + 1 ? selectedMoveRef : undefined}
+													key={move.type === 'reposition' ? move.id : move.actionId}
+													aria-current={cursor === index + 1 ? 'step' : undefined}
+													className={index >= cursor ? 'hanabi-review-future' : undefined}
+													onClick={() => goTo(index + 1)}
+												>
+													<span>{index + 1}</span>
+													<span>
+														{index < cursor
+															? getReviewMoveLabel(move, transcript)
+															: `${gameData.players[move.actorId]?.name ?? 'Player'}'s next action`}
+													</span>
+												</button>
+											))}
+										</div>
+										<p>Future moves hidden</p>
+									</section>
+									{activityDetails}
+								</>
+							}
+						/>
+						{notes && (
+							<p className="hanabi-review-notes" role="status">
+								{notes}
+							</p>
+						)}
+					</div>
 					<section className="hanabi-review-transport" aria-label="Review controls">
-						<p className="hanabi-review-caption" aria-live="polite">
+						<p className="hanabi-review-caption" aria-live="polite" title={caption}>
 							{cursor
 								? `${lastMove?.type === 'reposition' ? `Before turn ${turnCount + 1}` : `Turn ${turnCount}`} · `
 								: ''}
@@ -316,11 +346,7 @@ export default function HanabiReview({
 							{finished &&
 								` · Final score ${getHanabiScore(gameData)}/${getHanabiMaxScore(gameData.ruleSet)}`}
 						</p>
-						{notes && (
-							<p className="hanabi-review-notes" role="status">
-								{notes}
-							</p>
-						)}
+
 						<div className="hanabi-review-controls">
 							<button type="button" disabled={cursor === 0} onClick={() => goTo(0)}>
 								Start

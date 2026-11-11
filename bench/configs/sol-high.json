@@ -1,0 +1,12 @@
+{
+	"name": "three-player-sol-high",
+	"game": { "ruleSet": "5-color", "criticalGameOver": true, "allowDragging": false },
+	"players": [
+		{ "provider": "codex", "model": "gpt-6.1-sol", "effort": "high" },
+		{ "provider": "codex", "model": "gpt-6.1-sol", "effort": "high" },
+		{ "provider": "codex", "model": "gpt-6.1-sol", "effort": "high" }
+	],
+	"conventionsFile": "../conventions/minimal.md",
+	"dreamer": { "provider": "codex", "model": "gpt-6.1-sol", "effort": "high" },
+	"discussion": false
+}

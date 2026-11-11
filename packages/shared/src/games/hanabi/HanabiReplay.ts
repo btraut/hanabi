@@ -16,18 +16,33 @@ import {
 	type Position,
 } from './HanabiGameData.js';
 
-/** Review is available only when a complete round has ended. */
-export function isReplayableTranscript(transcript: GameTranscriptV1 | null | undefined): boolean {
+export interface HanabiReplayOptions {
+	/** Privileged local review may inspect a complete recording of an ongoing game. */
+	allowInProgress?: boolean;
+}
+
+/** Website review requires an ended round; local analysis can explicitly opt into live prefixes. */
+export function isReplayableTranscript(
+	transcript: GameTranscriptV1 | null | undefined,
+	options: HanabiReplayOptions = {},
+): boolean {
 	return Boolean(
 		transcript &&
 		transcript.version === GAME_TRANSCRIPT_VERSION &&
-		transcript.lifecycle.status === 'finished' &&
 		transcript.integrity.status === 'complete' &&
 		transcript.deck?.length &&
 		transcript.dealOrder?.length &&
 		transcript.turnOrder.length &&
-		transcript.result &&
-		transcript.moves.at(-1)?.postTurn.status === 'finished',
+		((transcript.lifecycle.status === 'finished' &&
+			transcript.result &&
+			transcript.moves.at(-1)?.postTurn.status === 'finished') ||
+			(options.allowInProgress === true &&
+				transcript.lifecycle.status === 'in_progress' &&
+				!transcript.result &&
+				transcript.lifecycle.endedAt === null &&
+				transcript.moves.every(
+					(move) => move.postTurn.status === 'in_progress' && !move.postTurn.result,
+				))),
 	);
 }
 
@@ -51,16 +66,21 @@ export function getHanabiReviewSteps(transcript: GameTranscriptV1): HanabiReview
 }
 
 /** Rebuild after `cursor` review steps, where zero is the original deal. */
-export function replayHanabiReview(transcript: GameTranscriptV1, cursor: number): HanabiGameData {
-	return replaySteps(transcript, getHanabiReviewSteps(transcript), cursor);
+export function replayHanabiReview(
+	transcript: GameTranscriptV1,
+	cursor: number,
+	options: HanabiReplayOptions = {},
+): HanabiGameData {
+	return replaySteps(transcript, getHanabiReviewSteps(transcript), cursor, options);
 }
 
 /** Rebuild after `cursor` accepted gameplay moves; hand movements do not change this API's cursor. */
 export function replayHanabiTranscript(
 	transcript: GameTranscriptV1,
 	cursor: number,
+	options: HanabiReplayOptions = {},
 ): HanabiGameData {
-	return replaySteps(transcript, transcript.moves, cursor);
+	return replaySteps(transcript, transcript.moves, cursor, options);
 }
 
 function defaultHandPositions(data: HanabiGameData): Record<string, Position> {
@@ -75,9 +95,14 @@ function replaySteps(
 	transcript: GameTranscriptV1,
 	steps: HanabiReviewStep[],
 	cursor: number,
+	options: HanabiReplayOptions,
 ): HanabiGameData {
-	if (!isReplayableTranscript(transcript)) {
-		throw new Error('Only complete, finished game transcripts can be reviewed.');
+	if (!isReplayableTranscript(transcript, options)) {
+		throw new Error(
+			options.allowInProgress
+				? 'Only complete finished or in-progress game transcripts can be reviewed.'
+				: 'Only complete, finished game transcripts can be reviewed.',
+		);
 	}
 	if (!Number.isInteger(cursor) || cursor < 0 || cursor > steps.length) {
 		throw new Error('Review position must be an integer within the recorded steps.');

@@ -843,8 +843,7 @@ body {
 
 /* Scale the same card used in hands so the captured back lands without
    changing its aspect ratio, border geometry, or artwork. */
-.hanabi-status-deck-card,
-.hanabi-status-deck-icon[data-deck-empty]::before {
+.hanabi-status-deck-card {
 	position: absolute;
 	width: var(--hanabi-player-tile-width);
 	height: var(--hanabi-player-tile-height);
@@ -857,12 +856,8 @@ body {
 	left: calc(var(--hanabi-deck-depth) * var(--hanabi-deck-step));
 }
 
-.hanabi-status-deck-icon[data-deck-empty]::before {
-	top: 0;
-	left: 0;
-	border: 1px dashed rgb(235 226 208 / 34%);
-	border-radius: 5px;
-	content: '';
+.hanabi-status-deck-icon[data-deck-empty] {
+	opacity: 0.5;
 }
 
 .hanabi-clue-token {

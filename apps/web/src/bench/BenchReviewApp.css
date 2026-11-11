@@ -1,0 +1,100 @@
+.bench-review {
+	display: flex;
+	flex-direction: column;
+	height: 100dvh;
+	overflow: hidden;
+	color: var(--color-hanabi-text);
+}
+.bench-review > .hanabi-review {
+	flex: 1;
+	height: auto;
+}
+.bench-review .hanabi-review-header {
+	flex-wrap: wrap;
+	gap: 12px 24px;
+}
+.bench-review .hanabi-review-header h1 {
+	margin-right: auto;
+}
+.bench-review .hanabi-review-header select {
+	max-width: 300px;
+}
+.bench-follow {
+	white-space: nowrap;
+}
+.bench-status {
+	color: var(--color-hanabi-text-muted);
+}
+.bench-status-playing {
+	color: var(--color-hanabi-coral-soft);
+}
+.bench-status-failed,
+.bench-banner {
+	color: var(--color-hanabi-coral);
+}
+.bench-banner,
+.bench-empty,
+.bench-source {
+	flex-shrink: 0;
+	width: calc(100% - 42px);
+	max-width: 1660px;
+	margin: 0 auto;
+	padding-block: 12px;
+	overflow-wrap: anywhere;
+}
+.bench-banner {
+	border-bottom: 1px solid var(--color-hanabi-border);
+}
+.bench-source {
+	color: var(--color-hanabi-text-muted);
+	font-size: 14px;
+}
+.bench-review .hanabi-review-move-list {
+	max-height: 190px;
+}
+.bench-reasoning,
+.bench-document {
+	border-top: 1px solid var(--color-hanabi-border);
+	margin-top: 18px;
+	padding-top: 14px;
+}
+.bench-reasoning h2 {
+	font-size: 20px;
+	font-weight: 600;
+}
+.bench-reasoning h3,
+.bench-document h3 {
+	margin-top: 12px;
+	color: var(--color-hanabi-coral-soft);
+	font-weight: 600;
+}
+.bench-reasoning p,
+.bench-document p {
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	line-height: 1.5;
+	margin-top: 6px;
+}
+.bench-reasoning {
+	padding-right: 8px;
+}
+.bench-pending {
+	border-top: 1px solid var(--color-hanabi-border);
+	margin-top: 16px;
+}
+.bench-muted {
+	color: var(--color-hanabi-text-muted);
+}
+.bench-document summary {
+	cursor: pointer;
+	font-weight: 600;
+}
+.bench-document summary:focus-visible {
+	outline: 1px solid var(--color-hanabi-coral);
+	outline-offset: 4px;
+}
+@media (max-width: 959px) {
+	.bench-review .hanabi-review-perspective {
+		width: auto;
+	}
+}
