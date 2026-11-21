@@ -24,6 +24,12 @@
 		border-radius: 8px;
 	}
 
+	/* Touch browsers can retain hover after inspecting a pile. */
+	.hanabi-mobile-stack:focus-visible {
+		outline: 1px solid var(--color-hanabi-coral-soft);
+		outline-offset: -1px;
+	}
+
 	.hanabi-mobile-discards {
 		display: flex;
 		width: 44px;

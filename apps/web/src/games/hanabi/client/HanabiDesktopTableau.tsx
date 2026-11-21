@@ -184,7 +184,7 @@ export function HanabiMobileTableau({
 						<button
 							type="button"
 							key={color}
-							className="hanabi-mobile-stack hanabi-focus-ring"
+							className="hanabi-mobile-stack"
 							onClick={() => setInspection({ color, roundKey })}
 							aria-label={`${color} firework ${top ? `at ${top.number}` : 'empty'}. Discards, oldest first: ${discards.map((tile) => tile.number).join(', ') || 'none'}. Inspect pile.`}
 						>
